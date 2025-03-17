@@ -72,7 +72,7 @@ draw_frame :: proc (f: ^Frame) {
     for child in f.children do draw_frame(child)
 }
 
-@(private="file")
+@(private)
 get_rect :: proc (f: ^Frame) -> Rect {
     if len(f.anchors) == 0 do return f.rect
 
@@ -252,10 +252,10 @@ get_rect :: proc (f: ^Frame) -> Rect {
     return { result_dir.l, result_dir.t, result_dir.r - result_dir.l, result_dir.b - result_dir.t }
 }
 
-@(private="file") Rect_Dir :: struct { l, t, r, b: f32 }
-@(private="file") Rect_Pin :: struct { l, t, r, b: bool }
+@(private) Rect_Dir :: struct { l, t, r, b: f32 }
+@(private) Rect_Pin :: struct { l, t, r, b: bool }
 
-@(private="file")
+@(private)
 transform_rect_dir :: proc (dir: ^Rect_Dir, pin: ^Rect_Pin, dir_next: Rect_Dir, pin_anchors: Rect_Pin) {
     if !pin.l do dir.l = dir_next.l
     if !pin.t do dir.t = dir_next.t
