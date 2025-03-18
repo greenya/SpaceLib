@@ -62,14 +62,17 @@ clear_anchors :: proc (f: ^Frame) {
     resize(&f.anchors, 0)
 }
 
-draw_frame :: proc (f: ^Frame) {
+update_frame_tree :: proc (f: ^Frame) {
     if f.hidden do return
     f.rect = get_rect(f)
+    for child in f.children do update_frame_tree(child)
+}
 
+draw_frame_tree :: proc (f: ^Frame) {
+    if f.hidden do return
     draw := f.draw != nil ? f.draw : default_draw_proc
     if draw != nil do draw(f)
-
-    for child in f.children do draw_frame(child)
+    for child in f.children do draw_frame_tree(child)
 }
 
 @(private)
