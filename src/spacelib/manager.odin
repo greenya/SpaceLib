@@ -1,25 +1,22 @@
 package spacelib
 
+import "core:slice"
+
 Manager :: struct {
-    root            : ^Frame,
-    mouse           : Mouse_Input,
-    prev_mouse      : Mouse_Input,
-    lmb_pressed     : bool,
-    lmb_released    : bool,
-    mouse_consumed  : bool,
-    top_hover_frame : ^Frame,
-    capture_frame   : ^Frame,
-    // capture_outside : bool,
+    root                : ^Frame,
 
-    default_draw_proc: Draw_Proc,
+    mouse               : Mouse_Input,
+    prev_mouse          : Mouse_Input,
+    lmb_pressed         : bool,
+    lmb_released        : bool,
+    mouse_consumed      : bool,
+    mouse_frames        : [dynamic] ^Frame,
+
+    captured_frame      : ^Frame,
+    captured_outside    : bool,
+
+    default_draw_proc   : Draw_Proc,
 }
-
-// todo: add capture_outside? or maybe capture by root treat as "world capture"
-// the idea:
-// if something pressed outside the ui, the ui should not detect hover,
-// it should treat it as its captured/locked by foreign system (and do not interfere)
-
-// todo: click should only be fire for single frame if clickable frames overlap
 
 Mouse_Input :: struct {
     pos: Vec2,
@@ -34,24 +31,42 @@ create_manager :: proc () -> ^Manager {
 
 destroy_manager :: proc (m: ^Manager) {
     destroy_frame_tree(m.root)
+    delete(m.mouse_frames)
     free(m)
 }
 
 update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
-    m.lmb_pressed = !m.prev_mouse.lmb_down && mouse.lmb_down
-    m.lmb_released = m.prev_mouse.lmb_down && !mouse.lmb_down
     m.mouse = mouse
-    m.top_hover_frame = nil
+    m.lmb_pressed = !m.prev_mouse.lmb_down && m.mouse.lmb_down
+    m.lmb_released = m.prev_mouse.lmb_down && !m.mouse.lmb_down
+
+    resize(&m.mouse_frames, 0)
 
     m.root.rect = screen_rect
     update_frame_tree(m.root, m)
 
-    if m.capture_frame != nil && m.lmb_released {
-        if m.capture_frame.hovered do m.capture_frame.click(m.capture_frame)
-        m.capture_frame = nil
+    frame_clicked: bool
+    #reverse for f in m.mouse_frames {
+        f.hovered = true
+
+        if m.lmb_pressed && f.click != nil && !frame_clicked {
+            frame_clicked = true
+            m.captured_frame = f
+        }
+
+        if f.solid do break
     }
 
-    m.mouse_consumed = m.capture_frame != nil || (m.top_hover_frame != nil && m.top_hover_frame != m.root)
+    if m.captured_frame != nil && m.lmb_released {
+        if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
+        m.captured_frame = nil
+    }
+
+    top_hover_frame := len(m.mouse_frames) > 0 ? slice.last(m.mouse_frames[:]) : nil
+    m.mouse_consumed = m.captured_frame != nil || (top_hover_frame != nil && top_hover_frame != m.root)
+
+    if !m.mouse_consumed && m.lmb_pressed do m.captured_outside = true
+    if m.captured_outside && m.lmb_released do m.captured_outside = false
 
     m.prev_mouse = mouse
 }

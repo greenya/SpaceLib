@@ -5,33 +5,25 @@ import "core:slice"
 Vec2 :: [2] f32
 Rect :: struct { x, y, w, h: f32 }
 
-// todo: maybe add Frame.layout: Layout // enum: { none, column, row }
+// todo: maybe add Frame.layout: Layout // enum: { none, column_down, column_up, row_right, row_left }
 // todo: maybe add Frame.role: Role // enum: { none, checkbox?, list?, dropdown? }
 
 Frame :: struct {
     parent      : ^Frame,
     children    : [dynamic] ^Frame,
-    // layout      : Layout,
     hidden      : bool,
     text        : string,
     rect        : Rect,
 
     anchors     : [dynamic] Anchor,
     size        : Vec2,
+    solid       : bool,
 
     draw        : Draw_Proc,
     click       : Click_Proc,
     hovered     : bool,
     pressed     : bool,
 }
-
-// Layout :: enum {
-//     none,
-//     column_down,
-//     column_up,
-//     row_right,
-//     row_left,
-// }
 
 Anchor :: struct {
     point       : Anchor_Point,
@@ -92,24 +84,25 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     if f.parent != nil do append(&f.parent.children, f)
 }
 
+@(private)
 update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
+
+    f.hovered = false
     f.rect = get_rect(f)
 
-    if m.capture_frame == nil || m.capture_frame == f {
+    if (m.captured_frame == nil || m.captured_frame == f) && !m.captured_outside {
         pos := &m.mouse.pos
-        f.hovered = f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
-        if f.hovered && m.lmb_pressed && f.click != nil do m.capture_frame = f
-        if f.hovered do m.top_hover_frame = f
-    } else {
-        f.hovered = false
+        in_rect := f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
+        if in_rect do append(&m.mouse_frames, f)
     }
 
-    f.pressed = m.capture_frame == f
+    f.pressed = m.captured_frame == f
 
     for child in f.children do update_frame_tree(child, m)
 }
 
+@(private)
 draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Draw_Proc = nil) {
     if f.hidden do return
     draw := f.draw != nil ? f.draw : default_draw_proc

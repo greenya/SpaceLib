@@ -49,7 +49,7 @@ main :: proc () {
 }
 
 init_ui_hud_menu :: proc () {
-    root := sl.add_frame({ parent=game.ui.manager.root })
+    root := sl.add_frame({ parent=game.ui.manager.root, solid=true })
     sl.add_anchor(root, {})
 
     count :: 5
@@ -70,7 +70,7 @@ init_ui_chat_window :: proc () {
     width, height :: 320, 200
     gap :: 10
 
-    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height } })
+    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height }, solid=true })
     sl.add_anchor(root, { point=.bottom_left })
 
     filter_bar := sl.add_frame({ parent=root, size={ 0, 32 } })
@@ -103,7 +103,7 @@ init_ui_spell_book :: proc () {
 
     // root
 
-    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height } })
+    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height }, solid=true })
     sl.add_anchor(root, { offset={ 0, gap_top } })
 
     // categories
@@ -136,7 +136,7 @@ init_ui_spell_book :: proc () {
 
     col1 := sl.add_frame({ parent=root })
     sl.add_anchor(col1, { offset={ gap_inner, gap_inner } })
-    sl.add_anchor(col1, { point=.bottom_right, rel_point=.bottom, offset={ -gap_inner/2, -pag_height - 2*gap_inner } })
+    sl.add_anchor(col1, { point=.top_right, rel_point=.top, offset={ -gap_inner/2, 0 } })
 
     col2 := sl.add_frame({ parent=root })
     sl.add_anchor(col2, { point=.top_right, offset={ -gap_inner, gap_inner } })
@@ -145,17 +145,17 @@ init_ui_spell_book :: proc () {
     // spell cards
 
     icon_size :: 48
-    text_height :: 48
-    card_height :: 64
-    card_gap :: 20
+    text_height :: icon_size
+    card_height :: icon_size
+    card_gap :: 10
 
     for col in ([] ^sl.Frame { col1, col2 }) {
         prev_col_card: ^sl.Frame
-        for i in 0..<4 {
+        for i in 0..<5 {
             card := sl.add_frame({ parent=col, size={ 0, card_height }, click=proc (f: ^sl.Frame) { fmt.println("click! spell book spell card") } })
             if prev_col_card != nil {
                 sl.add_anchor(card, { rel_point=.bottom_left, rel_frame=prev_col_card, offset={ 0, card_gap } })
-                sl.add_anchor(card, { point=.top_right, rel_point=.bottom_right, rel_frame=prev_col_card })
+                sl.add_anchor(card, { point=.top_right, rel_point=.bottom_right, rel_frame=prev_col_card, offset={ 0, card_gap } })
             } else {
                 sl.add_anchor(card, {})
                 sl.add_anchor(card, { point=.top_right })
