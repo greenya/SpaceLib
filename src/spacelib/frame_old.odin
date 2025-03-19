@@ -1,37 +1,18 @@
 package spacelib
 
-import "core:slice"
-
+/*
 Vec2 :: [2] f32
 Rect :: struct { x, y, w, h: f32 }
-
-// todo: maybe add Frame.layout: Layout // enum: { none, column, row }
-// todo: maybe add Frame.role: Role // enum: { none, checkbox?, list?, dropdown? }
 
 Frame :: struct {
     parent      : ^Frame,
     children    : [dynamic] ^Frame,
-    // layout      : Layout,
     hidden      : bool,
-    text        : string,
-    rect        : Rect,
-
-    anchors     : [dynamic] Anchor,
     size        : Vec2,
-
+    anchors     : [dynamic] Anchor,
+    rect        : Rect,
     draw        : Draw_Proc,
-    click       : Click_Proc,
-    hovered     : bool,
-    pressed     : bool,
 }
-
-// Layout :: enum {
-//     none,
-//     column_down,
-//     column_up,
-//     row_right,
-//     row_left,
-// }
 
 Anchor :: struct {
     point       : Anchor_Point,
@@ -54,7 +35,8 @@ Anchor_Point :: enum {
 }
 
 Draw_Proc :: proc (f: ^Frame)
-Click_Proc :: proc (f: ^Frame)
+
+default_draw_proc: Draw_Proc
 
 add_frame :: proc (init: Frame) -> ^Frame {
     f := new(Frame)
@@ -81,40 +63,17 @@ clear_anchors :: proc (f: ^Frame) {
     resize(&f.anchors, 0)
 }
 
-set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
-    if f.parent != nil {
-        idx, _ := slice.linear_search(f.parent.children[:], f)
-        assert(idx >= 0)
-        ordered_remove(&f.parent.children, idx)
-    }
-
-    f.parent = new_parent
-    if f.parent != nil do append(&f.parent.children, f)
-}
-
-update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
+update_frame_tree :: proc (f: ^Frame) {
     if f.hidden do return
     f.rect = get_rect(f)
-
-    if m.capture_frame == nil || m.capture_frame == f {
-        pos := &m.mouse.pos
-        f.hovered = f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
-        if f.hovered && m.lmb_pressed && f.click != nil do m.capture_frame = f
-        if f.hovered do m.top_hover_frame = f
-    } else {
-        f.hovered = false
-    }
-
-    f.pressed = m.capture_frame == f
-
-    for child in f.children do update_frame_tree(child, m)
+    for child in f.children do update_frame_tree(child)
 }
 
-draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Draw_Proc = nil) {
+draw_frame_tree :: proc (f: ^Frame) {
     if f.hidden do return
     draw := f.draw != nil ? f.draw : default_draw_proc
     if draw != nil do draw(f)
-    for child in f.children do draw_frame_tree(child, default_draw_proc)
+    for child in f.children do draw_frame_tree(child)
 }
 
 @(private)
@@ -312,3 +271,4 @@ transform_rect_dir :: proc (dir: ^Rect_Dir, pin: ^Rect_Pin, dir_next: Rect_Dir, 
     if pin_anchors.r do pin.r = true
     if pin_anchors.b do pin.b = true
 }
+*/
