@@ -43,6 +43,7 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
     resize(&m.mouse_frames, 0)
 
     m.root.rect = screen_rect
+    mark_frame_tree_dirty(m.root)
     update_frame_tree(m.root, m)
 
     frame_clicked: bool
@@ -57,9 +58,12 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
         if f.solid do break
     }
 
-    if m.captured_frame != nil && m.lmb_released {
-        if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
-        m.captured_frame = nil
+    if m.captured_frame != nil {
+        m.captured_frame.pressed = m.captured_frame.hovered
+        if m.lmb_released {
+            if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
+            m.captured_frame = nil
+        }
     }
 
     top_hover_frame := len(m.mouse_frames) > 0 ? slice.last(m.mouse_frames[:]) : nil
