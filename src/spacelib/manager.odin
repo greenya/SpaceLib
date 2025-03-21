@@ -26,7 +26,7 @@ Mouse_Input :: struct {
 create_manager :: proc (default_draw_proc: Draw_Proc = nil) -> ^Manager {
     m := new(Manager)
     m.default_draw_proc = default_draw_proc
-    m.root = add_frame({})
+    m.root = add_frame({ pass=true })
     return m
 }
 
@@ -60,7 +60,7 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
     }
 
     if m.captured_frame != nil {
-        m.captured_frame.pressed = m.captured_frame.hovered
+        m.captured_frame.pressed = true
         if m.lmb_released {
             if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
             m.captured_frame = nil

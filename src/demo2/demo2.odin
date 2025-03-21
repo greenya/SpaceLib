@@ -30,13 +30,14 @@ main :: proc () {
         mouse_pos, mouse_lmb_down := rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT)
         sl.update_manager(game.ui.manager, { 10, 10, screen_w-20, screen_h-20 }, { mouse_pos, mouse_lmb_down })
 
+        if !game.ui.manager.mouse_consumed {
+            fmt.println("mouse for world!", mouse_pos, mouse_lmb_down)
+        }
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.DARKGRAY)
 
         sl.draw_manager(game.ui.manager)
-        if !game.ui.manager.mouse_consumed {
-            fmt.println("mouse for world!", mouse_pos, mouse_lmb_down)
-        }
 
         rl.EndDrawing()
         free_all(context.temp_allocator)

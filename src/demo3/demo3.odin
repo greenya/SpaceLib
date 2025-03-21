@@ -29,13 +29,14 @@ main :: proc () {
         mouse_pos, mouse_lmb_down := rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT)
         sl.update_manager(game.ui.manager, { 10, 10, screen_w-20, screen_h-20 }, { mouse_pos, mouse_lmb_down })
 
+        if !game.ui.manager.mouse_consumed {
+            fmt.printfln("[world] pos=%v lmb=%v", mouse_pos, mouse_lmb_down)
+        }
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.DARKGRAY)
 
         sl.draw_manager(game.ui.manager)
-        if !game.ui.manager.mouse_consumed {
-            fmt.printfln("[world] pos=%v lmb=%v", mouse_pos, mouse_lmb_down)
-        }
 
         rl.EndDrawing()
         free_all(context.temp_allocator)
@@ -59,7 +60,7 @@ init_ui :: proc () {
     ui.frame1 = sl.add_frame({ parent=ui.manager.root, text="Frame 1", size={ 400, 300 } })
     sl.add_anchor(ui.frame1, { point=.center })
 
-    ui.frame2 = sl.add_frame({ parent=ui.manager.root, text="Frame 2", size={ 140, 100 } })
+    ui.frame2 = sl.add_frame({ parent=ui.manager.root, text="Frame 2", size={ 140, 100 }, draw=draw_frame2 })
     sl.add_anchor(ui.frame2, { point=.center, rel_frame=ui.frame1 })
 
     init_ui_anchor_menu(0)
@@ -134,4 +135,9 @@ click_menu_point :: proc (f: ^sl.Frame) {
             }
         }
     }
+}
+
+draw_frame2 :: proc (f: ^sl.Frame) {
+    sl_rl.debug_draw_frame(f)
+    sl_rl.debug_draw_frame_anchors(f)
 }

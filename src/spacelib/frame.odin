@@ -7,8 +7,8 @@ Vec2 :: [2] f32
 Rect :: struct { x, y, w, h: f32 }
 
 // todo: maybe add Frame.layout: Layout // enum: { none, column_down, column_up, row_right, row_left }
+// todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe add Frame.role: Role // enum: { none, checkbox?, list?, dropdown? }
-// todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_draggable, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 
 Frame :: struct {
     parent      : ^Frame,
