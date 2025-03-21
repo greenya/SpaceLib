@@ -23,8 +23,9 @@ Mouse_Input :: struct {
     lmb_down: bool,
 }
 
-create_manager :: proc () -> ^Manager {
+create_manager :: proc (default_draw_proc: Draw_Proc = nil) -> ^Manager {
     m := new(Manager)
+    m.default_draw_proc = default_draw_proc
     m.root = add_frame({})
     return m
 }

@@ -61,6 +61,7 @@ add_frame :: proc (init: Frame) -> ^Frame {
     return f
 }
 
+@(private)
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
     delete(f.children)

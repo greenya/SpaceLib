@@ -18,8 +18,7 @@ main :: proc () {
     rl.InitWindow(1280, 720, "spacelib demo 2")
 
     game = new(Game)
-    game.ui.manager = sl.create_manager()
-    game.ui.manager.default_draw_proc = sl_rl.debug_draw_frame
+    game.ui.manager = sl.create_manager(sl_rl.debug_draw_frame)
 
     init_ui_hud_menu()
     init_ui_chat_window()
