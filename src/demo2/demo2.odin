@@ -24,6 +24,7 @@ main :: proc () {
     init_ui_hud_menu()
     init_ui_chat_window()
     init_ui_spell_book()
+    init_ui_top_bar()
 
     for !rl.WindowShouldClose() {
         screen_w, screen_h := f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight())
@@ -171,4 +172,9 @@ init_ui_spell_book :: proc () {
             prev_col_card = card
         }
     }
+}
+
+init_ui_top_bar :: proc () {
+    root := sl.add_frame({ parent=game.ui.manager.root, size={ 200, 40 }, text="top bar (pass)", pass=true })
+    sl.add_anchor(root, { point=.top })
 }

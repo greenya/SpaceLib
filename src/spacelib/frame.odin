@@ -21,6 +21,8 @@ Frame :: struct {
 
     anchors     : [dynamic] Anchor,
     size        : Vec2,
+
+    pass        : bool,
     solid       : bool,
 
     draw        : Draw_Proc,
@@ -96,7 +98,7 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     f.pressed = false
     update_rect(f)
 
-    if (m.captured_frame == nil || m.captured_frame == f) && !m.captured_outside {
+    if !f.pass && !m.captured_outside && (m.captured_frame == nil || m.captured_frame == f) {
         pos := &m.mouse.pos
         in_rect := f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
         if in_rect do append(&m.mouse_frames, f)
