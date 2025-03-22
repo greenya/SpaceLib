@@ -3,18 +3,16 @@ package spacelib
 import "core:fmt"
 import "core:slice"
 
-Vec2 :: [2] f32
-Rect :: struct { x, y, w, h: f32 }
-
 // todo: maybe add Frame.layout: Layout // enum: { none, column_down, column_up, row_right, row_left }
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe add Frame.role: Role // enum: { none, checkbox?, list?, dropdown? }
+
+// todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
 Frame :: struct {
     parent      : ^Frame,
     children    : [dynamic] ^Frame,
     hidden      : bool,
-    text        : string,
 
     dirty       : bool,
     rect        : Rect,
@@ -24,7 +22,9 @@ Frame :: struct {
 
     pass        : bool,
     solid       : bool,
+    auto_hide   : bool,
 
+    text        : string,
     draw        : Draw_Proc,
     click       : Click_Proc,
     hovered     : bool,
@@ -105,6 +105,10 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
         if in_rect do append(&m.mouse_frames, f)
     }
 
+    if f.auto_hide {
+        append(&m.auto_hide_frames, f)
+    }
+
     for child in f.children do update_frame_tree(child, m)
 }
 
@@ -132,6 +136,7 @@ update_rect :: proc (f: ^Frame) {
 
     for anchor in f.anchors {
         assert(anchor.point != .none)
+        assert(anchor.rel_point != .none)
 
         rel_frame := anchor.rel_frame != nil ? anchor.rel_frame : f.parent
         update_rect(rel_frame)

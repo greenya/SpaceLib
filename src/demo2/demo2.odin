@@ -8,6 +8,9 @@ import sl_rl "../spacelib_raylib"
 Game :: struct {
     ui: struct {
         manager: ^sl.Manager,
+        layer_normal: ^sl.Frame,
+        layer_menu: ^sl.Frame,
+        // layer_tooltip: ^sl.Frame,
     }
 }
 
@@ -20,10 +23,19 @@ main :: proc () {
     game = new(Game)
     game.ui.manager = sl.create_manager(sl_rl.debug_draw_frame)
 
-    init_ui_hud_menu()
-    init_ui_chat_window()
-    init_ui_spell_book()
-    init_ui_top_bar()
+    game.ui.layer_normal = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    sl.add_anchor(game.ui.layer_normal, { point=.top_left })
+    sl.add_anchor(game.ui.layer_normal, { point=.bottom_right })
+
+    game.ui.layer_menu = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    sl.add_anchor(game.ui.layer_menu, { point=.top_left })
+    sl.add_anchor(game.ui.layer_menu, { point=.bottom_right })
+
+    hud_menu_init()
+    chat_window_init()
+    action_bar_init()
+    spell_book_init()
+    top_bar_init()
 
     for !rl.WindowShouldClose() {
         screen_w, screen_h := f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight())
@@ -39,6 +51,7 @@ main :: proc () {
 
         sl.draw_manager(game.ui.manager)
 
+        // rl.DrawFPS(10, 10)
         rl.EndDrawing()
         free_all(context.temp_allocator)
     }
@@ -49,8 +62,8 @@ main :: proc () {
     rl.CloseWindow()
 }
 
-init_ui_hud_menu :: proc () {
-    root := sl.add_frame({ parent=game.ui.manager.root, solid=true })
+hud_menu_init :: proc () {
+    root := sl.add_frame({ parent=game.ui.layer_normal, solid=true })
     sl.add_anchor(root, {})
 
     count :: 5
@@ -67,11 +80,11 @@ init_ui_hud_menu :: proc () {
     }
 }
 
-init_ui_chat_window :: proc () {
+chat_window_init :: proc () {
     width, height :: 320, 200
     gap :: 10
 
-    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height }, solid=true })
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height }, solid=true })
     sl.add_anchor(root, { point=.bottom_left })
 
     filter_bar := sl.add_frame({ parent=root, size={ 0, 32 } })
@@ -95,7 +108,47 @@ init_ui_chat_window :: proc () {
     sl.add_anchor(scroll_bar, { point=.bottom_right, offset={ -gap, -gap } })
 }
 
-init_ui_spell_book :: proc () {
+action_bar_context_menu: ^sl.Frame
+
+action_bar_init :: proc () {
+    gap :: 6
+    button_size :: 64
+    button_count :: 8
+    bar_width :: button_count * (button_size+gap) + gap
+
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ bar_width, 0 } })
+    sl.add_anchor(root, { point=.bottom })
+
+    for i in 0..<button_count {
+        button := sl.add_frame({ parent=root, size={ button_size, button_size }, click=action_bar_button_click })
+        sl.add_anchor(button, { point=.bottom_left, offset={ gap + (gap+button_size)*f32(i), 0 } })
+    }
+
+    { // init context menu
+        menu := sl.add_frame({ parent=game.ui.layer_menu, size={ 200, 200 }, text="context menu (auto_hide)", solid=true, hidden=true, auto_hide=true })
+        sl.add_anchor(menu, { point=.bottom, rel_point=.top, offset={ 0, -10 } })
+        action_bar_context_menu = menu
+
+        button := sl.add_frame({ parent=menu, size={ 0, 40 }, text="button", click=proc (f: ^sl.Frame) { fmt.println("click! context button") } })
+        sl.add_anchor(button, { point=.top_left, offset={ 10, 20 } })
+        sl.add_anchor(button, { point=.top_right, offset={ -10, 20 } })
+    }
+}
+
+action_bar_button_click :: proc (f: ^sl.Frame) {
+    fmt.println("click! action bar button")
+    menu := action_bar_context_menu
+
+    if menu.hidden || menu.anchors[0].rel_frame != f {
+        menu.hidden = false
+        menu.anchors[0].rel_frame = f
+    } else {
+        menu.hidden = true
+        menu.anchors[0].rel_frame = menu.parent
+    }
+}
+
+spell_book_init :: proc () {
     width, height :: 420, 380
     gap_top :: 80
     gap_inner :: 20
@@ -104,7 +157,7 @@ init_ui_spell_book :: proc () {
 
     // root
 
-    root := sl.add_frame({ parent=game.ui.manager.root, size={ width, height }, solid=true })
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height }, solid=true })
     sl.add_anchor(root, { offset={ 0, gap_top } })
 
     // categories
@@ -174,7 +227,7 @@ init_ui_spell_book :: proc () {
     }
 }
 
-init_ui_top_bar :: proc () {
-    root := sl.add_frame({ parent=game.ui.manager.root, size={ 200, 40 }, text="top bar (pass)", pass=true })
+top_bar_init :: proc () {
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ 200, 40 }, text="top bar (pass)", pass=true })
     sl.add_anchor(root, { point=.top })
 }

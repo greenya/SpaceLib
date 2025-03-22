@@ -14,6 +14,7 @@ Manager :: struct {
 
     captured_frame      : ^Frame,
     captured_outside    : bool,
+    auto_hide_frames    : [dynamic] ^Frame,
 
     default_draw_proc   : Draw_Proc,
 }
@@ -33,6 +34,7 @@ create_manager :: proc (default_draw_proc: Draw_Proc = nil) -> ^Manager {
 destroy_manager :: proc (m: ^Manager) {
     destroy_frame_tree(m.root)
     delete(m.mouse_frames)
+    delete(m.auto_hide_frames)
     free(m)
 }
 
@@ -42,6 +44,7 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
     m.lmb_released = m.prev_mouse.lmb_down && !m.mouse.lmb_down
 
     resize(&m.mouse_frames, 0)
+    resize(&m.auto_hide_frames, 0)
 
     m.root.rect = screen_rect
     mark_frame_tree_dirty(m.root)
@@ -62,13 +65,20 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) {
     if m.captured_frame != nil {
         m.captured_frame.pressed = true
         if m.lmb_released {
-            if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
+            if m.captured_frame.hovered {
+                m.captured_frame.click(m.captured_frame);
+                update_frame_tree(m.root, m);
+            }
             m.captured_frame = nil
         }
     }
 
     top_hover_frame := len(m.mouse_frames) > 0 ? slice.last(m.mouse_frames[:]) : nil
     m.mouse_consumed = m.captured_frame != nil || (top_hover_frame != nil && top_hover_frame != m.root)
+
+    if m.lmb_pressed do for f in m.auto_hide_frames {
+        if !f.hidden && !f.hovered do f.hidden = true
+    }
 
     if !m.mouse_consumed && m.lmb_pressed do m.captured_outside = true
     if m.captured_outside && m.lmb_released do m.captured_outside = false
