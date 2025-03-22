@@ -40,9 +40,9 @@ main :: proc () {
     for !rl.WindowShouldClose() {
         screen_w, screen_h := f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight())
         mouse_pos, mouse_lmb_down := rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT)
-        sl.update_manager(game.ui.manager, { 10, 10, screen_w-20, screen_h-20 }, { mouse_pos, mouse_lmb_down })
+        mouse_input_consumed := sl.update_manager(game.ui.manager, { 10, 10, screen_w-20, screen_h-20 }, { mouse_pos, mouse_lmb_down })
 
-        if !game.ui.manager.mouse_consumed {
+        if !mouse_input_consumed {
             fmt.println("mouse for world!", mouse_pos, mouse_lmb_down)
         }
 

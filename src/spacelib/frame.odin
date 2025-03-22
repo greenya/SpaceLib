@@ -25,8 +25,8 @@ Frame :: struct {
     auto_hide   : bool,
 
     text        : string,
-    draw        : Draw_Proc,
-    click       : Click_Proc,
+    draw        : Frame_Proc,
+    click       : Frame_Proc,
     hovered     : bool,
     pressed     : bool,
 }
@@ -51,8 +51,7 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
-Draw_Proc :: proc (f: ^Frame)
-Click_Proc :: proc (f: ^Frame)
+Frame_Proc :: proc (f: ^Frame)
 
 add_frame :: proc (init: Frame) -> ^Frame {
     f := new(Frame)
@@ -93,27 +92,24 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
 
 @(private)
 update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
-    if f.hidden do return
-
     f.hovered = false
     f.pressed = false
+
+    if f.hidden do return
+
     update_rect(f)
 
-    if !f.pass && !m.captured_outside && (m.captured_frame == nil || m.captured_frame == f) {
-        pos := &m.mouse.pos
-        in_rect := f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
-        if in_rect do append(&m.mouse_frames, f)
-    }
+    pos := &m.mouse.pos
+    is_mouse_in_rect := f.rect.x < pos.x && f.rect.x+f.rect.w > pos.x && f.rect.y < pos.y && f.rect.y+f.rect.h > pos.y
+    if is_mouse_in_rect do append(&m.mouse_frames, f)
 
-    if f.auto_hide {
-        append(&m.auto_hide_frames, f)
-    }
+    if f.auto_hide do append(&m.auto_hide_frames, f)
 
     for child in f.children do update_frame_tree(child, m)
 }
 
 @(private)
-draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Draw_Proc = nil) {
+draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Frame_Proc = nil) {
     if f.hidden do return
     draw := f.draw != nil ? f.draw : default_draw_proc
     if draw != nil do draw(f)
