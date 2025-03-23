@@ -14,9 +14,8 @@ Frame :: struct {
     children    : [dynamic] ^Frame,
     hidden      : bool,
 
-    dirty       : bool,
     rect        : Rect,
-
+    rect_dirty  : bool,
     anchors     : [dynamic] Anchor,
     size        : Vec2,
 
@@ -127,15 +126,15 @@ draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Frame_Proc = nil) {
 }
 
 @(private)
-mark_frame_tree_dirty :: proc (f: ^Frame) {
-    f.dirty = true
-    for child in f.children do mark_frame_tree_dirty(child)
+mark_frame_tree_rect_dirty :: proc (f: ^Frame) {
+    f.rect_dirty = true
+    for child in f.children do mark_frame_tree_rect_dirty(child)
 }
 
 @(private)
 update_rect :: proc (f: ^Frame) {
     if len(f.anchors) == 0 do return
-    if !f.dirty do return
+    if !f.rect_dirty do return
 
     result_dir := Rect_Dir { r=f.size.x, b=f.size.y }
     result_pin: Rect_Pin
@@ -315,7 +314,7 @@ update_rect :: proc (f: ^Frame) {
     }
 
     f.rect = { result_dir.l, result_dir.t, result_dir.r - result_dir.l, result_dir.b - result_dir.t }
-    f.dirty = false
+    f.rect_dirty = false
 }
 
 @(private) Rect_Dir :: struct { l, t, r, b: f32 }

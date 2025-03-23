@@ -49,7 +49,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     resize(&m.auto_hide_frames, 0)
 
     m.root.rect = root_rect
-    mark_frame_tree_dirty(m.root)
+    mark_frame_tree_rect_dirty(m.root)
     update_frame_tree(m.root, m)
 
     if !m.captured_outside {
