@@ -26,8 +26,11 @@ Frame :: struct {
 
     text        : string,
     draw        : Frame_Proc,
+    enter       : Frame_Proc,
+    leave       : Frame_Proc,
     click       : Frame_Proc,
     hovered     : bool,
+    prev_hovered: bool,
     pressed     : bool,
 }
 
@@ -90,8 +93,15 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     if f.parent != nil do append(&f.parent.children, f)
 }
 
+updated :: proc (f: ^Frame) {
+    if f.hidden do return
+    update_rect(f)
+    for child in f.children do updated(child)
+}
+
 @(private)
 update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
+    f.prev_hovered = f.hovered
     f.hovered = false
     f.pressed = false
 

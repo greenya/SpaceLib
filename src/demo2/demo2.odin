@@ -10,7 +10,8 @@ Game :: struct {
         manager: ^sl.Manager,
         layer_normal: ^sl.Frame,
         layer_menu: ^sl.Frame,
-        // layer_tooltip: ^sl.Frame,
+        layer_tooltip: ^sl.Frame,
+        mouse_pos_frame: ^sl.Frame,
     }
 }
 
@@ -31,19 +32,30 @@ main :: proc () {
     sl.add_anchor(game.ui.layer_menu, { point=.top_left })
     sl.add_anchor(game.ui.layer_menu, { point=.bottom_right })
 
+    game.ui.layer_tooltip = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    sl.add_anchor(game.ui.layer_tooltip, { point=.top_left })
+    sl.add_anchor(game.ui.layer_tooltip, { point=.bottom_right })
+
+    game.ui.mouse_pos_frame = sl.add_frame({ parent=game.ui.layer_normal, pass=true })
+
     hud_menu_init()
     chat_window_init()
     action_bar_init()
     spell_book_init()
     top_bar_init()
+    tooltip_init()
 
     for !rl.WindowShouldClose() {
         screen_w, screen_h := f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight())
         mouse_pos, mouse_lmb_down := rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT)
+
+        game.ui.mouse_pos_frame.rect.x = mouse_pos.x
+        game.ui.mouse_pos_frame.rect.y = mouse_pos.y
+
         mouse_input_consumed := sl.update_manager(game.ui.manager, { 10, 10, screen_w-20, screen_h-20 }, { mouse_pos, mouse_lmb_down })
 
         if !mouse_input_consumed {
-            fmt.println("mouse for world!", mouse_pos, mouse_lmb_down)
+            fmt.printfln("[world] pos=%v lmb=%v", mouse_pos, mouse_lmb_down)
         }
 
         rl.BeginDrawing()
@@ -75,7 +87,11 @@ hud_menu_init :: proc () {
     for i in 0..<count {
         button := sl.add_frame({ parent=root, size={ button_w, button_h }, click=proc (f: ^sl.Frame) { fmt.println("click! hud menu button") } })
         sl.add_anchor(button, { rel_point=.top_right, rel_frame=prev_rel_frame, offset={ i == 0 ? 0 : gap, 0 } })
-        if i == 0 do button.size = { button_big_w, button_big_h }
+        if i == 0 {
+            button.size = { button_big_w, button_big_h }
+            button.enter = proc (f: ^sl.Frame) { tooltip_show({ point=.bottom_right, rel_point=.bottom_right, offset={-20,-20} }, "big button tooltip") }
+            button.leave = proc (f: ^sl.Frame) { tooltip_hide() }
+        }
         prev_rel_frame = button
     }
 }
@@ -129,7 +145,11 @@ action_bar_init :: proc () {
         sl.add_anchor(menu, { point=.bottom, rel_point=.top, offset={ 0, -10 } })
         action_bar_context_menu = menu
 
-        button := sl.add_frame({ parent=menu, size={ 0, 40 }, text="button", click=proc (f: ^sl.Frame) { fmt.println("click! context button") } })
+        button := sl.add_frame({ parent=menu, size={ 0, 40 }, text="button",
+            click = proc (f: ^sl.Frame) { fmt.println("click! context button") },
+            enter = proc (f: ^sl.Frame) { tooltip_show({ point=.bottom, rel_point=.top, rel_frame=f, offset={ 0, -30 } }, "context menu button tooltip") },
+            leave = proc (f: ^sl.Frame) { tooltip_hide() },
+        })
         sl.add_anchor(button, { point=.top_left, offset={ 10, 20 } })
         sl.add_anchor(button, { point=.top_right, offset={ -10, 20 } })
     }
@@ -142,6 +162,7 @@ action_bar_button_click :: proc (f: ^sl.Frame) {
     if menu.hidden || menu.anchors[0].rel_frame != f {
         menu.hidden = false
         menu.anchors[0].rel_frame = f
+        sl.updated(menu)
     } else {
         menu.hidden = true
         menu.anchors[0].rel_frame = menu.parent
@@ -164,7 +185,11 @@ spell_book_init :: proc () {
 
     prev_rel_frame := root
     for i in 0..<3 {
-        button := sl.add_frame({ parent=root, size={ button_size, button_size }, click=proc (f: ^sl.Frame) { fmt.println("click! spell book category button") } })
+        button := sl.add_frame({ parent=root, size={ button_size, button_size },
+            click = proc (f: ^sl.Frame) { fmt.println("click! spell book category button") },
+            enter = proc (f: ^sl.Frame) { tooltip_show({ point=.top_left, rel_point=.left, rel_frame=game.ui.mouse_pos_frame, offset={ 20, 0 } }, "category button") },
+            leave = proc (f: ^sl.Frame) { tooltip_hide() }
+        })
         if i == 0 {
             sl.add_anchor(button, { rel_point=.top_right, offset={ gap_cat, 0 } })
         } else {
@@ -230,4 +255,25 @@ spell_book_init :: proc () {
 top_bar_init :: proc () {
     root := sl.add_frame({ parent=game.ui.layer_normal, size={ 200, 40 }, text="top bar (pass)", pass=true })
     sl.add_anchor(root, { point=.top })
+}
+
+tooltip_frame: ^sl.Frame
+
+tooltip_init :: proc () {
+    root := sl.add_frame({ parent=game.ui.layer_tooltip, size={ 300, 200 }, text="tooltip", pass=true, hidden=true })
+    sl.add_anchor(root, {})
+    tooltip_frame = root
+}
+
+tooltip_show :: proc (a: sl.Anchor, text: string) {
+    fmt.println("show tooltip:", text)
+    tooltip_frame.hidden = false
+    tooltip_frame.text = text
+    tooltip_frame.anchors[0] = a
+    sl.updated(tooltip_frame)
+}
+
+tooltip_hide :: proc () {
+    fmt.println("hide tooltip")
+    tooltip_frame.hidden = true
 }

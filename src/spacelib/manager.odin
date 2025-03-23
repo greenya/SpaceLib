@@ -9,10 +9,12 @@ Manager :: struct {
     prev_mouse          : Mouse_Input,
     lmb_pressed         : bool,
     lmb_released        : bool,
-    mouse_frames        : [dynamic] ^Frame,
 
     captured_frame      : ^Frame,
     captured_outside    : bool,
+
+    mouse_frames        : [dynamic] ^Frame,
+    entered_frames      : [dynamic] ^Frame,
     auto_hide_frames    : [dynamic] ^Frame,
 
     default_draw_proc   : Frame_Proc,
@@ -33,11 +35,12 @@ create_manager :: proc (default_draw_proc: Frame_Proc = nil) -> ^Manager {
 destroy_manager :: proc (m: ^Manager) {
     destroy_frame_tree(m.root)
     delete(m.mouse_frames)
+    delete(m.entered_frames)
     delete(m.auto_hide_frames)
     free(m)
 }
 
-update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
+update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     m.mouse = mouse
     m.lmb_pressed = !m.prev_mouse.lmb_down && m.mouse.lmb_down
     m.lmb_released = m.prev_mouse.lmb_down && !m.mouse.lmb_down
@@ -45,22 +48,26 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) -> (
     resize(&m.mouse_frames, 0)
     resize(&m.auto_hide_frames, 0)
 
-    m.root.rect = screen_rect
+    m.root.rect = root_rect
     mark_frame_tree_dirty(m.root)
     update_frame_tree(m.root, m)
 
     if !m.captured_outside {
-        frame_clicked: bool
+        new_frame_captured: bool
 
         #reverse for f in m.mouse_frames {
             if f.pass do continue
             if m.captured_frame != nil && m.captured_frame != f do continue
 
-            f.hovered = true
             mouse_input_consumed = true
+            f.hovered = true
+            if !f.prev_hovered {
+                append(&m.entered_frames, f)
+                if f.enter != nil do f.enter(f)
+            }
 
-            if m.lmb_pressed && f.click != nil && !frame_clicked {
-                frame_clicked = true
+            if m.lmb_pressed && f.click != nil && !new_frame_captured {
+                new_frame_captured = true
                 m.captured_frame = f
             }
 
@@ -68,16 +75,21 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) -> (
         }
 
         if m.captured_frame != nil {
-            m.captured_frame.pressed = true
             mouse_input_consumed = true
+            m.captured_frame.pressed = true
 
             if m.lmb_released {
-                if m.captured_frame.hovered {
-                    m.captured_frame.click(m.captured_frame);
-                    update_frame_tree(m.root, m);
-                }
+                if m.captured_frame.hovered do m.captured_frame.click(m.captured_frame)
                 m.captured_frame = nil
             }
+        }
+    }
+
+    for i := len(m.entered_frames) - 1; i >= 0; i -= 1 {
+        f := m.entered_frames[i]
+        if f.prev_hovered && !f.hovered {
+            unordered_remove(&m.entered_frames, i)
+            if f.leave != nil do f.leave(f)
         }
     }
 
@@ -95,6 +107,6 @@ update_manager :: proc (m: ^Manager, screen_rect: Rect, mouse: Mouse_Input) -> (
     return
 }
 
-draw_manager :: proc (manager: ^Manager) {
-    draw_frame_tree(manager.root, manager.default_draw_proc)
+draw_manager :: proc (m: ^Manager) {
+    draw_frame_tree(m.root, m.default_draw_proc)
 }
