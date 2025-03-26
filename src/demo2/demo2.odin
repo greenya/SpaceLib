@@ -138,6 +138,9 @@ action_bar_init :: proc () {
     for i in 0..<button_count {
         button := sl.add_frame({ parent=root, size={ button_size, button_size }, click=action_bar_button_click })
         sl.add_anchor(button, { point=.bottom_left, offset={ gap + (gap+button_size)*f32(i), 0 } })
+
+        button.enter = proc (f: ^sl.Frame) { tooltip_show({ point=.bottom_right, rel_point=.bottom_right, offset={-20,-20} }, "action bar button tooltip") }
+        button.leave = proc (f: ^sl.Frame) { tooltip_hide() }
     }
 
     { // init context menu

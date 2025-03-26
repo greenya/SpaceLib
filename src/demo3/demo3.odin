@@ -48,7 +48,7 @@ main :: proc () {
     rl.CloseWindow()
 }
 
-menu_button_info: map[^sl.Frame] struct {
+menu_button_info: map [^sl.Frame] struct {
     index: int,
     point: sl.Anchor_Point,
     is_rel: bool,
