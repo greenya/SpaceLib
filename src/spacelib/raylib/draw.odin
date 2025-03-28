@@ -1,11 +1,12 @@
 package spacelib_raylib
 
+import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
-import sl "../spacelib"
+import sl ".."
 
 debug_draw_frame :: proc (f: ^sl.Frame) {
-    rect := transmute(rl.Rectangle) f.rect
+    rect := transmute (rl.Rectangle) f.rect
     color := f.parent == nil ? rl.GRAY : rl.WHITE
 
     if rect.width > 0 && rect.height > 0 {
@@ -65,4 +66,53 @@ get_anchor_point_pos :: proc (point: sl.Anchor_Point, using rect: sl.Rect) -> sl
     case .bottom_right  : return { x+w, y+h }
     case                : return {}
     }
+}
+
+draw_text :: proc (text: string, pos: sl.Vec2, font: rl.Font, font_size, font_spacing: f32, tint := rl.WHITE) {
+    rl.DrawTextEx(font, fmt.ctprint(text), pos, font_size, font_spacing, tint)
+}
+
+draw_text_centered :: proc (text: string, pos: sl.Vec2, font: rl.Font, font_size, font_spacing: f32, tint := rl.WHITE) -> (actual_pos: sl.Vec2) {
+    size := rl.MeasureTextEx(font, fmt.ctprint(text), font_size, font_size/10)
+    actual_pos = pos - size/2
+    draw_text(text, actual_pos, font, font_size, font_spacing, tint)
+    return
+}
+
+draw_text_righted :: proc (text: string, pos: sl.Vec2, font: rl.Font, font_size, font_spacing: f32, tint := rl.WHITE) -> (actual_pos: sl.Vec2) {
+    size := rl.MeasureTextEx(font, fmt.ctprint(text), font_size, font_size/10)
+    actual_pos = pos - { size.x, 0 }
+    draw_text(text, actual_pos, font, font_size, font_spacing, tint)
+    return
+}
+
+draw_text_boxed :: proc (text: string, rect: sl.Rect, font: rl.Font, font_size, font_spacing: f32, tint := rl.WHITE) -> (text_rect: sl.Rect) {
+    space_size := sl.Vec2 { font_size/2, font_size }
+
+    rect := transmute (rl.Rectangle) rect
+    pos := sl.Vec2 { rect.x, rect.y }
+    rect_right := rect.x + rect.width
+    rect_bottom := rect.y + rect.height
+
+    loop: for p in strings.split(text, "\n", context.temp_allocator) {
+        for s in strings.split(p, " ", context.temp_allocator) {
+            cs := strings.clone_to_cstring(s, context.temp_allocator)
+            size := rl.MeasureTextEx(font, cs, font_size, font_spacing)
+
+            if pos.x + size.x > rect_right {
+                pos.x = rect.x
+                pos.y += space_size.y
+                if pos.y > rect_bottom do break loop
+            }
+
+            rl.DrawTextEx(font, cs, pos, font_size, font_spacing, tint)
+            pos.x += size.x + space_size.x
+        }
+
+        pos.x = rect.x
+        pos.y += space_size.y
+        if pos.y > rect_bottom do break
+    }
+
+    return { rect.x, rect.y, rect.width, pos.y - rect.y }
 }

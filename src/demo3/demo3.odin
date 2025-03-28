@@ -3,7 +3,7 @@ package demo3
 import "core:fmt"
 import rl "vendor:raylib"
 import sl "../spacelib"
-import sl_rl "../spacelib_raylib"
+import sl_rl "../spacelib/raylib"
 
 Game :: struct {
     ui: struct {
