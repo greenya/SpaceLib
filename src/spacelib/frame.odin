@@ -118,11 +118,11 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 }
 
 @(private)
-draw_frame_tree :: proc (f: ^Frame, default_draw_proc: Frame_Proc = nil) {
+draw_frame_tree :: proc (f: ^Frame, debug_draw_proc: Frame_Proc = nil) {
     if f.hidden do return
-    draw := f.draw != nil ? f.draw : default_draw_proc
-    if draw != nil do draw(f)
-    for child in f.children do draw_frame_tree(child, default_draw_proc)
+    if f.draw != nil do f.draw(f)
+    if debug_draw_proc != nil do debug_draw_proc(f)
+    for child in f.children do draw_frame_tree(child, debug_draw_proc)
 }
 
 @(private)
