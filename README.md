@@ -1,5 +1,7 @@
 # SpaceLib
 
+A retained mode UI library.
+
 - TODO rework into sdl3 (instead of raylib) -- seems like text wrapping is not in raylib
 - TODO support set_clip_children -- by default it is disabled
 - TODO support for Texture frame var and set_texture()

@@ -23,7 +23,7 @@ Frame :: struct {
     solid       : bool,
     auto_hide   : bool,
 
-    text        : string,
+    name        : string,
     draw        : Frame_Proc,
     enter       : Frame_Proc,
     leave       : Frame_Proc,

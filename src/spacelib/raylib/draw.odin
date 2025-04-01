@@ -34,8 +34,8 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
         rl.DrawLineEx({ rect.x, cy }, { rect.x+rect.width, cy }, 1, color)
     }
 
-    if f.text != "" {
-        cstr := strings.clone_to_cstring(f.text, context.temp_allocator)
+    if f.name != "" {
+        cstr := strings.clone_to_cstring(f.name, context.temp_allocator)
         rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2, 10, color)
     }
 }
@@ -73,7 +73,7 @@ draw_text :: proc (text: string, pos: sl.Vec2, font: rl.Font, font_size, font_sp
 }
 
 draw_text_centered :: proc (text: string, pos: sl.Vec2, font: rl.Font, font_size, font_spacing: f32, tint := rl.WHITE) -> (actual_pos: sl.Vec2) {
-    size := rl.MeasureTextEx(font, fmt.ctprint(text), font_size, font_size/10)
+    size := rl.MeasureTextEx(font, fmt.ctprint(text), font_size, font_spacing)
     actual_pos = pos - size/2
     draw_text(text, actual_pos, font, font_size, font_spacing, tint)
     return
