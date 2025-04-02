@@ -6,13 +6,11 @@ import sl ".."
 
 debug_draw_frame :: proc (f: ^sl.Frame) {
     rect := transmute (rl.Rectangle) f.rect
-    color := f.parent == nil ? rl.GRAY : rl.WHITE
+    color := get_debug_color(f)
 
     if rect.width > 0 && rect.height > 0 {
         rl.DrawRectangleLinesEx(rect, 1, color)
-        if f.solid do rl.DrawRectangleRec({ rect.x, rect.y, 20, 20 }, color)
-        if f.pressed do rl.DrawRectangleLinesEx(rect, 6, rl.RED)
-        if f.hovered do rl.DrawRectangleLinesEx(rect, 2, rl.YELLOW)
+        if f.solid do rl.DrawRectangleRec({ rect.x+rect.width-20, rect.y, 20, 20 }, color)
     } else if rect.width > 0 {
         rl.DrawLineEx({ rect.x, rect.y }, { rect.x + rect.width, rect.y }, 3, color)
         rl.DrawLineEx({ rect.x, rect.y-6 }, { rect.x, rect.y+5 }, 3, color)
@@ -43,15 +41,29 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
 }
 
 debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
-    thick :: 2
-    size :: 8
-    color := rl.WHITE
+    thick :: 1
+    size :: 6
+    color := get_debug_color(f)
 
     for a in f.anchors {
         pos := get_anchor_point_pos(a.point, f.rect)
+        rel_frame := a.rel_frame != nil ? a.rel_frame : f.parent
+        rel_pos := get_anchor_point_pos(a.rel_point, rel_frame.rect)
+
+        if abs(pos.x-rel_pos.x) > 0.1 || abs(pos.y-rel_pos.y) > 0.1 {
+            rl.DrawLineEx(rel_pos, pos, thick, color)
+            rl.DrawLineEx(rel_pos + {-size/2,-size/2}, rel_pos + {size/2,size/2}, thick, color)
+            rl.DrawLineEx(rel_pos + {size/2,-size/2}, rel_pos + {-size/2,size/2}, thick, color)
+        }
+
         rl.DrawLineEx(pos + {-size,-size}, pos + {size,size}, thick, color)
         rl.DrawLineEx(pos + {size,-size}, pos + {-size,size}, thick, color)
     }
+}
+
+@(private)
+get_debug_color :: proc (f: ^sl.Frame) -> rl.Color {
+    return f.parent == nil ? rl.GRAY : f.pressed ? rl.RED : f.hovered ? rl.YELLOW : rl.LIGHTGRAY
 }
 
 @(private)
