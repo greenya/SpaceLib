@@ -98,6 +98,15 @@ updated :: proc (f: ^Frame) {
     for child in f.children do updated(child)
 }
 
+show :: proc (f: ^Frame) {
+    f.hidden = false
+    updated(f)
+}
+
+hide :: proc (f: ^Frame) {
+    f.hidden = true
+}
+
 @(private)
 update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     f.prev_hovered = f.hovered
