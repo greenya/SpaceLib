@@ -24,6 +24,24 @@ rect_from_center :: proc (v: Vec2, size: Vec2) -> Rect {
     return { v.x-size.x/2, v.y-size.y/2, size.x, size.y }
 }
 
+rect_add_rect :: proc (r: ^Rect, o: Rect) {
+    if o.x < r.x {
+        r.w += r.x - o.x
+        r.x = o.x
+    }
+
+    if o.y < r.y {
+        r.h += r.y - o.y
+        r.y = o.y
+    }
+
+    dx := o.x+o.w - (r.x+r.w)
+    if dx > 0 do r.w += dx
+
+    dy := o.y+o.h - (r.y+r.h)
+    if dy > 0 do r.h += dy
+}
+
 clamp_pos_to_rect :: proc (v: Vec2, r: Rect) -> Vec2 {
     return { clamp(v.x, r.x, r.x + r.w), clamp(v.y, r.y, r.y + r.h) }
 }

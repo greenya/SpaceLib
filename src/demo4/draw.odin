@@ -9,17 +9,27 @@ draw_rect :: proc (rect: sl.Rect, tint := rl.WHITE) {
     rl.DrawRectangleRec(rect_rl, tint)
 }
 
-draw_text_centered :: proc (text: string, pos: sl.Vec2, font_id: Font_ID, tint := rl.WHITE) {
+draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text_Alignment, tint := rl.WHITE) {
     font := &font_assets[font_id]
-    sl_rl.draw_text_centered(text, pos, font.font, font.size, font.spacing, tint)
+
+    measured_text := sl.measure_text_rect(text, rect, &font.info, align, context.temp_allocator)
+
+    // draw_rect(measured_text.rect, rl.ORANGE)
+    for line in measured_text.lines {
+        // draw_rect(line.rect, rl.YELLOW)
+        for word in line.words {
+            // draw_rect(word.rect, rl.GREEN)
+            sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
+        }
+    }
 }
 
-draw_sprite :: proc (id: Sprite_ID, dest_rect: sl.Rect, tint := rl.WHITE) {
+draw_sprite :: proc (id: Sprite_ID, rect: sl.Rect, tint := rl.WHITE) {
     sprite := &sprite_assets[id]
     if sprite.npatch != {} {
         texture := &texture_assets[sprite.texture_id]
-        dest_rect_rl := transmute (rl.Rectangle) dest_rect
-        rl.DrawTextureNPatch(texture.texture, sprite.npatch, dest_rect_rl, {}, 0, tint)
+        rect_rl := transmute (rl.Rectangle) rect
+        rl.DrawTextureNPatch(texture.texture, sprite.npatch, rect_rl, {}, 0, tint)
     } else {
         panic("Not implemented yet.")
     }
@@ -34,16 +44,15 @@ draw_ui_panel :: proc (f: ^sl.Frame) {
 }
 
 draw_ui_button :: proc (f: ^sl.Frame) {
-    center := sl.rect_center(f.rect)
     color := f.hovered ? colors.six : colors.five
     text := f.name
 
     draw_sprite(.panel_9, f.rect, f.hovered ? colors.four : colors.three)
 
     if f.pressed {
-        draw_text_centered(text, center, .anaheim_bold_32, color)
+        draw_text(text, f.rect, .anaheim_bold_32, {.center,.center}, color)
     } else {
-        draw_text_centered(text, center + {1,1}, .anaheim_bold_32, colors.one)
-        draw_text_centered(text, center - {1,1}, .anaheim_bold_32, color)
+        draw_text(text, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.one)
+        draw_text(text, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, color)
     }
 }

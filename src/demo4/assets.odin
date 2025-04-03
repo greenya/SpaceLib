@@ -2,6 +2,8 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
+import sl "../spacelib"
+import sl_rl "../spacelib/raylib"
 
 colors: struct {
     one,
@@ -43,12 +45,11 @@ Font_ID :: enum {
 
 font_assets: [Font_ID] struct {
     file_id: File_ID,
-    font: rl.Font,
-    size: f32,
-    spacing: f32,
+    font_rl: rl.Font,
+    using info: sl.Font,
 } = {
-    .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, size=64, spacing=-2 },
-    .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, size=32, spacing=0 },
+    .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=0 },
+    .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=0 },
 }
 
 Texture_ID :: enum {
@@ -81,7 +82,9 @@ load_assets :: proc () {
     for &font in font_assets {
         file := &file_assets[font.file_id]
         file_ext := fmt.ctprintf(".%s", file.type)
-        font.font = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.size), nil, 0)
+        font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
+        font.font_ptr = &font.font_rl
+        font.measure_text = sl_rl.measure_text
     }
 
     for &texture in texture_assets {
@@ -95,8 +98,8 @@ load_assets :: proc () {
 
 unload_assets :: proc () {
     for &font in font_assets {
-        rl.UnloadFont(font.font)
-        font.font = {}
+        rl.UnloadFont(font.font_rl)
+        font.font_rl = {}
     }
 
     for &texture in texture_assets {

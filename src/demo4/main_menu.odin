@@ -26,15 +26,16 @@ destroy_main_menu :: proc (menu: ^Main_Menu) {
 // ----------
 
 add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
-    root := sl.add_frame({ parent=parent, solid=true, name="Main Menu", size={480,480}, draw=proc (f: ^sl.Frame) {
+    root := sl.add_frame({ parent=parent, solid=true, name="Main Menu", size={500,500}, draw=proc (f: ^sl.Frame) {
         draw_sprite(.panel_3, f.rect, colors.one)
     } })
     sl.add_anchor(root, { point=.center })
 
     title := sl.add_frame({ parent=root, size={0,120}, draw=proc (f: ^sl.Frame) {
-        draw_text_centered("Demo IV", sl.rect_center(f.rect), .anaheim_bold_64, colors.seven)
+        draw_text("Demo IV", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
     } })
-    sl.add_anchor(title, { point=.top, offset={0,15} })
+    sl.add_anchor(title, { point=.top_left, offset={0,20} })
+    sl.add_anchor(title, { point=.top_right, offset={0,20} })
 
     rel_frame := title
     for name, i in ([] string { "Play", "How To Play", "Info", "Options", "Exit" }) {
@@ -44,12 +45,14 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             case "Exit": sl.show(game.main_menu.exit_dialog)
             }
         } })
-        sl.add_anchor(button, { point=.top, rel_point=.bottom, rel_frame=rel_frame, offset=i > 0 ? {0,10} : {} })
+        sl.add_anchor(button, { point=.top, rel_point=.bottom, rel_frame=rel_frame, offset={0,10} })
         rel_frame = button
     }
 
     return root
 }
+
+// todo: add How To Play section with scroll area
 
 // -----------
 // exit dialog
@@ -63,10 +66,11 @@ add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     dialog := sl.add_frame({ parent=root, size={440,220}, draw=draw_ui_panel })
     sl.add_anchor(dialog, { point=.center })
 
-    title := sl.add_frame({ parent=dialog, size={0,80}, draw=proc (f: ^sl.Frame) {
-        draw_text_centered("Exit the game?", sl.rect_center(f.rect), .anaheim_bold_32, colors.seven)
+    title := sl.add_frame({ parent=dialog, size={0,120}, draw=proc (f: ^sl.Frame) {
+        draw_text("Exit the game?", f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
     } })
-    sl.add_anchor(title, { point=.top, offset={0,15} })
+    sl.add_anchor(title, { point=.top_left, offset={20,0} })
+    sl.add_anchor(title, { point=.top_right, offset={-20,0} })
 
     yes_button := sl.add_frame({ parent=dialog, name="Yes", size={150,50}, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
         game.exit_requested = true

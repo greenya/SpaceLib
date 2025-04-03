@@ -70,6 +70,12 @@ destroy_frame_tree :: proc (f: ^Frame) {
     free(f)
 }
 
+updated :: proc (f: ^Frame) {
+    if f.hidden do return
+    update_rect(f)
+    for child in f.children do updated(child)
+}
+
 add_anchor :: proc (f: ^Frame, init: Anchor) {
     init := init
     if init.point == .none do init.point = .top_left
@@ -90,12 +96,6 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
 
     f.parent = new_parent
     if f.parent != nil do append(&f.parent.children, f)
-}
-
-updated :: proc (f: ^Frame) {
-    if f.hidden do return
-    update_rect(f)
-    for child in f.children do updated(child)
 }
 
 show :: proc (f: ^Frame) {
