@@ -15,14 +15,15 @@ colors: struct {
     seven,
     eight: rl.Color,
 } = {
-    one     = transmute (rl.Color) u32be(0x0d2b45ff),
-    two     = transmute (rl.Color) u32be(0x203c56ff),
-    three   = transmute (rl.Color) u32be(0x544e68ff),
-    four    = transmute (rl.Color) u32be(0x8d697aff),
-    five    = transmute (rl.Color) u32be(0xd08159ff),
-    six     = transmute (rl.Color) u32be(0xffaa5eff),
-    seven   = transmute (rl.Color) u32be(0xffd4a3ff),
-    eight   = transmute (rl.Color) u32be(0xffecd6ff),
+    // https://lospec.com/palette-list/gothic-bit
+    one     = transmute (rl.Color) u32be(0x0e0e12ff),
+    two     = transmute (rl.Color) u32be(0x1a1a24ff),
+    three   = transmute (rl.Color) u32be(0x333346ff),
+    four    = transmute (rl.Color) u32be(0x535373ff),
+    five    = transmute (rl.Color) u32be(0x8080a4ff),
+    six     = transmute (rl.Color) u32be(0xa6a6bfff),
+    seven   = transmute (rl.Color) u32be(0xc1c1d2ff),
+    eight   = transmute (rl.Color) u32be(0xe6e6ecff),
 }
 
 File_ID :: enum {
@@ -49,7 +50,7 @@ font_assets: [Font_ID] struct {
     using info: sl.Font,
 } = {
     .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=0 },
-    .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=0 },
+    .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=-4 },
 }
 
 Texture_ID :: enum {
@@ -64,6 +65,7 @@ texture_assets: [Texture_ID] struct {
 }
 
 Sprite_ID :: enum {
+    border_17,
     panel_0,
     panel_3,
     panel_9,
@@ -73,9 +75,10 @@ sprite_assets: [Sprite_ID] struct {
     texture_id: Texture_ID,
     npatch: rl.NPatchInfo,
 } = {
-    .panel_0 = { npatch={ source={  1,145,48,48}, left=14, top=14, right=14, bottom=14, layout=.NINE_PATCH } },
-    .panel_3 = { npatch={ source={148,145,48,48}, left=14, top=14, right=14, bottom=14, layout=.NINE_PATCH } },
-    .panel_9 = { npatch={ source={442,145,48,48}, left=14, top=14, right=14, bottom=14, layout=.NINE_PATCH } },
+    .border_17  = { npatch={ source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_0    = { npatch={ source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_3    = { npatch={ source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_9    = { npatch={ source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
 }
 
 load_assets :: proc () {

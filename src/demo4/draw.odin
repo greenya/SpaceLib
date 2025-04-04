@@ -4,24 +4,40 @@ import rl "vendor:raylib"
 import sl "../spacelib"
 import sl_rl "../spacelib/raylib"
 
+draw_scissor_start :: proc (rect: sl.Rect) {
+    rl.BeginScissorMode(i32(rect.x), i32(rect.y), i32(rect.w), i32(rect.h))
+}
+
+draw_scissor_end :: proc () {
+    rl.EndScissorMode()
+}
+
 draw_rect :: proc (rect: sl.Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleRec(rect_rl, tint)
 }
 
-draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text_Alignment, tint := rl.WHITE) {
+draw_rect_lines :: proc (rect: sl.Rect, thick := f32(1.0), tint := rl.WHITE) {
+    rect_rl := transmute (rl.Rectangle) rect
+    rl.DrawRectangleLinesEx(rect_rl, thick, tint)
+}
+
+draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text_Alignment, tint := rl.WHITE) -> sl.Rect {
     font := &font_assets[font_id]
 
     measured_text := sl.measure_text_rect(text, rect, &font.info, align, context.temp_allocator)
+    debug := rl.IsKeyDown(.LEFT_CONTROL)
 
-    // draw_rect(measured_text.rect, rl.ORANGE)
+    if debug do draw_rect_lines(rect, tint={255,0,255,120})
+    if debug do draw_rect(measured_text.rect, {255,0,0,40})
     for line in measured_text.lines {
-        // draw_rect(line.rect, rl.YELLOW)
         for word in line.words {
-            // draw_rect(word.rect, rl.GREEN)
+            if debug do draw_rect(word.rect, {0,255,255,80})
             sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
         }
     }
+
+    return measured_text.rect
 }
 
 draw_sprite :: proc (id: Sprite_ID, rect: sl.Rect, tint := rl.WHITE) {
@@ -36,7 +52,11 @@ draw_sprite :: proc (id: Sprite_ID, rect: sl.Rect, tint := rl.WHITE) {
 }
 
 draw_ui_dim_rect :: proc (f: ^sl.Frame) {
-    draw_rect(f.rect, {0,0,0,192})
+    draw_rect(f.rect, {0,0,0,200})
+}
+
+draw_ui_border :: proc (f: ^sl.Frame) {
+    draw_sprite(.border_17, f.rect, colors.three)
 }
 
 draw_ui_panel :: proc (f: ^sl.Frame) {
@@ -44,7 +64,7 @@ draw_ui_panel :: proc (f: ^sl.Frame) {
 }
 
 draw_ui_button :: proc (f: ^sl.Frame) {
-    color := f.hovered ? colors.six : colors.five
+    color := f.hovered ? colors.seven : colors.six
     text := f.name
 
     draw_sprite(.panel_9, f.rect, f.hovered ? colors.four : colors.three)

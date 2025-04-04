@@ -25,8 +25,10 @@ create_game :: proc () {
     game = new(Game)
     game.camera = { zoom=1 }
     game.ui_manager = sl.create_manager(proc (f: ^sl.Frame) {
-        sl_rl.debug_draw_frame_anchors(f)
-        sl_rl.debug_draw_frame(f)
+        if rl.IsKeyDown(.LEFT_CONTROL) {
+            sl_rl.debug_draw_frame_anchors(f)
+            sl_rl.debug_draw_frame(f)
+        }
     })
     game.main_menu = create_main_menu(game.ui_manager.root)
 }
@@ -65,7 +67,7 @@ main :: proc () {
         }
 
         rl.BeginDrawing()
-        rl.ClearBackground(rl.DARKGRAY)
+        rl.ClearBackground(colors.one)
 
         rl.BeginMode2D(game.camera)
         // draw_world()
