@@ -71,7 +71,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
                 m.captured_frame = f
             }
 
-            if f.solid do break
+            break
         }
 
         if m.captured_frame != nil {

@@ -20,7 +20,6 @@ Frame :: struct {
     size        : Vec2,
 
     pass        : bool,
-    solid       : bool,
     auto_hide   : bool,
 
     name        : string,

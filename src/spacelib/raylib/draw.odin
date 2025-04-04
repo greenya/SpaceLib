@@ -10,7 +10,7 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
 
     if rect.width > 0 && rect.height > 0 {
         rl.DrawRectangleLinesEx(rect, 1, color)
-        if f.solid do rl.DrawRectangleRec({ rect.x+rect.width-20, rect.y, 20, 20 }, color)
+        if f.pass do rl.DrawRectangleRec({ rect.x+rect.width-10, rect.y, 10, 10 }, rl.ColorAlpha(color, .2))
     } else if rect.width > 0 {
         rl.DrawLineEx({ rect.x, rect.y }, { rect.x + rect.width, rect.y }, 3, color)
         rl.DrawLineEx({ rect.x, rect.y-6 }, { rect.x, rect.y+5 }, 3, color)
@@ -41,9 +41,9 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
 }
 
 debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
-    thick :: 1
+    thick :: 3
     size :: 6
-    color := get_debug_color(f)
+    color := rl.ColorAlpha(get_debug_color(f), .333)
 
     for a in f.anchors {
         pos := get_anchor_point_pos(a.point, f.rect)

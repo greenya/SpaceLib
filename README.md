@@ -9,3 +9,13 @@ A retained mode UI library.
 
 - [?] support draw layers
 - [?] instead of frame.var, have .text and .texture, which are nil be default; so its possible to have texture+text using single frame
+
+- TODO: add support for logic resolution, e.g. 1280x720
+
+- TODO: add support for inline codes to spacelib/text.odin:
+```c
+This text has <|icon-fire|> icon.
+This text is <|color-fire|>colored<|> differently.
+This text is <|u|>underlined<|>.
+This text is <|b|>bold<|>.
+```
