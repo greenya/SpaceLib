@@ -22,6 +22,7 @@ Frame :: struct {
     pass        : bool,
     auto_hide   : bool,
     check       : bool,
+    radio       : bool,
 
     name        : string,
     draw        : Frame_Proc,
@@ -110,6 +111,10 @@ hide :: proc (f: ^Frame) {
 
 click :: proc (f: ^Frame) {
     if f.check do f.selected = !f.selected
+    if f.radio {
+        if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
+        f.selected = true
+    }
     if f.click != nil do f.click(f)
 }
 

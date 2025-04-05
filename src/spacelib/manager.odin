@@ -66,7 +66,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
                 if f.enter != nil do f.enter(f)
             }
 
-            if m.lmb_pressed && (f.check || f.click != nil) && !new_frame_captured {
+            if m.lmb_pressed && (f.check || f.radio || f.click != nil) && !new_frame_captured {
                 new_frame_captured = true
                 m.captured_frame = f
             }
