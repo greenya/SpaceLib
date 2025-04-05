@@ -4,14 +4,6 @@ import rl "vendor:raylib"
 import sl "../spacelib"
 import sl_rl "../spacelib/raylib"
 
-draw_scissor_start :: proc (rect: sl.Rect) {
-    rl.BeginScissorMode(i32(rect.x), i32(rect.y), i32(rect.w), i32(rect.h))
-}
-
-draw_scissor_end :: proc () {
-    rl.EndScissorMode()
-}
-
 draw_rect :: proc (rect: sl.Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleRec(rect_rl, tint)
@@ -64,15 +56,18 @@ draw_ui_panel :: proc (f: ^sl.Frame) {
 }
 
 draw_ui_button :: proc (f: ^sl.Frame) {
-    color := f.hovered ? colors.seven : colors.six
-    text := f.name
+    if f.selected {
+        draw_sprite(.panel_4, f.rect, colors.five)
+    } else {
+        draw_sprite(.panel_9, f.rect, f.hovered ? colors.four : colors.three)
+    }
 
-    draw_sprite(.panel_9, f.rect, f.hovered ? colors.four : colors.three)
+    text_color := f.hovered ? colors.seven : colors.six
 
     if f.pressed {
-        draw_text(text, f.rect, .anaheim_bold_32, {.center,.center}, color)
+        draw_text(f.name, f.rect, .anaheim_bold_32, {.center,.center}, text_color)
     } else {
-        draw_text(text, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.one)
-        draw_text(text, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, color)
+        draw_text(f.name, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
+        draw_text(f.name, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, text_color)
     }
 }

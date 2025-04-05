@@ -68,6 +68,7 @@ Sprite_ID :: enum {
     border_17,
     panel_0,
     panel_3,
+    panel_4,
     panel_9,
 }
 
@@ -78,6 +79,7 @@ sprite_assets: [Sprite_ID] struct {
     .border_17  = { npatch={ source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
     .panel_0    = { npatch={ source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
     .panel_3    = { npatch={ source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_4    = { npatch={ source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
     .panel_9    = { npatch={ source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
 }
 
