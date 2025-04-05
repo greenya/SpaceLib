@@ -21,6 +21,7 @@ Frame :: struct {
 
     pass        : bool,
     auto_hide   : bool,
+    check       : bool,
 
     name        : string,
     draw        : Frame_Proc,
@@ -30,6 +31,7 @@ Frame :: struct {
     hovered     : bool,
     prev_hovered: bool,
     pressed     : bool,
+    selected    : bool,
 }
 
 Anchor :: struct {
@@ -104,6 +106,11 @@ show :: proc (f: ^Frame) {
 
 hide :: proc (f: ^Frame) {
     f.hidden = true
+}
+
+click :: proc (f: ^Frame) {
+    if f.check do f.selected = !f.selected
+    if f.click != nil do f.click(f)
 }
 
 @(private)
