@@ -5,8 +5,6 @@ import "core:slice"
 
 // todo: maybe add Frame.layout: Layout // enum: { none, column_down, column_up, row_right, row_left }
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
-// todo: maybe add Frame.role: Role // enum: { none, checkbox?, list?, dropdown? }
-
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
 Frame :: struct {
@@ -116,6 +114,17 @@ click :: proc (f: ^Frame) {
         f.selected = true
     }
     if f.click != nil do f.click(f)
+}
+
+find :: proc (f: ^Frame, name: string, recursive := false) -> ^Frame {
+    for child in f.children {
+        if child.name == name do return child
+        if recursive {
+            found_child := find(child, name, true)
+            if found_child != nil do return found_child
+        }
+    }
+    return nil
 }
 
 @(private)
