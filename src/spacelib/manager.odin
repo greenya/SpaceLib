@@ -17,6 +17,8 @@ Manager :: struct {
     entered_frames      : [dynamic] ^Frame,
     auto_hide_frames    : [dynamic] ^Frame,
 
+    scissor_start_proc  : Frame_Proc,
+    scissor_end_proc    : Frame_Proc,
     debug_draw_proc     : Frame_Proc,
 }
 
@@ -25,8 +27,10 @@ Mouse_Input :: struct {
     lmb_down: bool,
 }
 
-create_manager :: proc (debug_draw_proc: Frame_Proc = nil) -> ^Manager {
+create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, debug_draw_proc: Frame_Proc = nil) -> ^Manager {
     m := new(Manager)
+    m.scissor_start_proc = scissor_start_proc
+    m.scissor_end_proc = scissor_end_proc
     m.debug_draw_proc = debug_draw_proc
     m.root = add_frame({ pass=true })
     return m
@@ -108,5 +112,5 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
 }
 
 draw_manager :: proc (m: ^Manager) {
-    draw_frame_tree(m.root, m.debug_draw_proc)
+    draw_frame_tree(m.root, m)
 }
