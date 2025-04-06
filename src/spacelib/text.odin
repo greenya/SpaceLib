@@ -66,9 +66,9 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
         offset_rect_y := f32(-1)
 
         switch align.horizontal {
-        case .top:      // nothing, already aligned
-        case .center:   offset_rect_y = horizontal_empty_space/2
-        case .bottom:   offset_rect_y = horizontal_empty_space
+        case .top: // already aligned
+        case .center: offset_rect_y = horizontal_empty_space/2
+        case .bottom: offset_rect_y = horizontal_empty_space
         }
 
         if offset_rect_y > 0 {
@@ -80,9 +80,8 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
     }
 
     switch align.vertical {
-    case .left:     // nothing, already aligned
-    case .center:   fallthrough
-    case .right:
+    case .left: // already aligned
+    case .center, .right:
         for &line in measure_text.lines {
             offset_rect_x := (rect.w - line.rect.w) / (align.vertical == .center ? 2 : 1)
             line.rect.x += offset_rect_x
