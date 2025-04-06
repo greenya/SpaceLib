@@ -200,8 +200,11 @@ update_rect :: proc (f: ^Frame) {
 @(private)
 update_rect_for_children_with_layout :: proc (f: ^Frame) {
     prev_rect: Rect
+    has_prev_rect: bool
 
-    for child, i in f.children {
+    for child in f.children {
+        if child.hidden do continue
+
         rect := Rect { 0, 0, child.size.x, child.size.y }
         if rect.w == 0 do rect.w = f.layout.size.x
         if rect.w == 0 do rect.w = f.rect.w
@@ -210,20 +213,21 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
 
         #partial switch f.layout.dir {
         case .left:
-            rect.x = i > 0 ? prev_rect.x - rect.w - f.layout.gap : f.rect.x - rect.w - f.layout.pad
+            rect.x = has_prev_rect ? prev_rect.x - rect.w - f.layout.gap : f.rect.x - rect.w - f.layout.pad
             rect.y = f.rect.y
         case .left_and_right, .right:
-            rect.x = i > 0 ? prev_rect.x + prev_rect.w + f.layout.gap : f.rect.x + f.layout.pad
+            rect.x = has_prev_rect ? prev_rect.x + prev_rect.w + f.layout.gap : f.rect.x + f.layout.pad
             rect.y = f.rect.y
         case .up:
             rect.x = f.rect.x
-            rect.y = i > 0 ? prev_rect.y - rect.h - f.layout.gap : f.rect.y - rect.h - f.layout.pad
+            rect.y = has_prev_rect ? prev_rect.y - rect.h - f.layout.gap : f.rect.y - rect.h - f.layout.pad
         case .up_and_down, .down:
             rect.x = f.rect.x
-            rect.y = i > 0 ? prev_rect.y + prev_rect.h + f.layout.gap : f.rect.y + f.layout.pad
+            rect.y = has_prev_rect ? prev_rect.y + prev_rect.h + f.layout.gap : f.rect.y + f.layout.pad
         }
 
         prev_rect = rect
+        has_prev_rect = true
 
         #partial switch f.layout.dir {
         case .left, .left_and_right, .right:
