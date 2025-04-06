@@ -3,20 +3,21 @@ package spacelib
 import "core:fmt"
 import "core:slice"
 
-// todo: maybe add Frame.layout: Layout // enum: { none, column_down, column_up, row_right, row_left }
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
 Frame :: struct {
     parent      : ^Frame,
+
     children    : [dynamic] ^Frame,
-    hidden      : bool,
+    layout      : Layout,
 
     rect        : Rect,
     rect_dirty  : bool,
     anchors     : [dynamic] Anchor,
     size        : Vec2,
 
+    hidden      : bool,
     pass        : bool,
     auto_hide   : bool,
     check       : bool,
@@ -32,6 +33,30 @@ Frame :: struct {
     prev_hovered: bool,
     pressed     : bool,
     selected    : bool,
+}
+
+Layout :: struct {
+    dir     : Layout_Dir,
+    align   : Layout_Alignment,
+    size    : Vec2,
+    gap     : f32,
+    pad     : f32,
+}
+
+Layout_Dir :: enum {
+    none,
+    left,
+    left_and_right,
+    right,
+    up,
+    up_and_down,
+    down,
+}
+
+Layout_Alignment :: enum {
+    start,
+    center,
+    end,
 }
 
 Anchor :: struct {
@@ -167,9 +192,80 @@ mark_frame_tree_rect_dirty :: proc (f: ^Frame) {
 
 @(private)
 update_rect :: proc (f: ^Frame) {
-    if len(f.anchors) == 0 do return
     if !f.rect_dirty do return
+    if len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f.layout.dir != .none do update_rect_for_children_with_layout(f)
+}
 
+@(private)
+update_rect_for_children_with_layout :: proc (f: ^Frame) {
+    prev_rect: Rect
+
+    for child, i in f.children {
+        rect := Rect { 0, 0, child.size.x, child.size.y }
+        if rect.w == 0 do rect.w = f.layout.size.x
+        if rect.w == 0 do rect.w = f.rect.w
+        if rect.h == 0 do rect.h = f.layout.size.y
+        if rect.h == 0 do rect.h = f.rect.h
+
+        #partial switch f.layout.dir {
+        case .left:
+            rect.x = i > 0 ? prev_rect.x - rect.w - f.layout.gap : f.rect.x - rect.w - f.layout.pad
+            rect.y = f.rect.y
+        case .left_and_right, .right:
+            rect.x = i > 0 ? prev_rect.x + prev_rect.w + f.layout.gap : f.rect.x + f.layout.pad
+            rect.y = f.rect.y
+        case .up:
+            rect.x = f.rect.x
+            rect.y = i > 0 ? prev_rect.y - rect.h - f.layout.gap : f.rect.y - rect.h - f.layout.pad
+        case .up_and_down, .down:
+            rect.x = f.rect.x
+            rect.y = i > 0 ? prev_rect.y + prev_rect.h + f.layout.gap : f.rect.y + f.layout.pad
+        }
+
+        prev_rect = rect
+
+        #partial switch f.layout.dir {
+        case .left, .left_and_right, .right:
+            switch f.layout.align {
+            case .start : // already aligned
+            case .center: rect.y += (f.rect.h-rect.h)/2
+            case .end   : rect.h += (f.rect.h-rect.h)
+            }
+        case .up, .up_and_down, .down:
+            switch f.layout.align {
+            case .start : // already aligned
+            case .center: rect.x += (f.rect.w-rect.w)/2
+            case .end   : rect.x += (f.rect.w-rect.w)
+            }
+        }
+
+        child.rect = rect
+        child.rect_dirty = false
+    }
+
+    if len(f.children) > 0 do #no_bounds_check #partial switch f.layout.dir {
+    case .left_and_right:
+        first_child_x1 := f.children[0].rect.x
+        last_child := slice.last(f.children[:])
+        last_child_x2 := last_child.rect.x + last_child.rect.w
+        children_center_x := (first_child_x1 + last_child_x2) / 2
+        frame_center_x := f.rect.x + f.rect.w/2
+        dx := frame_center_x - children_center_x
+        for &child in f.children do child.rect.x += dx
+    case .up_and_down:
+        first_child_y1 := f.children[0].rect.y
+        last_child := slice.last(f.children[:])
+        last_child_y2 := last_child.rect.y + last_child.rect.h
+        children_center_y := (first_child_y1 + last_child_y2) / 2
+        frame_center_y := f.rect.y + f.rect.h/2
+        dy := frame_center_y - children_center_y
+        for &child in f.children do child.rect.y += dy
+    }
+}
+
+@(private)
+update_rect_with_anchors :: proc (f: ^Frame) {
     result_dir := Rect_Dir { r=f.size.x, b=f.size.y }
     result_pin: Rect_Pin
 

@@ -40,6 +40,34 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
     }
 }
 
+debug_draw_frame_layout :: proc (f: ^sl.Frame) {
+    step :: 10
+    size :: 20
+    thick :: 2
+    color := rl.ColorAlpha(get_debug_color(f), .222)
+
+    #partial switch f.layout.dir {
+    case .left, .right:
+        dir := f.layout.dir == .left ? f32(1) : f32(-1)
+        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+            rl.DrawLineEx({ f.rect.x, y }, { f.rect.x+dir*size, y }, thick, color)
+        }
+    case .left_and_right:
+        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+            rl.DrawLineEx({ f.rect.x-size, y }, { f.rect.x+size, y }, thick, color)
+        }
+    case .up, .down:
+        dir := f.layout.dir == .up ? f32(1) : f32(-1)
+        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+            rl.DrawLineEx({ x, f.rect.y }, { x, f.rect.y+dir*size }, thick, color)
+        }
+    case .up_and_down:
+        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+            rl.DrawLineEx({ x, f.rect.y-size }, { x, f.rect.y+size }, thick, color)
+        }
+    }
+}
+
 debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
     thick :: 3
     size :: 6
