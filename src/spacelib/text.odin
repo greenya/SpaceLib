@@ -45,7 +45,7 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
             word_size := font->measure_text(word)
             word_prefix_spacing := len(line.words) > 0 ? font.word_spacing : 0
 
-            if line.rect.w + word_prefix_spacing + word_size.x > rect.w {
+            if line.rect.w + word_prefix_spacing + word_size.x > rect.w && len(line.words) > 0 {
                 line = _append_measured_line(&measure_text.lines, rect, font)
             } else {
                 line.rect.w += word_prefix_spacing
