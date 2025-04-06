@@ -56,10 +56,11 @@ Anchor_Point :: enum {
 
 Frame_Proc :: proc (f: ^Frame)
 
-add_frame :: proc (init: Frame) -> ^Frame {
+add_frame :: proc (parent: ^Frame, init: Frame = {}) -> ^Frame {
     f := new(Frame)
     f^ = init
-    if f.parent != nil do append(&f.parent.children, f)
+    f.parent = parent
+    if parent != nil do append(&parent.children, f)
     return f
 }
 

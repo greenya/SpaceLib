@@ -32,7 +32,7 @@ create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: 
     m.scissor_start_proc = scissor_start_proc
     m.scissor_end_proc = scissor_end_proc
     m.debug_draw_proc = debug_draw_proc
-    m.root = add_frame({ pass=true })
+    m.root = add_frame(nil, { pass=true })
     return m
 }
 
