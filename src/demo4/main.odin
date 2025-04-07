@@ -14,6 +14,7 @@ Game :: struct {
     ui_manager: ^sl.Manager,
     main_menu: ^Main_Menu,
 
+    debug_drawing: bool,
     exit_requested: bool,
 }
 
@@ -26,16 +27,18 @@ create_game :: proc () {
     game.camera = { zoom=1 }
     game.ui_manager = sl.create_manager(
         scissor_start_proc = proc (f: ^sl.Frame) {
+            if game.debug_drawing do return
             rl.BeginScissorMode(i32(f.rect.x), i32(f.rect.y), i32(f.rect.w), i32(f.rect.h))
         },
         scissor_end_proc = proc (f: ^sl.Frame) {
+            if game.debug_drawing do return
             rl.EndScissorMode()
         },
-        debug_draw_proc = proc (f: ^sl.Frame) {
-            if rl.IsKeyDown(.LEFT_CONTROL) {
-                sl_rl.debug_draw_frame_anchors(f)
-                sl_rl.debug_draw_frame(f)
-            }
+        frame_post_draw_proc = proc (f: ^sl.Frame) {
+            if !game.debug_drawing do return
+            sl_rl.debug_draw_frame(f)
+            sl_rl.debug_draw_frame_layout(f)
+            sl_rl.debug_draw_frame_anchors(f)
         },
     )
     game.main_menu = create_main_menu(game.ui_manager.root)
@@ -67,12 +70,12 @@ main :: proc () {
         frame_started()
 
         mouse_input := sl.Mouse_Input { rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT) }
-
         mouse_input_consumed := sl.update_manager(game.ui_manager, game.screen_rect, mouse_input)
-
         if !mouse_input_consumed {
             // fmt.printfln("[world] %v", mouse_input)
         }
+
+        game.debug_drawing = rl.IsKeyDown(.LEFT_CONTROL)
 
         rl.BeginDrawing()
         rl.ClearBackground(colors.one)

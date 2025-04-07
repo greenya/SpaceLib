@@ -18,13 +18,13 @@ draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text
     font := &font_assets[font_id]
 
     measured_text := sl.measure_text_rect(text, rect, &font.info, align, context.temp_allocator)
-    debug := rl.IsKeyDown(.LEFT_CONTROL)
 
-    if debug do draw_rect_lines(rect, tint={255,0,255,120})
-    if debug do draw_rect(measured_text.rect, {255,0,0,40})
+    if game.debug_drawing do draw_rect_lines(rect, tint={255,0,255,120})
+    if game.debug_drawing do draw_rect(measured_text.rect, {255,0,0,40})
+
     for line in measured_text.lines {
         for word in line.words {
-            if debug do draw_rect(word.rect, {0,255,255,80})
+            if game.debug_drawing do draw_rect(word.rect, {0,255,255,80})
             sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
         }
     }
@@ -70,4 +70,25 @@ draw_ui_button :: proc (f: ^sl.Frame) {
         draw_text(f.name, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
         draw_text(f.name, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, text_color)
     }
+}
+
+draw_ui_link :: proc (f: ^sl.Frame) {
+    text_rect := draw_text(f.name, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
+
+    line := text_rect
+    line.y += line.h - 2
+    line.h = 2
+    draw_rect(line, colors.four)
+
+    if f.hovered {
+        icon_l := text_rect
+        icon_l.x -= icon_l.w
+        draw_text("~> ", icon_l, .anaheim_bold_32, {.center,.right}, colors.four)
+        icon_r := text_rect
+        icon_r.x += icon_r.w
+        draw_text(" <~", icon_r, .anaheim_bold_32, {.center,.left}, colors.four)
+    }
+
+    f.size.x = text_rect.w
+    f.size.y = text_rect.h
 }
