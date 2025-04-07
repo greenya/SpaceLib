@@ -1,6 +1,5 @@
 package spacelib
 
-import "core:fmt"
 import "core:slice"
 
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
@@ -24,7 +23,7 @@ Frame :: struct {
     radio       : bool,
     scissor     : bool,
 
-    name        : string,
+    text        : string,
     draw        : Frame_Proc,
     enter       : Frame_Proc,
     leave       : Frame_Proc,
@@ -144,11 +143,11 @@ click :: proc (f: ^Frame) {
     if f.click != nil do f.click(f)
 }
 
-find :: proc (f: ^Frame, name: string, recursive := false) -> ^Frame {
+find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
     for child in f.children {
-        if child.name == name do return child
+        if child.text == text do return child
         if recursive {
-            found_child := find(child, name, true)
+            found_child := find(child, text, true)
             if found_child != nil do return found_child
         }
     }

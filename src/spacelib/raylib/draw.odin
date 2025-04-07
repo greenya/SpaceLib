@@ -35,8 +35,8 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
         }
     }
 
-    if f.name != "" {
-        cstr := strings.clone_to_cstring(f.name, context.temp_allocator)
+    if f.text != "" {
+        cstr := strings.clone_to_cstring(f.text, context.temp_allocator)
         rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2, 10, color)
     }
 
