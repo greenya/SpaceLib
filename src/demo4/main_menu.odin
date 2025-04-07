@@ -24,7 +24,6 @@ create_main_menu :: proc (parent: ^sl.Frame) -> ^Main_Menu {
 
 destroy_main_menu :: proc (menu: ^Main_Menu) {
     free(menu)
-    menu^ = {}
 }
 
 // ----------
@@ -32,7 +31,7 @@ destroy_main_menu :: proc (menu: ^Main_Menu) {
 // ----------
 
 add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
-    root := sl.add_frame(parent, { name="Main Menu", size={720,480}, draw=proc (f: ^sl.Frame) {
+    root := sl.add_frame(parent, { text=#procedure, /*size={720,480},*/ draw=proc (f: ^sl.Frame) {
         draw_sprite(.panel_3, f.rect, colors.two)
     } }, { /*{ point=.center },*/ { point=.top_left, offset={250,120} }, { point=.bottom_right, offset={-250,-120} } })
 
@@ -47,7 +46,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
 
     { // play panel
         menu.tab_panel_play = sl.add_frame(tab_content,
-            { hidden=true, draw=draw_ui_border },
+            { text="play panel", hidden=true, draw=draw_ui_border },
             { { point=.top_left }, { point=.bottom_right } })
 
         sl.add_frame(menu.tab_panel_play, { draw=proc (f: ^sl.Frame) {
@@ -56,14 +55,14 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
         } }, { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } })
 
         sl.add_frame(menu.tab_panel_play,
-            { size={150,50}, name="New Game", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+            { size={150,50}, text="New Game", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
                 fmt.println("new game!")
             } }, { { point=.bottom, offset={0,-20} } })
     }
 
     { // how to play panel
         menu.tab_panel_htp = sl.add_frame(tab_content,
-            { hidden=true, draw=draw_ui_border },
+            { text="how to play panel", hidden=true, draw=draw_ui_border },
             { { point=.top_left }, { point=.bottom_right } })
 
         container := sl.add_frame(menu.tab_panel_htp,
@@ -90,7 +89,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
 
     { // info panel
         menu.tab_panel_info = sl.add_frame(tab_content,
-            { hidden=true, draw=draw_ui_border },
+            { text="info panel", hidden=true, draw=draw_ui_border },
             { { point=.top_left }, { point=.bottom_right } })
 
         container := sl.add_frame(menu.tab_panel_info,
@@ -102,10 +101,10 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
             f.size.y = text_rect.h + 10
         } })
 
-        sl.add_frame(container, { name="Open Jam page", draw=draw_ui_link })
-        sl.add_frame(container, { name="Open Game page", draw=draw_ui_link })
-        sl.add_frame(container, { name="Open Odin page", draw=draw_ui_link })
-        sl.add_frame(container, { name="Open Raylib page", draw=draw_ui_link })
+        sl.add_frame(container, { text="Open Jam page", draw=draw_ui_link })
+        sl.add_frame(container, { text="Open Game page", draw=draw_ui_link })
+        sl.add_frame(container, { text="Open Odin page", draw=draw_ui_link })
+        sl.add_frame(container, { text="Open Raylib page", draw=draw_ui_link })
 
         sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Thank you for playing <3", f.rect, .anaheim_bold_32, {.bottom,.center}, colors.seven)
@@ -118,10 +117,10 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
     })
 
-    for name in ([] string { "Play", "How To Play", "Info", "Exit" }) {
-        button := sl.add_frame(tab_bar, { name=name, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+    for text in ([] string { "Play", "How To Play", "Info", "Exit" }) {
+        button := sl.add_frame(tab_bar, { text=text, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
             menu := game.main_menu
-            switch f.name {
+            switch f.text {
             case "Play"         : main_menu_panel_select_tab_panel(menu.tab_panel_play)
             case "How To Play"  : main_menu_panel_select_tab_panel(menu.tab_panel_htp)
             case "Info"         : main_menu_panel_select_tab_panel(menu.tab_panel_info)
@@ -129,8 +128,8 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
             }
         } })
 
-        if name == "Play" do button.size.y = 65
-        if name != "Exit" do button.radio = true
+        if text == "Play" do button.size.y = 65
+        if text != "Exit" do button.radio = true
     }
 
     sl.add_frame(root, { size={150,40}, draw=proc (f: ^sl.Frame) {
@@ -158,20 +157,21 @@ main_menu_panel_select_tab_panel :: proc (tab_panel_frame: ^sl.Frame, menu: ^Mai
 // -----------
 
 add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
-    root := sl.add_frame(parent, { hidden=true, draw=draw_ui_dim_rect },
+    root := sl.add_frame(parent,
+        { text=#procedure, hidden=true, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
 
     dialog := sl.add_frame(root, { size={440,220}, draw=draw_ui_panel }, { { point=.center } })
 
-    sl.add_frame(dialog, { size={0,120}, draw=proc (f: ^sl.Frame) {
-        draw_text("Exit the game?", f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
+    sl.add_frame(dialog, { text="Exit the game?", size={0,120}, draw=proc (f: ^sl.Frame) {
+        draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
     } }, { { point=.top_left, offset={20,0} }, { point=.top_right, offset={-20,0} } })
 
-    sl.add_frame(dialog, { size={150,50}, name="Yes", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+    sl.add_frame(dialog, { size={150,50}, text="Yes", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
         game.exit_requested = true
     } }, { { point=.bottom, offset={-90,-30} } })
 
-    sl.add_frame(dialog, { size={150,50}, name="No", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+    sl.add_frame(dialog, { size={150,50}, text="No", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
         sl.hide(game.main_menu.exit_dialog)
     } }, { { point=.bottom, offset={90,-30} } })
 

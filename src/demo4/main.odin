@@ -21,6 +21,7 @@ Game :: struct {
 game: ^Game
 
 create_game :: proc () {
+    fmt.println(#procedure)
     assert(game == nil)
 
     game = new(Game)
@@ -42,11 +43,18 @@ create_game :: proc () {
         },
     )
     game.main_menu = create_main_menu(game.ui_manager.root)
+
+    fmt.println("-------- ui frame tree --------")
+    sl.print_frame_tree(game.ui_manager.root)
+    fmt.println("-------------------------------")
 }
 
 destroy_game :: proc () {
+    fmt.println(#procedure)
+
     destroy_main_menu(game.main_menu)
     sl.destroy_manager(game.ui_manager)
+
     free(game)
     game = nil
 }

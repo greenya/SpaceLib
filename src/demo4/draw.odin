@@ -65,15 +65,15 @@ draw_ui_button :: proc (f: ^sl.Frame) {
     text_color := f.hovered ? colors.seven : colors.six
 
     if f.pressed {
-        draw_text(f.name, f.rect, .anaheim_bold_32, {.center,.center}, text_color)
+        draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, text_color)
     } else {
-        draw_text(f.name, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
-        draw_text(f.name, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, text_color)
+        draw_text(f.text, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
+        draw_text(f.text, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, text_color)
     }
 }
 
 draw_ui_link :: proc (f: ^sl.Frame) {
-    text_rect := draw_text(f.name, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
+    text_rect := draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
 
     line := text_rect
     line.y += line.h - 2
