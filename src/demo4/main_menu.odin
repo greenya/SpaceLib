@@ -158,7 +158,7 @@ main_menu_panel_select_tab_panel :: proc (tab_panel_frame: ^sl.Frame, menu: ^Mai
 
 add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     root := sl.add_frame(parent,
-        { text=#procedure, hidden=true, draw=draw_ui_dim_rect },
+        { text=#procedure, hidden=true, modal=true, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
 
     dialog := sl.add_frame(root, { size={440,220}, draw=draw_ui_panel }, { { point=.center } })

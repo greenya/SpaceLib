@@ -138,7 +138,7 @@ hide :: proc (f: ^Frame) {
 }
 
 wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
-    if f.wheel_block || f.wheel != nil do consumed = true
+    if f.modal || f.wheel != nil do consumed = true
     if f.wheel != nil do f.wheel(f, dy)
     return
 }

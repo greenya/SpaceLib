@@ -12,6 +12,7 @@ print_frame_tree :: proc (f: ^Frame, depth := 0) {
     strings.write_rune(&sb, '{')
 
     if f.text != "" do fmt.sbprintf(&sb, " text=\"%s\"", f.text)
+    if f.modal do fmt.sbprint(&sb, " modal=true")
     if f.scissor do fmt.sbprint(&sb, " scissor=true")
     if f.layout.dir != .none do fmt.sbprintf(&sb, " layout.dir=%v", f.layout.dir)
 
