@@ -22,12 +22,14 @@ Frame :: struct {
     check       : bool,
     radio       : bool,
     scissor     : bool,
+    wheel_block : bool,
 
     text        : string,
     draw        : Frame_Proc,
     enter       : Frame_Proc,
     leave       : Frame_Proc,
     click       : Frame_Proc,
+    wheel       : Frame_Wheel_Proc,
     hovered     : bool,
     prev_hovered: bool,
     pressed     : bool,
@@ -79,6 +81,7 @@ Anchor_Point :: enum {
 }
 
 Frame_Proc :: proc (f: ^Frame)
+Frame_Wheel_Proc :: proc (f: ^Frame, dy: f32)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: [] Anchor = {}) -> ^Frame {
     f := new(Frame)
@@ -132,6 +135,12 @@ show :: proc (f: ^Frame) {
 
 hide :: proc (f: ^Frame) {
     f.hidden = true
+}
+
+wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+    if f.wheel_block || f.wheel != nil do consumed = true
+    if f.wheel != nil do f.wheel(f, dy)
+    return
 }
 
 click :: proc (f: ^Frame) {

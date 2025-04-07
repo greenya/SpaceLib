@@ -24,6 +24,7 @@ Manager :: struct {
 
 Mouse_Input :: struct {
     pos: Vec2,
+    wheel_dy: f32,
     lmb_down: bool,
 }
 
@@ -86,6 +87,12 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
                 if m.captured_frame.hovered do click(m.captured_frame)
                 m.captured_frame = nil
             }
+        }
+
+        if mouse.wheel_dy != 0 do #reverse for f in m.mouse_frames {
+            if f.pass do continue
+            consumed := wheel(f, mouse.wheel_dy)
+            if consumed do break
         }
     }
 
