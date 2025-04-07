@@ -41,7 +41,6 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
         line := _append_measured_line(&measure_text.lines, rect, font)
 
         for word in strings.split(para, " ", context.temp_allocator) {
-            word_cstr := strings.clone_to_cstring(word, context.temp_allocator)
             word_size := font->measure_text(word)
             word_prefix_spacing := len(line.words) > 0 ? font.word_spacing : 0
 

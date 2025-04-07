@@ -2,7 +2,6 @@ package demo4
 
 import "core:fmt"
 import sl "../spacelib"
-import sl_rl "../spacelib/raylib"
 
 Main_Menu :: struct {
     menu_panel: ^sl.Frame,
