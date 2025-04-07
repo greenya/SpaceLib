@@ -5,6 +5,9 @@ import "core:slice"
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
+// todo: add Frame.order (int), when add_frame(), check if last child has same order, if not -- sort
+// todo: add Frame.layout.auto_height (bool), when true, updates Frame.size.y after drawing -- use last child y2+layout.pad
+
 Frame :: struct {
     parent      : ^Frame,
 
@@ -18,11 +21,11 @@ Frame :: struct {
 
     hidden      : bool,
     pass        : bool,
-    auto_hide   : bool,
+    modal       : bool,
+    scissor     : bool,
     check       : bool,
     radio       : bool,
-    scissor     : bool,
-    wheel_block : bool,
+    auto_hide   : bool,
 
     text        : string,
     draw        : Frame_Proc,
@@ -39,6 +42,7 @@ Frame :: struct {
 Layout :: struct {
     dir     : Layout_Dir,
     align   : Layout_Alignment,
+    scroll  : Layout_Scroll,
     size    : Vec2,
     gap     : f32,
     pad     : f32,
@@ -58,6 +62,13 @@ Layout_Alignment :: enum {
     start,
     center,
     end,
+}
+
+Layout_Scroll :: struct {
+    step        : f32,
+    offset      : f32,
+    offset_min  : f32,
+    offset_max  : f32,
 }
 
 Anchor :: struct {
@@ -138,9 +149,10 @@ hide :: proc (f: ^Frame) {
 }
 
 wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
-    if f.modal || f.wheel != nil do consumed = true
+    has_scroll := layout_has_scroll(f)
+    if has_scroll do f.layout.scroll.offset -= dy * f.layout.scroll.step
     if f.wheel != nil do f.wheel(f, dy)
-    return
+    return has_scroll || f.wheel != nil || f.modal
 }
 
 click :: proc (f: ^Frame) {
@@ -161,6 +173,10 @@ find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
         }
     }
     return nil
+}
+
+layout_has_scroll :: proc (f: ^Frame) -> bool {
+    return f.layout.dir != .none && f.layout.scroll.step != 0
 }
 
 @(private)
@@ -213,25 +229,23 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     for child in f.children {
         if child.hidden do continue
 
-        rect := Rect { 0, 0, child.size.x, child.size.y }
-        if rect.w == 0 do rect.w = f.layout.size.x
-        if rect.w == 0 do rect.w = f.rect.w
-        if rect.h == 0 do rect.h = f.layout.size.y
-        if rect.h == 0 do rect.h = f.rect.h
+        rect := Rect {}
+        rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w
+        rect.h = child.size.y != 0 ? child.size.y : f.layout.size.y != 0 ? f.layout.size.y : f.rect.h
 
         #partial switch f.layout.dir {
         case .left:
-            rect.x = has_prev_rect ? prev_rect.x - rect.w - f.layout.gap : f.rect.x - rect.w - f.layout.pad
+            rect.x = has_prev_rect ? prev_rect.x-rect.w-f.layout.gap : f.rect.x+f.rect.w-rect.w-f.layout.pad
             rect.y = f.rect.y
         case .left_and_right, .right:
-            rect.x = has_prev_rect ? prev_rect.x + prev_rect.w + f.layout.gap : f.rect.x + f.layout.pad
+            rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+f.layout.gap : f.rect.x+f.layout.pad
             rect.y = f.rect.y
         case .up:
             rect.x = f.rect.x
-            rect.y = has_prev_rect ? prev_rect.y - rect.h - f.layout.gap : f.rect.y - rect.h - f.layout.pad
+            rect.y = has_prev_rect ? prev_rect.y-rect.h-f.layout.gap : f.rect.y+f.rect.h-rect.h-f.layout.pad
         case .up_and_down, .down:
             rect.x = f.rect.x
-            rect.y = has_prev_rect ? prev_rect.y + prev_rect.h + f.layout.gap : f.rect.y + f.layout.pad
+            rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+f.layout.gap : f.rect.y+f.layout.pad
         }
 
         prev_rect = rect
@@ -256,23 +270,66 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         child.rect_dirty = false
     }
 
-    if len(f.children) > 0 do #no_bounds_check #partial switch f.layout.dir {
-    case .left_and_right:
-        first_child_x1 := f.children[0].rect.x
+    if len(f.children) > 0 {
+        first_child := f.children[0]
         last_child := slice.last(f.children[:])
-        last_child_x2 := last_child.rect.x + last_child.rect.w
-        children_center_x := (first_child_x1 + last_child_x2) / 2
-        frame_center_x := f.rect.x + f.rect.w/2
-        dx := frame_center_x - children_center_x
-        for &child in f.children do child.rect.x += dx
-    case .up_and_down:
-        first_child_y1 := f.children[0].rect.y
-        last_child := slice.last(f.children[:])
-        last_child_y2 := last_child.rect.y + last_child.rect.h
-        children_center_y := (first_child_y1 + last_child_y2) / 2
-        frame_center_y := f.rect.y + f.rect.h/2
-        dy := frame_center_y - children_center_y
-        for &child in f.children do child.rect.y += dy
+
+        #partial switch f.layout.dir {
+        case .left_and_right:
+            first_child_x1 := first_child.rect.x
+            last_child_x2 := last_child.rect.x + last_child.rect.w
+            children_center_x := (first_child_x1 + last_child_x2) / 2
+            frame_center_x := f.rect.x + f.rect.w/2
+            dx := frame_center_x - children_center_x
+            for &child in f.children do child.rect.x += dx
+        case .up_and_down:
+            first_child_y1 := first_child.rect.y
+            last_child_y2 := last_child.rect.y + last_child.rect.h
+            children_center_y := (first_child_y1 + last_child_y2) / 2
+            frame_center_y := f.rect.y + f.rect.h/2
+            dy := frame_center_y - children_center_y
+            for &child in f.children do child.rect.y += dy
+        }
+
+        if layout_has_scroll(f) {
+            scroll := &f.layout.scroll
+            is_scroll_vertical := f.layout.dir == .down || f.layout.dir == .up || f.layout.dir == .up_and_down
+
+            if is_scroll_vertical {
+                min_y1: f32
+                max_y2: f32
+                #partial switch f.layout.dir {
+                case .up: // children grow up
+                    min_y1 = last_child.rect.y
+                    max_y2 = first_child.rect.y + first_child.rect.h
+                case .down, .up_and_down: // children grow down
+                    min_y1 = first_child.rect.y
+                    max_y2 = last_child.rect.y + last_child.rect.h
+                }
+                scroll.offset_min = min_y1 - f.rect.y - f.layout.pad
+                scroll.offset_max = max_y2 - f.rect.y - f.rect.h + f.layout.pad
+            } else {
+                min_x1: f32
+                max_x2: f32
+                #partial switch f.layout.dir {
+                case .left: // children grow left
+                    min_x1 = last_child.rect.x
+                    max_x2 = first_child.rect.x + first_child.rect.w
+                case .right, .left_and_right: // children grow right
+                    min_x1 = first_child.rect.x
+                    max_x2 = last_child.rect.x + last_child.rect.w
+                }
+                scroll.offset_min = min_x1 - f.rect.x - f.layout.pad
+                scroll.offset_max = max_x2 - f.rect.x - f.rect.w + f.layout.pad
+            }
+
+            scroll.offset_min = min(0, scroll.offset_min)
+            scroll.offset_max = max(0, scroll.offset_max)
+            scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
+
+            if is_scroll_vertical   do for &child in f.children do child.rect.y -= scroll.offset
+            else                    do for &child in f.children do child.rect.x -= scroll.offset
+        }
     }
 }
 

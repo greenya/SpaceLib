@@ -54,23 +54,33 @@ debug_draw_frame_layout :: proc (f: ^sl.Frame) {
     color := rl.ColorAlpha(get_debug_color(f), .222)
 
     #partial switch f.layout.dir {
-    case .left, .right:
-        dir := f.layout.dir == .left ? f32(1) : f32(-1)
+    case .left:
+        rect_x2 := f.rect.x + f.rect.w
         for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            rl.DrawLineEx({ f.rect.x, y }, { f.rect.x+dir*size, y }, thick, color)
+            rl.DrawLineEx({ rect_x2, y }, { rect_x2+size, y }, thick, color)
+        }
+    case .right:
+        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+            rl.DrawLineEx({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
         }
     case .left_and_right:
+        rect_cx := f.rect.x + f.rect.w/2
         for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            rl.DrawLineEx({ f.rect.x-size, y }, { f.rect.x+size, y }, thick, color)
+            rl.DrawLineEx({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
         }
-    case .up, .down:
-        dir := f.layout.dir == .up ? f32(1) : f32(-1)
+    case .up:
+        rect_y2 := f.rect.y + f.rect.h
         for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            rl.DrawLineEx({ x, f.rect.y }, { x, f.rect.y+dir*size }, thick, color)
+            rl.DrawLineEx({ x, rect_y2 }, { x, rect_y2+size }, thick, color)
+        }
+    case .down:
+        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+            rl.DrawLineEx({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
         }
     case .up_and_down:
+        rect_cy := f.rect.y + f.rect.h/2
         for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            rl.DrawLineEx({ x, f.rect.y-size }, { x, f.rect.y+size }, thick, color)
+            rl.DrawLineEx({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
         }
     }
 }
