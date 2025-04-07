@@ -19,7 +19,7 @@ Manager :: struct {
 
     scissor_start_proc  : Frame_Proc,
     scissor_end_proc    : Frame_Proc,
-    debug_draw_proc     : Frame_Proc,
+    frame_post_draw_proc: Frame_Proc,
 }
 
 Mouse_Input :: struct {
@@ -27,11 +27,11 @@ Mouse_Input :: struct {
     lmb_down: bool,
 }
 
-create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, debug_draw_proc: Frame_Proc = nil) -> ^Manager {
+create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, frame_post_draw_proc: Frame_Proc = nil) -> ^Manager {
     m := new(Manager)
     m.scissor_start_proc = scissor_start_proc
     m.scissor_end_proc = scissor_end_proc
-    m.debug_draw_proc = debug_draw_proc
+    m.frame_post_draw_proc = frame_post_draw_proc
     m.root = add_frame(nil, { pass=true })
     return m
 }

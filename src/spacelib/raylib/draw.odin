@@ -1,5 +1,6 @@
 package spacelib_raylib
 
+import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import sl ".."
@@ -37,6 +38,12 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
     if f.name != "" {
         cstr := strings.clone_to_cstring(f.name, context.temp_allocator)
         rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2, 10, color)
+    }
+
+    if f.hovered {
+        cstr := fmt.ctprintf("%v x %v", f.rect.w, f.rect.h)
+        cstr_w := rl.MeasureText(cstr, 10)
+        rl.DrawText(cstr, i32(rect.x + rect.width) - cstr_w - 4, i32(rect.y) + 2, 10, color)
     }
 }
 
