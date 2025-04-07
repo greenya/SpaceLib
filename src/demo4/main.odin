@@ -11,8 +11,10 @@ Game :: struct {
     screen_rect: sl.Rect,
     camera: rl.Camera2D,
 
-    ui_manager: ^sl.Manager,
-    main_menu: ^Main_Menu,
+    ui: struct {
+        manager: ^sl.Manager,
+        main_menu: ^Main_Menu,
+    },
 
     debug_drawing: bool,
     exit_requested: bool,
@@ -26,7 +28,8 @@ create_game :: proc () {
 
     game = new(Game)
     game.camera = { zoom=1 }
-    game.ui_manager = sl.create_manager(
+
+    game.ui.manager = sl.create_manager(
         scissor_start_proc = proc (f: ^sl.Frame) {
             if game.debug_drawing do return
             rl.BeginScissorMode(i32(f.rect.x), i32(f.rect.y), i32(f.rect.w), i32(f.rect.h))
@@ -42,24 +45,26 @@ create_game :: proc () {
             sl_rl.debug_draw_frame_anchors(f)
         },
     )
-    game.main_menu = create_main_menu(game.ui_manager.root)
+
+    create_main_menu()
 
     fmt.println("-------- ui frame tree --------")
-    sl.print_frame_tree(game.ui_manager.root)
+    sl.print_frame_tree(game.ui.manager.root)
     fmt.println("-------------------------------")
 }
 
 destroy_game :: proc () {
     fmt.println(#procedure)
 
-    destroy_main_menu(game.main_menu)
-    sl.destroy_manager(game.ui_manager)
+    destroy_main_menu()
+    sl.destroy_manager(game.ui.manager)
 
     free(game)
     game = nil
 }
 
-frame_started :: proc () {
+game_tick :: proc () {
+    free_all(context.temp_allocator)
     game.time = f32(rl.GetTime())
     game.frame_time = rl.GetFrameTime()
     game.screen_rect = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) }
@@ -74,11 +79,10 @@ main :: proc () {
     create_game()
 
     for !rl.WindowShouldClose() && !game.exit_requested {
-        free_all(context.temp_allocator)
-        frame_started()
+        game_tick()
 
-        mouse_input := sl.Mouse_Input { rl.GetMousePosition(), rl.IsMouseButtonDown(.LEFT) }
-        mouse_input_consumed := sl.update_manager(game.ui_manager, game.screen_rect, mouse_input)
+        mouse_input := sl.Mouse_Input { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) }
+        mouse_input_consumed := sl.update_manager(game.ui.manager, game.screen_rect, mouse_input)
         if !mouse_input_consumed {
             // fmt.printfln("[world] %v", mouse_input)
         }
@@ -92,7 +96,7 @@ main :: proc () {
         // draw_world()
         rl.EndMode2D()
 
-        sl.draw_manager(game.ui_manager)
+        sl.draw_manager(game.ui.manager)
         // rl.DrawFPS(10, 10)
         rl.EndDrawing()
     }

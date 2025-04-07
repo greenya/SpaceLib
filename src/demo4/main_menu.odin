@@ -15,22 +15,38 @@ Main_Menu :: struct {
     exit_dialog: ^sl.Frame,
 }
 
-create_main_menu :: proc (parent: ^sl.Frame) -> ^Main_Menu {
-    menu := new(Main_Menu)
-    menu.menu_panel = add_main_menu_panel(parent, menu)
-    menu.exit_dialog = add_main_menu_exit_dialog(parent)
-    return menu
+create_main_menu :: proc () {
+    fmt.println(#procedure)
+    assert(game.ui.main_menu == nil)
+
+    game.ui.main_menu = new(Main_Menu)
+    game.ui.main_menu.menu_panel = add_main_menu_panel(game.ui.manager.root)
+    game.ui.main_menu.exit_dialog = add_main_menu_exit_dialog(game.ui.manager.root)
+
+    // !! DEBUG -- test scroll dir
+    // cont := sl.add_frame(game.ui.manager.root, {
+    //     rect    = {50,50,150,150},
+    //     scissor = true,
+    //     layout  = { dir=.right, align=.center, pad=20, gap=5, size={50,50}, scroll={ step=20 } },
+    //     draw    = draw_ui_border
+    // })
+    // for i in 0..<5 do sl.add_frame(cont, { draw=draw_ui_border })
 }
 
-destroy_main_menu :: proc (menu: ^Main_Menu) {
-    free(menu)
+destroy_main_menu :: proc () {
+    fmt.println(#procedure)
+
+    free(game.ui.main_menu)
+    game.ui.main_menu = nil
 }
 
 // ----------
 // menu panel
 // ----------
 
-add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
+add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
+    menu := game.ui.main_menu
+
     root := sl.add_frame(parent, { text=#procedure, /*size={720,480},*/ draw=proc (f: ^sl.Frame) {
         draw_sprite(.panel_3, f.rect, colors.two)
     } }, { /*{ point=.center },*/ { point=.top_left, offset={250,120} }, { point=.bottom_right, offset={-250,-120} } })
@@ -66,7 +82,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
             { { point=.top_left }, { point=.bottom_right } })
 
         container := sl.add_frame(menu.tab_panel_htp,
-            { scissor=true, layout={ dir=.down } },
+            { scissor=true, layout={ dir=.down, scroll={ step=20 } } },
             { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-20,-20} } })
 
         sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
@@ -119,7 +135,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
 
     for text in ([] string { "Play", "How To Play", "Info", "Exit" }) {
         button := sl.add_frame(tab_bar, { text=text, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
-            menu := game.main_menu
+            menu := game.ui.main_menu
             switch f.text {
             case "Play"         : main_menu_panel_select_tab_panel(menu.tab_panel_play)
             case "How To Play"  : main_menu_panel_select_tab_panel(menu.tab_panel_htp)
@@ -137,19 +153,16 @@ add_main_menu_panel :: proc (parent: ^sl.Frame, menu: ^Main_Menu) -> ^sl.Frame {
     } }, { { point=.bottom_right, offset={-25,-15} } })
 
     // select default tab
-    sl.find(tab_bar, "Play").selected = true
-    main_menu_panel_select_tab_panel(menu.tab_panel_play, menu)
+    sl.click(sl.find(tab_bar, "How To Play"))
 
     return root
 }
 
-main_menu_panel_select_tab_panel :: proc (tab_panel_frame: ^sl.Frame, menu: ^Main_Menu = nil) {
-    menu := menu
-    if menu == nil do menu = game.main_menu
-
+main_menu_panel_select_tab_panel :: proc (tab_panel_frame: ^sl.Frame) {
+    menu := game.ui.main_menu
     if menu.current_tab_panel != nil do sl.hide(menu.current_tab_panel)
     menu.current_tab_panel = tab_panel_frame
-    sl.show(tab_panel_frame)
+    sl.show(menu.current_tab_panel)
 }
 
 // -----------
@@ -172,7 +185,7 @@ add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     } }, { { point=.bottom, offset={-90,-30} } })
 
     sl.add_frame(dialog, { size={150,50}, text="No", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
-        sl.hide(game.main_menu.exit_dialog)
+        sl.hide(game.ui.main_menu.exit_dialog)
     } }, { { point=.bottom, offset={90,-30} } })
 
     return root
