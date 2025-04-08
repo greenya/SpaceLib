@@ -4,6 +4,7 @@ import "core:fmt"
 import rl "vendor:raylib"
 import sl "../spacelib"
 import sl_rl "../spacelib/raylib"
+import sl_ta "../spacelib/tracking_allocator"
 
 Game :: struct {
     time: f32,
@@ -48,7 +49,7 @@ create_game :: proc () {
 
     create_main_menu()
 
-    fmt.println("-------- ui frame tree --------")
+    fmt.println("-------- UI frame tree --------")
     sl.print_frame_tree(game.ui.manager.root)
     fmt.println("-------------------------------")
 }
@@ -72,6 +73,9 @@ game_tick :: proc () {
 }
 
 main :: proc () {
+    context.allocator = sl_ta.init()
+    defer sl_ta.print_report()
+
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 4")
 
