@@ -36,16 +36,17 @@ Text_Alignment :: struct {
 
 measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_Alignment {.center,.center}, allocator := context.allocator) -> ^Measured_Text {
     measure_text := new(Measured_Text, allocator)
+    measure_text.lines.allocator = allocator
 
     loop: for para in strings.split(text, "\n", context.temp_allocator) {
-        line := _append_measured_line(&measure_text.lines, rect, font)
+        line := _append_measured_line(&measure_text.lines, rect, font, allocator)
 
         for word in strings.split(para, " ", context.temp_allocator) {
             word_size := font->measure_text(word)
             word_prefix_spacing := len(line.words) > 0 ? font.word_spacing : 0
 
             if line.rect.w + word_prefix_spacing + word_size.x > rect.w && len(line.words) > 0 {
-                line = _append_measured_line(&measure_text.lines, rect, font)
+                line = _append_measured_line(&measure_text.lines, rect, font, allocator)
             } else {
                 line.rect.w += word_prefix_spacing
             }
@@ -106,7 +107,7 @@ destroy_measured_text :: proc (mt: ^Measured_Text) {
 }
 
 @(private)
-_append_measured_line :: proc (lines: ^[dynamic] Measured_Line, rect: Rect, font: ^Font) -> ^Measured_Line {
+_append_measured_line :: proc (lines: ^[dynamic] Measured_Line, rect: Rect, font: ^Font, allocator := context.allocator) -> ^Measured_Line {
     rect_y := rect.y
 
     count := len(lines)
@@ -115,6 +116,9 @@ _append_measured_line :: proc (lines: ^[dynamic] Measured_Line, rect: Rect, font
         rect_y = last_line_rect.y + last_line_rect.h + font.line_spacing
     }
 
-    append(lines, Measured_Line { rect={rect.x,rect_y,0,font.height} })
+    line_init := Measured_Line { rect={rect.x,rect_y,0,font.height} }
+    line_init.words.allocator = allocator
+    append(lines, line_init)
+
     return slice.last_ptr(lines[:])
 }
