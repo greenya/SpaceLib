@@ -47,7 +47,7 @@ Font_ID :: enum {
 font_assets: [Font_ID] struct {
     file_id: File_ID,
     font_rl: rl.Font,
-    using info: sl.Font,
+    using font_sl: sl.Font,
 } = {
     .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=0 },
     .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=-4 },

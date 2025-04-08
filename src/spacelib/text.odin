@@ -35,18 +35,18 @@ Text_Alignment :: struct {
 }
 
 measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_Alignment {.center,.center}, allocator := context.allocator) -> ^Measured_Text {
-    measure_text := new(Measured_Text, allocator)
-    measure_text.lines.allocator = allocator
+    measured_text := new(Measured_Text, allocator)
+    measured_text.lines.allocator = allocator
 
     loop: for para in strings.split(text, "\n", context.temp_allocator) {
-        line := _append_measured_line(&measure_text.lines, rect, font, allocator)
+        line := _append_measured_line(&measured_text.lines, rect, font, allocator)
 
         for word in strings.split(para, " ", context.temp_allocator) {
             word_size := font->measure_text(word)
             word_prefix_spacing := len(line.words) > 0 ? font.word_spacing : 0
 
             if line.rect.w + word_prefix_spacing + word_size.x > rect.w && len(line.words) > 0 {
-                line = _append_measured_line(&measure_text.lines, rect, font, allocator)
+                line = _append_measured_line(&measured_text.lines, rect, font, allocator)
             } else {
                 line.rect.w += word_prefix_spacing
             }
@@ -56,9 +56,9 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
         }
     }
 
-    last_line := slice.last_ptr(measure_text.lines[:])
+    last_line := slice.last_ptr(measured_text.lines[:])
     if last_line == nil {
-        return measure_text
+        return measured_text
     }
 
     horizontal_empty_space := rect.y + rect.h - (last_line.rect.y + last_line.rect.h)
@@ -72,7 +72,7 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
         }
 
         if offset_rect_y > 0 {
-            for &line in measure_text.lines {
+            for &line in measured_text.lines {
                 line.rect.y += offset_rect_y
                 for &word in line.words do word.rect.y += offset_rect_y
             }
@@ -82,22 +82,22 @@ measure_text_rect :: proc (text: string, rect: Rect, font: ^Font, align := Text_
     switch align.vertical {
     case .left: // already aligned
     case .center, .right:
-        for &line in measure_text.lines {
+        for &line in measured_text.lines {
             offset_rect_x := (rect.w - line.rect.w) / (align.vertical == .center ? 2 : 1)
             line.rect.x += offset_rect_x
             for &word in line.words do word.rect.x += offset_rect_x
         }
     }
 
-    first_line := slice.first_ptr(measure_text.lines[:])
+    first_line := slice.first_ptr(measured_text.lines[:])
     if first_line != nil {
-        measure_text.rect = first_line.rect
-        for line in measure_text.lines[1:] {
-            rect_add_rect(&measure_text.rect, line.rect)
+        measured_text.rect = first_line.rect
+        for line in measured_text.lines[1:] {
+            rect_add_rect(&measured_text.rect, line.rect)
         }
     }
 
-    return measure_text
+    return measured_text
 }
 
 destroy_measured_text :: proc (mt: ^Measured_Text) {

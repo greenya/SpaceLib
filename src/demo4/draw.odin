@@ -17,7 +17,7 @@ draw_rect_lines :: proc (rect: sl.Rect, thick := f32(1.0), tint := rl.WHITE) {
 draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text_Alignment, tint := rl.WHITE) -> sl.Rect {
     font := &font_assets[font_id]
 
-    measured_text := sl.measure_text_rect(text, rect, &font.info, align, context.temp_allocator)
+    measured_text := sl.measure_text_rect(text, rect, &font.font_sl, align, context.temp_allocator)
 
     if game.debug_drawing do draw_rect_lines(rect, tint={255,0,255,120})
     if game.debug_drawing do draw_rect(measured_text.rect, {255,0,0,40})
