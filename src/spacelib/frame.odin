@@ -5,11 +5,11 @@ import "core:slice"
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
-// todo: add Frame.order (int), when add_frame(), check if last child has same order, if not -- sort
 // todo: add Frame.layout.auto_height (bool), when true, updates Frame.size.y after drawing -- use last child y2+layout.pad
 
 Frame :: struct {
     parent      : ^Frame,
+    order       : int,
 
     children    : [dynamic] ^Frame,
     layout      : Layout,
@@ -98,18 +98,13 @@ Frame_Wheel_Proc :: proc (f: ^Frame, dy: f32)
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: [] Anchor = {}) -> ^Frame {
     f := new(Frame)
     f^ = init
-    f.parent = parent
-    if parent != nil do append(&parent.children, f)
-    for a in anchors do add_anchor(f, a)
-    return f
-}
 
-@(private)
-destroy_frame_tree :: proc (f: ^Frame) {
-    for child in f.children do destroy_frame_tree(child)
-    delete(f.children)
-    delete(f.anchors)
-    free(f)
+    assert(f.parent == nil)
+    set_parent(f, parent)
+
+    for a in anchors do add_anchor(f, a)
+
+    return f
 }
 
 updated :: proc (f: ^Frame) {
@@ -137,7 +132,12 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 
     f.parent = new_parent
-    if f.parent != nil do append(&f.parent.children, f)
+    if f.parent != nil {
+        append(&f.parent.children, f)
+        slice.sort_by(f.parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
+            return f1.order < f2.order
+        })
+    }
 }
 
 show :: proc (f: ^Frame) {
@@ -190,6 +190,14 @@ find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
 
 layout_has_scroll :: proc (f: ^Frame) -> bool {
     return f.layout.dir != .none && f.layout.scroll.step != 0
+}
+
+@(private)
+destroy_frame_tree :: proc (f: ^Frame) {
+    for child in f.children do destroy_frame_tree(child)
+    delete(f.children)
+    delete(f.anchors)
+    free(f)
 }
 
 @(private)
