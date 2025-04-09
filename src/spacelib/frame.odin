@@ -7,6 +7,7 @@ import "core:slice"
 
 // todo: add Frame.order (int), when add_frame(), check if last child has same order, if not -- sort
 // todo: add Frame.layout.auto_height (bool), when true, updates Frame.size.y after drawing -- use last child y2+layout.pad
+// todo: add Frame.disabled, when true, disables interaction (click, wheel)
 
 Frame :: struct {
     parent      : ^Frame,
@@ -150,9 +151,14 @@ hide :: proc (f: ^Frame) {
 
 wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     has_scroll := layout_has_scroll(f)
-    if has_scroll do f.layout.scroll.offset -= dy * f.layout.scroll.step
+    if has_scroll do scroll(f, dy)
     if f.wheel != nil do f.wheel(f, dy)
     return has_scroll || f.wheel != nil || f.modal
+}
+
+scroll :: proc (f: ^Frame, dy: f32) {
+    scroll := &f.layout.scroll
+    scroll.offset = clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
 }
 
 click :: proc (f: ^Frame) {
