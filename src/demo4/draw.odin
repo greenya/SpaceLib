@@ -56,6 +56,13 @@ draw_ui_panel :: proc (f: ^sl.Frame) {
 }
 
 draw_ui_button :: proc (f: ^sl.Frame) {
+    if sl.disabled(f) {
+        draw_sprite(.panel_9, f.rect, colors.three)
+        draw_text(f.text, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
+        draw_text(f.text, sl.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, colors.four)
+        return
+    }
+
     if f.selected {
         draw_sprite(.panel_4, f.rect, colors.five)
     } else {

@@ -7,7 +7,6 @@ import "core:slice"
 
 // todo: add Frame.order (int), when add_frame(), check if last child has same order, if not -- sort
 // todo: add Frame.layout.auto_height (bool), when true, updates Frame.size.y after drawing -- use last child y2+layout.pad
-// todo: add Frame.disabled, when true, disables interaction (click, wheel)
 
 Frame :: struct {
     parent      : ^Frame,
@@ -38,6 +37,7 @@ Frame :: struct {
     prev_hovered: bool,
     pressed     : bool,
     selected    : bool,
+    disabled    : bool,
 }
 
 Layout :: struct {
@@ -150,6 +150,7 @@ hide :: proc (f: ^Frame) {
 }
 
 wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+    if disabled(f) do return
     has_scroll := layout_has_scroll(f)
     if has_scroll do scroll(f, dy)
     if f.wheel != nil do f.wheel(f, dy)
@@ -162,12 +163,18 @@ scroll :: proc (f: ^Frame, dy: f32) {
 }
 
 click :: proc (f: ^Frame) {
+    if disabled(f) do return
     if f.check do f.selected = !f.selected
     if f.radio {
         if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
         f.selected = true
     }
     if f.click != nil do f.click(f)
+}
+
+disabled :: proc (f: ^Frame) -> bool {
+    for i:=f; i!=nil; i=i.parent do if i.disabled do return true
+    return false
 }
 
 find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
