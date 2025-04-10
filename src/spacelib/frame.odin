@@ -149,26 +149,23 @@ hide :: proc (f: ^Frame) {
 }
 
 wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
-    if disabled(f) do return
+    if hidden(f) || disabled(f) do return
     has_scroll := layout_has_scroll(f)
-    if has_scroll do scroll(f, dy)
+    if has_scroll do layout_apply_scroll(f, dy)
     if f.wheel != nil do f.wheel(f, dy)
     return has_scroll || f.wheel != nil || f.modal
-}
-
-scroll :: proc (f: ^Frame, dy: f32) {
-    scroll := &f.layout.scroll
-    scroll.offset = clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
 }
 
 click :: proc (f: ^Frame) {
     if disabled(f) do return
     if f.check do f.selected = !f.selected
-    if f.radio {
-        if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
-        f.selected = true
-    }
+    if f.radio do click_radio(f)
     if f.click != nil do f.click(f)
+}
+
+hidden :: proc (f: ^Frame) -> bool {
+    for i:=f; i!=nil; i=i.parent do if i.hidden do return true
+    return false
 }
 
 disabled :: proc (f: ^Frame) -> bool {
@@ -189,6 +186,18 @@ find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
 
 layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
     return f.layout.dir != .none && f.layout.scroll.step != 0
+}
+
+@(private)
+layout_apply_scroll :: proc (f: ^Frame, dy: f32) {
+    scroll := &f.layout.scroll
+    scroll.offset = clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
+}
+
+@(private)
+click_radio :: proc (f: ^Frame) {
+    if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
+    f.selected = true
 }
 
 @(private)

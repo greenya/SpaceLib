@@ -1,5 +1,6 @@
 package spacelib
 
+import "base:intrinsics"
 import "core:math"
 import "core:math/linalg"
 import "core:math/rand"
