@@ -5,8 +5,6 @@ import "core:slice"
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
 
-// todo: add Frame.layout.auto_height (bool), when true, updates Frame.size.y after drawing -- use last child y2+layout.pad
-
 Frame :: struct {
     parent      : ^Frame,
     order       : int,
@@ -41,12 +39,13 @@ Frame :: struct {
 }
 
 Layout :: struct {
-    dir     : Layout_Dir,
-    align   : Layout_Alignment,
-    scroll  : Layout_Scroll,
-    size    : Vec2,
-    gap     : f32,
-    pad     : f32,
+    dir         : Layout_Dir,
+    align       : Layout_Alignment,
+    scroll      : Layout_Scroll,
+    size        : Vec2,
+    gap         : f32,
+    pad         : f32,
+    auto_size   : bool,
 }
 
 Layout_Dir :: enum {
@@ -188,7 +187,7 @@ find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
     return nil
 }
 
-layout_has_scroll :: proc (f: ^Frame) -> bool {
+layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
     return f.layout.dir != .none && f.layout.scroll.step != 0
 }
 
@@ -237,8 +236,7 @@ mark_frame_tree_rect_dirty :: proc (f: ^Frame) {
 
 @(private)
 update_rect :: proc (f: ^Frame) {
-    if !f.rect_dirty do return
-    if len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f.rect_dirty do if len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
 }
 
@@ -312,46 +310,73 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             for &child in f.children do child.rect.y += dy
         }
 
-        if layout_has_scroll(f) {
+        content_size, dir_rect_size := get_layout_content_size(f)
+        is_dir_vertical := is_layout_dir_vertical(f)
+
+        if f.layout.auto_size {
+            if is_dir_vertical  do f.size.y = content_size[1]
+            else                do f.size.x = content_size[1]
+        } else if layout_has_scroll(f) {
             scroll := &f.layout.scroll
-            is_scroll_vertical := f.layout.dir == .down || f.layout.dir == .up || f.layout.dir == .up_and_down
 
-            if is_scroll_vertical {
-                min_y1: f32
-                max_y2: f32
-                #partial switch f.layout.dir {
-                case .up: // children grow up
-                    min_y1 = last_child.rect.y
-                    max_y2 = first_child.rect.y + first_child.rect.h
-                case .down, .up_and_down: // children grow down
-                    min_y1 = first_child.rect.y
-                    max_y2 = last_child.rect.y + last_child.rect.h
-                }
-                scroll.offset_min = min_y1 - f.rect.y - f.layout.pad
-                scroll.offset_max = max_y2 - f.rect.y - f.rect.h + f.layout.pad
-            } else {
-                min_x1: f32
-                max_x2: f32
-                #partial switch f.layout.dir {
-                case .left: // children grow left
-                    min_x1 = last_child.rect.x
-                    max_x2 = first_child.rect.x + first_child.rect.w
-                case .right, .left_and_right: // children grow right
-                    min_x1 = first_child.rect.x
-                    max_x2 = last_child.rect.x + last_child.rect.w
-                }
-                scroll.offset_min = min_x1 - f.rect.x - f.layout.pad
-                scroll.offset_max = max_x2 - f.rect.x - f.rect.w + f.layout.pad
-            }
-
-            scroll.offset_min = min(0, scroll.offset_min)
-            scroll.offset_max = max(0, scroll.offset_max)
+            scroll.offset_min = min(0, content_size[0])
+            scroll.offset_max = max(0, content_size[1] - dir_rect_size)
             scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-            if is_scroll_vertical   do for &child in f.children do child.rect.y -= scroll.offset
-            else                    do for &child in f.children do child.rect.x -= scroll.offset
+            if is_dir_vertical  do for &child in f.children do child.rect.y -= scroll.offset
+            else                do for &child in f.children do child.rect.x -= scroll.offset
         }
     }
+}
+
+@(private)
+get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_size: f32) {
+    is_dir_vertical := is_layout_dir_vertical(f)
+    dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
+
+    if len(f.children) > 0 {
+        first_child := f.children[0]
+        last_child := slice.last(f.children[:])
+
+        if is_layout_dir_vertical(f) {
+            min_y1: f32
+            max_y2: f32
+
+            #partial switch f.layout.dir {
+            case .up: // children grow up
+                min_y1 = last_child.rect.y
+                max_y2 = first_child.rect.y + first_child.rect.h
+            case .down, .up_and_down: // children grow down
+                min_y1 = first_child.rect.y
+                max_y2 = last_child.rect.y + last_child.rect.h
+            }
+
+            content_size[0] = min_y1 - f.rect.y - f.layout.pad
+            content_size[1] = max_y2 - f.rect.y + f.layout.pad
+        } else {
+            min_x1: f32
+            max_x2: f32
+
+            #partial switch f.layout.dir {
+            case .left: // children grow left
+                min_x1 = last_child.rect.x
+                max_x2 = first_child.rect.x + first_child.rect.w
+            case .right, .left_and_right: // children grow right
+                min_x1 = first_child.rect.x
+                max_x2 = last_child.rect.x + last_child.rect.w
+            }
+
+            content_size[0] = min_x1 - f.rect.x - f.layout.pad
+            content_size[1] = max_x2 - f.rect.x + f.layout.pad
+        }
+    }
+
+    return
+}
+
+@(private)
+is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
+    return f.layout.dir == .down || f.layout.dir == .up || f.layout.dir == .up_and_down
 }
 
 @(private)

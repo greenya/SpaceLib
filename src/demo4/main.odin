@@ -49,9 +49,7 @@ create_game :: proc () {
 
     create_main_menu()
 
-    fmt.println("-------- UI frame tree --------")
     sl.print_frame_tree(game.ui.manager.root)
-    fmt.println("-------------------------------")
 }
 
 destroy_game :: proc () {

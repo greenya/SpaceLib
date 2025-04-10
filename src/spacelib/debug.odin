@@ -4,6 +4,8 @@ import "core:fmt"
 import "core:strings"
 
 print_frame_tree :: proc (f: ^Frame, depth_max := 20, depth := 0) {
+    if depth == 0 do fmt.println("-------- Frame tree --------")
+
     sb := strings.builder_make(context.temp_allocator)
     for i in 0..=depth do strings.write_string(&sb, i == 0 ? "+" : "-")
     strings.write_rune(&sb, '{')
@@ -25,4 +27,6 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, depth := 0) {
     if depth < depth_max {
         for child in f.children do print_frame_tree(child, depth_max, depth + 1)
     }
+
+    if depth == 0 do fmt.println("----------------------------")
 }

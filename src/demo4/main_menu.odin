@@ -22,14 +22,23 @@ create_main_menu :: proc () {
     game.ui.main_menu.menu_panel = add_main_menu_panel(game.ui.manager.root)
     game.ui.main_menu.exit_dialog = add_main_menu_exit_dialog(game.ui.manager.root)
 
-    // !! DEBUG -- test scroll dir
-    // cont := sl.add_frame(game.ui.manager.root, {
+    // // !! DEBUG -- test layout.scroll
+    // cont1 := sl.add_frame(game.ui.manager.root, {
     //     rect    = {50,50,150,150},
     //     scissor = true,
     //     layout  = { dir=.right, align=.center, pad=20, gap=5, size={50,50}, scroll={ step=20 } },
-    //     draw    = draw_ui_border
+    //     draw    = draw_ui_border,
     // })
-    // for i in 0..<5 do sl.add_frame(cont, { draw=draw_ui_border })
+    // for i in 0..<5 do sl.add_frame(cont1, { draw=draw_ui_border })
+
+    // // !! DEBUG -- test layout.auto_size
+    // cont2 := sl.add_frame(game.ui.manager.root, {
+    //     size={0,150},
+    //     scissor = true,
+    //     layout  = { dir=.right, align=.center, pad=20, gap=5, size={50,50}, auto_size=true },
+    //     draw    = draw_ui_border
+    // }, { {point=.top_left, offset={50,220}} })
+    // for i in 0..<5 do sl.add_frame(cont2, { draw=draw_ui_border })
 }
 
 destroy_main_menu :: proc () {
@@ -173,19 +182,23 @@ add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         { text=#procedure, order=10, hidden=true, modal=true, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
 
-    dialog := sl.add_frame(root, { size={440,220}, draw=draw_ui_panel }, { { point=.center } })
+    container := sl.add_frame(root, { size={440,0}, draw=draw_ui_panel,
+        layout={ dir=.down, gap=30, pad=30, auto_size=true } }, { { point=.center } })
 
-    sl.add_frame(dialog, { text="Exit the game?", size={0,120}, draw=proc (f: ^sl.Frame) {
-        draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
-    } }, { { point=.top_left, offset={20,0} }, { point=.top_right, offset={-20,0} } })
+    sl.add_frame(container, { text="Exit the game?", draw=proc (f: ^sl.Frame) {
+        text_rect := draw_text(f.text, sl.rect_inflated(f.rect, {-40, 0}), .anaheim_bold_32, {.center,.center}, colors.seven)
+        f.size.y = text_rect.h
+    } })
 
-    sl.add_frame(dialog, { size={150,50}, text="Yes", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+    button_row := sl.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
+
+    sl.add_frame(button_row, { text="Yes", size={150,0}, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
         game.exit_requested = true
-    } }, { { point=.bottom, offset={-90,-30} } })
+    } })
 
-    sl.add_frame(dialog, { size={150,50}, text="No", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+    sl.add_frame(button_row, { text="No", size={150,0}, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
         sl.hide(game.ui.main_menu.exit_dialog)
-    } }, { { point=.bottom, offset={90,-30} } })
+    } })
 
     return root
 }
