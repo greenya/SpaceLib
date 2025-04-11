@@ -34,12 +34,12 @@ draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text
 
 draw_sprite :: proc (id: Sprite_ID, rect: sl.Rect, tint := rl.WHITE) {
     sprite := &sprite_assets[id]
-    if sprite.npatch != {} {
-        texture := &texture_assets[sprite.texture_id]
-        rect_rl := transmute (rl.Rectangle) rect
-        rl.DrawTextureNPatch(texture.texture, sprite.npatch, rect_rl, {}, 0, tint)
-    } else {
-        panic("Not implemented yet.")
+    texture := &texture_assets[sprite.texture_id]
+    rect_rl := transmute (rl.Rectangle) rect
+
+    switch info in sprite.info {
+    case rl.Rectangle:  rl.DrawTexturePro(texture.texture, info, rect_rl, {}, 0, tint)
+    case rl.NPatchInfo: rl.DrawTextureNPatch(texture.texture, info, rect_rl, {}, 0, tint)
     }
 }
 
@@ -99,3 +99,12 @@ draw_ui_link :: proc (f: ^sl.Frame) {
     f.size.x = text_rect.w
     f.size.y = text_rect.h
 }
+
+draw_ui_button_sprite :: proc (f: ^sl.Frame, sprite_id: Sprite_ID) {
+    if f.hovered do draw_sprite(.panel_15, f.rect, colors.three)
+    draw_sprite(sprite_id, f.rect, f.hovered ? colors.six : colors.five)
+}
+
+draw_ui_button_sprite_icon_up :: proc (f: ^sl.Frame) { draw_ui_button_sprite(f, .icon_up) }
+draw_ui_button_sprite_icon_down :: proc (f: ^sl.Frame) { draw_ui_button_sprite(f, .icon_down) }
+draw_ui_button_sprite_icon_stop :: proc (f: ^sl.Frame) { draw_ui_button_sprite(f, .icon_stop) }

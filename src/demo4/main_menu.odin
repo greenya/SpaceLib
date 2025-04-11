@@ -4,14 +4,11 @@ import "core:fmt"
 import sl "../spacelib"
 
 Main_Menu :: struct {
-    menu_panel: ^sl.Frame,
-
-    current_tab_panel: ^sl.Frame,
-    tab_panel_play: ^sl.Frame,
-    tab_panel_htp: ^sl.Frame,
-    tab_panel_info: ^sl.Frame,
-
-    exit_dialog: ^sl.Frame,
+    menu_panel      : ^sl.Frame,
+    tab_panel_play  : ^sl.Frame,
+    tab_panel_htp   : ^sl.Frame,
+    tab_panel_info  : ^sl.Frame,
+    exit_dialog     : ^sl.Frame,
 }
 
 create_main_menu :: proc () {
@@ -63,49 +60,111 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         draw_text("Roads to Power", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
     } }, { { point=.top_left, offset={0,20} }, { point=.top_right, offset={0,20} } })
 
-    tab_content := sl.add_frame(root, anchors={
+    tab_content := sl.add_frame(root, {
+        wheel=proc (f: ^sl.Frame, dy: f32) {
+            content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
+            if content != nil do sl.wheel(content, dy)
+        },
+    }, {
         { point=.top_left, rel_point=.bottom_left, rel_frame=title_bar, offset={25,0} },
         { point=.bottom_right, offset={-25-200,-25} },
     })
 
     { // play panel
-        menu.tab_panel_play = sl.add_frame(tab_content,
-            { text="play panel", hidden=true, draw=draw_ui_border },
-            { { point=.top_left }, { point=.bottom_right } })
+        menu.tab_panel_play = sl.add_frame(tab_content, {
+            text="play panel",
+            hidden=true,
+            draw=draw_ui_border,
+        }, { { point=.top_left }, { point=.bottom_right } })
 
-        sl.add_frame(menu.tab_panel_play, { draw=proc (f: ^sl.Frame) {
-            text_rect := draw_text("Welcome!\n\nPlease see How To Play section if you're new to the game.\n\nClick New Game below or press ESC to start playing.", f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
-            f.size.y = text_rect.h
-        } }, { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } })
+        sl.add_frame(menu.tab_panel_play, {
+            draw=proc (f: ^sl.Frame) {
+                text_rect := draw_text("Welcome!\n\nPlease see How To Play section if you're new to the game.\n\nClick New Game below or press ESC to start playing.", f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
+                f.size.y = text_rect.h
+            },
+        }, { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } })
 
-        sl.add_frame(menu.tab_panel_play,
-            { size={150,50}, text="New Game", draw=draw_ui_button, click=proc (f: ^sl.Frame) {
+        sl.add_frame(menu.tab_panel_play, {
+            size={150,50},
+            text="New Game",
+            draw=draw_ui_button,
+            click=proc (f: ^sl.Frame) {
                 fmt.println("new game!")
-            } }, { { point=.bottom, offset={0,-20} } })
+            },
+        }, { { point=.bottom, offset={0,-20} } })
     }
 
     { // how to play panel
-        menu.tab_panel_htp = sl.add_frame(tab_content,
-            { text="how to play panel", hidden=true, draw=draw_ui_border },
-            { { point=.top_left }, { point=.bottom_right } })
+        menu.tab_panel_htp = sl.add_frame(tab_content, {
+            text="how to play panel",
+            hidden=true,
+            draw=draw_ui_border,
+        }, { { point=.top_left }, { point=.bottom_right } })
 
-        container := sl.add_frame(menu.tab_panel_htp,
-            { scissor=true, layout={ dir=.down, scroll={ step=20 } } },
-            { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-20,-20} } })
+        scrollbar := sl.add_frame(menu.tab_panel_htp, {
+            text="scrollbar",
+            size={50,0},
+        }, { { point=.top_right, offset={-20,20} }, { point=.bottom_right, offset={-20,-20} } })
 
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        scrollbar_up := sl.add_frame(scrollbar, {
+            text="up",
+            size={0,50},
+            draw=draw_ui_button_sprite_icon_up,
+            click=proc (f: ^sl.Frame) {
+                content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
+                sl.wheel(content, +1)
+            },
+        }, { { point=.top_left }, { point=.top_right } })
+
+        scrollbar_down := sl.add_frame(scrollbar, {
+            text="down",
+            size={0,50},
+            draw=draw_ui_button_sprite_icon_down,
+            click=proc (f: ^sl.Frame) {
+                content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
+                sl.wheel(content, -1)
+            },
+        }, { { point=.bottom_left }, { point=.bottom_right } })
+
+        scrollbar_head := sl.add_frame(scrollbar, {
+            text="head",
+            size={0,50},
+            draw=draw_ui_button_sprite_icon_stop,
+        }, { { point=.top_left, rel_point=.bottom_left, rel_frame=scrollbar_up }, { point=.top_right, rel_point=.bottom_right, rel_frame=scrollbar_up } })
+
+        content := sl.add_frame(menu.tab_panel_htp, {
+            text="content",
+            scissor=true,
+            layout={ dir=.down, scroll={ step=20 } },
+            wheel=proc (f: ^sl.Frame, dy: f32) {
+                scroll := &f.layout.scroll
+                scroll_ratio := sl.clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
+
+                menu := game.ui.main_menu
+                up := sl.find(menu.tab_panel_htp, "up", recursive=true)
+                down := sl.find(menu.tab_panel_htp, "down", recursive=true)
+                head := sl.find(menu.tab_panel_htp, "head", recursive=true)
+                head_space := down.rect.y - up.rect.y - up.rect.h - head.rect.h
+
+                head_offset := head_space * scroll_ratio
+                head.anchors[0].offset.y = head_offset
+                head.anchors[1].offset.y = head_offset
+            },
+        }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, rel_point=.bottom_left, rel_frame=scrollbar, offset={-10,0} } })
+
+        sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("All roads lead to Nexus", f.rect, .anaheim_bold_32, {.top,.left}, colors.seven)
             f.size.y = text_rect.h
         } })
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Build roads from any existing node. Roads cannot be destroyed. Build mines, turrets, and plants on empty nodes. The Nexus node is given at the start of the game; if destroyed, the game ends.", f.rect, .anaheim_bold_32, {.top,.left}, colors.five)
             f.size.y = text_rect.h + 20
         } })
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Growing world", f.rect, .anaheim_bold_32, {.top,.left}, colors.seven)
             f.size.y = text_rect.h
         } })
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("The world expands every 3 minutes. Newly revealed areas contain enemy units that will attack your units and nodes. Maximize gold mining, and build turrets and plants for unit production.", f.rect, .anaheim_bold_32, {.top,.left}, colors.five)
             f.size.y = text_rect.h
         } })
@@ -145,9 +204,9 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         button := sl.add_frame(tab_bar, { text=text, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
             menu := game.ui.main_menu
             switch f.text {
-            case "Play"         : main_menu_panel_select_tab_panel(menu.tab_panel_play)
-            case "How To Play"  : main_menu_panel_select_tab_panel(menu.tab_panel_htp)
-            case "Info"         : main_menu_panel_select_tab_panel(menu.tab_panel_info)
+            case "Play"         : sl.show(menu.tab_panel_play, hide_siblings=true)
+            case "How To Play"  : sl.show(menu.tab_panel_htp, hide_siblings=true)
+            case "Info"         : sl.show(menu.tab_panel_info, hide_siblings=true)
             case "Exit"         : sl.show(menu.exit_dialog)
             }
         } })
@@ -164,13 +223,6 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     sl.click(sl.find(tab_bar, "How To Play"))
 
     return root
-}
-
-main_menu_panel_select_tab_panel :: proc (tab_panel_frame: ^sl.Frame) {
-    menu := game.ui.main_menu
-    if menu.current_tab_panel != nil do sl.hide(menu.current_tab_panel)
-    menu.current_tab_panel = tab_panel_frame
-    sl.show(menu.current_tab_panel)
 }
 
 // -----------

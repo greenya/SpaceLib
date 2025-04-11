@@ -29,14 +29,18 @@ colors: struct {
 File_ID :: enum {
     anaheim_bold_ttf,
     ui_atlas_png,
+    sheet_white1x_png,
 }
 
-file_assets: [File_ID] struct {
+File :: struct {
     type: string,
     data: [] u8,
-} = {
+}
+
+file_assets: [File_ID] File = {
     .anaheim_bold_ttf   = { "ttf", #load("assets/Anaheim-Bold.ttf") },
     .ui_atlas_png       = { "png", #load("assets/ui_atlas.png") },
+    .sheet_white1x_png  = { "png", #load("assets/sheet_white1x.png") },
 }
 
 Font_ID :: enum {
@@ -44,24 +48,30 @@ Font_ID :: enum {
     anaheim_bold_32,
 }
 
-font_assets: [Font_ID] struct {
+Font :: struct {
     file_id: File_ID,
     font_rl: rl.Font,
     using font_sl: sl.Font,
-} = {
+}
+
+font_assets: [Font_ID] Font = {
     .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=0 },
     .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=-4 },
 }
 
 Texture_ID :: enum {
     ui_atlas,
+    sheet_white1x,
 }
 
-texture_assets: [Texture_ID] struct {
+Texture :: struct {
     file_id: File_ID,
     texture: rl.Texture,
-} = {
-    .ui_atlas = { file_id=.ui_atlas_png },
+}
+
+texture_assets: [Texture_ID] Texture = {
+    .ui_atlas       = { file_id=.ui_atlas_png },
+    .sheet_white1x  = { file_id=.sheet_white1x_png },
 }
 
 Sprite_ID :: enum {
@@ -70,17 +80,30 @@ Sprite_ID :: enum {
     panel_3,
     panel_4,
     panel_9,
+    panel_15,
+    icon_up,
+    icon_down,
+    icon_stop,
 }
 
-sprite_assets: [Sprite_ID] struct {
+Sprite :: struct {
     texture_id: Texture_ID,
-    npatch: rl.NPatchInfo,
-} = {
-    .border_17  = { npatch={ source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_0    = { npatch={ source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_3    = { npatch={ source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_4    = { npatch={ source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_9    = { npatch={ source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    info: union {
+        rl.Rectangle,
+        rl.NPatchInfo,
+    },
+}
+
+sprite_assets: [Sprite_ID] Sprite = {
+    .border_17  = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_0    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_3    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_4    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_9    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_15   = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .icon_up    = { texture_id=.sheet_white1x, info=rl.Rectangle { 100, 50,50,50 } },
+    .icon_down  = { texture_id=.sheet_white1x, info=rl.Rectangle { 400,300,50,50 } },
+    .icon_stop  = { texture_id=.sheet_white1x, info=rl.Rectangle { 100,400,50,50 } },
 }
 
 load_assets :: proc () {
