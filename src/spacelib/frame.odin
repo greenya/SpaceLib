@@ -24,6 +24,7 @@ Frame :: struct {
     check       : bool,
     radio       : bool,
     auto_hide   : bool,
+    actor       : Actor,
 
     text        : string,
     draw        : Frame_Proc,
@@ -70,6 +71,18 @@ Layout_Scroll :: struct {
     offset_min  : f32,
     offset_max  : f32,
 }
+
+Actor :: union {
+    Actor_Scrollbar_Content,
+    Actor_Scrollbar_Next,
+    Actor_Scrollbar_Prev,
+    Actor_Scrollbar_Thumb,
+}
+
+Actor_Scrollbar_Content :: struct { next, prev, thumb: ^Frame }
+Actor_Scrollbar_Prev    :: struct { content: ^Frame }
+Actor_Scrollbar_Next    :: struct { content: ^Frame }
+Actor_Scrollbar_Thumb   :: struct { /* ... */ }
 
 Anchor :: struct {
     point       : Anchor_Point,
@@ -139,6 +152,20 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 }
 
+setup_scrollbar_actors :: proc (content, prev, next, thumb: ^Frame) {
+    assert(content != nil && content.actor == nil)
+    assert(next != nil && next.actor == nil)
+    assert(prev != nil && prev.actor == nil)
+    assert(thumb != nil && thumb.actor == nil)
+    assert(len(thumb.anchors) == 1)
+    assert(layout_has_scroll(content))
+
+    content.actor   = Actor_Scrollbar_Content { next=next, prev=prev, thumb=thumb }
+    prev.actor      = Actor_Scrollbar_Prev { content=content }
+    next.actor      = Actor_Scrollbar_Next { content=content }
+    thumb.actor     = Actor_Scrollbar_Thumb {}
+}
+
 show :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil do for &child in f.parent.children do child.hidden = true
     f.hidden = false
@@ -153,6 +180,7 @@ wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return
     has_scroll := layout_has_scroll(f)
     if has_scroll do layout_apply_scroll(f, dy)
+    if f.actor != nil do wheel_actor(f)
     if f.wheel != nil do f.wheel(f, dy)
     return has_scroll || f.wheel != nil || f.modal
 }
@@ -161,6 +189,7 @@ click :: proc (f: ^Frame) {
     if disabled(f) do return
     if f.check do f.selected = !f.selected
     if f.radio do click_radio(f)
+    if f.actor != nil do click_actor(f)
     if f.click != nil do f.click(f)
 }
 
@@ -199,6 +228,37 @@ layout_apply_scroll :: proc (f: ^Frame, dy: f32) {
 click_radio :: proc (f: ^Frame) {
     if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
     f.selected = true
+}
+
+@(private)
+click_actor :: proc (f: ^Frame) {
+    #partial switch a in f.actor {
+    case Actor_Scrollbar_Prev: wheel(a.content, +1)
+    case Actor_Scrollbar_Next: wheel(a.content, -1)
+    }
+}
+
+@(private)
+wheel_actor :: proc (f: ^Frame) {
+    #partial switch &a in f.actor {
+    case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f, &a)
+    }
+}
+
+@(private)
+wheel_actor_scrollbar_content :: proc (f: ^Frame, a: ^Actor_Scrollbar_Content) {
+    scroll := &f.layout.scroll
+    scroll_ratio := clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
+
+    if is_layout_dir_vertical(f) {
+        thumb_space := a.next.rect.y - a.prev.rect.y - a.prev.rect.h - a.thumb.rect.h
+        thumb_offset := thumb_space * scroll_ratio
+        a.thumb.anchors[0].offset.y = thumb_offset
+    } else {
+        thumb_space := a.next.rect.x - a.prev.rect.x - a.prev.rect.w - a.thumb.rect.w
+        thumb_offset := thumb_space * scroll_ratio
+        a.thumb.anchors[0].offset.x = thumb_offset
+    }
 }
 
 @(private)

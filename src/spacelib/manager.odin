@@ -58,8 +58,6 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     update_frame_tree(m.root, m)
 
     if !m.captured_outside {
-        new_frame_captured: bool
-
         #reverse for f in m.mouse_frames {
             if f.pass do continue
             if m.captured_frame != nil && m.captured_frame != f do continue
@@ -71,10 +69,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
                 if f.enter != nil do f.enter(f)
             }
 
-            if m.lmb_pressed && (f.check || f.radio || f.click != nil) && !new_frame_captured {
-                new_frame_captured = true
-                m.captured_frame = f
-            }
+            if m.lmb_pressed do m.captured_frame = f
 
             break
         }

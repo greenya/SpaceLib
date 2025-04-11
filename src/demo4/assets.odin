@@ -55,7 +55,7 @@ Font :: struct {
 }
 
 font_assets: [Font_ID] Font = {
-    .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=0 },
+    .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=-8 },
     .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=-4 },
 }
 

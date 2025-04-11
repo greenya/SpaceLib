@@ -101,56 +101,13 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             draw=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        scrollbar := sl.add_frame(menu.tab_panel_htp, {
-            text="scrollbar",
-            size={50,0},
-        }, { { point=.top_right, offset={-20,20} }, { point=.bottom_right, offset={-20,-20} } })
-
-        scrollbar_up := sl.add_frame(scrollbar, {
-            text="up",
-            size={0,50},
-            draw=draw_ui_button_sprite_icon_up,
-            click=proc (f: ^sl.Frame) {
-                content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
-                sl.wheel(content, +1)
-            },
-        }, { { point=.top_left }, { point=.top_right } })
-
-        scrollbar_down := sl.add_frame(scrollbar, {
-            text="down",
-            size={0,50},
-            draw=draw_ui_button_sprite_icon_down,
-            click=proc (f: ^sl.Frame) {
-                content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
-                sl.wheel(content, -1)
-            },
-        }, { { point=.bottom_left }, { point=.bottom_right } })
-
-        scrollbar_head := sl.add_frame(scrollbar, {
-            text="head",
-            size={0,50},
-            draw=draw_ui_button_sprite_icon_stop,
-        }, { { point=.top_left, rel_point=.bottom_left, rel_frame=scrollbar_up }, { point=.top_right, rel_point=.bottom_right, rel_frame=scrollbar_up } })
+        scrollbar_w :: 50
 
         content := sl.add_frame(menu.tab_panel_htp, {
             text="content",
             scissor=true,
             layout={ dir=.down, scroll={ step=20 } },
-            wheel=proc (f: ^sl.Frame, dy: f32) {
-                scroll := &f.layout.scroll
-                scroll_ratio := sl.clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
-
-                menu := game.ui.main_menu
-                up := sl.find(menu.tab_panel_htp, "up", recursive=true)
-                down := sl.find(menu.tab_panel_htp, "down", recursive=true)
-                head := sl.find(menu.tab_panel_htp, "head", recursive=true)
-                head_space := down.rect.y - up.rect.y - up.rect.h - head.rect.h
-
-                head_offset := head_space * scroll_ratio
-                head.anchors[0].offset.y = head_offset
-                head.anchors[1].offset.y = head_offset
-            },
-        }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, rel_point=.bottom_left, rel_frame=scrollbar, offset={-10,0} } })
+        }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} } })
 
         sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("All roads lead to Nexus", f.rect, .anaheim_bold_32, {.top,.left}, colors.seven)
@@ -168,6 +125,31 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             text_rect := draw_text("The world expands every 3 minutes. Newly revealed areas contain enemy units that will attack your units and nodes. Maximize gold mining, and build turrets and plants for unit production.", f.rect, .anaheim_bold_32, {.top,.left}, colors.five)
             f.size.y = text_rect.h
         } })
+
+        scrollbar := sl.add_frame(menu.tab_panel_htp, {
+            text="scrollbar",
+            size={scrollbar_w,0},
+        }, {
+            { point=.top_left, rel_point=.top_right, rel_frame=content, offset={10,0} },
+            { point=.bottom_left, rel_point=.bottom_right, rel_frame=content, offset={10,0} },
+        })
+
+        scrollbar_up := sl.add_frame(scrollbar, {
+            size={scrollbar_w,50},
+            draw=draw_ui_button_sprite_icon_up,
+        }, { { point=.top } })
+
+        scrollbar_down := sl.add_frame(scrollbar, {
+            size={scrollbar_w,50},
+            draw=draw_ui_button_sprite_icon_down,
+        }, { { point=.bottom } })
+
+        scrollbar_thumb := sl.add_frame(scrollbar, {
+            size={scrollbar_w,50},
+            draw=draw_ui_button_sprite_icon_stop,
+        }, { { point=.top, rel_point=.bottom, rel_frame=scrollbar_up } })
+
+        sl.setup_scrollbar_actors(content, scrollbar_up, scrollbar_down, scrollbar_thumb)
     }
 
     { // info panel
