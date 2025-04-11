@@ -139,7 +139,8 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 }
 
-show :: proc (f: ^Frame) {
+show :: proc (f: ^Frame, hide_siblings := false) {
+    if hide_siblings && f.parent != nil do for &child in f.parent.children do child.hidden = true
     f.hidden = false
     updated(f)
 }
