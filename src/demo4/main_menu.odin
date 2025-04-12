@@ -4,11 +4,8 @@ import "core:fmt"
 import sl "../spacelib"
 
 Main_Menu :: struct {
-    menu_panel      : ^sl.Frame,
-    tab_panel_play  : ^sl.Frame,
-    tab_panel_htp   : ^sl.Frame,
-    tab_panel_info  : ^sl.Frame,
-    exit_dialog     : ^sl.Frame,
+    menu_panel  : ^sl.Frame,
+    exit_dialog : ^sl.Frame,
 }
 
 create_main_menu :: proc () {
@@ -18,6 +15,9 @@ create_main_menu :: proc () {
     game.ui.main_menu = new(Main_Menu)
     game.ui.main_menu.menu_panel = add_main_menu_panel(game.ui.manager.root)
     game.ui.main_menu.exit_dialog = add_main_menu_exit_dialog(game.ui.manager.root)
+
+    // select default tab
+    sl.click(game.ui.main_menu.menu_panel, "How To Play")
 
     // // !! DEBUG -- test layout.scroll
     // cont1 := sl.add_frame(game.ui.manager.root, {
@@ -54,7 +54,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
 
     root := sl.add_frame(parent, { text=#procedure, /*size={720,480},*/ draw=proc (f: ^sl.Frame) {
         draw_sprite(.panel_3, f.rect, colors.two)
-    } }, { /*{ point=.center },*/ { point=.top_left, offset={250,120} }, { point=.bottom_right, offset={-250,-120} } })
+    } }, { /*{ point=.center },*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} } })
 
     title_bar := sl.add_frame(root, { size={0,120}, draw=proc (f: ^sl.Frame) {
         draw_text("Roads to Power", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
@@ -62,7 +62,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
 
     tab_content := sl.add_frame(root, {
         wheel=proc (f: ^sl.Frame, dy: f32) {
-            content := sl.find(game.ui.main_menu.tab_panel_htp, "content")
+            content := sl.find(game.ui.main_menu.menu_panel, "how_to_play_panel/content")
             if content != nil do sl.wheel(content, dy)
         },
     }, {
@@ -70,21 +70,21 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         { point=.bottom_right, offset={-25-200,-25} },
     })
 
-    { // play panel
-        menu.tab_panel_play = sl.add_frame(tab_content, {
-            text="play panel",
+    {
+        play_panel := sl.add_frame(tab_content, {
+            text="play_panel",
             hidden=true,
             draw=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        sl.add_frame(menu.tab_panel_play, {
+        sl.add_frame(play_panel, {
             draw=proc (f: ^sl.Frame) {
                 text_rect := draw_text("Welcome!\n\nPlease see How To Play section if you're new to the game.\n\nClick New Game below or press ESC to start playing.", f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
                 f.size.y = text_rect.h
             },
         }, { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } })
 
-        sl.add_frame(menu.tab_panel_play, {
+        sl.add_frame(play_panel, {
             size={150,50},
             text="New Game",
             draw=draw_ui_button,
@@ -94,16 +94,28 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         }, { { point=.bottom, offset={0,-20} } })
     }
 
-    { // how to play panel
-        menu.tab_panel_htp = sl.add_frame(tab_content, {
-            text="how to play panel",
+    {
+        options_panel := sl.add_frame(tab_content, {
+            text="options_panel",
+            hidden=true,
+            draw=draw_ui_border,
+        }, { { point=.top_left }, { point=.bottom_right } })
+
+        // todo: add checkbox demo
+        // todo: add slider demo (and implement the support)
+    }
+
+    {
+        how_to_play_panel := sl.add_frame(tab_content, {
+            text="how_to_play_panel",
             hidden=true,
             draw=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 
         scrollbar_w :: 50
+        scrollbar_btn_h :: 50
 
-        content := sl.add_frame(menu.tab_panel_htp, {
+        content := sl.add_frame(how_to_play_panel, {
             text="content",
             scissor=true,
             layout={ dir=.down, scroll={ step=20 } },
@@ -126,38 +138,38 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             f.size.y = text_rect.h
         } })
 
-        scrollbar := sl.add_frame(menu.tab_panel_htp, {
-            text="scrollbar",
+        scrollbar_track := sl.add_frame(how_to_play_panel, {
+            text="scrollbar track",
             size={scrollbar_w,0},
         }, {
-            { point=.top_left, rel_point=.top_right, rel_frame=content, offset={10,0} },
-            { point=.bottom_left, rel_point=.bottom_right, rel_frame=content, offset={10,0} },
+            { point=.top_left, rel_point=.top_right, rel_frame=content, offset={10,scrollbar_btn_h} },
+            { point=.bottom_left, rel_point=.bottom_right, rel_frame=content, offset={10,-scrollbar_btn_h} },
         })
 
-        scrollbar_up := sl.add_frame(scrollbar, {
-            size={scrollbar_w,50},
-            draw=draw_ui_button_sprite_icon_up,
+        scrollbar_thumb := sl.add_frame(scrollbar_track, {
+            size={scrollbar_w,scrollbar_btn_h},
+            draw=draw_ui_button_sprite_icon_stop,
         }, { { point=.top } })
 
-        scrollbar_down := sl.add_frame(scrollbar, {
-            size={scrollbar_w,50},
+        scrollbar_up := sl.add_frame(scrollbar_track, {
+            size={scrollbar_w,scrollbar_btn_h},
+            draw=draw_ui_button_sprite_icon_up,
+        }, { { point=.bottom, rel_point=.top } })
+
+        scrollbar_down := sl.add_frame(scrollbar_track, {
+            size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_down,
-        }, { { point=.bottom } })
+        }, { { point=.top, rel_point=.bottom } })
 
-        scrollbar_thumb := sl.add_frame(scrollbar, {
-            size={scrollbar_w,50},
-            draw=draw_ui_button_sprite_icon_stop,
-        }, { { point=.top, rel_point=.bottom, rel_frame=scrollbar_up } })
-
-        sl.setup_scrollbar_actors(content, scrollbar_up, scrollbar_down, scrollbar_thumb)
+        sl.setup_scrollbar_actors(content, scrollbar_thumb, scrollbar_down, scrollbar_up)
     }
 
-    { // info panel
-        menu.tab_panel_info = sl.add_frame(tab_content,
-            { text="info panel", hidden=true, draw=draw_ui_border },
+    {
+        about_panel := sl.add_frame(tab_content,
+            { text="about_panel", hidden=true, draw=draw_ui_border },
             { { point=.top_left }, { point=.bottom_right } })
 
-        container := sl.add_frame(menu.tab_panel_info,
+        container := sl.add_frame(about_panel,
             { scissor=true, layout={ dir=.down, align=.center, gap=5 } },
             { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-20,-20} } })
 
@@ -182,13 +194,14 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
     })
 
-    for text in ([] string { "Play", "How To Play", "Info", "Exit" }) {
+    for text in ([] string { "Play", "Options", "How To Play", "About", "Exit" }) {
         button := sl.add_frame(tab_bar, { text=text, draw=draw_ui_button, click=proc (f: ^sl.Frame) {
             menu := game.ui.main_menu
             switch f.text {
-            case "Play"         : sl.show(menu.tab_panel_play, hide_siblings=true)
-            case "How To Play"  : sl.show(menu.tab_panel_htp, hide_siblings=true)
-            case "Info"         : sl.show(menu.tab_panel_info, hide_siblings=true)
+            case "Play"         : sl.show(menu.menu_panel, "play_panel", hide_siblings=true)
+            case "Options"      : sl.show(menu.menu_panel, "options_panel", hide_siblings=true)
+            case "How To Play"  : sl.show(menu.menu_panel, "how_to_play_panel", hide_siblings=true)
+            case "About"        : sl.show(menu.menu_panel, "about_panel", hide_siblings=true)
             case "Exit"         : sl.show(menu.exit_dialog)
             }
         } })
@@ -200,9 +213,6 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     sl.add_frame(root, { size={150,40}, draw=proc (f: ^sl.Frame) {
         draw_text("by Spacemad", f.rect, .anaheim_bold_32, {.bottom,.right}, colors.three)
     } }, { { point=.bottom_right, offset={-25,-15} } })
-
-    // select default tab
-    sl.click(sl.find(tab_bar, "How To Play"))
 
     return root
 }

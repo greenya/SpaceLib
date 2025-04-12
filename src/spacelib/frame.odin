@@ -1,6 +1,7 @@
 package spacelib
 
 import "core:slice"
+import "core:strings"
 
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]""
@@ -79,10 +80,10 @@ Actor :: union {
     Actor_Scrollbar_Thumb,
 }
 
-Actor_Scrollbar_Content :: struct { next, prev, thumb: ^Frame }
-Actor_Scrollbar_Prev    :: struct { content: ^Frame }
+Actor_Scrollbar_Content :: struct { thumb: ^Frame }
+Actor_Scrollbar_Thumb   :: struct {}
 Actor_Scrollbar_Next    :: struct { content: ^Frame }
-Actor_Scrollbar_Thumb   :: struct { /* ... */ }
+Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
 Anchor :: struct {
     point       : Anchor_Point,
@@ -152,24 +153,30 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 }
 
-setup_scrollbar_actors :: proc (content, prev, next, thumb: ^Frame) {
-    assert(content != nil && content.actor == nil)
-    assert(next != nil && next.actor == nil)
-    assert(prev != nil && prev.actor == nil)
-    assert(thumb != nil && thumb.actor == nil)
+setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
     assert(len(thumb.anchors) == 1)
     assert(layout_has_scroll(content))
 
-    content.actor   = Actor_Scrollbar_Content { next=next, prev=prev, thumb=thumb }
-    prev.actor      = Actor_Scrollbar_Prev { content=content }
-    next.actor      = Actor_Scrollbar_Next { content=content }
-    thumb.actor     = Actor_Scrollbar_Thumb {}
+    content.actor = Actor_Scrollbar_Content { thumb=thumb }
+    thumb.actor = Actor_Scrollbar_Thumb {}
+    if next != nil do next.actor = Actor_Scrollbar_Next { content=content }
+    if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
 
-show :: proc (f: ^Frame, hide_siblings := false) {
+show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil do for &child in f.parent.children do child.hidden = true
     f.hidden = false
     updated(f)
+}
+
+show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false) {
+    target := get(parent, path)
+    show_by_frame(target, hide_siblings)
+}
+
+show :: proc {
+    show_by_frame,
+    show_by_path,
 }
 
 hide :: proc (f: ^Frame) {
@@ -180,17 +187,27 @@ wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return
     has_scroll := layout_has_scroll(f)
     if has_scroll do layout_apply_scroll(f, dy)
-    if f.actor != nil do wheel_actor(f)
+    if f.actor != nil do wheel_actor(f, dy)
     if f.wheel != nil do f.wheel(f, dy)
     return has_scroll || f.wheel != nil || f.modal
 }
 
-click :: proc (f: ^Frame) {
+click_by_frame :: proc (f: ^Frame) {
     if disabled(f) do return
     if f.check do f.selected = !f.selected
     if f.radio do click_radio(f)
     if f.actor != nil do click_actor(f)
     if f.click != nil do f.click(f)
+}
+
+click_by_path :: proc (parent: ^Frame, path: string) {
+    target := get(parent, path)
+    click_by_frame(target)
+}
+
+click :: proc {
+    click_by_frame,
+    click_by_path,
 }
 
 hidden :: proc (f: ^Frame) -> bool {
@@ -203,15 +220,29 @@ disabled :: proc (f: ^Frame) -> bool {
     return false
 }
 
-find :: proc (f: ^Frame, text: string, recursive := false) -> ^Frame {
-    for child in f.children {
+find_by_text :: proc (parent: ^Frame, text: string) -> ^Frame {
+    for child in parent.children {
         if child.text == text do return child
-        if recursive {
-            found_child := find(child, text, true)
-            if found_child != nil do return found_child
-        }
+        found_child := find_by_text(child, text)
+        if found_child != nil do return found_child
     }
     return nil
+}
+
+find :: proc (parent: ^Frame, path: string) -> ^Frame {
+    found_child := parent
+    for text in strings.split(path, "/", context.temp_allocator) {
+        found_child = find_by_text(found_child, text)
+        if found_child == nil do return nil
+    }
+    assert(found_child != parent) // this is expected as strings.split() never returns empty slice, but lets keep the assert
+    return found_child
+}
+
+get :: proc (parent: ^Frame, path: string) -> ^Frame {
+    target := find(parent, path)
+    if target == nil do panic("Path not found, use find() in case its expected")
+    return target
 }
 
 layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
@@ -233,31 +264,33 @@ click_radio :: proc (f: ^Frame) {
 @(private)
 click_actor :: proc (f: ^Frame) {
     #partial switch a in f.actor {
-    case Actor_Scrollbar_Prev: wheel(a.content, +1)
     case Actor_Scrollbar_Next: wheel(a.content, -1)
+    case Actor_Scrollbar_Prev: wheel(a.content, +1)
     }
 }
 
 @(private)
-wheel_actor :: proc (f: ^Frame) {
-    #partial switch &a in f.actor {
-    case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f, &a)
+wheel_actor :: proc (f: ^Frame, dy: f32) {
+    #partial switch _ in f.actor {
+    case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f, dy)
     }
 }
 
 @(private)
-wheel_actor_scrollbar_content :: proc (f: ^Frame, a: ^Actor_Scrollbar_Content) {
+wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) {
+    actor := &f.actor.(Actor_Scrollbar_Content)
+    thumb := actor.thumb
     scroll := &f.layout.scroll
     scroll_ratio := clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
 
     if is_layout_dir_vertical(f) {
-        thumb_space := a.next.rect.y - a.prev.rect.y - a.prev.rect.h - a.thumb.rect.h
+        thumb_space := thumb.parent.rect.h - thumb.rect.h
         thumb_offset := thumb_space * scroll_ratio
-        a.thumb.anchors[0].offset.y = thumb_offset
+        thumb.anchors[0].offset.y = thumb_offset
     } else {
-        thumb_space := a.next.rect.x - a.prev.rect.x - a.prev.rect.w - a.thumb.rect.w
+        thumb_space := thumb.parent.rect.w - thumb.rect.w
         thumb_offset := thumb_space * scroll_ratio
-        a.thumb.anchors[0].offset.x = thumb_offset
+        thumb.anchors[0].offset.x = thumb_offset
     }
 }
 
