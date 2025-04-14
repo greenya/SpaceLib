@@ -324,9 +324,9 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 @(private)
 draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
-    if f.scissor && m.scissor_start_proc != nil do m.scissor_start_proc(f)
     if f.draw != nil do f.draw(f)
     if m.frame_post_draw_proc != nil do m.frame_post_draw_proc(f)
+    if f.scissor && m.scissor_start_proc != nil do m.scissor_start_proc(f)
     for child in f.children do draw_frame_tree(child, m)
     if f.scissor && m.scissor_end_proc != nil do m.scissor_end_proc(f)
 }
