@@ -8,15 +8,17 @@ Manager :: struct {
     mouse               : Mouse_Input,
     prev_mouse          : Mouse_Input,
 
+    phase               : Processing_Phase,
     captured            : Captured_Info,
 
     mouse_frames        : [dynamic] ^Frame,
     entered_frames      : [dynamic] ^Frame,
     auto_hide_frames    : [dynamic] ^Frame,
 
+    scissor_rect        : Rect,
+    scissor_rects       : [dynamic] Rect,
     scissor_set_proc    : Scissor_Set_Proc,
     scissor_clear_proc  : Scissor_Clear_Proc,
-    scissor_rects       : [dynamic] Rect,
 
     overdraw_proc       : Frame_Proc,
 }
@@ -25,6 +27,12 @@ Mouse_Input :: struct {
     pos     : Vec2,
     wheel_dy: f32,
     lmb_down: bool,
+}
+
+Processing_Phase :: enum {
+    none,
+    updating,
+    drawing,
 }
 
 Captured_Info :: struct {
@@ -55,6 +63,10 @@ destroy_manager :: proc (m: ^Manager) {
 }
 
 update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
+    m.phase = .updating
+    m.root.rect = root_rect
+    m.scissor_rect = root_rect
+
     m.mouse = mouse
     lmb_pressed := !m.prev_mouse.lmb_down && m.mouse.lmb_down
     lmb_released := m.prev_mouse.lmb_down && !m.mouse.lmb_down
@@ -62,7 +74,6 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     clear(&m.mouse_frames)
     clear(&m.auto_hide_frames)
 
-    m.root.rect = root_rect
     mark_frame_tree_rect_dirty(m.root)
     update_frame_tree(m.root, m)
 
@@ -122,17 +133,23 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     if m.captured.outside && lmb_released do m.captured = {}
 
     m.prev_mouse = mouse
+    m.phase = .none
     return
 }
 
 draw_manager :: proc (m: ^Manager) {
     assert(len(m.scissor_rects) == 0)
+    m.phase = .drawing
+    m.scissor_rect = m.root.rect
     draw_frame_tree(m.root, m)
+    m.phase = .none
 }
 
 @(private)
-push_scissor_rect :: proc (m: ^Manager, r: Rect) {
-    new_rect := r
+push_scissor_rect :: proc (m: ^Manager, new_rect: Rect) {
+    assert(m.phase != .none)
+
+    new_rect := new_rect
 
     last_rect := slice.last_ptr(m.scissor_rects[:])
     if last_rect != nil {
@@ -140,18 +157,23 @@ push_scissor_rect :: proc (m: ^Manager, r: Rect) {
     }
 
     append(&m.scissor_rects, new_rect)
-    if m.scissor_set_proc != nil do m.scissor_set_proc(new_rect)
+    m.scissor_rect = new_rect
+    if m.phase == .drawing && m.scissor_set_proc != nil do m.scissor_set_proc(new_rect)
 }
 
 @(private)
 pop_scissor_rect :: proc (m: ^Manager) {
+    assert(m.phase != .none)
     assert(len(m.scissor_rects) > 0)
+
     pop(&m.scissor_rects)
 
     last_rect := slice.last_ptr(m.scissor_rects[:])
     if last_rect != nil {
-        if m.scissor_set_proc != nil do m.scissor_set_proc(last_rect^)
+        m.scissor_rect = last_rect^
+        if m.phase == .drawing && m.scissor_set_proc != nil do m.scissor_set_proc(last_rect^)
     } else {
-        if m.scissor_clear_proc != nil do m.scissor_clear_proc()
+        m.scissor_rect = m.root.rect
+        if m.phase == .drawing && m.scissor_clear_proc != nil do m.scissor_clear_proc()
     }
 }

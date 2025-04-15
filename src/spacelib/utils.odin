@@ -9,23 +9,23 @@ Vec2 :: [2] f32
 Vec3 :: [3] f32
 Rect :: struct { x, y, w, h: f32 }
 
-rect_center :: proc (r: Rect) -> Vec2 {
+rect_center :: #force_inline proc (r: Rect) -> Vec2 {
     return { r.x + r.w/2, r.y + r.h/2 }
 }
 
-rect_inflated :: proc (r: Rect, v: Vec2) -> Rect {
+rect_inflated :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
     return { r.x - v.x, r.y - v.y, r.w + 2*v.x, r.h + 2*v.y }
 }
 
-rect_moved :: proc (r: Rect, v: Vec2) -> Rect {
+rect_moved :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
     return { r.x + v.x, r.y + v.y, r.w, r.h }
 }
 
-rect_from_center :: proc (v: Vec2, size: Vec2) -> Rect {
+rect_from_center :: #force_inline proc (v: Vec2, size: Vec2) -> Rect {
     return { v.x-size.x/2, v.y-size.y/2, size.x, size.y }
 }
 
-rect_add_rect :: proc (r: ^Rect, o: Rect) {
+rect_add_rect :: #force_inline proc (r: ^Rect, o: Rect) {
     if o.x < r.x {
         r.w += r.x - o.x
         r.x = o.x
@@ -43,7 +43,7 @@ rect_add_rect :: proc (r: ^Rect, o: Rect) {
     if dy > 0 do r.h += dy
 }
 
-rect_intersection :: proc (a: Rect, b: Rect) -> Rect {
+rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     x1 := max(a.x, b.x)
     x2 := min(a.x+a.w, b.x+b.w)
     if x2 > x1 {
@@ -56,15 +56,19 @@ rect_intersection :: proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
-clamp_pos_to_rect :: proc (v: Vec2, r: Rect) -> Vec2 {
+pos_in_rect :: #force_inline proc (pos: Vec2, rect: Rect) -> bool {
+    return rect.x < pos.x && rect.x+rect.w > pos.x && rect.y < pos.y && rect.y+rect.h > pos.y
+}
+
+clamp_pos_to_rect :: #force_inline proc (v: Vec2, r: Rect) -> Vec2 {
     return { clamp(v.x, r.x, r.x + r.w), clamp(v.y, r.y, r.y + r.h) }
 }
 
-clamp_ratio :: proc (value, minimum, maximum: $T) -> T where intrinsics.type_is_float(T) {
+clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intrinsics.type_is_float(T) {
     return clamp((value - minimum) / (maximum - minimum), 0.0, 1.0)
 }
 
-is_consumed :: proc (flag: ^bool) -> bool {
+is_consumed :: #force_inline proc (flag: ^bool) -> bool {
     if !flag^ do return false
     flag^ = false
     return true
