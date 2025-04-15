@@ -43,6 +43,19 @@ rect_add_rect :: proc (r: ^Rect, o: Rect) {
     if dy > 0 do r.h += dy
 }
 
+rect_intersection :: proc (a: Rect, b: Rect) -> Rect {
+    x1 := max(a.x, b.x)
+    x2 := min(a.x+a.w, b.x+b.w)
+    if x2 > x1 {
+        y1 := max(a.y, b.y)
+        y2 := min(a.y+a.h, b.y+b.h)
+        if y2 > y1 {
+            return { x1, y1, x2-x1, y2-y1 }
+        }
+    }
+    return {}
+}
+
 clamp_pos_to_rect :: proc (v: Vec2, r: Rect) -> Vec2 {
     return { clamp(v.x, r.x, r.x + r.w), clamp(v.y, r.y, r.y + r.h) }
 }

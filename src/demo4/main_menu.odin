@@ -129,8 +129,22 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         } })
         sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Build roads from any existing node. Roads cannot be destroyed. Build mines, turrets, and plants on empty nodes. The Nexus node is given at the start of the game; if destroyed, the game ends.", f.rect, .anaheim_bold_32, {.top,.left}, colors.five)
-            f.size.y = text_rect.h + 20
+            f.size.y = text_rect.h
         } })
+
+        { // test scrolling child frame
+            sl.add_frame(content, { size={0,30} })
+            sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
+                text_rect := draw_text("Test scrolling child frame", f.rect, .anaheim_bold_32, {.top,.left}, colors.seven)
+                f.size.y = text_rect.h
+            } })
+            sc := sl.add_frame(content, { size={0,80}, scissor=true, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border })
+            for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
+                sl.add_frame(sc, { text=text, radio=true, draw=draw_ui_button })
+            }
+            sl.add_frame(content, { size={0,30} })
+        }
+
         sl.add_frame(content, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Growing world", f.rect, .anaheim_bold_32, {.top,.left}, colors.seven)
             f.size.y = text_rect.h

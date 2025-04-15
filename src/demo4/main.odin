@@ -31,11 +31,11 @@ create_game :: proc () {
     game.camera = { zoom=1 }
 
     game.ui.manager = sl.create_manager(
-        scissor_start_proc = proc (f: ^sl.Frame) {
+        scissor_set_proc = proc (r: sl.Rect) {
             if game.debug_drawing do return
-            rl.BeginScissorMode(i32(f.rect.x), i32(f.rect.y), i32(f.rect.w), i32(f.rect.h))
+            rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
         },
-        scissor_end_proc = proc (f: ^sl.Frame) {
+        scissor_clear_proc = proc () {
             if game.debug_drawing do return
             rl.EndScissorMode()
         },

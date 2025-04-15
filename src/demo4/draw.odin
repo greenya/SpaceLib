@@ -15,6 +15,38 @@ draw_rect_lines :: proc (rect: sl.Rect, thick := f32(1.0), tint := rl.WHITE) {
     rl.DrawRectangleLinesEx(rect_rl, thick, tint)
 }
 
+// todo: add text token, split frame update and draw
+
+// // "|top+left,f1,c7|All roads lead to |c5|Nexus"
+
+// update_measured_text :: proc (f: ^sl.Frame, font_id: Font_ID, align: sl.Text_Alignment) {
+//     font := &font_assets[font_id]
+//     f.measured_text = sl.measure_text_rect(f.text, f.rect, &font.font_sl, align, context.temp_allocator)
+//     f.size.y = f.measured_text.rect.h
+// }
+
+// draw_measured_text :: proc (f: ^sl.Frame, tint := rl.WHITE) {
+//     if game.debug_drawing do draw_rect_lines(f.rect, tint={255,0,255,120})
+//     if game.debug_drawing do draw_rect(f.measured_text.rect, {255,0,0,40})
+
+//     for line in f.measured_text.lines {
+//         for word in line.words {
+//             if game.debug_drawing do draw_rect(word.rect, {0,255,255,80})
+//             sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
+//         }
+//     }
+// }
+
+// sl.add_frame(content, {
+//     text="All roads lead to Nexus",
+//     update=proc (f: ^sl.Frame) {
+//         update_measured_text(f, .anaheim_bold_32, {.top,.left})
+//     },
+//     draw=proc (f: ^sl.Frame) {
+//         draw_measured_text(f, .anaheim_bold_32, colors.seven)
+//     },
+// })
+
 draw_text :: proc (text: string, rect: sl.Rect, font_id: Font_ID, align: sl.Text_Alignment, tint := rl.WHITE) -> sl.Rect {
     font := &font_assets[font_id]
 

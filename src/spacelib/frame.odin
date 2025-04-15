@@ -8,6 +8,11 @@ import "core:strings"
 // todo: layout_apply_scroll() should return true if scroll was consumed (actually scrolled anything)
 // todo: user's Frame.wheel() should return true if scroll was consumed
 
+// todo: fix issue with mouse events handled outside of scissor rect:
+// manager should have Manager.phase = .none | .updating | .drawing
+// so push/pop calls scissor_set/clear_proc only when .drawing
+// p.s.: also maybe add Manager.scissor_rect which holds current rect (?)
+
 Frame :: struct {
     parent      : ^Frame,
     order       : int,
@@ -108,8 +113,8 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
-Frame_Proc :: proc (f: ^Frame)
-Frame_Wheel_Proc :: proc (f: ^Frame, dy: f32)
+Frame_Proc          :: proc (f: ^Frame)
+Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: [] Anchor = {}) -> ^Frame {
     f := new(Frame)
@@ -360,9 +365,9 @@ draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
     if f.draw != nil do f.draw(f)
     if m.overdraw_proc != nil do m.overdraw_proc(f)
-    if f.scissor && m.scissor_start_proc != nil do m.scissor_start_proc(f)
+    if f.scissor do push_scissor_rect(m, f.rect)
     for child in f.children do draw_frame_tree(child, m)
-    if f.scissor && m.scissor_end_proc != nil do m.scissor_end_proc(f)
+    if f.scissor do pop_scissor_rect(m)
     if f.draw_after != nil do f.draw_after(f)
 }
 

@@ -14,8 +14,10 @@ Manager :: struct {
     entered_frames      : [dynamic] ^Frame,
     auto_hide_frames    : [dynamic] ^Frame,
 
-    scissor_start_proc  : Frame_Proc,
-    scissor_end_proc    : Frame_Proc,
+    scissor_set_proc    : Scissor_Set_Proc,
+    scissor_clear_proc  : Scissor_Clear_Proc,
+    scissor_rects       : [dynamic] Rect,
+
     overdraw_proc       : Frame_Proc,
 }
 
@@ -31,10 +33,13 @@ Captured_Info :: struct {
     pos     : Vec2,
 }
 
-create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, overdraw_proc: Frame_Proc = nil) -> ^Manager {
+Scissor_Set_Proc    :: proc (r: Rect)
+Scissor_Clear_Proc  :: proc ()
+
+create_manager :: proc (scissor_set_proc: Scissor_Set_Proc = nil, scissor_clear_proc: Scissor_Clear_Proc = nil, overdraw_proc: Frame_Proc = nil) -> ^Manager {
     m := new(Manager)
-    m.scissor_start_proc = scissor_start_proc
-    m.scissor_end_proc = scissor_end_proc
+    m.scissor_set_proc = scissor_set_proc
+    m.scissor_clear_proc = scissor_clear_proc
     m.overdraw_proc = overdraw_proc
     m.root = add_frame(nil, { pass=true })
     return m
@@ -45,6 +50,7 @@ destroy_manager :: proc (m: ^Manager) {
     delete(m.mouse_frames)
     delete(m.entered_frames)
     delete(m.auto_hide_frames)
+    delete(m.scissor_rects)
     free(m)
 }
 
@@ -120,5 +126,32 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
 }
 
 draw_manager :: proc (m: ^Manager) {
+    assert(len(m.scissor_rects) == 0)
     draw_frame_tree(m.root, m)
+}
+
+@(private)
+push_scissor_rect :: proc (m: ^Manager, r: Rect) {
+    new_rect := r
+
+    last_rect := slice.last_ptr(m.scissor_rects[:])
+    if last_rect != nil {
+        new_rect = rect_intersection(new_rect, last_rect^)
+    }
+
+    append(&m.scissor_rects, new_rect)
+    if m.scissor_set_proc != nil do m.scissor_set_proc(new_rect)
+}
+
+@(private)
+pop_scissor_rect :: proc (m: ^Manager) {
+    assert(len(m.scissor_rects) > 0)
+    pop(&m.scissor_rects)
+
+    last_rect := slice.last_ptr(m.scissor_rects[:])
+    if last_rect != nil {
+        if m.scissor_set_proc != nil do m.scissor_set_proc(last_rect^)
+    } else {
+        if m.scissor_clear_proc != nil do m.scissor_clear_proc()
+    }
 }
