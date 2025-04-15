@@ -91,7 +91,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             click=proc (f: ^sl.Frame) {
                 fmt.println("new game!")
             },
-        }, { { point=.bottom, offset={0,-20} } })
+        }, { { point=.bottom, offset={0,-30} } })
     }
 
     {

@@ -71,7 +71,7 @@ draw_ui_button :: proc (f: ^sl.Frame) {
 
     text_color := f.hovered ? colors.seven : colors.six
 
-    if f.pressed {
+    if f.captured {
         draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, text_color)
     } else {
         draw_text(f.text, sl.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)

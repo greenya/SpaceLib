@@ -7,11 +7,8 @@ Manager :: struct {
 
     mouse               : Mouse_Input,
     prev_mouse          : Mouse_Input,
-    lmb_pressed         : bool,
-    lmb_released        : bool,
 
-    captured_frame      : ^Frame,
-    captured_outside    : bool,
+    captured            : Captured_Info,
 
     mouse_frames        : [dynamic] ^Frame,
     entered_frames      : [dynamic] ^Frame,
@@ -23,9 +20,15 @@ Manager :: struct {
 }
 
 Mouse_Input :: struct {
-    pos: Vec2,
+    pos     : Vec2,
     wheel_dy: f32,
     lmb_down: bool,
+}
+
+Captured_Info :: struct {
+    outside : bool,
+    frame   : ^Frame,
+    pos     : Vec2,
 }
 
 create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, frame_post_draw_proc: Frame_Proc = nil) -> ^Manager {
@@ -47,20 +50,20 @@ destroy_manager :: proc (m: ^Manager) {
 
 update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     m.mouse = mouse
-    m.lmb_pressed = !m.prev_mouse.lmb_down && m.mouse.lmb_down
-    m.lmb_released = m.prev_mouse.lmb_down && !m.mouse.lmb_down
+    lmb_pressed := !m.prev_mouse.lmb_down && m.mouse.lmb_down
+    lmb_released := m.prev_mouse.lmb_down && !m.mouse.lmb_down
 
-    resize(&m.mouse_frames, 0)
-    resize(&m.auto_hide_frames, 0)
+    clear(&m.mouse_frames)
+    clear(&m.auto_hide_frames)
 
     m.root.rect = root_rect
     mark_frame_tree_rect_dirty(m.root)
     update_frame_tree(m.root, m)
 
-    if !m.captured_outside {
+    if !m.captured.outside {
         #reverse for f in m.mouse_frames {
             if f.pass do continue
-            if m.captured_frame != nil && m.captured_frame != f do continue
+            if m.captured.frame != nil && m.captured.frame != f do continue
 
             mouse_input_consumed = true
             f.hovered = true
@@ -69,18 +72,18 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
                 if f.enter != nil do f.enter(f)
             }
 
-            if m.lmb_pressed do m.captured_frame = f
+            if lmb_pressed do m.captured = { frame=f, pos=m.mouse.pos }
 
             break
         }
 
-        if m.captured_frame != nil {
+        if m.captured.frame != nil {
+            m.captured.frame.captured = true
             mouse_input_consumed = true
-            m.captured_frame.pressed = true
 
-            if m.lmb_released {
-                if m.captured_frame.hovered do click(m.captured_frame)
-                m.captured_frame = nil
+            if lmb_released {
+                if m.captured.frame.hovered do click(m.captured.frame)
+                m.captured = {}
             }
         }
 
@@ -99,15 +102,15 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
         }
     }
 
-    if m.lmb_pressed do for f in m.auto_hide_frames {
+    if lmb_pressed do for f in m.auto_hide_frames {
         if !f.hidden {
             _, found := slice.linear_search_reverse(m.mouse_frames[:], f)
             if !found do f.hidden = true
         }
     }
 
-    if !mouse_input_consumed && m.lmb_pressed do m.captured_outside = true
-    if m.captured_outside && m.lmb_released do m.captured_outside = false
+    if !mouse_input_consumed && lmb_pressed do m.captured = { outside=true }
+    if m.captured.outside && lmb_released do m.captured = {}
 
     m.prev_mouse = mouse
     return

@@ -114,7 +114,7 @@ debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
 
 @(private)
 get_debug_color :: proc (f: ^sl.Frame) -> rl.Color {
-    return f.parent == nil ? rl.GRAY : f.pressed ? rl.RED : f.hovered ? rl.YELLOW : rl.LIGHTGRAY
+    return f.parent == nil ? rl.GRAY : f.captured ? rl.RED : f.hovered ? rl.YELLOW : rl.LIGHTGRAY
 }
 
 @(private)

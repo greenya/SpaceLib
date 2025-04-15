@@ -35,7 +35,7 @@ Frame :: struct {
     wheel       : Frame_Wheel_Proc,
     hovered     : bool,
     prev_hovered: bool,
-    pressed     : bool,
+    captured    : bool,
     selected    : bool,
     disabled    : bool,
 }
@@ -306,7 +306,7 @@ destroy_frame_tree :: proc (f: ^Frame) {
 update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     f.prev_hovered = f.hovered
     f.hovered = false
-    f.pressed = false
+    f.captured = false
 
     if f.hidden do return
 
