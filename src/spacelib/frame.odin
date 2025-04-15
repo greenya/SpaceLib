@@ -46,7 +46,7 @@ Layout :: struct {
     scroll      : Layout_Scroll,
     size        : Vec2,
     gap         : f32,
-    pad         : f32,
+    pad         : Vec2,
     auto_size   : bool,
 }
 
@@ -383,22 +383,22 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         if child.hidden do continue
 
         rect := Rect {}
-        rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w
-        rect.h = child.size.y != 0 ? child.size.y : f.layout.size.y != 0 ? f.layout.size.y : f.rect.h
+        rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w-2*f.layout.pad.x
+        rect.h = child.size.y != 0 ? child.size.y : f.layout.size.y != 0 ? f.layout.size.y : f.rect.h-2*f.layout.pad.y
 
         #partial switch f.layout.dir {
         case .left:
-            rect.x = has_prev_rect ? prev_rect.x-rect.w-f.layout.gap : f.rect.x+f.rect.w-rect.w-f.layout.pad
-            rect.y = f.rect.y
+            rect.x = has_prev_rect ? prev_rect.x-rect.w-f.layout.gap : f.rect.x+f.rect.w-rect.w-f.layout.pad.x
+            rect.y = f.rect.y + f.layout.pad.y
         case .left_and_right, .right:
-            rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+f.layout.gap : f.rect.x+f.layout.pad
-            rect.y = f.rect.y
+            rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+f.layout.gap : f.rect.x+f.layout.pad.x
+            rect.y = f.rect.y + f.layout.pad.y
         case .up:
-            rect.x = f.rect.x
-            rect.y = has_prev_rect ? prev_rect.y-rect.h-f.layout.gap : f.rect.y+f.rect.h-rect.h-f.layout.pad
+            rect.x = f.rect.x + f.layout.pad.x
+            rect.y = has_prev_rect ? prev_rect.y-rect.h-f.layout.gap : f.rect.y+f.rect.h-rect.h-f.layout.pad.y
         case .up_and_down, .down:
-            rect.x = f.rect.x
-            rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+f.layout.gap : f.rect.y+f.layout.pad
+            rect.x = f.rect.x + f.layout.pad.x
+            rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+f.layout.gap : f.rect.y+f.layout.pad.y
         }
 
         prev_rect = rect
@@ -485,8 +485,8 @@ get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_siz
                 max_y2 = last_child.rect.y + last_child.rect.h
             }
 
-            content_size[0] = min_y1 - f.rect.y - f.layout.pad
-            content_size[1] = max_y2 - f.rect.y + f.layout.pad
+            content_size[0] = min_y1 - f.rect.y - f.layout.pad.y
+            content_size[1] = max_y2 - f.rect.y + f.layout.pad.y
         } else {
             min_x1: f32
             max_x2: f32
@@ -500,8 +500,8 @@ get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_siz
                 max_x2 = last_child.rect.x + last_child.rect.w
             }
 
-            content_size[0] = min_x1 - f.rect.x - f.layout.pad
-            content_size[1] = max_x2 - f.rect.x + f.layout.pad
+            content_size[0] = min_x1 - f.rect.x - f.layout.pad.x
+            content_size[1] = max_x2 - f.rect.x + f.layout.pad.x
         }
     }
 
