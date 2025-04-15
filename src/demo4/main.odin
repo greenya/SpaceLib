@@ -39,7 +39,7 @@ create_game :: proc () {
             if game.debug_drawing do return
             rl.EndScissorMode()
         },
-        frame_post_draw_proc = proc (f: ^sl.Frame) {
+        overdraw_proc = proc (f: ^sl.Frame) {
             if !game.debug_drawing do return
             sl_rl.debug_draw_frame(f)
             sl_rl.debug_draw_frame_layout(f)

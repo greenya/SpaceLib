@@ -16,7 +16,7 @@ Manager :: struct {
 
     scissor_start_proc  : Frame_Proc,
     scissor_end_proc    : Frame_Proc,
-    frame_post_draw_proc: Frame_Proc,
+    overdraw_proc       : Frame_Proc,
 }
 
 Mouse_Input :: struct {
@@ -31,11 +31,11 @@ Captured_Info :: struct {
     pos     : Vec2,
 }
 
-create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, frame_post_draw_proc: Frame_Proc = nil) -> ^Manager {
+create_manager :: proc (scissor_start_proc: Frame_Proc = nil, scissor_end_proc: Frame_Proc = nil, overdraw_proc: Frame_Proc = nil) -> ^Manager {
     m := new(Manager)
     m.scissor_start_proc = scissor_start_proc
     m.scissor_end_proc = scissor_end_proc
-    m.frame_post_draw_proc = frame_post_draw_proc
+    m.overdraw_proc = overdraw_proc
     m.root = add_frame(nil, { pass=true })
     return m
 }

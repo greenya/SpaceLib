@@ -5,6 +5,8 @@ import "core:strings"
 
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]"
+// todo: layout_apply_scroll() should return true if scroll was consumed (actually scrolled anything)
+// todo: user's Frame.wheel() should return true if scroll was consumed
 
 Frame :: struct {
     parent      : ^Frame,
@@ -29,6 +31,7 @@ Frame :: struct {
 
     text        : string,
     draw        : Frame_Proc,
+    draw_after  : Frame_Proc,
     enter       : Frame_Proc,
     leave       : Frame_Proc,
     click       : Frame_Proc,
@@ -356,10 +359,11 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
     if f.draw != nil do f.draw(f)
-    if m.frame_post_draw_proc != nil do m.frame_post_draw_proc(f)
+    if m.overdraw_proc != nil do m.overdraw_proc(f)
     if f.scissor && m.scissor_start_proc != nil do m.scissor_start_proc(f)
     for child in f.children do draw_frame_tree(child, m)
     if f.scissor && m.scissor_end_proc != nil do m.scissor_end_proc(f)
+    if f.draw_after != nil do f.draw_after(f)
 }
 
 @(private)
@@ -408,14 +412,14 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         case .left, .left_and_right, .right:
             switch f.layout.align {
             case .start : // already aligned
-            case .center: rect.y += (f.rect.h-rect.h)/2
-            case .end   : rect.h += (f.rect.h-rect.h)
+            case .center: rect.y += (f.rect.h-rect.h)/2   - f.layout.pad.y
+            case .end   : rect.h +=  f.rect.h-rect.h    - 2*f.layout.pad.y
             }
         case .up, .up_and_down, .down:
             switch f.layout.align {
             case .start : // already aligned
-            case .center: rect.x += (f.rect.w-rect.w)/2
-            case .end   : rect.x += (f.rect.w-rect.w)
+            case .center: rect.x += (f.rect.w-rect.w)/2   - f.layout.pad.x
+            case .end   : rect.x +=  f.rect.w-rect.w    - 2*f.layout.pad.x
             }
         }
 

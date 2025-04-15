@@ -1,5 +1,6 @@
 package demo4
 
+import "core:fmt"
 import rl "vendor:raylib"
 import sl "../spacelib"
 import sl_rl "../spacelib/raylib"
@@ -79,6 +80,12 @@ draw_ui_button :: proc (f: ^sl.Frame) {
     }
 }
 
+draw_ui_checkbox :: proc (f: ^sl.Frame) {
+    text := fmt.tprintf("%s: [ %s ]", f.text, f.selected ? "Yes" : "No")
+    text_rect := draw_text(text, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
+    f.size.y = text_rect.h
+}
+
 draw_ui_link :: proc (f: ^sl.Frame) {
     text_rect := draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
 
@@ -96,7 +103,6 @@ draw_ui_link :: proc (f: ^sl.Frame) {
         draw_text(" <~", icon_r, .anaheim_bold_32, {.center,.left}, colors.four)
     }
 
-    f.size.x = text_rect.w
     f.size.y = text_rect.h
 }
 

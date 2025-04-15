@@ -17,7 +17,7 @@ create_main_menu :: proc () {
     game.ui.main_menu.exit_dialog = add_main_menu_exit_dialog(game.ui.manager.root)
 
     // select default tab
-    sl.click(game.ui.main_menu.menu_panel, "How To Play")
+    sl.click(game.ui.main_menu.menu_panel, "Options")
 
     // // !! DEBUG -- test layout.scroll
     // cont1 := sl.add_frame(game.ui.manager.root, {
@@ -60,12 +60,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         draw_text("Roads to Power", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
     } }, { { point=.top_left, offset={0,20} }, { point=.top_right, offset={0,20} } })
 
-    tab_content := sl.add_frame(root, {
-        wheel=proc (f: ^sl.Frame, dy: f32) {
-            content := sl.find(game.ui.main_menu.menu_panel, "how_to_play_panel/content")
-            if content != nil do sl.wheel(content, dy)
-        },
-    }, {
+    tab_content := sl.add_frame(root, {}, {
         { point=.top_left, rel_point=.bottom_left, rel_frame=title_bar, offset={25,0} },
         { point=.bottom_right, offset={-25-200,-25} },
     })
@@ -98,10 +93,16 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         options_panel := sl.add_frame(tab_content, {
             text="options_panel",
             hidden=true,
-            draw=draw_ui_border,
+            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
+            scissor=true,
+            draw_after=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        // todo: add checkbox demo
+        sl.add_frame(options_panel, { text="Play Music", check=true, draw=draw_ui_checkbox })
+        sl.add_frame(options_panel, { text="Play SFX", check=true, draw=draw_ui_checkbox })
+        sl.add_frame(options_panel, { text="Do something else", check=true, draw=draw_ui_checkbox })
+        sl.add_frame(options_panel, { text="And do this too please", check=true, draw=draw_ui_checkbox })
+
         // todo: add slider demo (and implement the support)
     }
 
@@ -110,6 +111,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             text="how_to_play_panel",
             hidden=true,
             draw=draw_ui_border,
+            wheel=proc (f: ^sl.Frame, dy: f32) { sl.wheel(sl.get(f, "content"), dy) },
         }, { { point=.top_left }, { point=.bottom_right } })
 
         scrollbar_w :: 50
@@ -165,25 +167,25 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     }
 
     {
-        about_panel := sl.add_frame(tab_content,
-            { text="about_panel", hidden=true, draw=draw_ui_border },
-            { { point=.top_left }, { point=.bottom_right } })
+        about_panel := sl.add_frame(tab_content, {
+            text="about_panel",
+            hidden=true,
+            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
+            scissor=true,
+            draw_after=draw_ui_border,
+        }, { { point=.top_left }, { point=.bottom_right } })
 
-        container := sl.add_frame(about_panel,
-            { scissor=true, layout={ dir=.down, align=.center, gap=5 } },
-            { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-20,-20} } })
-
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        sl.add_frame(about_panel, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("The game is made for Odin 7 Day Jam by Spacemad using Odin and Raylib.", f.rect, .anaheim_bold_32, {.top,.center}, colors.seven)
             f.size.y = text_rect.h + 10
         } })
 
-        sl.add_frame(container, { text="Open Jam page", draw=draw_ui_link })
-        sl.add_frame(container, { text="Open Game page", draw=draw_ui_link })
-        sl.add_frame(container, { text="Open Odin page", draw=draw_ui_link })
-        sl.add_frame(container, { text="Open Raylib page", draw=draw_ui_link })
+        sl.add_frame(about_panel, { text="Open Jam page", draw=draw_ui_link })
+        sl.add_frame(about_panel, { text="Open Game page", draw=draw_ui_link })
+        sl.add_frame(about_panel, { text="Open Odin page", draw=draw_ui_link })
+        sl.add_frame(about_panel, { text="Open Raylib page", draw=draw_ui_link })
 
-        sl.add_frame(container, { draw=proc (f: ^sl.Frame) {
+        sl.add_frame(about_panel, { draw=proc (f: ^sl.Frame) {
             text_rect := draw_text("Thank you for playing <3", f.rect, .anaheim_bold_32, {.bottom,.center}, colors.seven)
             f.size.y = text_rect.h + 15
         } })
@@ -210,7 +212,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         if text != "Exit" do button.radio = true
     }
 
-    sl.add_frame(root, { size={150,40}, draw=proc (f: ^sl.Frame) {
+    sl.add_frame(root, { size={150,40}, order=-1, draw=proc (f: ^sl.Frame) {
         draw_text("by Spacemad", f.rect, .anaheim_bold_32, {.bottom,.right}, colors.three)
     } }, { { point=.bottom_right, offset={-25,-15} } })
 
@@ -227,10 +229,10 @@ add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         { { point=.top_left }, { point=.bottom_right } })
 
     container := sl.add_frame(root, { size={440,0}, draw=draw_ui_panel,
-        layout={ dir=.down, gap=30, pad=30, auto_size=true } }, { { point=.center } })
+        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=true } }, { { point=.center } })
 
     sl.add_frame(container, { text="Exit the game?", draw=proc (f: ^sl.Frame) {
-        text_rect := draw_text(f.text, sl.rect_inflated(f.rect, {-40, 0}), .anaheim_bold_32, {.center,.center}, colors.seven)
+        text_rect := draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, colors.seven)
         f.size.y = text_rect.h
     } })
 
