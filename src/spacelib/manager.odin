@@ -66,20 +66,23 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
             if m.captured.frame != nil && m.captured.frame != f do continue
 
             mouse_input_consumed = true
+
             f.hovered = true
             if !f.prev_hovered {
                 append(&m.entered_frames, f)
                 if f.enter != nil do f.enter(f)
             }
 
-            if lmb_pressed do m.captured = { frame=f, pos=m.mouse.pos }
+            if lmb_pressed do m.captured = { frame=f, pos=m.mouse.pos-{f.rect.x,f.rect.y} }
 
             break
         }
 
         if m.captured.frame != nil {
-            m.captured.frame.captured = true
             mouse_input_consumed = true
+
+            m.captured.frame.captured = true
+            drag(m.captured.frame, m.mouse.pos, m.captured.pos)
 
             if lmb_released {
                 if m.captured.frame.hovered do click(m.captured.frame)

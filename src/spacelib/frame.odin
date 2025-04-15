@@ -4,7 +4,7 @@ import "core:slice"
 import "core:strings"
 
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
-// todo: maybe convert all bool fields to "flags: bit_set [Flags]""
+// todo: maybe convert all bool fields to "flags: bit_set [Flags]"
 
 Frame :: struct {
     parent      : ^Frame,
@@ -81,7 +81,7 @@ Actor :: union {
 }
 
 Actor_Scrollbar_Content :: struct { thumb: ^Frame }
-Actor_Scrollbar_Thumb   :: struct {}
+Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
 Actor_Scrollbar_Next    :: struct { content: ^Frame }
 Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
@@ -158,7 +158,7 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = n
     assert(layout_has_scroll(content))
 
     content.actor = Actor_Scrollbar_Content { thumb=thumb }
-    thumb.actor = Actor_Scrollbar_Thumb {}
+    thumb.actor = Actor_Scrollbar_Thumb { content=content }
     if next != nil do next.actor = Actor_Scrollbar_Next { content=content }
     if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
@@ -256,20 +256,6 @@ layout_apply_scroll :: proc (f: ^Frame, dy: f32) {
 }
 
 @(private)
-click_radio :: proc (f: ^Frame) {
-    if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
-    f.selected = true
-}
-
-@(private)
-click_actor :: proc (f: ^Frame) {
-    #partial switch a in f.actor {
-    case Actor_Scrollbar_Next: wheel(a.content, -1)
-    case Actor_Scrollbar_Prev: wheel(a.content, +1)
-    }
-}
-
-@(private)
 wheel_actor :: proc (f: ^Frame, dy: f32) {
     #partial switch _ in f.actor {
     case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f, dy)
@@ -291,6 +277,51 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) {
         thumb_space := thumb.parent.rect.w - thumb.rect.w
         thumb_offset := thumb_space * scroll_ratio
         thumb.anchors[0].offset.x = thumb_offset
+    }
+}
+
+@(private)
+click_radio :: proc (f: ^Frame) {
+    if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
+    f.selected = true
+}
+
+@(private)
+click_actor :: proc (f: ^Frame) {
+    #partial switch a in f.actor {
+    case Actor_Scrollbar_Next: wheel(a.content, -1)
+    case Actor_Scrollbar_Prev: wheel(a.content, +1)
+    }
+}
+
+@(private)
+drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
+    if f.actor != nil do drag_actor(f, mouse_pos, captured_pos)
+}
+
+@(private)
+drag_actor :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
+    #partial switch a in f.actor {
+    case Actor_Scrollbar_Thumb: drag_actor_scrollbar_thumb(f, mouse_pos, captured_pos)
+    }
+}
+
+@(private)
+drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
+    actor := &f.actor.(Actor_Scrollbar_Thumb)
+
+    if is_layout_dir_vertical(actor.content) {
+        space := f.parent.rect.h - f.rect.h
+        ratio := clamp_ratio(mouse_pos.y-captured_pos.y, f.parent.rect.y, f.parent.rect.y + f.parent.rect.h - f.rect.h)
+        f.anchors[0].offset.y = space * ratio
+        scroll := &actor.content.layout.scroll
+        scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
+    } else {
+        space := f.parent.rect.w - f.rect.w
+        ratio := clamp_ratio(mouse_pos.x-captured_pos.x, f.parent.rect.x, f.parent.rect.x + f.parent.rect.w - f.rect.w)
+        f.anchors[0].offset.x = space * ratio
+        scroll := &actor.content.layout.scroll
+        scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
     }
 }
 
