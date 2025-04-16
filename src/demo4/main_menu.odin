@@ -57,7 +57,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     } }, { /*{ point=.center },*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} } })
 
     title_bar := sl.add_frame(root, { size={0,120}, draw=proc (f: ^sl.Frame) {
-        draw_text("Roads to Power", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
+        draw_text("Demo Title Text", f.rect, .anaheim_bold_64, {.center,.center}, colors.seven)
     } }, { { point=.top_left, offset={0,20} }, { point=.top_right, offset={0,20} } })
 
     tab_content := sl.add_frame(root, {}, {
@@ -93,8 +93,8 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         options_panel := sl.add_frame(tab_content, {
             text="options_panel",
             hidden=true,
-            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             scissor=true,
+            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 
@@ -111,7 +111,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
             text="how_to_play_panel",
             hidden=true,
             draw=draw_ui_border,
-            wheel=proc (f: ^sl.Frame, dy: f32) { sl.wheel(sl.get(f, "content"), dy) },
+            wheel=proc (f: ^sl.Frame, dy: f32) -> bool { return sl.wheel(f, "content", dy) },
         }, { { point=.top_left }, { point=.bottom_right } })
 
         scrollbar_w :: 50
@@ -184,8 +184,8 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
         about_panel := sl.add_frame(tab_content, {
             text="about_panel",
             hidden=true,
-            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             scissor=true,
+            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border,
         }, { { point=.top_left }, { point=.bottom_right } })
 

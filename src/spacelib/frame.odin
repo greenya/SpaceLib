@@ -5,8 +5,6 @@ import "core:strings"
 
 // todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 // todo: maybe convert all bool fields to "flags: bit_set [Flags]"
-// todo: layout_apply_scroll() should return true if scroll was consumed (actually scrolled anything)
-// todo: user's Frame.wheel() should return true if scroll was consumed
 
 Frame :: struct {
     parent      : ^Frame,
@@ -109,7 +107,7 @@ Anchor_Point :: enum {
 }
 
 Frame_Proc          :: proc (f: ^Frame)
-Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32)
+Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: [] Anchor = {}) -> ^Frame {
     f := new(Frame)
@@ -182,17 +180,37 @@ show :: proc {
     show_by_path,
 }
 
-hide :: proc (f: ^Frame) {
+hide_by_frame :: proc (f: ^Frame) {
     f.hidden = true
 }
 
-wheel :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
-    if hidden(f) || disabled(f) do return
-    has_scroll := layout_has_scroll(f)
-    if has_scroll do layout_apply_scroll(f, dy)
-    if f.actor != nil do wheel_actor(f, dy)
-    if f.wheel != nil do f.wheel(f, dy)
-    return has_scroll || f.wheel != nil || f.modal
+hide_by_path :: proc (parent: ^Frame, path: string) {
+    target := get(parent, path)
+    hide_by_frame(target)
+}
+
+hide :: proc {
+    hide_by_frame,
+    hide_by_path,
+}
+
+wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+    if hidden(f) || disabled(f) do return false
+    if layout_has_scroll(f) && layout_apply_scroll(f, dy) do consumed = true
+    if f.actor != nil && wheel_actor(f, dy) do consumed = true
+    if f.wheel != nil && f.wheel(f, dy) do consumed = true
+    if f.modal do consumed = true
+    return
+}
+
+wheel_by_path :: proc (parent: ^Frame, path: string, dy: f32) -> (consumed: bool) {
+    target := get(parent, path)
+    return wheel_by_frame(target, dy)
+}
+
+wheel :: proc {
+    wheel_by_frame,
+    wheel_by_path,
 }
 
 click_by_frame :: proc (f: ^Frame) {
@@ -244,7 +262,7 @@ find :: proc (parent: ^Frame, path: string) -> ^Frame {
 
 get :: proc (parent: ^Frame, path: string) -> ^Frame {
     target := find(parent, path)
-    if target == nil do panic("Path not found, use find() in case its expected")
+    ensure(target != nil, "Path not found, use find() in case its expected")
     return target
 }
 
@@ -253,20 +271,27 @@ layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
 }
 
 @(private)
-layout_apply_scroll :: proc (f: ^Frame, dy: f32) {
+layout_apply_scroll :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     scroll := &f.layout.scroll
-    scroll.offset = clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
-}
-
-@(private)
-wheel_actor :: proc (f: ^Frame, dy: f32) {
-    #partial switch _ in f.actor {
-    case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f, dy)
+    new_offset := clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
+    if scroll.offset != new_offset {
+        scroll.offset = new_offset
+        return true
+    } else {
+        return false
     }
 }
 
 @(private)
-wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) {
+wheel_actor :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+    #partial switch _ in f.actor {
+    case Actor_Scrollbar_Content: return wheel_actor_scrollbar_content(f, dy)
+    case                        : return false
+    }
+}
+
+@(private)
+wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     actor := &f.actor.(Actor_Scrollbar_Content)
     thumb := actor.thumb
     scroll := &f.layout.scroll
@@ -275,12 +300,20 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) {
     if is_layout_dir_vertical(f) {
         thumb_space := thumb.parent.rect.h - thumb.rect.h
         thumb_offset := thumb_space * scroll_ratio
-        thumb.anchors[0].offset.y = thumb_offset
+        if thumb.anchors[0].offset.y != thumb_offset {
+            thumb.anchors[0].offset.y = thumb_offset
+            consumed = true
+        }
     } else {
         thumb_space := thumb.parent.rect.w - thumb.rect.w
         thumb_offset := thumb_space * scroll_ratio
-        thumb.anchors[0].offset.x = thumb_offset
+        if thumb.anchors[0].offset.x != thumb_offset {
+            thumb.anchors[0].offset.x = thumb_offset
+            consumed = true
+        }
     }
+
+    return
 }
 
 @(private)
