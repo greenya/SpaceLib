@@ -101,11 +101,12 @@ main :: proc () {
         sl.draw_manager(game.ui.manager)
 
         if game.debug_drawing {
-            rect := rl.Rectangle { 10, game.screen_rect.h-200-10, 280, 200 }
+            rect_w, rect_h :: 280, 220
+            rect := rl.Rectangle { 10, game.screen_rect.h-rect_h-10, rect_w, rect_h }
             rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
             rl.DrawRectangleLinesEx(rect, 2, rl.RED)
             rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-            cstr := fmt.ctprintf("%#v", game.ui.manager.stats)
+            cstr := fmt.ctprintf("TA Memory: %v\n%#v", sl_ta.current_memory_allocated(), game.ui.manager.stats)
             rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
         }
 
