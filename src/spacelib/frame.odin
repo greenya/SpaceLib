@@ -3,9 +3,6 @@ package spacelib
 import "core:slice"
 import "core:strings"
 
-// todo: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
-// todo: maybe convert all bool fields to "flags: bit_set [Flags]"
-
 Frame :: struct {
     parent      : ^Frame,
     order       : int,
