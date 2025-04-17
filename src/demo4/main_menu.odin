@@ -239,7 +239,7 @@ add_main_menu_panel :: proc (parent: ^sl.Frame) -> ^sl.Frame {
 
 add_main_menu_exit_dialog :: proc (parent: ^sl.Frame) -> ^sl.Frame {
     root := sl.add_frame(parent,
-        { text=#procedure, order=10, hidden=true, modal=true, draw=draw_ui_dim_rect },
+        { text=#procedure, order=10, hidden=true, solid=true, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
 
     container := sl.add_frame(root, { size={440,0}, draw=draw_ui_panel,

@@ -99,7 +99,16 @@ main :: proc () {
         rl.EndMode2D()
 
         sl.draw_manager(game.ui.manager)
-        // rl.DrawFPS(10, 10)
+
+        if game.debug_drawing {
+            rect := rl.Rectangle { 10, game.screen_rect.h-200-10, 280, 200 }
+            rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
+            rl.DrawRectangleLinesEx(rect, 2, rl.RED)
+            rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
+            cstr := fmt.ctprintf("%#v", game.ui.manager.stats)
+            rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
+        }
+
         rl.EndDrawing()
     }
 

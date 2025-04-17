@@ -20,7 +20,7 @@ Frame :: struct {
 
     hidden      : bool,
     pass        : bool,
-    modal       : bool,
+    solid       : bool,
     scissor     : bool,
     check       : bool,
     radio       : bool,
@@ -199,7 +199,7 @@ wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if layout_has_scroll(f) && layout_apply_scroll(f, dy) do consumed = true
     if f.actor != nil && wheel_actor(f, dy) do consumed = true
     if f.wheel != nil && f.wheel(f, dy) do consumed = true
-    if f.modal do consumed = true
+    if f.solid do consumed = true
     return
 }
 
@@ -398,12 +398,14 @@ draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     for child in f.children do draw_frame_tree(child, m)
     if f.scissor do pop_scissor_rect(m)
     if f.draw_after != nil do f.draw_after(f)
+    m.stats.frames_drawn += 1
 }
 
 @(private)
-mark_frame_tree_rect_dirty :: proc (f: ^Frame) {
+mark_frame_tree_rect_dirty :: proc (f: ^Frame, m: ^Manager) {
     f.rect_dirty = true
-    for child in f.children do mark_frame_tree_rect_dirty(child)
+    for child in f.children do mark_frame_tree_rect_dirty(child, m)
+    m.stats.frames_total += 1
 }
 
 @(private)

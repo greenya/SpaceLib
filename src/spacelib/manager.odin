@@ -1,6 +1,7 @@
 package spacelib
 
 import "core:slice"
+import "core:time"
 
 Manager :: struct {
     root                : ^Frame,
@@ -21,6 +22,8 @@ Manager :: struct {
     scissor_clear_proc  : Scissor_Clear_Proc,
 
     overdraw_proc       : Frame_Proc,
+
+    stats               : Manager_Stats,
 }
 
 Mouse_Input :: struct {
@@ -39,6 +42,14 @@ Captured_Info :: struct {
     outside : bool,
     frame   : ^Frame,
     pos     : Vec2,
+}
+
+Manager_Stats :: struct {
+    updating_time   : time.Duration,
+    drawing_time    : time.Duration,
+    frames_total    : int,
+    frames_drawn    : int,
+    scissors_set    : int,
 }
 
 Scissor_Set_Proc    :: proc (r: Rect)
@@ -63,7 +74,14 @@ destroy_manager :: proc (m: ^Manager) {
 }
 
 update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
+    m.stats = {}
+    phase_started := time.now()
     m.phase = .updating
+    defer {
+        m.phase = .none
+        m.stats.updating_time = time.since(phase_started)
+    }
+
     m.root.rect = root_rect
     m.scissor_rect = root_rect
 
@@ -74,7 +92,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     clear(&m.mouse_frames)
     clear(&m.auto_hide_frames)
 
-    mark_frame_tree_rect_dirty(m.root)
+    mark_frame_tree_rect_dirty(m.root, m)
     update_frame_tree(m.root, m)
 
     if !m.captured.outside {
@@ -133,16 +151,21 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     if m.captured.outside && lmb_released do m.captured = {}
 
     m.prev_mouse = mouse
-    m.phase = .none
     return
 }
 
 draw_manager :: proc (m: ^Manager) {
-    assert(len(m.scissor_rects) == 0)
+    phase_started := time.now()
     m.phase = .drawing
+    defer {
+        m.phase = .none
+        m.stats.drawing_time = time.since(phase_started)
+    }
+
+    assert(len(m.scissor_rects) == 0)
     m.scissor_rect = m.root.rect
+
     draw_frame_tree(m.root, m)
-    m.phase = .none
 }
 
 @(private)
@@ -158,7 +181,10 @@ push_scissor_rect :: proc (m: ^Manager, new_rect: Rect) {
 
     append(&m.scissor_rects, new_rect)
     m.scissor_rect = new_rect
-    if m.phase == .drawing && m.scissor_set_proc != nil do m.scissor_set_proc(new_rect)
+    if m.phase == .drawing && m.scissor_set_proc != nil {
+        m.scissor_set_proc(new_rect)
+        m.stats.scissors_set += 1
+    }
 }
 
 @(private)

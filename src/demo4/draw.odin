@@ -17,6 +17,51 @@ draw_rect_lines :: proc (rect: sl.Rect, thick := f32(1.0), tint := rl.WHITE) {
 
 // todo: add text token, split frame update and draw
 
+// todo: implement Measured_HyperText maybe (?)
+
+aaa := "|TOPLEFT,f_normal,c_normal|You deal |i_fire| 17 damage |c_dim|(target dies)"
+
+bbb := "|a:topleft|f:normal|c:normal|You deal {fire} 17 damage |c:dim|(target dies)|r|"
+
+// <a:topleft><f:default><c:default> ---- defaults
+ccc1 := "You deal <i:fire> 17 damage to The Monster Name <c:dim>(target dies)</c> and you heal for <i:health> 14"
+ccc2 := "0 <i:gold> 44 <i:silver> 33 <i:copper>"
+ccc3 := "0 {gold} 44 {silver} 33 {copper}"
+ccc4 := "0 {c:gold} 44 {c:silver} 33 {c:copper}"
+
+// |va=top;ha=left;f=default;c=default|...|cr|...|br|
+
+// -- FORMATTING --
+// -- per text --
+// <valign:top> -- set valign
+// -- per line --
+// <align:left> -- push align
+// </align>     -- pop align
+// -- per word --
+// <font:name>  -- push font
+// </font>      -- pop font
+// <color:name> -- push color
+// </color>     -- pop color
+// -- EXTRA --
+// <br>         -- new line (treat \n as space, treat multiple spaces as single space)
+// <icon:name>  -- insert icon (Measured_HyperIcon, Measured_HyperLine.items: [dynamic] union { Measured_HyperText, Measured_HyperIcon }
+// <group:name> -- start group (Measured_HyperText.groups, element should contain "name" and "words", a list of ^Measured_HyperWord)
+// </group>    -- end group (each word in the group should also group name, e.g. Measured_HyperWord.group)
+
+sss := "<font:normal><color:normal>You deal <icon:fire> 17 damage <color:dim>(target dies)</color>"
+
+ddd := `
+## All roads lead to Nexus
+Build roads from any existing node. Roads cannot be destroyed.
+Build mines, turrets, and plants on empty nodes. The Nexus node
+is given at the start of the game; if destroyed, the game ends.
+
+## Growing world
+The world expands every 3 minutes. Newly revealed areas contain
+enemy units that will attack your units and nodes. Maximize gold
+mining, and build turrets and plants for unit production.
+`
+
 // // "|top+left,f1,c7|All roads lead to |c5|Nexus"
 
 // update_measured_text :: proc (f: ^sl.Frame, font_id: Font_ID, align: sl.Text_Alignment) {
