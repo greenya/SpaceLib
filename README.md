@@ -1,6 +1,6 @@
 # SpaceLib
 
-* /                     a retained mode ui library
+* /                     - a retained mode ui library
 * /raylib               - set of helpers when using lib with Raylib
 * /sdl3                 - [planned] set of helpers when using lib with SDL3
 * /tracking_allocator   - simple tracking allocator
@@ -10,6 +10,10 @@
 ## TODO
 
 - code refactor: move all ui related stuff to /ui subdir (package)
+- proj refactor: use collection:
+    * build: odin run src/demo4 -collection:spacelib=../SpaceLib/src/spacelib -out:build/demo4.exe -debug -o:none
+    * ols.json: "collections": [ { "name": "spacelib", "path": "../SpaceLib/src/spacelib" } ]
+
 - add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
 - [?] maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
