@@ -13,6 +13,22 @@ rect_center :: #force_inline proc (r: Rect) -> Vec2 {
     return { r.x + r.w/2, r.y + r.h/2 }
 }
 
+rect_half_left :: #force_inline proc (r: Rect) -> Rect {
+    return { r.x, r.y, r.w/2, r.h }
+}
+
+rect_half_right :: #force_inline proc (r: Rect) -> Rect {
+    return { r.x+r.w/2, r.y, r.w/2, r.h }
+}
+
+rect_half_top :: #force_inline proc (r: Rect) -> Rect {
+    return { r.x, r.y, r.w, r.h/2 }
+}
+
+rect_half_bottom :: #force_inline proc (r: Rect) -> Rect {
+    return { r.x, r.y+r.h/2, r.w, r.h/2 }
+}
+
 rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
     return { r.x - size.x, r.y - size.y, r.w + 2*size.x, r.h + 2*size.y }
 }
