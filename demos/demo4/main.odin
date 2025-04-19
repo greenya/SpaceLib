@@ -2,9 +2,9 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import sl "../spacelib"
-import sl_rl "../spacelib/raylib"
-import sl_ta "../spacelib/tracking_allocator"
+import sl "../../src"
+import sl_rl "../../src/raylib"
+import sl_ta "../../src/tracking_allocator"
 
 Game :: struct {
     time: f32,

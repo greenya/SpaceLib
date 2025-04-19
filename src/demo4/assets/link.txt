@@ -1,3 +1,0 @@
-[palette]           : https://lospec.com/palette-list/slso8
-Anaheim-Bold.ttf    : https://fonts.google.com/specimen/Anaheim
-ui_atlas.png        : https://kenney.nl/assets/fantasy-ui-borders

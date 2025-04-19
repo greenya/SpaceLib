@@ -6,6 +6,7 @@
 * /tracking_allocator   - simple tracking allocator
 * /tweens               - [planned] tweening support (simpler version of core:math/ease with support for ^Rect)
 * /ui                   - [planned] after code refactor, right now it is in the root (/)
+* /utils                - [planned] after code refactor, all from root (/) not related directly to ui
 
 ## TODO
 

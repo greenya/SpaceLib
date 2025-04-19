@@ -2,8 +2,8 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import sl "../spacelib"
-import sl_rl "../spacelib/raylib"
+import sl "../../src"
+import sl_rl "../../src/raylib"
 
 colors: struct {
     one,
