@@ -2,7 +2,7 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import ui "spacelib:ui"
+import "spacelib:ui"
 import sl_rl "spacelib:raylib"
 
 draw_rect :: proc (rect: ui.Rect, tint := rl.WHITE) {

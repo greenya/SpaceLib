@@ -1,7 +1,7 @@
 package demo4
 
 import "core:fmt"
-import ui "spacelib:ui"
+import "spacelib:ui"
 
 Main_Menu :: struct {
     menu_panel  : ^ui.Frame,
