@@ -2,8 +2,8 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import sl "../../src"
-import sl_rl "../../src/raylib"
+import ui "spacelib:ui"
+import sl_rl "spacelib:raylib"
 
 colors: struct {
     one,
@@ -51,7 +51,7 @@ Font_ID :: enum {
 Font :: struct {
     file_id: File_ID,
     font_rl: rl.Font,
-    using font_sl: sl.Font,
+    using font_sl: ui.Font,
 }
 
 font_assets: [Font_ID] Font = {

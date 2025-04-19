@@ -1,4 +1,4 @@
-package spacelib
+package spacelib_ui
 
 import "core:slice"
 import "core:strings"
@@ -570,7 +570,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         #partial switch anchor.point {
         case .top_left:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.t=rel.y;
+            case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.l=rel.x; dir.t=rel.y+rel.h/2
@@ -587,7 +587,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .top:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.t=rel.y;
+            case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.l=rel.x; dir.t=rel.y+rel.h/2
@@ -604,7 +604,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .top_right:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.r=rel.x; dir.t=rel.y;
+            case .top_left      : dir.r=rel.x; dir.t=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.r=rel.x; dir.t=rel.y+rel.h/2
@@ -621,7 +621,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .left:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.t=rel.y;
+            case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.l=rel.x; dir.t=rel.y+rel.h/2
@@ -638,7 +638,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .center:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.t=rel.y;
+            case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.l=rel.x; dir.t=rel.y+rel.h/2
@@ -655,7 +655,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .right:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.r=rel.x; dir.t=rel.y;
+            case .top_left      : dir.r=rel.x; dir.t=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.t=rel.y
             case .left          : dir.r=rel.x; dir.t=rel.y+rel.h/2
@@ -672,7 +672,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom_left:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.b=rel.y;
+            case .top_left      : dir.l=rel.x; dir.b=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.b=rel.y
             case .left          : dir.l=rel.x; dir.b=rel.y+rel.h/2
@@ -689,7 +689,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.l=rel.x; dir.b=rel.y;
+            case .top_left      : dir.l=rel.x; dir.b=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.b=rel.y
             case .left          : dir.l=rel.x; dir.b=rel.y+rel.h/2
@@ -706,7 +706,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom_right:
             #partial switch anchor.rel_point {
-            case .top_left      : dir.r=rel.x; dir.b=rel.y;
+            case .top_left      : dir.r=rel.x; dir.b=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.b=rel.y
             case .left          : dir.r=rel.x; dir.b=rel.y+rel.h/2

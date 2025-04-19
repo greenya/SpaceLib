@@ -2,18 +2,18 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import sl "../../src"
-import sl_rl "../../src/raylib"
-import sl_ta "../../src/tracking_allocator"
+import ui "spacelib:ui"
+import sl_rl "spacelib:raylib"
+import sl_ta "spacelib:tracking_allocator"
 
 Game :: struct {
     time: f32,
-    frame_time: f32,
-    screen_rect: sl.Rect,
+    dt: f32,
+    screen_rect: ui.Rect,
     camera: rl.Camera2D,
 
     ui: struct {
-        manager: ^sl.Manager,
+        manager: ^ui.Manager,
         main_menu: ^Main_Menu,
     },
 
@@ -30,8 +30,8 @@ create_game :: proc () {
     game = new(Game)
     game.camera = { zoom=1 }
 
-    game.ui.manager = sl.create_manager(
-        scissor_set_proc = proc (r: sl.Rect) {
+    game.ui.manager = ui.create_manager(
+        scissor_set_proc = proc (r: ui.Rect) {
             if game.debug_drawing do return
             rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
         },
@@ -39,7 +39,7 @@ create_game :: proc () {
             if game.debug_drawing do return
             rl.EndScissorMode()
         },
-        overdraw_proc = proc (f: ^sl.Frame) {
+        overdraw_proc = proc (f: ^ui.Frame) {
             if !game.debug_drawing do return
             sl_rl.debug_draw_frame(f)
             sl_rl.debug_draw_frame_layout(f)
@@ -49,14 +49,14 @@ create_game :: proc () {
 
     create_main_menu()
 
-    sl.print_frame_tree(game.ui.manager.root)
+    ui.print_frame_tree(game.ui.manager.root)
 }
 
 destroy_game :: proc () {
     fmt.println(#procedure)
 
     destroy_main_menu()
-    sl.destroy_manager(game.ui.manager)
+    ui.destroy_manager(game.ui.manager)
 
     free(game)
     game = nil
@@ -65,7 +65,7 @@ destroy_game :: proc () {
 game_tick :: proc () {
     free_all(context.temp_allocator)
     game.time = f32(rl.GetTime())
-    game.frame_time = rl.GetFrameTime()
+    game.dt = rl.GetFrameTime()
     game.screen_rect = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) }
     game.camera.offset = { game.screen_rect.w/2, game.screen_rect.h/2 }
 }
@@ -83,8 +83,8 @@ main :: proc () {
     for !rl.WindowShouldClose() && !game.exit_requested {
         game_tick()
 
-        mouse_input := sl.Mouse_Input { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) }
-        mouse_input_consumed := sl.update_manager(game.ui.manager, game.screen_rect, mouse_input)
+        mouse_input := ui.Mouse_Input { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) }
+        mouse_input_consumed := ui.update_manager(game.ui.manager, game.screen_rect, mouse_input)
         if !mouse_input_consumed {
             // fmt.printfln("[world] %v", mouse_input)
         }
@@ -98,7 +98,7 @@ main :: proc () {
         // draw_world()
         rl.EndMode2D()
 
-        sl.draw_manager(game.ui.manager)
+        ui.draw_manager(game.ui.manager)
 
         if game.debug_drawing {
             rect_w, rect_h :: 280, 220

@@ -1,4 +1,4 @@
-package spacelib
+package spacelib_ui
 
 import "core:slice"
 import "core:strings"

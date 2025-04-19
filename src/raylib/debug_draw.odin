@@ -3,9 +3,9 @@ package spacelib_raylib
 import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
-import sl ".."
+import ui "../ui"
 
-debug_draw_frame :: proc (f: ^sl.Frame) {
+debug_draw_frame :: proc (f: ^ui.Frame) {
     rect := transmute (rl.Rectangle) f.rect
     color := get_debug_color(f)
 
@@ -42,7 +42,6 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
 
     if f.order != 0 {
         cstr := fmt.ctprintf("[order:%v]", f.order)
-        cstr_w := rl.MeasureText(cstr, 10)
         rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2 + 10, 10, color)
     }
 
@@ -53,7 +52,7 @@ debug_draw_frame :: proc (f: ^sl.Frame) {
     }
 }
 
-debug_draw_frame_layout :: proc (f: ^sl.Frame) {
+debug_draw_frame_layout :: proc (f: ^ui.Frame) {
     step :: 10
     size :: 20
     thick :: 2
@@ -91,7 +90,7 @@ debug_draw_frame_layout :: proc (f: ^sl.Frame) {
     }
 }
 
-debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
+debug_draw_frame_anchors :: proc (f: ^ui.Frame) {
     thick :: 3
     size :: 6
     color := rl.ColorAlpha(get_debug_color(f), .333)
@@ -113,12 +112,12 @@ debug_draw_frame_anchors :: proc (f: ^sl.Frame) {
 }
 
 @(private)
-get_debug_color :: proc (f: ^sl.Frame) -> rl.Color {
+get_debug_color :: proc (f: ^ui.Frame) -> rl.Color {
     return f.parent == nil ? rl.GRAY : f.captured ? rl.RED : f.hovered ? rl.YELLOW : rl.LIGHTGRAY
 }
 
 @(private)
-get_anchor_point_pos :: proc (point: sl.Anchor_Point, using rect: sl.Rect) -> sl.Vec2 {
+get_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: ui.Rect) -> ui.Vec2 {
     #partial switch point {
     case .top_left      : return { x, y }
     case .top           : return { x+w/2, y }

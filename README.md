@@ -1,19 +1,15 @@
 # SpaceLib
 
-* /                     - a retained mode ui library
 * /raylib               - set of helpers when using lib with Raylib
 * /sdl3                 - [planned] set of helpers when using lib with SDL3
 * /tracking_allocator   - simple tracking allocator
 * /tweens               - [planned] tweening support (simpler version of core:math/ease with support for ^Rect)
-* /ui                   - [planned] after code refactor, right now it is in the root (/)
-* /utils                - [planned] after code refactor, all from root (/) not related directly to ui
+* /ui                   - a retained mode ui library
 
 ## TODO
 
-- code refactor: move all ui related stuff to /ui subdir (package)
-- proj refactor: use collection:
-    * build: odin run src/demo4 -collection:spacelib=../SpaceLib/src/spacelib -out:build/demo4.exe -debug -o:none
-    * ols.json: "collections": [ { "name": "spacelib", "path": "../SpaceLib/src/spacelib" } ]
++ code refactor: move all ui related stuff to /ui subdir
++ code refactor: use "-collection" arg
 
 - add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 

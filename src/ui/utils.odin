@@ -1,4 +1,4 @@
-package spacelib
+package spacelib_ui
 
 import "base:intrinsics"
 import "core:math"
@@ -13,8 +13,8 @@ rect_center :: #force_inline proc (r: Rect) -> Vec2 {
     return { r.x + r.w/2, r.y + r.h/2 }
 }
 
-rect_inflated :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
-    return { r.x - v.x, r.y - v.y, r.w + 2*v.x, r.h + 2*v.y }
+rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
+    return { r.x - size.x, r.y - size.y, r.w + 2*size.x, r.h + 2*size.y }
 }
 
 rect_moved :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
@@ -56,12 +56,12 @@ rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
-pos_in_rect :: #force_inline proc (pos: Vec2, rect: Rect) -> bool {
-    return rect.x < pos.x && rect.x+rect.w > pos.x && rect.y < pos.y && rect.y+rect.h > pos.y
+pos_in_rect :: #force_inline proc (pos: Vec2, r: Rect) -> bool {
+    return r.x < pos.x && r.x+r.w > pos.x && r.y < pos.y && r.y+r.h > pos.y
 }
 
-clamp_pos_to_rect :: #force_inline proc (v: Vec2, r: Rect) -> Vec2 {
-    return { clamp(v.x, r.x, r.x + r.w), clamp(v.y, r.y, r.y + r.h) }
+clamp_pos_to_rect :: #force_inline proc (pos: Vec2, r: Rect) -> Vec2 {
+    return { clamp(pos.x, r.x, r.x + r.w), clamp(pos.y, r.y, r.y + r.h) }
 }
 
 clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intrinsics.type_is_float(T) {
@@ -88,12 +88,12 @@ pos_moved_towards_pos :: proc (pos, target_pos: Vec2, speed, dt: f32) -> (new_po
     return pos + dir * speed * dt
 }
 
-pos_orbited_around_pos :: proc (pos, orbit_pos: Vec2, speed, dt: f32, is_clockwise := true) -> (new_pos: Vec2) {
+pos_orbited_around_pos :: proc (pos, orbit_pos: Vec2, speed, dt: f32, is_clockwise := true) -> (new_orbit_pos: Vec2) {
     radius := linalg.distance(orbit_pos, pos)
     angle := linalg.atan2(pos.y-orbit_pos.y, pos.x-orbit_pos.x)
     angular_vel := speed / radius
     new_angle := is_clockwise\
-        ? angle + angular_vel * dt\
+        ?  angle + angular_vel * dt\
         : -angle + angular_vel * dt
     new_x := orbit_pos.x + radius * math.cos(new_angle)
     new_y := orbit_pos.y + radius * math.sin(new_angle)
