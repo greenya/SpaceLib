@@ -61,5 +61,11 @@ print_report :: proc () {
     fmt.println("-----------------------------------")
 }
 
+print_report_with_issues_only :: proc () {
+    if len(track.allocation_map) > 0 || len(track.bad_free_array) > 0 {
+        print_report()
+    }
+}
+
 @(private)
 track: mem.Tracking_Allocator
