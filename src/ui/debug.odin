@@ -10,10 +10,10 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
     for i in 0..=_depth do strings.write_string(&sb, i == 0 ? "+" : "-")
     strings.write_rune(&sb, '{')
 
-    if f.text != "" do fmt.sbprintf(&sb, " text=\"%s\"", f.text)
-    if f.solid do fmt.sbprint(&sb, " solid=true")
-    if f.scissor do fmt.sbprint(&sb, " scissor=true")
-    if f.layout.dir != .none do fmt.sbprintf(&sb, " layout.dir=%v", f.layout.dir)
+    if f.text != ""             do fmt.sbprintf(&sb, " text=\"%s\"", f.text)
+    if f.solid                  do fmt.sbprint (&sb, " solid=true")
+    if f.scissor                do fmt.sbprint (&sb, " scissor=true")
+    if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout.dir=%v", f.layout.dir)
 
     if sb.buf[len(sb.buf)-1] != '{' do strings.write_rune(&sb, ' ')
     strings.write_rune(&sb, '}')

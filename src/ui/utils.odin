@@ -8,6 +8,7 @@ import "core:math/rand"
 Vec2 :: [2] f32
 Vec3 :: [3] f32
 Rect :: struct { x, y, w, h: f32 }
+Color :: [4] u8
 
 rect_center :: #force_inline proc (r: Rect) -> Vec2 {
     return { r.x + r.w/2, r.y + r.h/2 }
@@ -84,12 +85,6 @@ clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intri
     return clamp((value - minimum) / (maximum - minimum), 0.0, 1.0)
 }
 
-is_consumed :: #force_inline proc (flag: ^bool) -> bool {
-    if !flag^ do return false
-    flag^ = false
-    return true
-}
-
 random_pos_in_rect :: proc (rect: Rect) -> Vec2 {
     return { rect.x + rect.w*rand.float32(), rect.y + rect.h*rand.float32() }
 }
@@ -114,6 +109,18 @@ pos_orbited_around_pos :: proc (pos, orbit_pos: Vec2, speed, dt: f32, is_clockwi
     new_x := orbit_pos.x + radius * math.cos(new_angle)
     new_y := orbit_pos.y + radius * math.sin(new_angle)
     return { new_x, new_y }
+}
+
+is_consumed :: #force_inline proc (flag: ^bool) -> bool {
+    if !flag^ do return false
+    flag^ = false
+    return true
+}
+
+alpha :: #force_inline proc (c: Color, alpha_ratio: f32) -> Color {
+    c := c
+    c.a = u8(f32(c.a)*alpha_ratio)
+    return c
 }
 
 // https://iquilezles.org/articles/palettes/

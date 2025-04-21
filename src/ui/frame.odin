@@ -193,10 +193,12 @@ hide :: proc {
 
 wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return false
-    if layout_has_scroll(f) && layout_apply_scroll(f, dy) do consumed = true
-    if f.actor != nil && wheel_actor(f, dy) do consumed = true
-    if f.wheel != nil && f.wheel(f, dy) do consumed = true
-    if f.solid do consumed = true
+
+    if layout_has_scroll(f) && layout_apply_scroll(f, dy)   do consumed = true
+    if f.actor != nil && wheel_actor(f, dy)                 do consumed = true
+    if f.wheel != nil && f.wheel(f, dy)                     do consumed = true
+    if f.solid                                              do consumed = true
+
     return
 }
 
@@ -212,10 +214,11 @@ wheel :: proc {
 
 click_by_frame :: proc (f: ^Frame) {
     if disabled(f) do return
-    if f.check do f.selected = !f.selected
-    if f.radio do click_radio(f)
-    if f.actor != nil do click_actor(f)
-    if f.click != nil do f.click(f)
+
+    if f.check          do f.selected = !f.selected
+    if f.radio          do click_radio(f)
+    if f.actor != nil   do click_actor(f)
+    if f.click != nil   do f.click(f)
 }
 
 click_by_path :: proc (parent: ^Frame, path: string) {
@@ -389,12 +392,14 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 @(private)
 draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
+
     if f.draw != nil do f.draw(f)
     if m.overdraw_proc != nil do m.overdraw_proc(f)
     if f.scissor do push_scissor_rect(m, f.rect)
     for child in f.children do draw_frame_tree(child, m)
     if f.scissor do pop_scissor_rect(m)
     if f.draw_after != nil do f.draw_after(f)
+
     m.stats.frames_drawn += 1
 }
 
