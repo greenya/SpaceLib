@@ -9,18 +9,18 @@ Clock :: struct ($T: typeid) where intrinsics.type_is_float(T) {
     time_scale  : T,
     tick_count  : int,
 
-    _now        : tm.Time,
+    _now        : tm.Tick,
 }
 
 init :: proc (c: ^Clock($T)) {
-    c^ = { time_scale=1, _now=tm.now() }
+    c^ = { time_scale=1, _now=tm.tick_now() }
 }
 
 tick :: proc (c: ^Clock($T)) {
     c.tick_count += 1
 
-    now := tm.now()
-    dur := tm.diff(c._now, now)
+    now := tm.tick_now()
+    dur := tm.tick_diff(c._now, now)
     dt := f64(c.time_scale) * tm.duration_seconds(dur)
     c.time += T(dt)
 
