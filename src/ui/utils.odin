@@ -86,7 +86,11 @@ clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intri
     return clamp((value - minimum) / (maximum - minimum), 0.0, 1.0)
 }
 
-ease_pos :: proc (from, to: Vec2, ratio: f32, easing := ease.Ease.Linear) -> Vec2 {
+ease_ratio :: #force_inline proc "contextless" (ratio: $T, easing: ease.Ease) -> T {
+    return ease.ease(easing, ratio)
+}
+
+ease_pos :: proc (from, to: Vec2, ratio: f32, easing: ease.Ease = .Linear) -> Vec2 {
     ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
     return {
         from.x + (to.x - from.x) * ratio,
