@@ -75,11 +75,11 @@ destroy_manager :: proc (m: ^Manager) {
 
 update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     m.stats = {}
-    phase_started := time.now()
+    phase_started := time.tick_now()
     m.phase = .updating
     defer {
         m.phase = .none
-        m.stats.updating_time = time.since(phase_started)
+        m.stats.updating_time = time.tick_since(phase_started)
     }
 
     m.root.rect = root_rect
@@ -155,11 +155,11 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
 }
 
 draw_manager :: proc (m: ^Manager) {
-    phase_started := time.now()
+    phase_started := time.tick_now()
     m.phase = .drawing
     defer {
         m.phase = .none
-        m.stats.drawing_time = time.since(phase_started)
+        m.stats.drawing_time = time.tick_since(phase_started)
     }
 
     assert(len(m.scissor_rects) == 0)
