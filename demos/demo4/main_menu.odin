@@ -8,16 +8,16 @@ Main_Menu :: struct {
     exit_dialog : ^ui.Frame,
 }
 
-create_main_menu :: proc () {
+main_menu_init :: proc () {
     fmt.println(#procedure)
-    assert(game.ui.main_menu == nil)
+    assert(app.ui.main_menu == nil)
 
-    game.ui.main_menu = new(Main_Menu)
-    game.ui.main_menu.menu_panel = add_main_menu_panel(game.ui.manager.root)
-    game.ui.main_menu.exit_dialog = add_main_menu_exit_dialog(game.ui.manager.root)
+    app.ui.main_menu = new(Main_Menu)
+    app.ui.main_menu.menu_panel = main_menu_add_panel(app.ui.manager.root)
+    app.ui.main_menu.exit_dialog = main_menu_add_exit_dialog(app.ui.manager.root)
 
     // select default tab
-    ui.click(game.ui.main_menu.menu_panel, "Options")
+    ui.click(app.ui.main_menu.menu_panel, "Options")
 
     // // !! DEBUG -- test layout.scroll
     // cont1 := ui.add_frame(game.ui.manager.root, {
@@ -38,18 +38,18 @@ create_main_menu :: proc () {
     // for i in 0..<5 do ui.add_frame(cont2, { draw=draw_ui_border })
 }
 
-destroy_main_menu :: proc () {
+main_menu_destroy :: proc () {
     fmt.println(#procedure)
 
-    free(game.ui.main_menu)
-    game.ui.main_menu = nil
+    free(app.ui.main_menu)
+    app.ui.main_menu = nil
 }
 
 // ----------
 // menu panel
 // ----------
 
-add_main_menu_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent, { text=#procedure, /*size={720,480},*/ draw=proc (f: ^ui.Frame) {
         draw_sprite(.panel_3, f.rect, colors.two)
     } }, { /*{ point=.center },*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} } })
@@ -210,7 +210,7 @@ add_main_menu_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
     for text in ([] string { "Play", "Options", "How To Play", "About", "Exit" }) {
         button := ui.add_frame(tab_bar, { text=text, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
-            menu := game.ui.main_menu
+            menu := app.ui.main_menu
             switch f.text {
             case "Play"         : ui.show(menu.menu_panel, "play_panel", hide_siblings=true)
             case "Options"      : ui.show(menu.menu_panel, "options_panel", hide_siblings=true)
@@ -235,7 +235,7 @@ add_main_menu_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 // exit dialog
 // -----------
 
-add_main_menu_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent,
         { text=#procedure, order=10, hidden=true, solid=true, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
@@ -251,11 +251,11 @@ add_main_menu_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     button_row := ui.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
 
     ui.add_frame(button_row, { text="Yes", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
-        game.exit_requested = true
+        app.exit_requested = true
     } })
 
     ui.add_frame(button_row, { text="No", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
-        ui.hide(game.ui.main_menu.exit_dialog)
+        ui.hide(app.ui.main_menu.exit_dialog)
     } })
 
     return root

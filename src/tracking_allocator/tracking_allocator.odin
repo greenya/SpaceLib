@@ -7,10 +7,10 @@ import "core:mem"
 
 Usage:
 
-    import ta "spacelib:tracking_allocator"
+    import "spacelib:tracking_allocator"
     main :: proc () {
-        context.allocator = ta.init()
-        defer ta.print_report()
+        context.allocator = tracking_allocator.init()
+        defer tracking_allocator.print_report()
         ...
     }
 

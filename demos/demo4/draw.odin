@@ -20,12 +20,12 @@ draw_text :: proc (text: string, rect: ui.Rect, font_id: Font_ID, align: ui.Text
 
     measured_text := ui.measure_text_rect(text, rect, &font.font_sl, align, context.temp_allocator)
 
-    if game.debug_drawing do draw_rect_lines(rect, tint={255,0,255,120})
-    if game.debug_drawing do draw_rect(measured_text.rect, {255,0,0,40})
+    if app.debug_drawing do draw_rect_lines(rect, tint={255,0,255,120})
+    if app.debug_drawing do draw_rect(measured_text.rect, {255,0,0,40})
 
     for line in measured_text.lines {
         for word in line.words {
-            if game.debug_drawing do draw_rect(word.rect, {0,255,255,80})
+            if app.debug_drawing do draw_rect(word.rect, {0,255,255,80})
             sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
         }
     }
@@ -39,8 +39,8 @@ draw_sprite :: proc (id: Sprite_ID, rect: ui.Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
 
     switch info in sprite.info {
-    case rl.Rectangle:  rl.DrawTexturePro(texture.texture, info, rect_rl, {}, 0, tint)
-    case rl.NPatchInfo: rl.DrawTextureNPatch(texture.texture, info, rect_rl, {}, 0, tint)
+    case rl.Rectangle   : rl.DrawTexturePro(texture.texture, info, rect_rl, {}, 0, tint)
+    case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture, info, rect_rl, {}, 0, tint)
     }
 }
 

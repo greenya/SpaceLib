@@ -101,12 +101,12 @@ sprite_assets: [Sprite_ID] Sprite = {
     .panel_4    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
     .panel_9    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
     .panel_15   = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .icon_up    = { texture_id=.sheet_white1x, info=rl.Rectangle { 100, 50,50,50 } },
-    .icon_down  = { texture_id=.sheet_white1x, info=rl.Rectangle { 400,300,50,50 } },
-    .icon_stop  = { texture_id=.sheet_white1x, info=rl.Rectangle { 100,400,50,50 } },
+    .icon_up    = { texture_id=.sheet_white1x, info=rl.Rectangle {100, 50,50,50} },
+    .icon_down  = { texture_id=.sheet_white1x, info=rl.Rectangle {400,300,50,50} },
+    .icon_stop  = { texture_id=.sheet_white1x, info=rl.Rectangle {100,400,50,50} },
 }
 
-load_assets :: proc () {
+assets_load :: proc () {
     for &font in font_assets {
         file := &file_assets[font.file_id]
         file_ext := fmt.ctprintf(".%s", file.type)
@@ -124,7 +124,7 @@ load_assets :: proc () {
     }
 }
 
-unload_assets :: proc () {
+assets_unload :: proc () {
     for &font in font_assets {
         rl.UnloadFont(font.font_rl)
         font.font_rl = {}
