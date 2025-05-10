@@ -3,7 +3,7 @@ package demo4
 import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:ui"
-import sl_rl "spacelib:raylib"
+import rl_sl "spacelib:raylib"
 
 draw_rect :: proc (rect: ui.Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
@@ -26,7 +26,7 @@ draw_text :: proc (text: string, rect: ui.Rect, font_id: Font_ID, align: ui.Text
     for line in measured_text.lines {
         for word in line.words {
             if app.debug_drawing do draw_rect(word.rect, {0,255,255,80})
-            sl_rl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
+            rl_sl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
         }
     }
 

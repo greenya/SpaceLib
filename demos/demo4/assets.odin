@@ -3,7 +3,7 @@ package demo4
 import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:ui"
-import sl_rl "spacelib:raylib"
+import rl_sl "spacelib:raylib"
 
 colors: struct {
     one,
@@ -112,7 +112,7 @@ assets_load :: proc () {
         file_ext := fmt.ctprintf(".%s", file.type)
         font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
         font.font_ptr = &font.font_rl
-        font.measure_text = sl_rl.measure_text
+        font.measure_text = rl_sl.measure_text
     }
 
     for &texture in texture_assets {
