@@ -2,40 +2,48 @@ package spacelib_ui
 
 import "core:slice"
 import "core:strings"
+import "../core"
+import "../terse"
+
+@(private) Vec2 :: core.Vec2
+@(private) Rect :: core.Rect
 
 Frame :: struct {
-    parent      : ^Frame,
-    order       : int,
+    parent          : ^Frame,
+    order           : int,
 
-    children    : [dynamic] ^Frame,
-    layout      : Layout,
+    children        : [dynamic] ^Frame,
+    layout          : Layout,
 
-    rect        : Rect,
-    rect_dirty  : bool,
-    anchors     : [dynamic] Anchor,
-    size        : Vec2,
+    rect            : Rect,
+    rect_dirty      : bool,
+    anchors         : [dynamic] Anchor,
+    size            : Vec2,
 
-    hidden      : bool,
-    pass        : bool,
-    solid       : bool,
-    scissor     : bool,
-    check       : bool,
-    radio       : bool,
-    auto_hide   : bool,
-    actor       : Actor,
+    hidden          : bool,
+    pass            : bool,
+    solid           : bool,
+    scissor         : bool,
+    check           : bool,
+    radio           : bool,
+    auto_hide       : bool,
+    actor           : Actor,
 
-    text        : string,
-    draw        : Frame_Proc,
-    draw_after  : Frame_Proc,
-    enter       : Frame_Proc,
-    leave       : Frame_Proc,
-    click       : Frame_Proc,
-    wheel       : Frame_Wheel_Proc,
-    hovered     : bool,
-    prev_hovered: bool,
-    captured    : bool,
-    selected    : bool,
-    disabled    : bool,
+    name            : string,
+    text            : string,
+    text_terse      : ^terse.Text,
+    text_flags      : bit_set [Text_Flag],
+    draw            : Frame_Proc,
+    draw_after      : Frame_Proc,
+    enter           : Frame_Proc,
+    leave           : Frame_Proc,
+    click           : Frame_Proc,
+    wheel           : Frame_Wheel_Proc,
+    hovered         : bool,
+    prev_hovered    : bool,
+    captured        : bool,
+    selected        : bool,
+    disabled        : bool,
 }
 
 Layout :: struct {
@@ -103,6 +111,12 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
+Text_Flag :: enum {
+    terse,
+    auto_height,
+    auto_width,
+}
+
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 
@@ -149,6 +163,12 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
             return f1.order < f2.order
         })
     }
+}
+
+set_text :: proc (f: ^Frame, new_text: string) {
+    f.text = new_text
+    terse.destroy(f.text_terse)
+    f.text_terse = nil
 }
 
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
@@ -241,10 +261,19 @@ disabled :: proc (f: ^Frame) -> bool {
     return false
 }
 
-find_by_text :: proc (parent: ^Frame, text: string) -> ^Frame {
+find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
+    is_text := false
+    rule_text := rule
+
+    if strings.starts_with(rule, "text=") {
+        is_text = true
+        rule_text = rule[5:]
+    }
+
     for child in parent.children {
-        if child.text == text do return child
-        found_child := find_by_text(child, text)
+        if  is_text && child.text == rule_text do return child
+        if !is_text && child.name == rule_text do return child
+        found_child := find_by_rule(child, rule)
         if found_child != nil do return found_child
     }
     return nil
@@ -252,8 +281,8 @@ find_by_text :: proc (parent: ^Frame, text: string) -> ^Frame {
 
 find :: proc (parent: ^Frame, path: string) -> ^Frame {
     found_child := parent
-    for text in strings.split(path, "/", context.temp_allocator) {
-        found_child = find_by_text(found_child, text)
+    for name in strings.split(path, "/", context.temp_allocator) {
+        found_child = find_by_rule(found_child, name)
         if found_child == nil do return nil
     }
     assert(found_child != parent) // this is expected as strings.split() never returns empty slice, but lets keep the assert
@@ -295,7 +324,7 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     actor := &f.actor.(Actor_Scrollbar_Content)
     thumb := actor.thumb
     scroll := &f.layout.scroll
-    scroll_ratio := clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
+    scroll_ratio := core.clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
 
     if is_layout_dir_vertical(f) {
         thumb_space := thumb.parent.rect.h - thumb.rect.h
@@ -348,13 +377,13 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 
     if is_layout_dir_vertical(actor.content) {
         space := f.parent.rect.h - f.rect.h
-        ratio := clamp_ratio(mouse_pos.y-captured_pos.y, f.parent.rect.y, f.parent.rect.y + f.parent.rect.h - f.rect.h)
+        ratio := core.clamp_ratio(mouse_pos.y-captured_pos.y, f.parent.rect.y, f.parent.rect.y + f.parent.rect.h - f.rect.h)
         f.anchors[0].offset.y = space * ratio
         scroll := &actor.content.layout.scroll
         scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
     } else {
         space := f.parent.rect.w - f.rect.w
-        ratio := clamp_ratio(mouse_pos.x-captured_pos.x, f.parent.rect.x, f.parent.rect.x + f.parent.rect.w - f.rect.w)
+        ratio := core.clamp_ratio(mouse_pos.x-captured_pos.x, f.parent.rect.x, f.parent.rect.x + f.parent.rect.w - f.rect.w)
         f.anchors[0].offset.x = space * ratio
         scroll := &actor.content.layout.scroll
         scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
@@ -364,6 +393,7 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 @(private)
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
+    terse.destroy(f.text_terse)
     delete(f.children)
     delete(f.anchors)
     free(f)
@@ -379,8 +409,18 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 
     update_rect(f)
 
+    if .terse in f.text_flags {
+        should_rebuild := f.text_terse == nil || (f.text_terse != nil && f.text_terse.rect_input != f.rect)
+        if should_rebuild {
+            terse.destroy(f.text_terse)
+            f.text_terse = terse.create(f.text, f.rect, m.terse_query_font_proc, m.terse_query_color_proc)
+            if .auto_height in f.text_flags do f.size.y = f.text_terse.rect.h
+            if .auto_width in f.text_flags do f.size.x = f.text_terse.rect.w
+        }
+    }
+
     m_pos := m.mouse.pos
-    if pos_in_rect(m_pos, f.rect) && pos_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
+    if core.vec_in_rect(m_pos, f.rect) && core.vec_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
 
     if f.auto_hide do append(&m.auto_hide_frames, f)
 
@@ -393,7 +433,12 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
 
-    if f.draw != nil do f.draw(f)
+    if f.draw != nil {
+        if .terse not_in f.text_flags || f.text_terse != nil do f.draw(f)
+    } else {
+        if f.text_terse != nil do m.terse_draw_text_proc(f.text_terse)
+    }
+
     if m.overdraw_proc != nil do m.overdraw_proc(f)
     if f.scissor do push_scissor_rect(m, f.rect)
     for child in f.children do draw_frame_tree(child, m)

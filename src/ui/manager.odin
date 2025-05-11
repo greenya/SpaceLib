@@ -2,6 +2,8 @@ package spacelib_ui
 
 import "core:slice"
 import "core:time"
+import "../core"
+import "../terse"
 
 Manager :: struct {
     root                : ^Frame,
@@ -20,6 +22,10 @@ Manager :: struct {
     scissor_rects       : [dynamic] Rect,
     scissor_set_proc    : Scissor_Set_Proc,
     scissor_clear_proc  : Scissor_Clear_Proc,
+
+    terse_query_font_proc   : terse.Query_Font_Proc,
+    terse_query_color_proc  : terse.Query_Color_Proc,
+    terse_draw_text_proc    : Terse_Draw_Text_Proc,
 
     overdraw_proc       : Frame_Proc,
 
@@ -52,13 +58,24 @@ Manager_Stats :: struct {
     scissors_set    : int,
 }
 
-Scissor_Set_Proc    :: proc (r: Rect)
-Scissor_Clear_Proc  :: proc ()
+Scissor_Set_Proc        :: proc (r: Rect)
+Scissor_Clear_Proc      :: proc ()
+Terse_Draw_Text_Proc    :: proc (text: ^terse.Text)
 
-create_manager :: proc (scissor_set_proc: Scissor_Set_Proc = nil, scissor_clear_proc: Scissor_Clear_Proc = nil, overdraw_proc: Frame_Proc = nil) -> ^Manager {
+create_manager :: proc (
+    scissor_set_proc        : Scissor_Set_Proc = nil,
+    scissor_clear_proc      : Scissor_Clear_Proc = nil,
+    terse_query_font_proc   : terse.Query_Font_Proc = nil,
+    terse_query_color_proc  : terse.Query_Color_Proc = nil,
+    terse_draw_text_proc    : Terse_Draw_Text_Proc = nil,
+    overdraw_proc           : Frame_Proc = nil,
+) -> ^Manager {
     m := new(Manager)
     m.scissor_set_proc = scissor_set_proc
     m.scissor_clear_proc = scissor_clear_proc
+    m.terse_query_font_proc = terse_query_font_proc
+    m.terse_query_color_proc = terse_query_color_proc
+    m.terse_draw_text_proc = terse_draw_text_proc
     m.overdraw_proc = overdraw_proc
     m.root = add_frame(nil, { pass=true })
     return m
@@ -176,7 +193,7 @@ push_scissor_rect :: proc (m: ^Manager, new_rect: Rect) {
 
     last_rect := slice.last_ptr(m.scissor_rects[:])
     if last_rect != nil {
-        new_rect = rect_intersection(new_rect, last_rect^)
+        new_rect = core.rect_intersection(new_rect, last_rect^)
     }
 
     append(&m.scissor_rects, new_rect)

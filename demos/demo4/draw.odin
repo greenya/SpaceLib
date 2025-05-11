@@ -2,40 +2,52 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
+import "spacelib:core"
+import "spacelib:terse"
 import "spacelib:ui"
 import rl_sl "spacelib:raylib"
+_ :: fmt
 
-draw_rect :: proc (rect: ui.Rect, tint := rl.WHITE) {
+draw_rect :: proc (rect: Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleRec(rect_rl, tint)
 }
 
-draw_rect_lines :: proc (rect: ui.Rect, thick := f32(1.0), tint := rl.WHITE) {
+draw_rect_lines :: proc (rect: Rect, thick := f32(1.0), tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleLinesEx(rect_rl, thick, tint)
 }
 
-draw_text :: proc (text: string, rect: ui.Rect, font_id: Font_ID, align: ui.Text_Alignment, tint := rl.WHITE) -> ui.Rect {
-    font := &font_assets[font_id]
+draw_text_terse :: proc (text: ^terse.Text, override_color: ^Color = nil, offset := Vec2 {}) {
+    debug := app.debug_drawing
 
-    measured_text := ui.measure_text_rect(text, rect, &font.font_sl, align, context.temp_allocator)
-
-    if app.debug_drawing do draw_rect_lines(rect, tint={255,0,255,120})
-    if app.debug_drawing do draw_rect(measured_text.rect, {255,0,0,40})
-
-    for line in measured_text.lines {
-        for word in line.words {
-            if app.debug_drawing do draw_rect(word.rect, {0,255,255,80})
-            rl_sl.draw_text(word.text, {word.rect.x,word.rect.y}, font.font_rl, font.height, font.letter_spacing, tint)
-        }
+    if debug {
+        draw_rect_lines(text.rect, 1, {255,0,0,160})
+        draw_rect(text.rect, {255,0,0,20})
     }
 
-    return measured_text.rect
+    for line in text.lines {
+        if debug do draw_rect_lines(line.rect, 1, {255,255,128,80})
+        for word in line.words {
+            rect := core.rect_moved(word.rect, offset)
+            tint := override_color != nil ? override_color.val : word.color
+            if debug do draw_rect_lines(rect, 1, {255,255,0,40})
+            if word.is_icon {
+                sprite_id := assets_sprite_id(word.text)
+                draw_sprite(sprite_id, rect, cast (rl.Color) tint)
+            } else {
+                pos := Vec2 { rect.x, rect.y }
+                font := word.font
+                font_rl := (cast (^rl.Font) font.font_ptr)^
+                rl_sl.draw_text(word.text, pos, font_rl, font.height, font.letter_spacing, cast (rl.Color) tint)
+            }
+        }
+    }
 }
 
-draw_sprite :: proc (id: Sprite_ID, rect: ui.Rect, tint := rl.WHITE) {
-    sprite := &sprite_assets[id]
-    texture := &texture_assets[sprite.texture_id]
+draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint := rl.WHITE) {
+    sprite := &sprites[id]
+    texture := &textures[sprite.texture_id]
     rect_rl := transmute (rl.Rectangle) rect
 
     switch info in sprite.info {
@@ -49,66 +61,66 @@ draw_ui_dim_rect :: proc (f: ^ui.Frame) {
 }
 
 draw_ui_border :: proc (f: ^ui.Frame) {
-    draw_sprite(.border_17, f.rect, colors.three)
+    draw_sprite(.border_17, f.rect, colors[.c3].val.rgba)
 }
 
 draw_ui_panel :: proc (f: ^ui.Frame) {
-    draw_sprite(.panel_0, f.rect, colors.two)
+    draw_sprite(.panel_0, f.rect, colors[.c2].val.rgba)
 }
 
 draw_ui_button :: proc (f: ^ui.Frame) {
     if ui.disabled(f) {
-        draw_sprite(.panel_9, f.rect, colors.three)
-        draw_text(f.text, ui.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
-        draw_text(f.text, ui.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, colors.four)
+        draw_sprite(.panel_9, f.rect, colors[.c3].val.rgba)
+        draw_text_terse(f.text_terse, &colors[.c2], {+1,+1})
+        draw_text_terse(f.text_terse, &colors[.c4], {-1,-1})
         return
     }
 
     if f.selected {
-        draw_sprite(.panel_4, f.rect, colors.five)
+        draw_sprite(.panel_4, f.rect, colors[.c5].val.rgba)
     } else {
-        draw_sprite(.panel_9, f.rect, f.hovered ? colors.four : colors.three)
+        draw_sprite(.panel_9, f.rect, f.hovered ? colors[.c4].val.rgba : colors[.c3].val.rgba)
     }
 
-    text_color := f.hovered ? colors.seven : colors.six
+    text_color: Color = f.hovered ? colors[.c7] : colors[.c6]
 
     if f.captured {
-        draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, text_color)
+        draw_text_terse(f.text_terse, &text_color)
     } else {
-        draw_text(f.text, ui.rect_moved(f.rect, {+1,+1}), .anaheim_bold_32, {.center,.center}, colors.two)
-        draw_text(f.text, ui.rect_moved(f.rect, {-1,-1}), .anaheim_bold_32, {.center,.center}, text_color)
+        draw_text_terse(f.text_terse, &colors[.c2], {+1,+1})
+        draw_text_terse(f.text_terse, &text_color, {-1,-1})
     }
 }
 
 draw_ui_checkbox :: proc (f: ^ui.Frame) {
-    text := fmt.tprintf("%s: [ %s ]", f.text, f.selected ? "Yes" : "No")
-    text_rect := draw_text(text, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
-    f.size.y = text_rect.h
+    offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
+    text_color := f.hovered ? &colors[.c8] : &colors[.c6]
+    draw_text_terse(f.text_terse, text_color, offset)
+
+    check_size := f.text_terse.lines[0].rect.h
+    check_rect := Rect { f.text_terse.rect.x, f.text_terse.rect.y, check_size, check_size }
+    check_rect = core.rect_moved(check_rect, offset)
+    check_border_thick := check_size/10
+    draw_rect_lines(core.rect_inflated(check_rect, {-4,-4}), check_border_thick, colors[.c3].val.rgba)
+
+    if f.selected do draw_sprite(.icon_check, check_rect, colors[.c6].val.rgba)
 }
 
 draw_ui_link :: proc (f: ^ui.Frame) {
-    text_rect := draw_text(f.text, f.rect, .anaheim_bold_32, {.center,.center}, f.hovered ? colors.eight : colors.six)
-
-    line := text_rect
-    line.y += line.h - 2
-    line.h = 2
-    draw_rect(line, colors.four)
+    offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
 
     if f.hovered {
-        icon_l := text_rect
-        icon_l.x -= icon_l.w
-        draw_text("~> ", icon_l, .anaheim_bold_32, {.center,.right}, colors.four)
-        icon_r := text_rect
-        icon_r.x += icon_r.w
-        draw_text(" <~", icon_r, .anaheim_bold_32, {.center,.left}, colors.four)
+        border := core.rect_moved(core.rect_inflated(f.text_terse.rect, {8,4}), {2,0}+offset)
+        draw_rect_lines(border, 3, colors[.c3].val.rgba)
     }
 
-    f.size.y = text_rect.h
+    text_color := f.hovered ? &colors[.c8] : &colors[.c6]
+    draw_text_terse(f.text_terse, text_color, offset)
 }
 
 draw_ui_button_sprite :: proc (f: ^ui.Frame, sprite_id: Sprite_ID) {
-    if f.hovered do draw_sprite(.panel_15, f.rect, colors.three)
-    draw_sprite(sprite_id, f.rect, f.hovered ? colors.six : colors.five)
+    if f.hovered do draw_sprite(.panel_15, f.rect, colors[.c3].val.rgba)
+    draw_sprite(sprite_id, f.rect, f.hovered ? colors[.c6].val.rgba : colors[.c5].val.rgba)
 }
 
 draw_ui_button_sprite_icon_up :: proc (f: ^ui.Frame) { draw_ui_button_sprite(f, .icon_up) }

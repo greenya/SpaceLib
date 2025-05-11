@@ -2,9 +2,9 @@ package demo5
 
 import "core:fmt"
 import rl "vendor:raylib"
-import "spacelib:measured_text"
+import "spacelib:core"
+import "spacelib:terse"
 import rl_sl "spacelib:raylib"
-import "spacelib:ui"
 
 // ----------------
 // ---- colors ----
@@ -31,27 +31,27 @@ Color_ID :: enum {
 
 Color :: struct {
     name: string,
-    rgba: ui.Color,
+    rgba: core.Color,
 }
 
 // https://lospec.com/palette-list/possessioner-pc-98
 colors := [Color_ID] Color {
-    .black      = { "black",     transmute (ui.Color) u32be((0x000000<<8)|0xff) }, // #000000
-    .gray       = { "gray",      transmute (ui.Color) u32be((0xbababa<<8)|0xff) }, // #bababa
-    .white      = { "white",     transmute (ui.Color) u32be((0xfefefe<<8)|0xff) }, // #fefefe
-    .brown      = { "brown",     transmute (ui.Color) u32be((0x894523<<8)|0xff) }, // #894523
-    .salmon     = { "salmon",    transmute (ui.Color) u32be((0xcd6754<<8)|0xff) }, // #cd6754
-    .peach      = { "peach",     transmute (ui.Color) u32be((0xef9889<<8)|0xff) }, // #ef9889
-    .apricot    = { "apricot",   transmute (ui.Color) u32be((0xfebaab<<8)|0xff) }, // #febaab
-    .navy       = { "navy",      transmute (ui.Color) u32be((0x013267<<8)|0xff) }, // #013267
-    .teal       = { "teal",      transmute (ui.Color) u32be((0x237689<<8)|0xff) }, // #237689
-    .cyan       = { "cyan",      transmute (ui.Color) u32be((0x23abba<<8)|0xff) }, // #23abba
-    .forest     = { "forest",    transmute (ui.Color) u32be((0x457645<<8)|0xff) }, // #457645
-    .green      = { "green",     transmute (ui.Color) u32be((0x239845<<8)|0xff) }, // #239845
-    .olive      = { "olive",     transmute (ui.Color) u32be((0x9cba8c<<8)|0xff) }, // #9cba8c
-    .gold       = { "gold",      transmute (ui.Color) u32be((0xfecd01<<8)|0xff) }, // #fecd01
-    .maroon     = { "maroon",    transmute (ui.Color) u32be((0x730031<<8)|0xff) }, // #730031
-    .red        = { "red",       transmute (ui.Color) u32be((0xef0101<<8)|0xff) }, // #ef0101
+    .black      = { "black",     transmute (core.Color) u32be((0x000000<<8)|0xff) }, // #000000
+    .gray       = { "gray",      transmute (core.Color) u32be((0xbababa<<8)|0xff) }, // #bababa
+    .white      = { "white",     transmute (core.Color) u32be((0xfefefe<<8)|0xff) }, // #fefefe
+    .brown      = { "brown",     transmute (core.Color) u32be((0x894523<<8)|0xff) }, // #894523
+    .salmon     = { "salmon",    transmute (core.Color) u32be((0xcd6754<<8)|0xff) }, // #cd6754
+    .peach      = { "peach",     transmute (core.Color) u32be((0xef9889<<8)|0xff) }, // #ef9889
+    .apricot    = { "apricot",   transmute (core.Color) u32be((0xfebaab<<8)|0xff) }, // #febaab
+    .navy       = { "navy",      transmute (core.Color) u32be((0x013267<<8)|0xff) }, // #013267
+    .teal       = { "teal",      transmute (core.Color) u32be((0x237689<<8)|0xff) }, // #237689
+    .cyan       = { "cyan",      transmute (core.Color) u32be((0x23abba<<8)|0xff) }, // #23abba
+    .forest     = { "forest",    transmute (core.Color) u32be((0x457645<<8)|0xff) }, // #457645
+    .green      = { "green",     transmute (core.Color) u32be((0x239845<<8)|0xff) }, // #239845
+    .olive      = { "olive",     transmute (core.Color) u32be((0x9cba8c<<8)|0xff) }, // #9cba8c
+    .gold       = { "gold",      transmute (core.Color) u32be((0xfecd01<<8)|0xff) }, // #fecd01
+    .maroon     = { "maroon",    transmute (core.Color) u32be((0x730031<<8)|0xff) }, // #730031
+    .red        = { "red",       transmute (core.Color) u32be((0xef0101<<8)|0xff) }, // #ef0101
 }
 
 // ---------------
@@ -94,7 +94,7 @@ Font :: struct {
     name            : string,
     file_id         : File_ID,
     font_rl         : rl.Font,
-    using font_mt   : measured_text.Font,
+    using font_tr   : terse.Font,
 }
 
 fonts: [Font_ID] Font = {
@@ -152,7 +152,7 @@ assets_load :: proc () {
         file_ext := fmt.ctprintf(".%s", file.type)
         font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
         font.font_ptr = &font.font_rl
-        font.measure_text = rl_sl.measure_text2
+        font.measure_text = rl_sl.measure_text
     }
 
     for &texture in textures {

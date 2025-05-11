@@ -1,23 +1,25 @@
-package spacelib_measured_text
+package spacelib_terse
 
-// TODO: rework "color" and "font" to be stack-based, e.g. {color:a}...{/color}
-// TODO: add support for named groups, e.g. {group=title}...{/group}; Text.groups should be dynamic array
+// TODO: rework "color" and "font" to be stack-based, e.g. {color=a}...{/color}
+// TODO: add support for named groups, e.g. {group=title}...{/group}; Text.groups should be dynamic array (or map?)
 // TODO: add support for extra top gap for a line, e.g. {gap=0} should set gap for current line, default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0)
 // TODO: [?] maybe rework "icon" so its size is not Vec2 {font_height,font_height} but is returned by Query_Block_Proc (and rename "icon" to "block")
+// TODO: add support for optional icon size: {icon=title^1.75}, should use 1.75*font.height for icon size
 
 import "core:fmt"
 import "core:slice"
 import "core:strings"
-import ui "../ui"
+import "../core"
 
-Vec2 :: ui.Vec2
-Rect :: ui.Rect
-Color :: ui.Color
+@(private) Vec2 :: core.Vec2
+@(private) Rect :: core.Rect
+@(private) Color :: core.Color
 
 Text :: struct {
-    rect    : Rect,
-    valign  : Vertical_Alignment,
-    lines   : [dynamic] Line,
+    rect        : Rect,
+    rect_input  : Rect,
+    valign      : Vertical_Alignment,
+    lines       : [dynamic] Line,
 }
 
 Line :: struct {
@@ -54,9 +56,17 @@ Query_Color_Proc    :: proc (name: string) -> Color
 @(private) default_font     :: ""
 @(private) default_color    :: ""
 
-create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_color: Query_Color_Proc, allocator := context.allocator, debug_keep_codes := false) -> ^Text {
+create :: proc (
+    str             : string,
+    rect            : Rect,
+    query_font      : Query_Font_Proc,
+    query_color     : Query_Color_Proc,
+    allocator       := context.allocator,
+    debug_keep_codes:= false,
+) -> ^Text {
     text := new(Text, allocator)
     text.rect = rect
+    text.rect_input = rect
     text.valign = default_valign
     text.lines.allocator = allocator
 
@@ -64,6 +74,7 @@ create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_colo
 
     font: ^Font = query_font(default_font)
     color: Color = query_color(default_color)
+    wrapping_allowed := rect.w > 0
 
     cursor: struct { type: enum { text, code }, start: int }
     code, word, icon: string
@@ -128,7 +139,7 @@ create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_colo
             if word != "" {
                 word_size := font->measure_text(word)
 
-                if line.rect.w + word_size.x > rect.w && len(line.words) > 0 {
+                if wrapping_allowed && line.rect.w + word_size.x > rect.w && len(line.words) > 0 {
                     line = _append_line(text, font)
                 }
 
@@ -142,7 +153,7 @@ create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_colo
             if icon != "" {
                 icon_size := Vec2 { font.height, font.height }
 
-                if line.rect.w + icon_size.x > rect.w && len(line.words) > 0 {
+                if wrapping_allowed && line.rect.w + icon_size.x > rect.w && len(line.words) > 0 {
                     line = _append_line(text, font)
                 }
 
@@ -202,7 +213,7 @@ create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_colo
     if first_line != nil {
         text.rect = first_line.rect
         for line in text.lines[1:] {
-            ui.rect_add_rect(&text.rect, line.rect)
+            core.rect_add_rect(&text.rect, line.rect)
         }
     }
 
@@ -210,6 +221,7 @@ create :: proc (str: string, rect: Rect, query_font: Query_Font_Proc, query_colo
 }
 
 destroy :: proc (text: ^Text) {
+    if text == nil do return
     for line in text.lines do delete(line.words)
     delete(text.lines)
     free(text)

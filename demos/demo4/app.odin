@@ -3,13 +3,18 @@ package demo4
 import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:clock"
+import "spacelib:core"
 import "spacelib:ui"
-import rl_sl "spacelib:raylib"
+import "spacelib:terse"
 import "spacelib:tracking_allocator"
+import rl_sl "spacelib:raylib"
+
+Vec2 :: core.Vec2
+Rect :: core.Rect
 
 App :: struct {
     clock: clock.Clock(f32),
-    screen_rect: ui.Rect,
+    screen_rect: Rect,
     camera: rl.Camera2D,
 
     ui: struct {
@@ -37,13 +42,22 @@ app_startup :: proc () {
     app.camera = { zoom=1 }
 
     app.ui.manager = ui.create_manager(
-        scissor_set_proc = proc (r: ui.Rect) {
+        scissor_set_proc = proc (r: Rect) {
             if app.debug_drawing do return
             rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
         },
         scissor_clear_proc = proc () {
             if app.debug_drawing do return
             rl.EndScissorMode()
+        },
+        terse_query_font_proc = proc (name: string) -> ^terse.Font {
+            return &assets_font(name).font_tr
+        },
+        terse_query_color_proc = proc (name: string) -> core.Color {
+            return assets_color(name).val
+        },
+        terse_draw_text_proc = proc (text: ^terse.Text) {
+            draw_text_terse(text)
         },
         overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return
@@ -79,7 +93,7 @@ app_tick :: proc () {
 
 app_draw :: proc () {
     rl.BeginDrawing()
-    rl.ClearBackground(colors.one)
+    rl.ClearBackground(colors[.c1].val.rgba)
     rl.BeginMode2D(app.camera)
     // draw_world()
     rl.EndMode2D()

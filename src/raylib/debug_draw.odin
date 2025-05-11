@@ -3,7 +3,7 @@ package spacelib_raylib
 import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
-import ui "../ui"
+import "../ui"
 
 debug_draw_frame :: proc (f: ^ui.Frame) {
     rect := transmute (rl.Rectangle) f.rect
@@ -117,7 +117,7 @@ get_debug_color :: proc (f: ^ui.Frame) -> rl.Color {
 }
 
 @(private)
-get_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: ui.Rect) -> ui.Vec2 {
+get_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
     #partial switch point {
     case .top_left      : return { x, y }
     case .top           : return { x+w/2, y }

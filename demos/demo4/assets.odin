@@ -2,34 +2,56 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import "spacelib:ui"
+import "spacelib:core"
+import "spacelib:terse"
 import rl_sl "spacelib:raylib"
 
-colors: struct {
-    one,
-    two,
-    three,
-    four,
-    five,
-    six,
-    seven,
-    eight: rl.Color,
-} = {
-    // https://lospec.com/palette-list/gothic-bit
-    one     = transmute (rl.Color) u32be(0x0e0e12ff),
-    two     = transmute (rl.Color) u32be(0x1a1a24ff),
-    three   = transmute (rl.Color) u32be(0x333346ff),
-    four    = transmute (rl.Color) u32be(0x535373ff),
-    five    = transmute (rl.Color) u32be(0x8080a4ff),
-    six     = transmute (rl.Color) u32be(0xa6a6bfff),
-    seven   = transmute (rl.Color) u32be(0xc1c1d2ff),
-    eight   = transmute (rl.Color) u32be(0xe6e6ecff),
+// ----------------
+// ---- colors ----
+// ----------------
+
+Color_ID :: enum {
+    white,
+    black,
+    undefined,
+    c1,
+    c2,
+    c3,
+    c4,
+    c5,
+    c6,
+    c7,
+    c8,
 }
+
+Color :: struct {
+    name: string,
+    val : core.Color,
+}
+
+colors := [Color_ID] Color {
+    .white      = { "white",        transmute (core.Color) u32be((0xffffff<<8)|0xff) }, // #ffffff
+    .black      = { "black",        transmute (core.Color) u32be((0x000000<<8)|0xff) }, // #000000
+    .undefined  = { "undefined",    transmute (core.Color) u32be((0xff00ff<<8)|0xff) }, // #ff00ff
+    // https://lospec.com/palette-list/gothic-bit
+    .c1         = { "c1",           transmute (core.Color) u32be((0x0e0e12<<8)|0xff) }, // #0e0e12
+    .c2         = { "c2",           transmute (core.Color) u32be((0x1a1a24<<8)|0xff) }, // #1a1a24
+    .c3         = { "c3",           transmute (core.Color) u32be((0x333346<<8)|0xff) }, // #333346
+    .c4         = { "c4",           transmute (core.Color) u32be((0x535373<<8)|0xff) }, // #535373
+    .c5         = { "c5",           transmute (core.Color) u32be((0x8080a4<<8)|0xff) }, // #8080a4
+    .c6         = { "c6",           transmute (core.Color) u32be((0xa6a6bf<<8)|0xff) }, // #a6a6bf
+    .c7         = { "c7",           transmute (core.Color) u32be((0xc1c1d2<<8)|0xff) }, // #c1c1d2
+    .c8         = { "c8",           transmute (core.Color) u32be((0xe6e6ec<<8)|0xff) }, // #e6e6ec
+}
+
+// ---------------
+// ---- files ----
+// ---------------
 
 File_ID :: enum {
     anaheim_bold_ttf,
     ui_atlas_png,
-    sheet_white1x_png,
+    sheet_white2x_png,
 }
 
 File :: struct {
@@ -37,11 +59,15 @@ File :: struct {
     data: [] u8,
 }
 
-file_assets: [File_ID] File = {
+files: [File_ID] File = {
     .anaheim_bold_ttf   = { "ttf", #load("assets/Anaheim-Bold.ttf") },
     .ui_atlas_png       = { "png", #load("assets/ui_atlas.png") },
-    .sheet_white1x_png  = { "png", #load("assets/sheet_white1x.png") },
+    .sheet_white2x_png  = { "png", #load("assets/sheet_white2x.png") },
 }
+
+// ---------------
+// ---- fonts ----
+// ---------------
 
 Font_ID :: enum {
     anaheim_bold_64,
@@ -49,19 +75,24 @@ Font_ID :: enum {
 }
 
 Font :: struct {
-    file_id: File_ID,
-    font_rl: rl.Font,
-    using font_sl: ui.Font,
+    name            : string,
+    file_id         : File_ID,
+    font_rl         : rl.Font,
+    using font_tr   : terse.Font,
 }
 
-font_assets: [Font_ID] Font = {
-    .anaheim_bold_64 = { file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, word_spacing=16, line_spacing=-8 },
-    .anaheim_bold_32 = { file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, word_spacing=8, line_spacing=-4 },
+fonts: [Font_ID] Font = {
+    .anaheim_bold_64 = { name="anaheim_huge", file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, line_spacing=-8 },
+    .anaheim_bold_32 = { name="anaheim_normal", file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, line_spacing=-4 },
 }
+
+// ----------------------------
+// ---- textures & sprites ----
+// ----------------------------
 
 Texture_ID :: enum {
     ui_atlas,
-    sheet_white1x,
+    sheet_white2x,
 }
 
 Texture :: struct {
@@ -69,9 +100,9 @@ Texture :: struct {
     texture: rl.Texture,
 }
 
-texture_assets: [Texture_ID] Texture = {
+textures: [Texture_ID] Texture = {
     .ui_atlas       = { file_id=.ui_atlas_png },
-    .sheet_white1x  = { file_id=.sheet_white1x_png },
+    .sheet_white2x  = { file_id=.sheet_white2x_png },
 }
 
 Sprite_ID :: enum {
@@ -84,39 +115,58 @@ Sprite_ID :: enum {
     icon_up,
     icon_down,
     icon_stop,
+    icon_nav,
+    icon_check,
+    icon_cog,
+    icon_exit,
+    icon_info,
+    icon_question,
+    icon_play,
 }
 
 Sprite :: struct {
-    texture_id: Texture_ID,
+    name        : string,
+    texture_id  : Texture_ID,
     info: union {
         rl.Rectangle,
         rl.NPatchInfo,
     },
 }
 
-sprite_assets: [Sprite_ID] Sprite = {
-    .border_17  = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_0    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_3    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_4    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_9    = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_15   = { texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .icon_up    = { texture_id=.sheet_white1x, info=rl.Rectangle {100, 50,50,50} },
-    .icon_down  = { texture_id=.sheet_white1x, info=rl.Rectangle {400,300,50,50} },
-    .icon_stop  = { texture_id=.sheet_white1x, info=rl.Rectangle {100,400,50,50} },
+sprites: [Sprite_ID] Sprite = {
+    .border_17      = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_0        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_3        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_4        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_9        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_15       = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .icon_up        = { name="up",      texture_id=.sheet_white2x, info=rl.Rectangle {100, 200,100,100} },
+    .icon_down      = { name="down",    texture_id=.sheet_white2x, info=rl.Rectangle {400,1100,100,100} },
+    .icon_stop      = { name="stop",    texture_id=.sheet_white2x, info=rl.Rectangle {100, 900,100,100} },
+    .icon_nav       = { name="nav",     texture_id=.sheet_white2x, info=rl.Rectangle {100,1905,100,100} },
+    .icon_check     = { name="check",   texture_id=.sheet_white2x, info=rl.Rectangle {400,1405,100,100} },
+    .icon_cog       = { name="cog",     texture_id=.sheet_white2x, info=rl.Rectangle {300,1702,100,100} },
+    .icon_exit      = { name="exit",    texture_id=.sheet_white2x, info=rl.Rectangle {400, 702,100,100} },
+    .icon_info      = { name="info",    texture_id=.sheet_white2x, info=rl.Rectangle {300,1405,100,100} },
+    .icon_question  = { name="question",texture_id=.sheet_white2x, info=rl.Rectangle {200, 605,100,100} },
+    .icon_play      = { name="play",    texture_id=.sheet_white2x, info=rl.Rectangle {300,1305,100,100} },
 }
 
+// ---------------
+// ---- procs ----
+// ---------------
+
 assets_load :: proc () {
-    for &font in font_assets {
-        file := &file_assets[font.file_id]
+    for &font in fonts {
+        file := &files[font.file_id]
         file_ext := fmt.ctprintf(".%s", file.type)
         font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
         font.font_ptr = &font.font_rl
         font.measure_text = rl_sl.measure_text
     }
 
-    for &texture in texture_assets {
-        file := &file_assets[texture.file_id]
+    for &texture in textures {
+        file := &files[texture.file_id]
         file_ext := fmt.ctprintf(".%s", file.type)
         image := rl.LoadImageFromMemory(file_ext, raw_data(file.data), i32(len(file.data)))
         texture.texture = rl.LoadTextureFromImage(image)
@@ -125,13 +175,30 @@ assets_load :: proc () {
 }
 
 assets_unload :: proc () {
-    for &font in font_assets {
+    for &font in fonts {
         rl.UnloadFont(font.font_rl)
         font.font_rl = {}
     }
 
-    for &texture in texture_assets {
+    for &texture in textures {
         rl.UnloadTexture(texture.texture)
         texture.texture = {}
     }
+}
+
+assets_color :: #force_inline proc (name: string) -> ^Color {
+    if name == "" do return &colors[.undefined]
+    for &color in colors do if color.name == name do return &color
+    fmt.panicf("[!] Color not found: \"%v\"", name)
+}
+
+assets_font :: #force_inline proc (name: string) -> ^Font {
+    if name == "" do return &fonts[.anaheim_bold_32]
+    for &font in fonts do if font.name == name do return &font
+    fmt.panicf("[!] Font not found: \"%v\"", name)
+}
+
+assets_sprite_id :: #force_inline proc (name: string) -> Sprite_ID {
+    for sprite, id in sprites do if sprite.name == name do return id
+    fmt.panicf("[!] Sprite not found: \"%v\"", name)
 }

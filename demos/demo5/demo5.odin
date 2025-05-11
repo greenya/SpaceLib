@@ -3,11 +3,14 @@ package demo5
 import "core:fmt"
 import "core:time"
 import rl "vendor:raylib"
-import "spacelib:measured_text"
-import rl_sl "spacelib:raylib"
+import "spacelib:core"
+import "spacelib:terse"
 import "spacelib:tracking_allocator"
-import "spacelib:ui"
+import rl_sl "spacelib:raylib"
 _ :: fmt
+
+Vec2 :: core.Vec2
+Rect :: core.Rect
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
@@ -21,7 +24,7 @@ main :: proc () {
     // text := "{top,left}Hello, LEFT!\n{right}Hello, RIGHT!\n{center}Hello, CENTER!\n\n{color=gold}This text is colored GOLD\n{color=olive}This text is colored OLIVE\n{color=red,font=body_code}This CODE text and it is colored RED\nCODE is continued on this line: [OK]\n\n{font=header,color=cyan}This is HEADER font colored CYAN\n{font=body,color=green}\nMore body text goes here... More body text goes here... More body text goes here... More body text goes here... More body text goes here... More body text goes here..."
 
     text0 :: "{top,font=header}{color=gold}1,234{icon=coins}\t{color=gray}56{icon=coins}\t{color=salmon}78{icon=coins}\n{font=body,color=white}\n"
-    text1 :: "{left}Lorem ipsum dolor: {color=salmon} {icon=fire}17 damage{color=white} consectetur adipiscing elit. Praesent vitae aliquam libero. Praesent malesuada nulla: {font=body_code,color=green}id{color=gold}={color=green}ex{color=gold}+{color=green}sodales{font=body,color=white} in auctor ex mattis. Praesent pretium iaculis bibendum. Morbi ultrices vehicula turpis, ac varius lacus scelerisque eu. Nunc accumsan, nisl quis ultrices ultrices, nibh nunc tincidunt urna, ac vulputate purus felis consequat metus."
+    text1 :: "{left}Lorem ipsum dolor: {color=salmon}{icon=fire}17 damage{color=white} consectetur adipiscing elit. Praesent vitae aliquam libero. Praesent malesuada nulla: {font=body_code,color=green}id{color=gold}={color=green}ex{color=gold}+{color=green}sodales{font=body,color=white} in auctor ex mattis. Praesent pretium iaculis bibendum. Morbi ultrices vehicula turpis, ac varius lacus scelerisque eu. Nunc accumsan, nisl quis ultrices ultrices, nibh nunc tincidunt urna, ac vulputate purus felis consequat metus."
     text2 :: "In {color=cyan}lacinia {font=body_bold}mauris sed{font=body} tempor {color=white}tempor. Mauris lacus sem, consequat ac orci vitae, aliquam dapibus nunc. Nulla tempor mi eu quam facilisis sollicitudin. Quisque ultrices laoreet finibus. Proin non ligula mauris. Mauris molestie pellentesque pellentesque. Etiam volutpat vestibulum nisl, sit amet interdum tortor rutrum gravida."
     text3_s :: "{font=body_code}"
     text3_1 :: "{color=cyan}rl{color=gray}.{color=green}SetTraceLogLevel{color=gray}(.WARNING)\n"
@@ -43,18 +46,18 @@ main :: proc () {
 
         time.stopwatch_reset(&sw)
         time.stopwatch_start(&sw)
-        mrect := ui.Rect { 200, 100, f32(rl.GetScreenWidth())-400, 400 }
-        mtext := measured_text.create(text, mrect, measured_text_query_font, measured_text_query_color, context.temp_allocator, debug_keep_codes=false)
+        text_rect := Rect { 200, 100, f32(rl.GetScreenWidth())-400, 400 }
+        text_terse := terse.create(text, text_rect, terse_query_font, terse_query_color, context.temp_allocator, debug_keep_codes=false)
         time.stopwatch_stop(&sw)
         dur_measuring := time.stopwatch_duration(sw)
 
         rl.BeginDrawing()
         rl.ClearBackground({ 40, 40, 40, 255 })
-        draw_rect_lines(ui.rect_inflated(mrect, {8,8}), 8, {40,40,255,255})
+        draw_rect_lines(core.rect_inflated(text_rect, {8,8}), 8, {40,40,255,255})
 
         time.stopwatch_reset(&sw)
         time.stopwatch_start(&sw)
-        draw_measured_text(mtext, debug=rl.IsKeyDown(.LEFT_CONTROL))
+        draw_terse_text(text_terse, debug=rl.IsKeyDown(.LEFT_CONTROL))
         time.stopwatch_stop(&sw)
         dur_drawing := time.stopwatch_duration(sw)
 
@@ -64,27 +67,27 @@ main :: proc () {
         rl.EndDrawing()
     }
 
-    // measured_text.destroy(mtext1)
+    // terse.destroy(mtext1)
 
     assets_unload()
     rl.CloseWindow()
 }
 
-measured_text_query_font :: #force_inline proc (name: string) -> ^measured_text.Font {
-    if name == "" do return &font_default.font_mt
-    for &font in fonts do if font.name == name do return &font.font_mt
+terse_query_font :: #force_inline proc (name: string) -> ^terse.Font {
+    if name == "" do return &font_default.font_tr
+    for &font in fonts do if font.name == name do return &font.font_tr
     fmt.eprintfln("[!] Font not found: \"%v\"", name)
-    return &font_default.font_mt
+    return &font_default.font_tr
 }
 
-measured_text_query_color :: #force_inline proc (name: string) -> ui.Color {
+terse_query_color :: #force_inline proc (name: string) -> core.Color {
     if name == "" do return colors[.white].rgba
     for &color in colors do if color.name == name do return color.rgba
     fmt.eprintfln("[!] Color not found: \"%v\"", name)
     return colors[.white].rgba
 }
 
-draw_measured_text :: proc (text: ^measured_text.Text, debug := false) {
+draw_terse_text :: proc (text: ^terse.Text, debug := false) {
     if debug {
         draw_rect_lines(text.rect, 1, {255,0,0,160})
         draw_rect(text.rect, {255,0,0,20})
@@ -101,7 +104,7 @@ draw_measured_text :: proc (text: ^measured_text.Text, debug := false) {
                     }
                 }
             } else {
-                pos := ui.Vec2 { word.rect.x, word.rect.y }
+                pos := Vec2 { word.rect.x, word.rect.y }
                 font := word.font
                 font_rl := (cast (^rl.Font) font.font_ptr)^
                 rl_sl.draw_text(word.text, pos, font_rl, font.height, font.letter_spacing, cast (rl.Color) word.color)
@@ -110,7 +113,7 @@ draw_measured_text :: proc (text: ^measured_text.Text, debug := false) {
     }
 }
 
-draw_sprite :: proc (id: Sprite_ID, rect: ui.Rect, tint := rl.WHITE) {
+draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint := rl.WHITE) {
     sprite := &sprites[id]
     texture := &textures[sprite.texture_id]
     rect_rl := transmute (rl.Rectangle) rect
@@ -121,12 +124,12 @@ draw_sprite :: proc (id: Sprite_ID, rect: ui.Rect, tint := rl.WHITE) {
     }
 }
 
-draw_rect :: proc (rect: ui.Rect, tint := rl.WHITE) {
+draw_rect :: proc (rect: Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleRec(rect_rl, tint)
 }
 
-draw_rect_lines :: proc (rect: ui.Rect, thick := f32(1.0), tint := rl.WHITE) {
+draw_rect_lines :: proc (rect: Rect, thick := f32(1.0), tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
     rl.DrawRectangleLinesEx(rect_rl, thick, tint)
 }

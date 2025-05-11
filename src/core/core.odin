@@ -1,4 +1,4 @@
-package spacelib_ui
+package spacelib_core
 
 import "base:intrinsics"
 import "core:math"
@@ -29,6 +29,10 @@ rect_half_top :: #force_inline proc (r: Rect) -> Rect {
 
 rect_half_bottom :: #force_inline proc (r: Rect) -> Rect {
     return { r.x, r.y+r.h/2, r.w, r.h/2 }
+}
+
+rect_line_bottom :: #force_inline proc (r: Rect, thick: f32) -> Rect {
+    return { r.x, r.y+r.h-thick, r.w, thick }
 }
 
 rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
@@ -74,12 +78,12 @@ rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
-pos_in_rect :: #force_inline proc (pos: Vec2, r: Rect) -> bool {
-    return r.x < pos.x && r.x+r.w > pos.x && r.y < pos.y && r.y+r.h > pos.y
+vec_in_rect :: #force_inline proc (vec: Vec2, r: Rect) -> bool {
+    return r.x < vec.x && r.x+r.w > vec.x && r.y < vec.y && r.y+r.h > vec.y
 }
 
-clamp_pos_to_rect :: #force_inline proc (pos: Vec2, r: Rect) -> Vec2 {
-    return { clamp(pos.x, r.x, r.x + r.w), clamp(pos.y, r.y, r.y + r.h) }
+clamp_vec_to_rect :: #force_inline proc (vec: Vec2, r: Rect) -> Vec2 {
+    return { clamp(vec.x, r.x, r.x + r.w), clamp(vec.y, r.y, r.y + r.h) }
 }
 
 clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intrinsics.type_is_float(T) {
@@ -90,7 +94,7 @@ ease_ratio :: #force_inline proc "contextless" (ratio: $T, easing: ease.Ease) ->
     return ease.ease(easing, ratio)
 }
 
-ease_pos :: proc (from, to: Vec2, ratio: f32, easing: ease.Ease = .Linear) -> Vec2 {
+ease_vec :: proc (from, to: Vec2, ratio: f32, easing: ease.Ease = .Linear) -> Vec2 {
     ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
     return {
         from.x + (to.x - from.x) * ratio,
@@ -118,29 +122,29 @@ ease_color :: proc (from, to: Color, ratio: f32, easing := ease.Ease.Linear) -> 
     }
 }
 
-random_pos_in_rect :: proc (rect: Rect) -> Vec2 {
+random_vec_in_rect :: proc (rect: Rect) -> Vec2 {
     return { rect.x + rect.w*rand.float32(), rect.y + rect.h*rand.float32() }
 }
 
-random_pos_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
+random_vec_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
     dir := linalg.normalize0(Vec2 { rand.float32()*2 - 1, rand.float32()*2 - 1 })
     return dir * rand.float32_range(inner_radius, outer_radius)
 }
 
-pos_moved_towards_pos :: proc (pos, target_pos: Vec2, speed, dt: f32) -> (new_pos: Vec2) {
-    dir := linalg.normalize0(target_pos - pos)
-    return pos + dir * speed * dt
+vec_moved_towards_vec :: proc (current_vec, target_vec: Vec2, speed, dt: f32) -> (new_vec: Vec2) {
+    dir := linalg.normalize0(target_vec - current_vec)
+    return current_vec + dir * speed * dt
 }
 
-pos_orbited_around_pos :: proc (pos, orbit_pos: Vec2, speed, dt: f32, is_clockwise := true) -> (new_orbit_pos: Vec2) {
-    radius := linalg.distance(orbit_pos, pos)
-    angle := linalg.atan2(pos.y-orbit_pos.y, pos.x-orbit_pos.x)
+vec_orbited_around_vec :: proc (vec, center_vec: Vec2, speed, dt: f32, is_clockwise := true) -> (new_vec: Vec2) {
+    radius := linalg.distance(center_vec, vec)
+    angle := linalg.atan2(vec.y-center_vec.y, vec.x-center_vec.x)
     angular_vel := speed / radius
     new_angle := is_clockwise\
         ?  angle + angular_vel * dt\
         : -angle + angular_vel * dt
-    new_x := orbit_pos.x + radius * math.cos(new_angle)
-    new_y := orbit_pos.y + radius * math.sin(new_angle)
+    new_x := center_vec.x + radius * math.cos(new_angle)
+    new_y := center_vec.y + radius * math.sin(new_angle)
     return { new_x, new_y }
 }
 

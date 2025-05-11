@@ -18,8 +18,4 @@ TODO: [?] maybe convert all Frame's bool fields // flags: bit_set [Flags]
 
 TODO: [?] maybe add support for logic resolution 1280x720
 
-TODO: improve Measured_Text, so its possible to split frame update and draw
-// * currently when drawing text we update f.rect.h which is not nice
-// * idea is to have Frame.text with all info for updating (measure) and drawing
-// * rework /text.odin, maybe move to separate package /measured_text
-// * add Manager.drawing_frames and .updating phase should fill it to be later used in .drawing phase
+TODO: add Manager.drawing_frames and .updating phase should fill it to be later used in .drawing phase
