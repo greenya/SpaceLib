@@ -17,7 +17,7 @@ main_menu_init :: proc () {
     app.ui.main_menu.exit_dialog = main_menu_add_exit_dialog(app.ui.manager.root)
 
     // select default tab
-    ui.click(app.ui.main_menu.menu_panel, "text={icon=play}Play ") // TODO: use "tab_bar/play"
+    ui.click(app.ui.main_menu.menu_panel, "tab_bar/play")
 
     // // !! DEBUG -- test layout.scroll
     // cont1 := ui.add_frame(app.ui.manager.root, {
@@ -179,7 +179,8 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         }, { { point=.top_left }, { point=.bottom_right } })
 
         ui.add_frame(about_panel, { text_flags={.terse,.auto_height}, text=
-            "{top,center,color=c7}The game is made for Odin 7 Day Jam by Spacemad using Odin and Raylib.\n" })
+            "{top,center,color=c5}The game is made for {color=c8}Odin 7 Day Jam{color=c5} "+
+            "by Spacemad using Odin and Raylib.\n" })
 
         ui.add_frame(about_panel, { text_flags={.terse,.auto_height}, text="{icon=nav}Open Jam page", draw=draw_ui_link })
         ui.add_frame(about_panel, { text_flags={.terse,.auto_height}, text="{icon=nav}Open Game page", draw=draw_ui_link })
@@ -195,27 +196,32 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
     })
 
-    // TODO: rework to use "name" and "text" separately
-    for text in ([] string {
-        "{icon=play}Play ",
-        "{icon=cog}Options ",
-        "{icon=question}How To Play ",
-        "{icon=info}About ",
-        "{icon=exit}Exit ",
+    for info in ([][2] string {
+        { "play"        , "{icon=play}Play " },
+        { "options"     , "{icon=cog}Options " },
+        { "how_to_play" , "{icon=question}How To Play "},
+        { "about"       , "{icon=info}About " },
+        { "exit"        , "{icon=exit}Exit " },
     }) {
-        button := ui.add_frame(tab_bar, { text_flags={.terse}, text=text, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
-            menu := app.ui.main_menu
-            switch f.text {
-            case "{icon=play}Play "             : ui.show(menu.menu_panel, "play_panel", hide_siblings=true)
-            case "{icon=cog}Options "           : ui.show(menu.menu_panel, "options_panel", hide_siblings=true)
-            case "{icon=question}How To Play "  : ui.show(menu.menu_panel, "how_to_play_panel", hide_siblings=true)
-            case "{icon=info}About "            : ui.show(menu.menu_panel, "about_panel", hide_siblings=true)
-            case "{icon=exit}Exit "             : ui.show(menu.exit_dialog)
-            }
-        } })
+        name := info[0]
+        text := info[1]
+        draw := draw_ui_button
 
-        if text == "Play" do button.size.y = 65
-        if text != "Exit" do button.radio = true
+        button := ui.add_frame(tab_bar,
+            { name=name, text_flags={.terse}, text=text, draw=draw, click=proc (f: ^ui.Frame) {
+                menu := app.ui.main_menu
+                switch f.name {
+                case "play"         : ui.show(menu.menu_panel, "play_panel", hide_siblings=true)
+                case "options"      : ui.show(menu.menu_panel, "options_panel", hide_siblings=true)
+                case "how_to_play"  : ui.show(menu.menu_panel, "how_to_play_panel", hide_siblings=true)
+                case "about"        : ui.show(menu.menu_panel, "about_panel", hide_siblings=true)
+                case "exit"         : ui.show(menu.exit_dialog)
+                }
+            },
+        })
+
+        if name == "play" do button.size.y = 65
+        if name != "exit" do button.radio = true
     }
 
     ui.add_frame(root,
