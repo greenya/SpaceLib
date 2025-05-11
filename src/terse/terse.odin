@@ -1,10 +1,9 @@
 package spacelib_terse
 
-// TODO: rework "color" and "font" to be stack-based, e.g. {color=a}...{/color}
 // TODO: add support for named groups, e.g. {group=title}...{/group}; Text.groups should be dynamic array (or map?)
 // TODO: add support for extra top gap for a line, e.g. {gap=0} should set gap for current line, default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0)
 // TODO: [?] maybe rework "icon" so its size is not Vec2 {font_height,font_height} but is returned by Query_Block_Proc (and rename "icon" to "block")
-// TODO: add support for optional icon size: {icon=title^1.75}, should use 1.75*font.height for icon size
+// TODO: [?] maybe add support for optional icon size: {icon=title^1.75}, should use 1.75*font.height for icon size
 
 import "core:fmt"
 import "core:slice"
@@ -51,10 +50,12 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
-@(private) default_valign   :: Vertical_Alignment.middle
-@(private) default_align    :: Horizontal_Alignment.center
-@(private) default_font     :: ""
-@(private) default_color    :: ""
+@(private) default_fonts_stack_size     :: 8
+@(private) default_colors_stack_size    :: 8
+@(private) default_valign               :: Vertical_Alignment.middle
+@(private) default_align                :: Horizontal_Alignment.center
+@(private) default_font                 :: ""
+@(private) default_color                :: ""
 
 create :: proc (
     str             : string,
@@ -72,8 +73,16 @@ create :: proc (
 
     if str == "" do return text
 
-    font: ^Font = query_font(default_font)
-    color: Color = query_color(default_color)
+    font := query_font(default_font)
+    fonts_stack := [default_fonts_stack_size] ^Font {}
+    fonts_stack[0] = font
+    fonts_stack_idx := 0
+
+    color := query_color(default_color)
+    colors_stack := [default_colors_stack_size] Color {}
+    colors_stack[0] = color
+    colors_stack_idx := 0
+
     wrapping_allowed := rect.w > 0
 
     cursor: struct { type: enum { text, code }, start: int }
@@ -107,17 +116,31 @@ create :: proc (
                 case "top"      : text.valign = .top
                 case "middle"   : text.valign = .middle
                 case "bottom"   : text.valign = .bottom
+                case "/font":
+                    fonts_stack_idx -= 1
+                    ensure(fonts_stack_idx >= 0, "Fonts stack underflow!")
+                    font = fonts_stack[fonts_stack_idx]
+                case "/color":
+                    colors_stack_idx -= 1
+                    ensure(colors_stack_idx >= 0, "Colors stack underflow!")
+                    color = colors_stack[colors_stack_idx]
                 case:
                     pair_sep_index := strings.index(command, "=")
                     if pair_sep_index >= 0 && pair_sep_index <= len(command)-2 {
                         command_name := command[0:pair_sep_index]
                         command_value := command[pair_sep_index+1:]
                         switch command_name {
-                        case "color":
-                            color = query_color(command_value)
                         case "font":
                             font = query_font(command_value)
+                            fonts_stack_idx += 1
+                            ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow!")
+                            fonts_stack[fonts_stack_idx] = font
                             line.rect.h = len(line.words) > 0 ? max(line.rect.h, font.height) : font.height
+                        case "color":
+                            color = query_color(command_value)
+                            colors_stack_idx += 1
+                            ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow!")
+                            colors_stack[colors_stack_idx] = color
                         case "icon":
                             icon = command_value
                         case:
