@@ -2,11 +2,13 @@
 
 * /assets               - [planned] assets automation
 * /clock                - clock with time scale support
+* /core                 - core types and procs
 * /raylib               - set of helpers when using lib with Raylib
 * /sdl3                 - [planned] set of helpers when using lib with SDL3
-* /tracking_allocator   - simple tracking allocator
+* /terse                - measured text
+* /tracking_allocator   - tracking allocator
 * /tweens               - [planned] tweening support (simpler version of core:math/ease with support for ^Rect)
-* /ui                   - a retained mode ui library
+* /ui                   - ui manager with frames
 
 ## TODOs
 
