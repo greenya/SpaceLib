@@ -77,7 +77,7 @@ create_manager :: proc (
     m.terse_query_color_proc = terse_query_color_proc
     m.terse_draw_text_proc = terse_draw_text_proc
     m.overdraw_proc = overdraw_proc
-    m.root = add_frame(nil, { pass=true })
+    m.root = add_frame(nil, { flags={ .pass } })
     return m
 }
 
@@ -114,7 +114,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
 
     if !m.captured.outside {
         #reverse for f in m.mouse_frames {
-            if f.pass do continue
+            if .pass in f.flags do continue
             if m.captured.frame != nil && m.captured.frame != f do continue
 
             mouse_input_consumed = true
@@ -143,7 +143,7 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
         }
 
         if mouse.wheel_dy != 0 do #reverse for f in m.mouse_frames {
-            if f.pass do continue
+            if .pass in f.flags do continue
             consumed := wheel(f, mouse.wheel_dy)
             if consumed do break
         }
@@ -158,9 +158,9 @@ update_manager :: proc (m: ^Manager, root_rect: Rect, mouse: Mouse_Input) -> (mo
     }
 
     if lmb_pressed do for f in m.auto_hide_frames {
-        if !f.hidden {
+        if .hidden not_in f.flags {
             _, found := slice.linear_search_reverse(m.mouse_frames[:], f)
-            if !found do f.hidden = true
+            if !found do f.flags += { .hidden }
         }
     }
 

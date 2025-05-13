@@ -11,7 +11,7 @@ debug_draw_frame :: proc (f: ^ui.Frame) {
 
     if f.rect.w > 0 && f.rect.h > 0 {
         draw_rect_lines(f.rect, 1, color)
-        if f.pass do draw_rect({ f.rect.x+f.rect.w-10, f.rect.y, 10, 10 }, core.alpha(color, .2))
+        if .pass in f.flags do draw_rect({ f.rect.x+f.rect.w-10, f.rect.y, 10, 10 }, core.alpha(color, .2))
     } else if f.rect.w > 0 {
         draw_line({ f.rect.x, f.rect.y }, { f.rect.x + f.rect.w, f.rect.y }, 3, color)
         draw_line({ f.rect.x, f.rect.y-6 }, { f.rect.x, f.rect.y+5 }, 3, color)

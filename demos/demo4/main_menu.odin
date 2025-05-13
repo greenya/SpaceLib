@@ -65,11 +65,10 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     })
 
     {
-        play_panel := ui.add_frame(tab_content, {
-            name="play_panel",
-            hidden=true,
-            draw=draw_ui_border_17,
-        }, { { point=.top_left }, { point=.bottom_right } })
+        play_panel := ui.add_frame(tab_content,
+            { name="play_panel", flags={ .hidden }, draw=draw_ui_border_17, },
+            { { point=.top_left }, { point=.bottom_right } },
+        )
 
         ui.add_frame(play_panel,
             { flags={.terse,.terse_height}, text=
@@ -91,16 +90,15 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     {
         options_panel := ui.add_frame(tab_content, {
             name="options_panel",
-            hidden=true,
-            scissor=true,
+            flags={ .hidden, .scissor },
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        ui.add_frame(options_panel, { flags={.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play Music", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play SFX", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Do something else", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} And do this too please", check=true, draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play Music", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play SFX", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Do something else", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} And do this too please", draw=draw_ui_checkbox })
 
         // todo: add slider demo (and implement the support)
     }
@@ -108,7 +106,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     {
         how_to_play_panel := ui.add_frame(tab_content, {
             name="how_to_play_panel",
-            hidden=true,
+            flags={ .hidden },
             draw=draw_ui_border_17,
             wheel=proc (f: ^ui.Frame, dy: f32) -> bool { return ui.wheel(f, "content", dy) },
         }, { { point=.top_left }, { point=.bottom_right } })
@@ -118,7 +116,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
         content := ui.add_frame(how_to_play_panel, {
             name="content",
-            scissor=true,
+            flags={ .scissor },
             layout={ dir=.down, gap=25, scroll={ step=20 } },
         }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} } })
 
@@ -131,9 +129,9 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         { // test scrolling child frame
             inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=true } })
             ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="{top,left,color=c7}Test scrolling child frame" })
-            sc := ui.add_frame(inline_container, { size={0,80}, scissor=true, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
+            sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
-                ui.add_frame(sc, { flags={.terse}, text=text, radio=true, draw=draw_ui_button })
+                ui.add_frame(sc, { flags={.terse,.radio}, text=text, draw=draw_ui_button })
             }
         }
 
@@ -172,8 +170,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     {
         about_panel := ui.add_frame(tab_content, {
             name="about_panel",
-            hidden=true,
-            scissor=true,
+            flags={ .hidden, .scissor },
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
@@ -229,7 +226,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         })
 
         if name == "play" do button.size.y = 65
-        if name != "exit" do button.radio = true
+        if name != "exit" do button.flags += { .radio }
     }
 
     ui.add_frame(root,
@@ -246,7 +243,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
 main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent,
-        { name=#procedure, order=10, hidden=true, solid=true, draw=draw_ui_dim_rect },
+        { name=#procedure, order=10, flags={ .hidden, .solid }, draw=draw_ui_dim_rect },
         { { point=.top_left }, { point=.bottom_right } })
 
     container := ui.add_frame(root, { size={440,0}, draw=draw_ui_panel,

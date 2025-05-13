@@ -25,19 +25,10 @@ Frame :: struct {
     anchors         : [dynamic] Anchor,
     size            : Vec2,
 
+    flags           : bit_set [Flag],
     name            : string,
     text            : string,
     text_terse      : ^terse.Text,
-
-    flags           : bit_set [Flag],
-    hidden          : bool,
-    pass            : bool,
-    solid           : bool,
-    scissor         : bool,
-    check           : bool,
-    radio           : bool,
-    auto_hide       : bool,
-    disabled        : bool,
     actor           : Actor,
 
     draw            : Frame_Proc,
@@ -50,6 +41,21 @@ Frame :: struct {
     prev_hovered    : bool,
     captured        : bool,
     selected        : bool,
+}
+
+Flag :: enum {
+    hidden,
+    pass,
+    solid,
+    scissor,
+    check,
+    radio,
+    auto_hide,
+    disabled,
+    terse,
+    terse_height,
+    terse_width,
+    terse_rect,
 }
 
 Layout :: struct {
@@ -117,13 +123,6 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
-Flag :: enum {
-    terse,
-    terse_height,
-    terse_width,
-    terse_rect,
-}
-
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 
@@ -140,7 +139,7 @@ add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: [] Anchor = {}) ->
 }
 
 updated :: proc (f: ^Frame) {
-    if f.hidden do return
+    if .hidden in f.flags do return
     update_rect(f)
     for child in f.children do updated(child)
 }
@@ -189,8 +188,8 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = n
 }
 
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
-    if hide_siblings && f.parent != nil do for &child in f.parent.children do child.hidden = true
-    f.hidden = false
+    if hide_siblings && f.parent != nil do for &child in f.parent.children do child.flags += { .hidden }
+    f.flags -= { .hidden }
     updated(f)
 }
 
@@ -205,7 +204,7 @@ show :: proc {
 }
 
 hide_by_frame :: proc (f: ^Frame) {
-    f.hidden = true
+    f.flags += { .hidden }
 }
 
 hide_by_path :: proc (parent: ^Frame, path: string) {
@@ -224,7 +223,7 @@ wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if layout_has_scroll(f) && layout_apply_scroll(f, dy)   do consumed = true
     if f.actor != nil && wheel_actor(f, dy)                 do consumed = true
     if f.wheel != nil && f.wheel(f, dy)                     do consumed = true
-    if f.solid                                              do consumed = true
+    if .solid in f.flags                                    do consumed = true
 
     return
 }
@@ -242,10 +241,10 @@ wheel :: proc {
 click_by_frame :: proc (f: ^Frame) {
     if disabled(f) do return
 
-    if f.check          do f.selected = !f.selected
-    if f.radio          do click_radio(f)
-    if f.actor != nil   do click_actor(f)
-    if f.click != nil   do f.click(f)
+    if .check in f.flags    do f.selected = !f.selected
+    if .radio in f.flags    do click_radio(f)
+    if f.actor != nil       do click_actor(f)
+    if f.click != nil       do f.click(f)
 }
 
 click_by_path :: proc (parent: ^Frame, path: string) {
@@ -259,12 +258,12 @@ click :: proc {
 }
 
 hidden :: proc (f: ^Frame) -> bool {
-    for i:=f; i!=nil; i=i.parent do if i.hidden do return true
+    for i:=f; i!=nil; i=i.parent do if .hidden in i.flags do return true
     return false
 }
 
 disabled :: proc (f: ^Frame) -> bool {
-    for i:=f; i!=nil; i=i.parent do if i.disabled do return true
+    for i:=f; i!=nil; i=i.parent do if .disabled in i.flags do return true
     return false
 }
 
@@ -354,7 +353,7 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
 
 @(private)
 click_radio :: proc (f: ^Frame) {
-    if f.parent != nil do for &child in f.parent.children do if child.radio do child.selected = false
+    if f.parent != nil do for &child in f.parent.children do if .radio in child.flags do child.selected = false
     f.selected = true
 }
 
@@ -412,7 +411,7 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     f.hovered = false
     f.captured = false
 
-    if f.hidden do return
+    if .hidden in f.flags do return
 
     update_rect(f)
 
@@ -431,16 +430,16 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if .terse_rect in f.flags && f.text_terse != nil do hit_rect = f.text_terse.rect
     if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
 
-    if f.auto_hide do append(&m.auto_hide_frames, f)
+    if .auto_hide in f.flags do append(&m.auto_hide_frames, f)
 
-    if f.scissor do push_scissor_rect(m, f.rect)
+    if .scissor in f.flags do push_scissor_rect(m, f.rect)
     for child in f.children do update_frame_tree(child, m)
-    if f.scissor do pop_scissor_rect(m)
+    if .scissor in f.flags do pop_scissor_rect(m)
 }
 
 @(private)
 draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
-    if f.hidden do return
+    if .hidden in f.flags do return
 
     if f.draw != nil {
         if .terse not_in f.flags || f.text_terse != nil do f.draw(f)
@@ -449,9 +448,9 @@ draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     }
 
     if m.overdraw_proc != nil do m.overdraw_proc(f)
-    if f.scissor do push_scissor_rect(m, f.rect)
+    if .scissor in f.flags do push_scissor_rect(m, f.rect)
     for child in f.children do draw_frame_tree(child, m)
-    if f.scissor do pop_scissor_rect(m)
+    if .scissor in f.flags do pop_scissor_rect(m)
     if f.draw_after != nil do f.draw_after(f)
 
     m.stats.frames_drawn += 1
@@ -476,7 +475,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     has_prev_rect: bool
 
     for child in f.children {
-        if child.hidden do continue
+        if .hidden in child.flags do continue
 
         rect := Rect {}
         rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w-2*f.layout.pad.x
