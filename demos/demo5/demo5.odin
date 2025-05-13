@@ -36,20 +36,16 @@ main :: proc () {
     //     "And now this is default colored text. EOT."
 
     text0 :: "{top,color=white,font=header}{color=gold}1,234{icon=coins}{/color}\t{color=gray}56{icon=coins}{/color}\t{color=salmon}78{icon=coins}{/color}{/font}\n\n"
-    text1 :: "{left}Lorem ipsum dolor: {color=salmon}{icon=fire}17 damage{/color} consectetur adipiscing elit. Praesent vitae aliquam libero. Praesent malesuada nulla: {font=body_code,color=green}id{color=gold}={/color}ex{color=gold}+{/color}sodales{font=body,/color} in auctor ex mattis. Praesent pretium iaculis bibendum. Morbi ultrices vehicula turpis, ac varius lacus scelerisque eu. Nunc accumsan, nisl quis ultrices ultrices, nibh nunc tincidunt urna, ac vulputate purus felis consequat metus."
-    text2 :: "In {color=cyan}lacinia {font=body_bold}mauris sed{font=body} tempor {/color}tempor. Mauris lacus sem, consequat ac orci vitae, aliquam dapibus nunc. Nulla tempor mi eu quam facilisis sollicitudin. Quisque ultrices laoreet finibus. Proin non ligula mauris. Mauris molestie pellentesque pellentesque. Etiam volutpat vestibulum nisl, sit amet interdum tortor rutrum gravida."
+    text1 :: "{left}{group=group1}Lorem ipsum dolor{/group}: {color=salmon}{icon=fire}17 damage{/color} consectetur adipiscing elit. Praesent vitae aliquam libero. Praesent malesuada nulla: {font=body_code,color=green}id{color=gold}={/color}ex{color=gold}+{/color}sodales{font=body,/color} in auctor ex mattis. Praesent pretium iaculis bibendum. Morbi ultrices vehicula turpis, ac varius lacus scelerisque eu. Nunc accumsan, nisl quis ultrices ultrices, nibh nunc tincidunt urna, ac vulputate purus felis consequat metus."
+    text2 :: "In {color=cyan}lacinia {font=body_bold}mauris sed{font=body} tempor {/color}tempor. Mauris lacus sem, consequat ac orci vitae, aliquam dapibus nunc. Nulla tempor mi eu quam facilisis sollicitudin. {group=group2}Quisque ultrices laoreet finibus. Proin non ligula mauris. Mauris molestie pellentesque pellentesque.{/group} Etiam volutpat vestibulum nisl, sit amet interdum tortor rutrum gravida."
     text3_s :: "{font=body_code}"
     text3_1 :: "{color=cyan}rl{/color,color=gray}.{/color,color=green}SetTraceLogLevel{/color,color=gray}(.WARNING){/color}\n"
     text3_2 :: "{color=cyan}rl{/color,color=gray}.{/color,color=green}InitWindow{/color,color=gray}({/color,color=olive}1280{/color,color=gray}, {/color,color=olive}720{/color,color=gray}, {color=gold}\"spacelib demo 5\"{/color,color=gray}){/color}\n"
     text3_3 :: "{color=green}assets_load{/color,color=gray}(){/color}\n"
     text3_4 :: "{color=brown}/* comments goes here */{/color}\n"
     text3_e :: "{/font}"
-    text4 :: "Vestibulum gravida erat id lacus pretium semper. Morbi laoreet arcu augue, ac elementum ex porttitor id. Sed nec aliquam tortor. Fusce feugiat mollis tellus ut consectetur."
+    text4 :: "Vestibulum {group=group3}gravida{/group} erat id lacus pretium semper. Morbi laoreet arcu augue, ac elementum ex porttitor id. Sed nec aliquam tortor. Fusce feugiat mollis tellus ut consectetur."
     text := text0 + text1 + "\n\n" + text2 + "\n\n" + text3_s+text3_1+text3_2+text3_3+text3_4+text3_e + "\n" + text4
-
-    // mrect1 := ui.Rect { 200, 100, 800, 400 }
-    // mtext1 := measured_text.create(text, mrect1, measured_text_query_font, measured_text_query_color)
-    // fmt.printfln("%#v", mtext1)
 
     sw: time.Stopwatch
 
@@ -60,6 +56,7 @@ main :: proc () {
         time.stopwatch_start(&sw)
         text_rect := Rect { 200, 50, f32(rl.GetScreenWidth())-400, 400 }
         text_terse := terse.create(text, text_rect, terse_query_font, terse_query_color, context.temp_allocator, debug_keep_codes=false)
+        // defer terse.destroy(text_terse)
         time.stopwatch_stop(&sw)
         dur_measuring := time.stopwatch_duration(sw)
 
@@ -78,8 +75,6 @@ main :: proc () {
         rl.DrawFPS(10, 10)
         rl.EndDrawing()
     }
-
-    // terse.destroy(mtext1)
 
     assets_unload()
     rl.CloseWindow()
@@ -120,6 +115,22 @@ draw_terse_text :: proc (text: ^terse.Text, debug := false) {
                 font := word.font
                 font_rl := (cast (^rl.Font) font.font_ptr)^
                 rl_sl.draw_text(word.text, pos, font_rl, font.height, font.letter_spacing, cast (rl.Color) word.color)
+            }
+        }
+    }
+
+    if debug {
+        groups_color := rl.Color {255,0,255,200}
+        for group in text.groups do for rect, i in group.line_rects {
+            draw_rect_lines(rect, 3, groups_color)
+            if i == 0 {
+                font := rl.GetFontDefault()
+                font_height := f32(20)
+                font_spacing := f32(2)
+                cstr := fmt.ctprint(group.name)
+                size := rl.MeasureTextEx(font, cstr, font_height, font_spacing)
+                draw_rect({rect.x,rect.y-size.y,size.x+4*2,size.y}, groups_color)
+                rl_sl.draw_text(group.name, {rect.x+4,rect.y-font_height}, font, font_height, font_spacing, rl.ColorBrightness(groups_color, -.75))
             }
         }
     }

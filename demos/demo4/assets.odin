@@ -97,7 +97,7 @@ Texture_ID :: enum {
 
 Texture :: struct {
     file_id: File_ID,
-    texture: rl.Texture,
+    texture_rl: rl.Texture,
 }
 
 textures: [Texture_ID] Texture = {
@@ -163,13 +163,17 @@ assets_load :: proc () {
         font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
         font.font_ptr = &font.font_rl
         font.measure_text = rl_sl.measure_text
+        // rl.SetTextureFilter(font.font_rl.texture, .BILINEAR)
+        // rl.GenTextureMipmaps(&font.font_rl.texture)
     }
 
     for &texture in textures {
         file := &files[texture.file_id]
         file_ext := fmt.ctprintf(".%s", file.type)
         image := rl.LoadImageFromMemory(file_ext, raw_data(file.data), i32(len(file.data)))
-        texture.texture = rl.LoadTextureFromImage(image)
+        texture.texture_rl = rl.LoadTextureFromImage(image)
+        // rl.SetTextureFilter(texture.texture_rl, .BILINEAR)
+        // rl.GenTextureMipmaps(&texture.texture_rl)
         rl.UnloadImage(image)
     }
 }
@@ -181,8 +185,8 @@ assets_unload :: proc () {
     }
 
     for &texture in textures {
-        rl.UnloadTexture(texture.texture)
-        texture.texture = {}
+        rl.UnloadTexture(texture.texture_rl)
+        texture.texture_rl = {}
     }
 }
 

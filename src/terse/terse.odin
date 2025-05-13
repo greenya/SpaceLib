@@ -1,9 +1,9 @@
 package spacelib_terse
 
-// TODO: add support for named groups, e.g. {group=title}...{/group}; Text.groups should be dynamic array (or map?)
 // TODO: add support for extra top gap for a line, e.g. {gap=0} should set gap for current line, default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0)
 // TODO: [?] maybe rework "icon" so its size is not Vec2 {font_height,font_height} but is returned by Query_Block_Proc (and rename "icon" to "block")
 // TODO: [?] maybe add support for optional icon size: {icon=title^1.75}, should use 1.75*font.height for icon size
+// TODO: [?] maybe add support for nested groups? need to see good reason with example first
 
 import "core:fmt"
 import "core:slice"
@@ -19,6 +19,7 @@ Text :: struct {
     rect_input  : Rect,
     valign      : Vertical_Alignment,
     lines       : [dynamic] Line,
+    groups      : [dynamic] Group,
 }
 
 Line :: struct {
@@ -33,6 +34,17 @@ Word :: struct {
     font    : ^Font,
     color   : Color,
     is_icon : bool,
+}
+
+Group :: struct {
+    name: string,
+    word_locs: [dynamic] Word_Location,
+    line_rects: [dynamic] Rect,
+}
+
+Word_Location :: struct {
+    line_idx: int,
+    word_idx: int,
 }
 
 Font :: struct {
@@ -70,6 +82,7 @@ create :: proc (
     text.rect_input = rect
     text.valign = default_valign
     text.lines.allocator = allocator
+    text.groups.allocator = allocator
 
     if str == "" do return text
 
@@ -83,10 +96,13 @@ create :: proc (
     colors_stack[0] = color
     colors_stack_idx := 0
 
+    group: ^Group
+
     wrapping_allowed := rect.w > 0
 
     cursor: struct { type: enum { text, code }, start: int }
-    code, word, icon: string
+    code, word: string
+    word_is_icon: bool
 
     for para in strings.split(str, "\n", context.temp_allocator) {
         line := _append_line(text, font)
@@ -124,6 +140,9 @@ create :: proc (
                     colors_stack_idx -= 1
                     ensure(colors_stack_idx >= 0, "Colors stack underflow!")
                     color = colors_stack[colors_stack_idx]
+                case "/group":
+                    ensure(group != nil, "No group to close!")
+                    group = nil
                 case:
                     pair_sep_index := strings.index(command, "=")
                     if pair_sep_index >= 0 && pair_sep_index <= len(command)-2 {
@@ -142,7 +161,15 @@ create :: proc (
                             ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow!")
                             colors_stack[colors_stack_idx] = color
                         case "icon":
-                            icon = command_value
+                            assert(word == "")
+                            word = command_value
+                            word_is_icon = true
+                        case "group":
+                            ensure(group == nil, "Groups cannot be nested!")
+                            append(&text.groups, Group { name=command_value })
+                            group = slice.last_ptr(text.groups[:])
+                            group.word_locs.allocator = allocator
+                            group.line_rects.allocator = allocator
                         case:
                             fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
                         }
@@ -160,32 +187,34 @@ create :: proc (
             }
 
             if word != "" {
-                word_size := font->measure_text(word)
+                word_size := word_is_icon\
+                    ? Vec2 { font.height, font.height }\
+                    : font->measure_text(word)
 
                 if wrapping_allowed && line.rect.w + word_size.x > rect.w && len(line.words) > 0 {
                     line = _append_line(text, font)
                 }
 
-                word_rect := Rect { line.rect.x+line.rect.w, line.rect.y, word_size.x, word_size.y }
-                append(&line.words, Word { rect=word_rect, text=word, font=font, color=color })
+                append(&line.words, Word {
+                    rect    = { line.rect.x+line.rect.w, line.rect.y, word_size.x, word_size.y },
+                    text    = word,
+                    font    = font,
+                    color   = color,
+                    is_icon = word_is_icon,
+                })
+
                 line.rect.w += word_size.x
+                line.rect.h = len(line.words) > 0 ? max(line.rect.h, word_size.y) : font.height
 
-                word = ""
-            }
-
-            if icon != "" {
-                icon_size := Vec2 { font.height, font.height }
-
-                if wrapping_allowed && line.rect.w + icon_size.x > rect.w && len(line.words) > 0 {
-                    line = _append_line(text, font)
+                if group != nil {
+                    append(&group.word_locs, Word_Location {
+                        line_idx = len(text.lines)-1,
+                        word_idx = len(line.words)-1,
+                    })
                 }
 
-                word_rect := Rect { line.rect.x+line.rect.w, line.rect.y, icon_size.x, icon_size.y }
-                append(&line.words, Word { rect=word_rect, text=icon, font=font, color=color, is_icon=true })
-                line.rect.w += icon_size.x
-                line.rect.h = len(line.words) > 0 ? max(line.rect.h, icon_size.y) : font.height
-
-                icon = ""
+                word = ""
+                word_is_icon = false
             }
         }
     }
@@ -229,6 +258,20 @@ create :: proc (
             space := (max_word_height - word.rect.h)/2
             word.rect.y += space
         }
+
+        // generate text.groups' line_rects
+        for &group in text.groups {
+            prev_line_idx := int(-1)
+            for loc in group.word_locs {
+                word_rect := text.lines[loc.line_idx].words[loc.word_idx].rect
+                if loc.line_idx != prev_line_idx {
+                    append(&group.line_rects, word_rect)
+                } else {
+                    core.rect_add_rect(slice.last_ptr(group.line_rects[:]), word_rect)
+                }
+                prev_line_idx = loc.line_idx
+            }
+        }
     }
 
     // calculate text.rect
@@ -245,8 +288,16 @@ create :: proc (
 
 destroy :: proc (text: ^Text) {
     if text == nil do return
+
     for line in text.lines do delete(line.words)
     delete(text.lines)
+
+    for group in text.groups {
+        delete(group.word_locs)
+        delete(group.line_rects)
+    }
+    delete(text.groups)
+
     free(text)
 }
 

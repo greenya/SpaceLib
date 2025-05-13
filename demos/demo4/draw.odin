@@ -51,8 +51,8 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint := rl.WHITE) {
     rect_rl := transmute (rl.Rectangle) rect
 
     switch info in sprite.info {
-    case rl.Rectangle   : rl.DrawTexturePro(texture.texture, info, rect_rl, {}, 0, tint)
-    case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture, info, rect_rl, {}, 0, tint)
+    case rl.Rectangle   : rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint)
+    case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint)
     }
 }
 
