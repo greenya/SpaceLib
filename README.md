@@ -1,14 +1,14 @@
 # SpaceLib
 
 * /clock                - clock with time scale support
-* /core                 - core types and procs
-* /raylib               - set of helpers when using lib with Raylib
+* /core                 - core types and utility procs
+* /raylib               - set of helpers when using Raylib
 * /res                  - [planned] resources automation
-* /sdl3                 - [planned] set of helpers when using lib with SDL3
-* /terse                - measured text
+* /sdl3                 - [planned] set of helpers when using SDL3
+* /terse                - text layout calculation
 * /tracking_allocator   - tracking allocator
-* /tweens               - [planned] tweening support (simpler version of core:math/ease with support for ^Rect)
-* /ui                   - ui manager with frames
+* /tweens               - [planned] [maybe] tweening support
+* /ui                   - ui manager
 
 ## TODOs
 
@@ -18,4 +18,4 @@ TODO: [?] maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Opera
 
 TODO: [?] maybe add support for logic resolution 1280x720
 
-TODO: add Manager.drawing_frames and .updating phase should fill it to be later used in .drawing phase
+TODO: [?] add UI.drawing_frames and .updating phase should fill it to be later used in .drawing phase

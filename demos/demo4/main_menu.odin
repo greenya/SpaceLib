@@ -175,17 +175,16 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        // ui.add_frame(about_panel, { flags={.terse,.auto_height}, text=
-        //     "{top,center,color=c5}The game is made for {color=c8}Odin 7 Day Jam{/color} "+
-        //     "by Spacemad using Odin and Raylib.\n" })
-
-        // FIXME: issue with groups!
         ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
-            "{top,center,color=c5}"+
-            "The game is made for {group=jm_link,color=c8}Odin 7 Day Jam{/color,/group} "+
-            "by {group=sm_link,color=c8}Spacemad{/color,/group} "+
-            "using {group=od_link,color=c8}Odin{/color,/group} "+
-            "and {group=rl_link,color=c8}Raylib{/color,/group}.\n" })
+            "{top,center,color=c5}The game is made for {color=c8}Odin 7 Day Jam{/color} "+
+            "by Spacemad using Odin and Raylib.\n" })
+
+        // ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
+        //     "{top,center,color=c5}"+
+        //     "The game is made for {group=jm_link,color=c8}Odin 7 Day Jam{/color,/group} "+
+        //     "by {group=sm_link,color=c8}Spacemad{/color,/group} "+
+        //     "using {group=od_link,color=c8}Odin{/color,/group} "+
+        //     "and {group=rl_link,color=c8}Raylib{/color,/group}.\n" })
 
         ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Jam page", draw=draw_ui_link })
         ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Game page", draw=draw_ui_link })
