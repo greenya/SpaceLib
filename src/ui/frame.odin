@@ -25,6 +25,11 @@ Frame :: struct {
     anchors         : [dynamic] Anchor,
     size            : Vec2,
 
+    name            : string,
+    text            : string,
+    text_terse      : ^terse.Text,
+
+    flags           : bit_set [Flag],
     hidden          : bool,
     pass            : bool,
     solid           : bool,
@@ -32,12 +37,9 @@ Frame :: struct {
     check           : bool,
     radio           : bool,
     auto_hide       : bool,
+    disabled        : bool,
     actor           : Actor,
 
-    name            : string,
-    text            : string,
-    text_terse      : ^terse.Text,
-    text_flags      : bit_set [Text_Flag],
     draw            : Frame_Proc,
     draw_after      : Frame_Proc,
     enter           : Frame_Proc,
@@ -48,7 +50,6 @@ Frame :: struct {
     prev_hovered    : bool,
     captured        : bool,
     selected        : bool,
-    disabled        : bool,
 }
 
 Layout :: struct {
@@ -116,10 +117,11 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
-Text_Flag :: enum {
+Flag :: enum {
     terse,
-    auto_height,
-    auto_width,
+    terse_height,
+    terse_width,
+    terse_rect,
 }
 
 Frame_Proc          :: proc (f: ^Frame)
@@ -414,18 +416,20 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
 
     update_rect(f)
 
-    if .terse in f.text_flags {
+    if .terse in f.flags {
         should_rebuild := f.text_terse == nil || (f.text_terse != nil && f.text_terse.rect_input != f.rect)
         if should_rebuild {
             terse.destroy(f.text_terse)
             f.text_terse = terse.create(f.text, f.rect, m.terse_query_font_proc, m.terse_query_color_proc)
-            if .auto_height in f.text_flags do f.size.y = f.text_terse.rect.h
-            if .auto_width in f.text_flags do f.size.x = f.text_terse.rect.w
+            if .terse_height in f.flags do f.size.y = f.text_terse.rect.h
+            if .terse_width in f.flags do f.size.x = f.text_terse.rect.w
         }
     }
 
     m_pos := m.mouse.pos
-    if core.vec_in_rect(m_pos, f.rect) && core.vec_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
+    hit_rect := f.rect
+    if .terse_rect in f.flags && f.text_terse != nil do hit_rect = f.text_terse.rect
+    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
 
     if f.auto_hide do append(&m.auto_hide_frames, f)
 
@@ -439,7 +443,7 @@ draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     if f.hidden do return
 
     if f.draw != nil {
-        if .terse not_in f.text_flags || f.text_terse != nil do f.draw(f)
+        if .terse not_in f.flags || f.text_terse != nil do f.draw(f)
     } else {
         if f.text_terse != nil do m.terse_draw_text_proc(f.text_terse)
     }
