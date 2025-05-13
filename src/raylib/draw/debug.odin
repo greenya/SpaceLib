@@ -116,26 +116,22 @@ debug_frame_anchors :: proc (f: ^ui.Frame) {
     }
 }
 
-debug_terse_text :: proc (t: ^terse.Text) {
+debug_terse :: proc (t: ^terse.Terse) {
     rect_lines(t.rect, 1, {255,0,0,160})
     rect(t.rect, {255,0,0,20})
 
-    for line in t.lines {
-        rect_lines(line.rect, 1, {255,255,128,80})
-        for word in line.words {
-            rect_lines(word.rect, 1, {255,255,0,40})
-        }
-    }
+    for line in t.lines do rect_lines(line.rect, 1, {255,255,128,80})
+    for word in t.words do rect_lines(word.rect, 1, {255,255,0,40})
 
-    groups_color := Color {255,0,255,200}
-    for group in t.groups do for line_rect, i in group.line_rects {
-        rect_lines(line_rect, 3, groups_color)
+    groups_color :: Color {255,0,255,255}
+    groups_text_color   :: Color {0,0,0,255}
+    for group in t.groups do for i_rect, i in group.rects {
+        rect_lines(i_rect, 3, groups_color)
         if i == 0 {
             font := rl.GetFontDefault()
-            cstr := fmt.ctprint(group.name)
-            size := rl.MeasureTextEx(font, cstr, 10, 2)
-            rect({ line_rect.x, line_rect.y-size.y, size.x+2, size.y }, groups_color)
-            _debug_text(group.name, { line_rect.x+2, line_rect.y-size.y }, {0,0,0,255})
+            size := rl.MeasureTextEx(font, fmt.ctprint(group.name), 10, 2)
+            rect({ i_rect.x, i_rect.y-size.y, size.x+2, size.y }, groups_color)
+            _debug_text(group.name, { i_rect.x+2, i_rect.y-size.y }, groups_text_color)
         }
     }
 }

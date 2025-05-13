@@ -94,23 +94,21 @@ terse_query_color :: #force_inline proc (name: string) -> core.Color {
     return colors[.white].val
 }
 
-draw_terse_text :: proc (text: ^terse.Text, debug := false) {
-    if debug do draw.debug_terse_text(text)
+draw_terse_text :: proc (t: ^terse.Terse, debug := false) {
+    if debug do draw.debug_terse(t)
 
-    for line in text.lines {
-        for word in line.words {
-            if word.is_icon {
-                for sprite, id in sprites {
-                    if sprite.name == word.text {
-                        draw_sprite(id, word.rect, word.color.rgba)
-                    }
+    for word in t.words {
+        if word.is_icon {
+            for sprite, id in sprites {
+                if sprite.name == word.text {
+                    draw_sprite(id, word.rect, word.color.rgba)
                 }
-            } else {
-                pos := Vec2 { word.rect.x, word.rect.y }
-                font := word.font
-                font_rl := (cast (^rl.Font) font.font_ptr)^
-                draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, word.color)
             }
+        } else {
+            pos := Vec2 { word.rect.x, word.rect.y }
+            font := word.font
+            font_rl := (cast (^rl.Font) font.font_ptr)^
+            draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, word.color)
         }
     }
 }

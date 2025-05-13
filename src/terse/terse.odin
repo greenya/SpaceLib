@@ -14,37 +14,37 @@ import "../core"
 @(private) Rect :: core.Rect
 @(private) Color :: core.Color
 
-Text :: struct {
+Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
     valign      : Vertical_Alignment,
+    words       : [dynamic] Word,
     lines       : [dynamic] Line,
     groups      : [dynamic] Group,
 }
 
 Line :: struct {
-    rect    : Rect,
-    align   : Horizontal_Alignment,
-    words   : [dynamic] Word,
+    rect            : Rect,
+    align           : Horizontal_Alignment,
+    word_start_idx  : int,
+    word_count      : int,
 }
 
 Word :: struct {
-    rect    : Rect,
-    text    : string,
-    font    : ^Font,
-    color   : Color,
-    is_icon : bool,
+    rect        : Rect,
+    text        : string,
+    font        : ^Font,
+    color       : Color,
+    is_icon     : bool,
+    in_group    : bool,
+    line_idx    : int,
 }
 
 Group :: struct {
-    name: string,
-    word_locs: [dynamic] Word_Location,
-    line_rects: [dynamic] Rect,
-}
-
-Word_Location :: struct {
-    line_idx: int,
-    word_idx: int,
+    name            : string,
+    word_start_idx  : int,
+    word_count      : int,
+    rects           : [dynamic] Rect,
 }
 
 Font :: struct {
@@ -70,21 +70,22 @@ Query_Color_Proc    :: proc (name: string) -> Color
 @(private) default_color                :: ""
 
 create :: proc (
-    str             : string,
-    rect            : Rect,
-    query_font      : Query_Font_Proc,
-    query_color     : Query_Color_Proc,
-    allocator       := context.allocator,
-    debug_keep_codes:= false,
-) -> ^Text {
-    text := new(Text, allocator)
-    text.rect = rect
-    text.rect_input = rect
-    text.valign = default_valign
-    text.lines.allocator = allocator
-    text.groups.allocator = allocator
+    text                : string,
+    rect                : Rect,
+    query_font          : Query_Font_Proc,
+    query_color         : Query_Color_Proc,
+    allocator           := context.allocator,
+    debug_keep_codes    := false,
+) -> ^Terse {
+    terse := new(Terse, allocator)
+    terse.rect = rect
+    terse.rect_input = rect
+    terse.valign = default_valign
+    terse.words.allocator = allocator
+    terse.lines.allocator = allocator
+    terse.groups.allocator = allocator
 
-    if str == "" do return text
+    if text == "" do return terse
 
     font := query_font(default_font)
     fonts_stack := [default_fonts_stack_size] ^Font {}
@@ -104,8 +105,8 @@ create :: proc (
     code, word: string
     word_is_icon: bool
 
-    for para in strings.split(str, "\n", context.temp_allocator) {
-        line := _append_line(text, font)
+    for para in strings.split(text, "\n", context.temp_allocator) {
+        line := _append_line(terse, font)
 
         cursor = { type=.text, start=0 }
         for i:=0; i<len(para); i+=1 {
@@ -129,9 +130,9 @@ create :: proc (
                 case "left"     : line.align = .left
                 case "center"   : line.align = .center
                 case "right"    : line.align = .right
-                case "top"      : text.valign = .top
-                case "middle"   : text.valign = .middle
-                case "bottom"   : text.valign = .bottom
+                case "top"      : terse.valign = .top
+                case "middle"   : terse.valign = .middle
+                case "bottom"   : terse.valign = .bottom
                 case "/font":
                     fonts_stack_idx -= 1
                     ensure(fonts_stack_idx >= 0, "Fonts stack underflow!")
@@ -154,7 +155,7 @@ create :: proc (
                             fonts_stack_idx += 1
                             ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow!")
                             fonts_stack[fonts_stack_idx] = font
-                            line.rect.h = len(line.words) > 0 ? max(line.rect.h, font.height) : font.height
+                            line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
                         case "color":
                             color = query_color(command_value)
                             colors_stack_idx += 1
@@ -166,10 +167,7 @@ create :: proc (
                             word_is_icon = true
                         case "group":
                             ensure(group == nil, "Groups cannot be nested!")
-                            append(&text.groups, Group { name=command_value })
-                            group = slice.last_ptr(text.groups[:])
-                            group.word_locs.allocator = allocator
-                            group.line_rects.allocator = allocator
+                            group = _append_group(terse, command_value)
                         case:
                             fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
                         }
@@ -187,31 +185,15 @@ create :: proc (
             }
 
             if word != "" {
-                word_size := word_is_icon\
+                size := word_is_icon\
                     ? Vec2 { font.height, font.height }\
                     : font->measure_text(word)
 
-                if wrapping_allowed && line.rect.w + word_size.x > rect.w && len(line.words) > 0 {
-                    line = _append_line(text, font)
+                if wrapping_allowed && line.rect.w + size.x > rect.w && line.word_count > 0 {
+                    line = _append_line(terse, font)
                 }
 
-                append(&line.words, Word {
-                    rect    = { line.rect.x+line.rect.w, line.rect.y, word_size.x, word_size.y },
-                    text    = word,
-                    font    = font,
-                    color   = color,
-                    is_icon = word_is_icon,
-                })
-
-                line.rect.w += word_size.x
-                line.rect.h = len(line.words) > 0 ? max(line.rect.h, word_size.y) : font.height
-
-                if group != nil {
-                    append(&group.word_locs, Word_Location {
-                        line_idx = len(text.lines)-1,
-                        word_idx = len(line.words)-1,
-                    })
-                }
+                _append_word(terse, word, size, font, color, word_is_icon, group)
 
                 word = ""
                 word_is_icon = false
@@ -219,7 +201,7 @@ create :: proc (
         }
     }
 
-    last_line := slice.last_ptr(text.lines[:])
+    last_line := slice.last_ptr(terse.lines[:])
     assert(last_line != nil)
 
     // apply vertical alignment
@@ -227,92 +209,94 @@ create :: proc (
     if vertical_empty_space > 0 {
         offset_rect_y := f32(-1)
 
-        switch text.valign {
+        switch terse.valign {
         case .top: // already aligned
         case .middle: offset_rect_y = vertical_empty_space/2
         case .bottom: offset_rect_y = vertical_empty_space
         }
 
         if offset_rect_y > 0 {
-            for &line in text.lines {
+            for &line in terse.lines {
                 line.rect.y += offset_rect_y
-                for &word in line.words do word.rect.y += offset_rect_y
+                for i in 0..<line.word_count {
+                    word := &terse.words[line.word_start_idx + i]
+                    word.rect.y += offset_rect_y
+                }
             }
         }
     }
 
-    for &line in text.lines {
+    for &line in terse.lines {
         // apply horizontal alignment
         switch line.align {
         case .left: // already aligned
         case .center, .right:
             offset_rect_x := (rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
             line.rect.x += offset_rect_x
-            for &word in line.words do word.rect.x += offset_rect_x
+            for i in 0..<line.word_count {
+                word := &terse.words[line.word_start_idx + i]
+                word.rect.x += offset_rect_x
+            }
         }
 
         // vertically center words in a line in case they have different heights
-        max_word_height := f32(-1)
-        for &word in line.words do if max_word_height < word.rect.h do max_word_height = word.rect.h
-        for &word in line.words {
-            space := (max_word_height - word.rect.h)/2
+        line_height := line.rect.h
+        for i in 0..<line.word_count {
+            word := &terse.words[line.word_start_idx + i]
+            space := (line_height - word.rect.h)/2
             word.rect.y += space
         }
+    }
 
-        // generate text.groups' line_rects
-        for &group in text.groups {
-            prev_line_idx := int(-1)
-            for loc in group.word_locs {
-                word_rect := text.lines[loc.line_idx].words[loc.word_idx].rect
-                if loc.line_idx != prev_line_idx {
-                    append(&group.line_rects, word_rect)
-                } else {
-                    core.rect_add_rect(slice.last_ptr(group.line_rects[:]), word_rect)
-                }
-                prev_line_idx = loc.line_idx
+    // generate rects for terse.groups
+    for &group in terse.groups {
+        prev_line_idx := int(-1)
+        for i in 0..<group.word_count {
+            word := &terse.words[group.word_start_idx + i]
+            if word.line_idx != prev_line_idx {
+                append(&group.rects, word.rect)
+            } else {
+                core.rect_add_rect(slice.last_ptr(group.rects[:]), word.rect)
             }
+            prev_line_idx = word.line_idx
         }
     }
 
-    // calculate text.rect
-    first_line := slice.first_ptr(text.lines[:])
+    // calculate terse.rect
+    first_line := slice.first_ptr(terse.lines[:])
     if first_line != nil {
-        text.rect = first_line.rect
-        for line in text.lines[1:] {
-            core.rect_add_rect(&text.rect, line.rect)
+        terse.rect = first_line.rect
+        for line in terse.lines[1:] {
+            core.rect_add_rect(&terse.rect, line.rect)
         }
     }
 
-    return text
+    return terse
 }
 
-destroy :: proc (text: ^Text) {
-    if text == nil do return
+destroy :: proc (terse: ^Terse) {
+    if terse == nil do return
 
-    for line in text.lines do delete(line.words)
-    delete(text.lines)
+    for group in terse.groups do delete(group.rects)
+    delete(terse.groups)
+    delete(terse.lines)
+    delete(terse.words)
 
-    for group in text.groups {
-        delete(group.word_locs)
-        delete(group.line_rects)
-    }
-    delete(text.groups)
-
-    free(text)
+    free(terse)
 }
 
 @(private)
-_append_line :: proc (text: ^Text, font: ^Font) -> ^Line {
-    line_rect_y := text.rect.y
+_append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
+    line_rect_y := terse.rect.y
     line_align := default_align
 
-    prev_line := slice.last_ptr(text.lines[:])
+    prev_line := slice.last_ptr(terse.lines[:])
     if prev_line != nil {
         line_rect_y = prev_line.rect.y + prev_line.rect.h + font.line_spacing
         line_align = prev_line.align
 
         // re-measure last word of last line in case it ends with space
-        last_word := slice.last_ptr(prev_line.words[:])
+        last_word := slice.last_ptr(terse.words[:])
         if last_word != nil && strings.ends_with(last_word.text, " ") {
             last_word.text = last_word.text[:len(last_word.text)-1]
             size := font->measure_text(last_word.text)
@@ -321,11 +305,56 @@ _append_line :: proc (text: ^Text, font: ^Font) -> ^Line {
         }
     }
 
-    append(&text.lines, Line {})
-    line := slice.last_ptr(text.lines[:])
-    line.rect = { text.rect.x, line_rect_y, 0, font.height }
-    line.align = line_align
-    line.words.allocator = text.lines.allocator
+    line := Line {
+        rect    = { terse.rect.x, line_rect_y, 0, font.height },
+        align   = line_align,
+    }
 
-    return line
+    append(&terse.lines, line)
+    return slice.last_ptr(terse.lines[:])
+}
+
+@(private)
+_append_group :: proc (terse: ^Terse, name: string) -> ^Group {
+    group := Group { name=name }
+    group.rects.allocator = terse.groups.allocator
+    append(&terse.groups, group)
+    return slice.last_ptr(terse.groups[:])
+}
+
+@(private)
+_append_word :: proc (
+    terse   : ^Terse,
+    text    : string,
+    size    : Vec2,
+    font    : ^Font,
+    color   : Color,
+    is_icon : bool,
+    group   : ^Group,
+) {
+    line := slice.last_ptr(terse.lines[:])
+    assert(line != nil)
+
+    word := Word {
+        rect        = { line.rect.x+line.rect.w, line.rect.y, size.x, size.y },
+        text        = text,
+        font        = font,
+        color       = color,
+        is_icon     = is_icon,
+        in_group    = group != nil,
+        // idx         = len(terse.words), // len value as we are about to add this word now
+        line_idx    = len(terse.lines) - 1,
+    }
+
+    append(&terse.words, word)
+    line.word_count += 1
+    if line.word_count == 1 do line.word_start_idx = len(terse.words)-1 // word.idx
+
+    line.rect.w += size.x
+    line.rect.h = max(line.rect.h, size.y)
+
+    if group != nil {
+        group.word_count += 1
+        if group.word_count == 1 do group.word_start_idx = len(terse.words)-1 // word.idx
+    }
 }
