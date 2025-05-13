@@ -68,7 +68,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         play_panel := ui.add_frame(tab_content, {
             name="play_panel",
             hidden=true,
-            draw=draw_ui_border,
+            draw=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
         ui.add_frame(play_panel,
@@ -94,13 +94,13 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             hidden=true,
             scissor=true,
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
-            draw_after=draw_ui_border,
+            draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}     Play Music", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}     Play SFX", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}     Do something else", check=true, draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}     And do this too please", check=true, draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}{group=tick}{icon=border_15}{/group} Play Music", check=true, draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}{group=tick}{icon=border_15}{/group} Play SFX", check=true, draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}{group=tick}{icon=border_15}{/group} Do something else", check=true, draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { text_flags={.terse,.auto_height}, text="{left}{group=tick}{icon=border_15}{/group} And do this too please", check=true, draw=draw_ui_checkbox })
 
         // todo: add slider demo (and implement the support)
     }
@@ -109,7 +109,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         how_to_play_panel := ui.add_frame(tab_content, {
             name="how_to_play_panel",
             hidden=true,
-            draw=draw_ui_border,
+            draw=draw_ui_border_17,
             wheel=proc (f: ^ui.Frame, dy: f32) -> bool { return ui.wheel(f, "content", dy) },
         }, { { point=.top_left }, { point=.bottom_right } })
 
@@ -131,7 +131,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         { // test scrolling child frame
             inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=true } })
             ui.add_frame(inline_container, { text_flags={.terse,.auto_height}, text="{top,left,color=c7}Test scrolling child frame" })
-            sc := ui.add_frame(inline_container, { size={0,80}, scissor=true, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border })
+            sc := ui.add_frame(inline_container, { size={0,80}, scissor=true, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
                 ui.add_frame(sc, { text_flags={.terse}, text=text, radio=true, draw=draw_ui_button })
             }
@@ -175,7 +175,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             hidden=true,
             scissor=true,
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
-            draw_after=draw_ui_border,
+            draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
         ui.add_frame(about_panel, { text_flags={.terse,.auto_height}, text=

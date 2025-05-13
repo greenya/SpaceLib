@@ -106,6 +106,7 @@ textures: [Texture_ID] Texture = {
 }
 
 Sprite_ID :: enum {
+    border_15,
     border_17,
     panel_0,
     panel_3,
@@ -134,22 +135,23 @@ Sprite :: struct {
 }
 
 sprites: [Sprite_ID] Sprite = {
-    .border_17      = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_0        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_3        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_4        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_9        = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .panel_15       = {                 texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
-    .icon_up        = { name="up",      texture_id=.sheet_white2x, info=rl.Rectangle {100, 200,100,100} },
-    .icon_down      = { name="down",    texture_id=.sheet_white2x, info=rl.Rectangle {400,1100,100,100} },
-    .icon_stop      = { name="stop",    texture_id=.sheet_white2x, info=rl.Rectangle {100, 900,100,100} },
-    .icon_nav       = { name="nav",     texture_id=.sheet_white2x, info=rl.Rectangle {100,1905,100,100} },
-    .icon_check     = { name="check",   texture_id=.sheet_white2x, info=rl.Rectangle {400,1405,100,100} },
-    .icon_cog       = { name="cog",     texture_id=.sheet_white2x, info=rl.Rectangle {300,1702,100,100} },
-    .icon_exit      = { name="exit",    texture_id=.sheet_white2x, info=rl.Rectangle {400, 702,100,100} },
-    .icon_info      = { name="info",    texture_id=.sheet_white2x, info=rl.Rectangle {300,1405,100,100} },
-    .icon_question  = { name="question",texture_id=.sheet_white2x, info=rl.Rectangle {200, 605,100,100} },
-    .icon_play      = { name="play",    texture_id=.sheet_white2x, info=rl.Rectangle {300,1305,100,100} },
+    .border_15      = { name="border_15",   texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .border_17      = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={834,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_0        = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={  1,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_3        = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={148,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_4        = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={197,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_9        = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={442,145,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .panel_15       = {                     texture_id=.ui_atlas, info=rl.NPatchInfo { source={736,  1,48,48}, left=16, top=16, right=16, bottom=16, layout=.NINE_PATCH } },
+    .icon_up        = { name="up",          texture_id=.sheet_white2x, info=rl.Rectangle {100, 200,100,100} },
+    .icon_down      = { name="down",        texture_id=.sheet_white2x, info=rl.Rectangle {400,1100,100,100} },
+    .icon_stop      = { name="stop",        texture_id=.sheet_white2x, info=rl.Rectangle {100, 900,100,100} },
+    .icon_nav       = { name="nav",         texture_id=.sheet_white2x, info=rl.Rectangle {100,1905,100,100} },
+    .icon_check     = { name="check",       texture_id=.sheet_white2x, info=rl.Rectangle {400,1405,100,100} },
+    .icon_cog       = { name="cog",         texture_id=.sheet_white2x, info=rl.Rectangle {300,1702,100,100} },
+    .icon_exit      = { name="exit",        texture_id=.sheet_white2x, info=rl.Rectangle {400, 702,100,100} },
+    .icon_info      = { name="info",        texture_id=.sheet_white2x, info=rl.Rectangle {300,1405,100,100} },
+    .icon_question  = { name="question",    texture_id=.sheet_white2x, info=rl.Rectangle {200, 605,100,100} },
+    .icon_play      = { name="play",        texture_id=.sheet_white2x, info=rl.Rectangle {300,1305,100,100} },
 }
 
 // ---------------
