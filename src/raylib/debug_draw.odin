@@ -1,54 +1,55 @@
 package spacelib_raylib
 
 import "core:fmt"
-import "core:strings"
 import rl "vendor:raylib"
+import "../core"
+import "../terse"
 import "../ui"
 
 debug_draw_frame :: proc (f: ^ui.Frame) {
-    rect := transmute (rl.Rectangle) f.rect
-    color := get_debug_color(f)
+    color := frame_debug_color(f)
 
-    if rect.width > 0 && rect.height > 0 {
-        rl.DrawRectangleLinesEx(rect, 1, color)
-        if f.pass do rl.DrawRectangleRec({ rect.x+rect.width-10, rect.y, 10, 10 }, rl.ColorAlpha(color, .2))
-    } else if rect.width > 0 {
-        rl.DrawLineEx({ rect.x, rect.y }, { rect.x + rect.width, rect.y }, 3, color)
-        rl.DrawLineEx({ rect.x, rect.y-6 }, { rect.x, rect.y+5 }, 3, color)
-        rl.DrawLineEx({ rect.x+rect.width, rect.y-6 }, { rect.x+rect.width, rect.y + 5 }, 3, color)
-    } else if rect.height > 0 {
-        rl.DrawLineEx({ rect.x, rect.y }, { rect.x, rect.y+rect.height }, 3, color)
-        rl.DrawLineEx({ rect.x-6, rect.y }, { rect.x+5, rect.y }, 3, color)
-        rl.DrawLineEx({ rect.x-6, rect.y+rect.height }, { rect.x+5, rect.y+rect.height }, 3, color)
+    if f.rect.w > 0 && f.rect.h > 0 {
+        draw_rect_lines(f.rect, 1, color)
+        if f.pass do draw_rect({ f.rect.x+f.rect.w-10, f.rect.y, 10, 10 }, core.alpha(color, .2))
+    } else if f.rect.w > 0 {
+        draw_line({ f.rect.x, f.rect.y }, { f.rect.x + f.rect.w, f.rect.y }, 3, color)
+        draw_line({ f.rect.x, f.rect.y-6 }, { f.rect.x, f.rect.y+5 }, 3, color)
+        draw_line({ f.rect.x+f.rect.w, f.rect.y-6 }, { f.rect.x+f.rect.w, f.rect.y + 5 }, 3, color)
+    } else if f.rect.h > 0 {
+        draw_line({ f.rect.x, f.rect.y }, { f.rect.x, f.rect.y+f.rect.h }, 3, color)
+        draw_line({ f.rect.x-6, f.rect.y }, { f.rect.x+5, f.rect.y }, 3, color)
+        draw_line({ f.rect.x-6, f.rect.y+f.rect.h }, { f.rect.x+5, f.rect.y+f.rect.h }, 3, color)
     } else {
-        rl.DrawLineEx({ rect.x-5, rect.y+1 }, { rect.x+6, rect.y+1 }, 3, color)
-        rl.DrawLineEx({ rect.x+1, rect.y-6 }, { rect.x+1, rect.y+6 }, 3, color)
+        draw_line({ f.rect.x-5, f.rect.y+1 }, { f.rect.x+6, f.rect.y+1 }, 3, color)
+        draw_line({ f.rect.x+1, f.rect.y-6 }, { f.rect.x+1, f.rect.y+6 }, 3, color)
     }
 
     if f.parent == nil {
-        cx, cy := rect.x + rect.width/2, rect.y + rect.height/2
-        rl.DrawRectangleLinesEx(rect, 1, rl.ColorAlpha(color, .1))
+        cx, cy := f.rect.x + f.rect.w/2, f.rect.y + f.rect.h/2
+        draw_rect_lines(f.rect, 1, core.alpha(color, .1))
         for d in -2..=+2 {
             df := f32(d) * 200
-            rl.DrawLineEx({ cx+df, rect.y }, { cx+df, rect.y+rect.height }, 1, color)
-            rl.DrawLineEx({ rect.x, cy+df }, { rect.x+rect.width, cy+df }, 1, color)
+            draw_line({ cx+df, f.rect.y }, { cx+df, f.rect.y+f.rect.h }, 1, color)
+            draw_line({ f.rect.x, cy+df }, { f.rect.x+f.rect.w, cy+df }, 1, color)
         }
     }
 
     if f.text != "" {
-        cstr := strings.clone_to_cstring(f.text, context.temp_allocator)
-        rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2, 10, color)
+        pos := Vec2 { f.rect.x+4, f.rect.y+2 }
+        debug_draw_text(f.text, pos, color)
     }
 
     if f.order != 0 {
-        cstr := fmt.ctprintf("[order:%v]", f.order)
-        rl.DrawText(cstr, i32(rect.x) + 4, i32(rect.y) + 2 + 10, 10, color)
+        text := fmt.tprintf("[order:%v]", f.order)
+        pos := Vec2 { f.rect.x+4, f.rect.y+2+10 }
+        debug_draw_text(text, pos, color)
     }
 
     if f.hovered {
-        cstr := fmt.ctprintf("%v x %v", f.rect.w, f.rect.h)
-        cstr_w := rl.MeasureText(cstr, 10)
-        rl.DrawText(cstr, i32(rect.x + rect.width) - cstr_w - 4, i32(rect.y) + 2, 10, color)
+        text := fmt.tprintf("%v x %v", f.rect.w, f.rect.h)
+        pos := Vec2 { f.rect.x+f.rect.w-4, f.rect.y+2 }
+        debug_draw_text_right(text, pos, color)
     }
 }
 
@@ -56,36 +57,36 @@ debug_draw_frame_layout :: proc (f: ^ui.Frame) {
     step :: 10
     size :: 20
     thick :: 2
-    color := rl.ColorAlpha(get_debug_color(f), .222)
+    color := core.alpha(frame_debug_color(f), .222)
 
     #partial switch f.layout.dir {
     case .left:
         rect_x2 := f.rect.x + f.rect.w
         for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            rl.DrawLineEx({ rect_x2, y }, { rect_x2+size, y }, thick, color)
+            draw_line({ rect_x2, y }, { rect_x2+size, y }, thick, color)
         }
     case .right:
         for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            rl.DrawLineEx({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
+            draw_line({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
         }
     case .left_and_right:
         rect_cx := f.rect.x + f.rect.w/2
         for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            rl.DrawLineEx({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
+            draw_line({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
         }
     case .up:
         rect_y2 := f.rect.y + f.rect.h
         for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            rl.DrawLineEx({ x, rect_y2 }, { x, rect_y2+size }, thick, color)
+            draw_line({ x, rect_y2 }, { x, rect_y2+size }, thick, color)
         }
     case .down:
         for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            rl.DrawLineEx({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
+            draw_line({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
         }
     case .up_and_down:
         rect_cy := f.rect.y + f.rect.h/2
         for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            rl.DrawLineEx({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
+            draw_line({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
         }
     }
 }
@@ -93,31 +94,71 @@ debug_draw_frame_layout :: proc (f: ^ui.Frame) {
 debug_draw_frame_anchors :: proc (f: ^ui.Frame) {
     thick :: 3
     size :: 6
-    color := rl.ColorAlpha(get_debug_color(f), .333)
+    color := core.alpha(frame_debug_color(f), .333)
 
     for a in f.anchors {
-        pos := get_anchor_point_pos(a.point, f.rect)
+        pos := anchor_point_pos(a.point, f.rect)
         rel_frame := a.rel_frame != nil ? a.rel_frame : f.parent
-        rel_pos := get_anchor_point_pos(a.rel_point, rel_frame.rect)
+        rel_pos := anchor_point_pos(a.rel_point, rel_frame.rect)
 
         if abs(pos.x-rel_pos.x) > 0.1 || abs(pos.y-rel_pos.y) > 0.1 {
-            rl.DrawLineEx(rel_pos, pos, thick, color)
-            rl.DrawLineEx(rel_pos + {-size/2,-size/2}, rel_pos + {size/2,size/2}, thick, color)
-            rl.DrawLineEx(rel_pos + {size/2,-size/2}, rel_pos + {-size/2,size/2}, thick, color)
+            draw_line(rel_pos, pos, thick, color)
+            draw_line(rel_pos + {-size/2,-size/2}, rel_pos + {size/2,size/2}, thick, color)
+            draw_line(rel_pos + {size/2,-size/2}, rel_pos + {-size/2,size/2}, thick, color)
         }
 
-        rl.DrawLineEx(pos + {-size,-size}, pos + {size,size}, thick, color)
-        rl.DrawLineEx(pos + {size,-size}, pos + {-size,size}, thick, color)
+        draw_line(pos + {-size,-size}, pos + {size,size}, thick, color)
+        draw_line(pos + {size,-size}, pos + {-size,size}, thick, color)
+    }
+}
+
+debug_draw_terse_text :: proc (t: ^terse.Text) {
+    draw_rect_lines(t.rect, 1, {255,0,0,160})
+    draw_rect(t.rect, {255,0,0,20})
+
+    for line in t.lines {
+        draw_rect_lines(line.rect, 1, {255,255,128,80})
+        for word in line.words {
+            draw_rect_lines(word.rect, 1, {255,255,0,40})
+        }
+    }
+
+    groups_color := Color {255,0,255,200}
+    for group in t.groups do for rect, i in group.line_rects {
+        draw_rect_lines(rect, 3, groups_color)
+        if i == 0 {
+            font := rl.GetFontDefault()
+            cstr := fmt.ctprint(group.name)
+            size := rl.MeasureTextEx(font, cstr, 10, 2)
+            draw_rect({ rect.x, rect.y-size.y, size.x+2, size.y }, groups_color)
+            debug_draw_text(group.name, { rect.x+2, rect.y-size.y }, {0,0,0,255})
+        }
     }
 }
 
 @(private)
-get_debug_color :: proc (f: ^ui.Frame) -> rl.Color {
-    return f.parent == nil ? rl.GRAY : f.captured ? rl.RED : f.hovered ? rl.YELLOW : rl.LIGHTGRAY
+debug_draw_text :: proc (text: string, pos: Vec2, tint: Color) {
+    font := rl.GetFontDefault()
+    draw_text(text, pos, font, 10, 1, tint)
 }
 
 @(private)
-get_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
+debug_draw_text_right :: proc (text: string, pos: Vec2, tint: Color) {
+    font := rl.GetFontDefault()
+    draw_text_right(text, pos, font, 10, 1, tint)
+}
+
+@(private)
+frame_debug_color :: proc (f: ^ui.Frame) -> Color {
+    gray        :: Color(rl.GRAY)
+    red         :: Color(rl.RED)
+    yellow      :: Color(rl.YELLOW)
+    light_gray  :: Color(rl.LIGHTGRAY)
+    return f.parent == nil ? gray : f.captured ? red : f.hovered ? yellow : light_gray
+}
+
+@(private)
+anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
     #partial switch point {
     case .top_left      : return { x, y }
     case .top           : return { x+w/2, y }
