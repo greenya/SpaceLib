@@ -154,10 +154,30 @@ is_consumed :: #force_inline proc (flag: ^bool) -> bool {
     return true
 }
 
-alpha :: #force_inline proc (c: Color, alpha_ratio: f32) -> Color {
+alpha :: #force_inline proc (c: Color, ratio: f32) -> Color {
     c := c
-    c.a = u8(f32(c.a)*alpha_ratio)
+    c.a = u8(f32(c.a)*ratio)
     return c
+}
+
+brightness :: #force_inline proc (c: Color, factor: f32) -> Color {
+    r, g, b := f32(c.r), f32(c.g), f32(c.b)
+    if factor > 0 {
+        return {
+            u8(r + (255-r)*factor),
+            u8(g + (255-g)*factor),
+            u8(b + (255-b)*factor),
+            c.a,
+        }
+    } else {
+        factor_plus_1 := factor + 1
+        return {
+            u8(r*factor_plus_1),
+            u8(g*factor_plus_1),
+            u8(b*factor_plus_1),
+            c.a,
+        }
+    }
 }
 
 // https://iquilezles.org/articles/palettes/
