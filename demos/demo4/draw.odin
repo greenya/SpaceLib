@@ -20,22 +20,22 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
     }
 }
 
-draw_text_terse :: proc (text: ^terse.Text, override_color: ^Color = nil, offset := Vec2 {}) {
-    if app.debug_drawing do draw.debug_terse_text(text)
+draw_terse :: proc (t: ^terse.Terse, override_color: ^Color = nil, offset := Vec2 {}) {
+    if app.debug_drawing do draw.debug_terse(t)
 
-    for line in text.lines {
-        for word in line.words {
-            rect := core.rect_moved(word.rect, offset)
-            tint := override_color != nil ? override_color.val : word.color
-            if word.is_icon {
-                sprite_id := assets_sprite_id(word.text)
-                draw_sprite(sprite_id, rect, tint)
-            } else {
-                pos := Vec2 { rect.x, rect.y }
-                font := word.font
-                font_rl := (cast (^rl.Font) font.font_ptr)^
-                draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, tint)
-            }
+    for word in t.words {
+        // if word.in_group do continue
+
+        rect := core.rect_moved(word.rect, offset)
+        tint := override_color != nil ? override_color.val : word.color
+        if word.is_icon {
+            sprite_id := assets_sprite_id(word.text)
+            draw_sprite(sprite_id, rect, tint)
+        } else {
+            pos := Vec2 { rect.x, rect.y }
+            font := word.font
+            font_rl := (cast (^rl.Font) font.font_ptr)^
+            draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, tint)
         }
     }
 }
@@ -59,8 +59,8 @@ draw_ui_panel :: proc (f: ^ui.Frame) {
 draw_ui_button :: proc (f: ^ui.Frame) {
     if ui.disabled(f) {
         draw_sprite(.panel_9, f.rect, colors[.c3].val)
-        draw_text_terse(f.text_terse, &colors[.c2], {+1,+1})
-        draw_text_terse(f.text_terse, &colors[.c4], {-1,-1})
+        draw_terse(f.terse, &colors[.c2], {+1,+1})
+        draw_terse(f.terse, &colors[.c4], {-1,-1})
         return
     }
 
@@ -73,21 +73,23 @@ draw_ui_button :: proc (f: ^ui.Frame) {
     text_color: Color = f.hovered ? colors[.c7] : colors[.c6]
 
     if f.captured {
-        draw_text_terse(f.text_terse, &text_color)
+        draw_terse(f.terse, &text_color)
     } else {
-        draw_text_terse(f.text_terse, &colors[.c2], {+1,+1})
-        draw_text_terse(f.text_terse, &text_color, {-1,-1})
+        draw_terse(f.terse, &colors[.c2], {+1,+1})
+        draw_terse(f.terse, &text_color, {-1,-1})
     }
 }
 
 draw_ui_checkbox :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
     text_color := f.hovered ? &colors[.c8] : &colors[.c6]
-    draw_text_terse(f.text_terse, text_color, offset)
+    draw_terse(f.terse, text_color, offset)
 
-    assert(f.text_terse.groups[0].name == "tick")
-    tick_rect := core.rect_moved(f.text_terse.groups[0].line_rects[0], offset)
+    assert(len(f.terse.groups) == 1)
+    assert(len(f.terse.groups[0].rects) == 1)
+    assert(f.terse.groups[0].name == "tick")
 
+    tick_rect := core.rect_moved(f.terse.groups[0].rects[0], offset)
     if f.selected do draw_sprite(.icon_check, tick_rect, colors[.c6].val)
 }
 
@@ -95,12 +97,12 @@ draw_ui_link :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
 
     if f.hovered {
-        border := core.rect_moved(core.rect_inflated(f.text_terse.rect, {8,4}), {2,0}+offset)
+        border := core.rect_moved(core.rect_inflated(f.terse.rect, {8,4}), {2,0}+offset)
         draw.rect_lines(border, 3, colors[.c3].val)
     }
 
     text_color := f.hovered ? &colors[.c8] : &colors[.c6]
-    draw_text_terse(f.text_terse, text_color, offset)
+    draw_terse(f.terse, text_color, offset)
 }
 
 draw_ui_button_sprite :: proc (f: ^ui.Frame, sprite_id: Sprite_ID) {

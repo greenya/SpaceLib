@@ -28,7 +28,7 @@ Frame :: struct {
     flags           : bit_set [Flag],
     name            : string,
     text            : string,
-    text_terse      : ^terse.Text,
+    terse           : ^terse.Terse,
     actor           : Actor,
 
     draw            : Frame_Proc,
@@ -173,8 +173,8 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
 
 set_text :: proc (f: ^Frame, new_text: string) {
     f.text = new_text
-    terse.destroy(f.text_terse)
-    f.text_terse = nil
+    terse.destroy(f.terse)
+    f.terse = nil
 }
 
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
@@ -399,14 +399,14 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 @(private)
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
-    terse.destroy(f.text_terse)
+    terse.destroy(f.terse)
     delete(f.children)
     delete(f.anchors)
     free(f)
 }
 
 @(private)
-update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
+update_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     f.prev_hovered = f.hovered
     f.hovered = false
     f.captured = false
@@ -416,51 +416,51 @@ update_frame_tree :: proc (f: ^Frame, m: ^Manager) {
     update_rect(f)
 
     if .terse in f.flags {
-        should_rebuild := f.text_terse == nil || (f.text_terse != nil && f.text_terse.rect_input != f.rect)
+        should_rebuild := f.terse == nil || (f.terse != nil && f.terse.rect_input != f.rect)
         if should_rebuild {
-            terse.destroy(f.text_terse)
-            f.text_terse = terse.create(f.text, f.rect, m.terse_query_font_proc, m.terse_query_color_proc)
-            if .terse_height in f.flags do f.size.y = f.text_terse.rect.h
-            if .terse_width in f.flags do f.size.x = f.text_terse.rect.w
+            terse.destroy(f.terse)
+            f.terse = terse.create(f.text, f.rect, ui.terse_query_font_proc, ui.terse_query_color_proc)
+            if .terse_height in f.flags do f.size.y = f.terse.rect.h
+            if .terse_width in f.flags do f.size.x = f.terse.rect.w
         }
     }
 
-    m_pos := m.mouse.pos
+    m_pos := ui.mouse.pos
     hit_rect := f.rect
-    if .terse_rect in f.flags && f.text_terse != nil do hit_rect = f.text_terse.rect
-    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, m.scissor_rect) do append(&m.mouse_frames, f)
+    if .terse_rect in f.flags && f.terse != nil do hit_rect = f.terse.rect
+    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, ui.scissor_rect) do append(&ui.mouse_frames, f)
 
-    if .auto_hide in f.flags do append(&m.auto_hide_frames, f)
+    if .auto_hide in f.flags do append(&ui.auto_hide_frames, f)
 
-    if .scissor in f.flags do push_scissor_rect(m, f.rect)
-    for child in f.children do update_frame_tree(child, m)
-    if .scissor in f.flags do pop_scissor_rect(m)
+    if .scissor in f.flags do push_scissor_rect(ui, f.rect)
+    for child in f.children do update_frame_tree(child, ui)
+    if .scissor in f.flags do pop_scissor_rect(ui)
 }
 
 @(private)
-draw_frame_tree :: proc (f: ^Frame, m: ^Manager) {
+draw_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     if .hidden in f.flags do return
 
     if f.draw != nil {
-        if .terse not_in f.flags || f.text_terse != nil do f.draw(f)
+        if .terse not_in f.flags || f.terse != nil do f.draw(f)
     } else {
-        if f.text_terse != nil do m.terse_draw_text_proc(f.text_terse)
+        if f.terse != nil do ui.terse_draw_proc(f.terse)
     }
 
-    if m.overdraw_proc != nil do m.overdraw_proc(f)
-    if .scissor in f.flags do push_scissor_rect(m, f.rect)
-    for child in f.children do draw_frame_tree(child, m)
-    if .scissor in f.flags do pop_scissor_rect(m)
+    if ui.overdraw_proc != nil do ui.overdraw_proc(f)
+    if .scissor in f.flags do push_scissor_rect(ui, f.rect)
+    for child in f.children do draw_frame_tree(child, ui)
+    if .scissor in f.flags do pop_scissor_rect(ui)
     if f.draw_after != nil do f.draw_after(f)
 
-    m.stats.frames_drawn += 1
+    ui.stats.frames_drawn += 1
 }
 
 @(private)
-mark_frame_tree_rect_dirty :: proc (f: ^Frame, m: ^Manager) {
+mark_frame_tree_rect_dirty :: proc (f: ^Frame, ui: ^UI) {
     f.rect_dirty = true
-    for child in f.children do mark_frame_tree_rect_dirty(child, m)
-    m.stats.frames_total += 1
+    for child in f.children do mark_frame_tree_rect_dirty(child, ui)
+    ui.stats.frames_total += 1
 }
 
 @(private)

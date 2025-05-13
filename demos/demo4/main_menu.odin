@@ -10,14 +10,14 @@ Main_Menu :: struct {
 
 main_menu_init :: proc () {
     fmt.println(#procedure)
-    assert(app.ui.main_menu == nil)
+    assert(app.main_menu == nil)
 
-    app.ui.main_menu = new(Main_Menu)
-    app.ui.main_menu.menu_panel = main_menu_add_panel(app.ui.manager.root)
-    app.ui.main_menu.exit_dialog = main_menu_add_exit_dialog(app.ui.manager.root)
+    app.main_menu = new(Main_Menu)
+    app.main_menu.menu_panel = main_menu_add_panel(app.ui.root)
+    app.main_menu.exit_dialog = main_menu_add_exit_dialog(app.ui.root)
 
     // select default tab
-    ui.click(app.ui.main_menu.menu_panel, "tab_bar/play")
+    ui.click(app.main_menu.menu_panel, "tab_bar/play")
 
     // // !! DEBUG -- test layout.scroll
     // cont1 := ui.add_frame(app.ui.manager.root, {
@@ -41,8 +41,8 @@ main_menu_init :: proc () {
 main_menu_destroy :: proc () {
     fmt.println(#procedure)
 
-    free(app.ui.main_menu)
-    app.ui.main_menu = nil
+    free(app.main_menu)
+    app.main_menu = nil
 }
 
 // ----------
@@ -214,7 +214,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
         button := ui.add_frame(tab_bar,
             { name=name, flags={.terse}, text=text, draw=draw, click=proc (f: ^ui.Frame) {
-                menu := app.ui.main_menu
+                menu := app.main_menu
                 switch f.name {
                 case "play"         : ui.show(menu.menu_panel, "play_panel", hide_siblings=true)
                 case "options"      : ui.show(menu.menu_panel, "options_panel", hide_siblings=true)
@@ -258,7 +258,7 @@ main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     } })
 
     ui.add_frame(button_row, { flags={.terse}, text="No", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
-        ui.hide(app.ui.main_menu.exit_dialog)
+        ui.hide(app.main_menu.exit_dialog)
     } })
 
     return root

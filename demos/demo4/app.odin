@@ -17,10 +17,8 @@ App :: struct {
     screen_rect: Rect,
     camera: rl.Camera2D,
 
-    ui: struct {
-        manager: ^ui.Manager,
-        main_menu: ^Main_Menu,
-    },
+    ui: ^ui.UI,
+    main_menu: ^Main_Menu,
 
     debug_drawing: bool,
     exit_requested: bool,
@@ -41,7 +39,7 @@ app_startup :: proc () {
     clock.init(&app.clock)
     app.camera = { zoom=1 }
 
-    app.ui.manager = ui.create_manager(
+    app.ui = ui.create_ui(
         scissor_set_proc = proc (r: Rect) {
             if app.debug_drawing do return
             rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
@@ -56,8 +54,8 @@ app_startup :: proc () {
         terse_query_color_proc = proc (name: string) -> core.Color {
             return assets_color(name).val
         },
-        terse_draw_text_proc = proc (text: ^terse.Text) {
-            draw_text_terse(text)
+        terse_draw_proc = proc (text: ^terse.Terse) {
+            draw_terse(text)
         },
         overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return
@@ -69,7 +67,7 @@ app_startup :: proc () {
 
     main_menu_init()
 
-    ui.print_frame_tree(app.ui.manager.root)
+    ui.print_frame_tree(app.ui.root)
 }
 
 app_running :: proc () -> bool {
@@ -83,7 +81,7 @@ app_tick :: proc () {
     app.camera.offset = { app.screen_rect.w/2, app.screen_rect.h/2 }
 
     mouse_input := ui.Mouse_Input { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) }
-    mouse_input_consumed := ui.update_manager(app.ui.manager, app.screen_rect, mouse_input)
+    mouse_input_consumed := ui.update_ui(app.ui, app.screen_rect, mouse_input)
     if !mouse_input_consumed {
         // fmt.printfln("[world] %v", mouse_input)
     }
@@ -98,7 +96,7 @@ app_draw :: proc () {
     // draw_world()
     rl.EndMode2D()
 
-    ui.draw_manager(app.ui.manager)
+    ui.draw_ui(app.ui)
 
     if app.debug_drawing {
         rect_w, rect_h :: 280, 220
@@ -106,7 +104,7 @@ app_draw :: proc () {
         rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
         rl.DrawRectangleLinesEx(rect, 2, rl.RED)
         rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-        cstr := fmt.ctprintf("TA Memory: %v\n%#v", tracking_allocator.current_memory_allocated(), app.ui.manager.stats)
+        cstr := fmt.ctprintf("TA Memory: %v\n%#v", tracking_allocator.current_memory_allocated(), app.ui.stats)
         rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
     }
 
@@ -118,7 +116,7 @@ app_shutdown :: proc () {
     fmt.println(#procedure)
 
     main_menu_destroy()
-    ui.destroy_manager(app.ui.manager)
+    ui.destroy_ui(app.ui)
 
     free(app)
     app = nil
