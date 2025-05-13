@@ -131,6 +131,10 @@ random_vec_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
     return dir * rand.float32_range(inner_radius, outer_radius)
 }
 
+vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
+    return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
+}
+
 vec_moved_towards_vec :: proc (current_vec, target_vec: Vec2, speed, dt: f32) -> (new_vec: Vec2) {
     dir := linalg.normalize0(target_vec - current_vec)
     return current_vec + dir * speed * dt

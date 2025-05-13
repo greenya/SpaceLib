@@ -6,7 +6,7 @@ import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:terse"
 import "spacelib:tracking_allocator"
-import rl_sl "spacelib:raylib"
+import "spacelib:raylib/draw"
 _ :: fmt
 
 Vec2 :: core.Vec2
@@ -62,7 +62,7 @@ main :: proc () {
 
         rl.BeginDrawing()
         rl.ClearBackground({ 40, 40, 40, 255 })
-        draw_rect_lines(core.rect_inflated(text_rect, {8,8}), 8, {40,40,255,255})
+        draw.rect_lines(core.rect_inflated(text_rect, {8,8}), 8, {40,40,255,255})
 
         time.stopwatch_reset(&sw)
         time.stopwatch_start(&sw)
@@ -88,22 +88,17 @@ terse_query_font :: #force_inline proc (name: string) -> ^terse.Font {
 }
 
 terse_query_color :: #force_inline proc (name: string) -> core.Color {
-    if name == "" do return colors[.white].rgba
-    for &color in colors do if color.name == name do return color.rgba
+    if name == "" do return colors[.white].val
+    for &color in colors do if color.name == name do return color.val
     fmt.eprintfln("[!] Color not found: \"%v\"", name)
-    return colors[.white].rgba
+    return colors[.white].val
 }
 
 draw_terse_text :: proc (text: ^terse.Text, debug := false) {
-    if debug {
-        draw_rect_lines(text.rect, 1, {255,0,0,160})
-        draw_rect(text.rect, {255,0,0,20})
-    }
+    if debug do draw.debug_terse_text(text)
 
     for line in text.lines {
-        if debug do draw_rect_lines(line.rect, 1, {255,255,128,80})
         for word in line.words {
-            if debug do draw_rect_lines(word.rect, 1, {255,255,0,40})
             if word.is_icon {
                 for sprite, id in sprites {
                     if sprite.name == word.text {
@@ -114,23 +109,7 @@ draw_terse_text :: proc (text: ^terse.Text, debug := false) {
                 pos := Vec2 { word.rect.x, word.rect.y }
                 font := word.font
                 font_rl := (cast (^rl.Font) font.font_ptr)^
-                rl_sl.draw_text(word.text, pos, font_rl, font.height, font.letter_spacing, cast (rl.Color) word.color)
-            }
-        }
-    }
-
-    if debug {
-        groups_color := rl.Color {255,0,255,200}
-        for group in text.groups do for rect, i in group.line_rects {
-            draw_rect_lines(rect, 3, groups_color)
-            if i == 0 {
-                font := rl.GetFontDefault()
-                font_height := f32(20)
-                font_spacing := f32(2)
-                cstr := fmt.ctprint(group.name)
-                size := rl.MeasureTextEx(font, cstr, font_height, font_spacing)
-                draw_rect({rect.x,rect.y-size.y,size.x+4*2,size.y}, groups_color)
-                rl_sl.draw_text(group.name, {rect.x+4,rect.y-font_height}, font, font_height, font_spacing, rl.ColorBrightness(groups_color, -.75))
+                draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, word.color)
             }
         }
     }
@@ -145,14 +124,4 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint := rl.WHITE) {
     case rl.Rectangle   : rl.DrawTexturePro(texture.texture, info, rect_rl, {}, 0, tint)
     case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture, info, rect_rl, {}, 0, tint)
     }
-}
-
-draw_rect :: proc (rect: Rect, tint := rl.WHITE) {
-    rect_rl := transmute (rl.Rectangle) rect
-    rl.DrawRectangleRec(rect_rl, tint)
-}
-
-draw_rect_lines :: proc (rect: Rect, thick := f32(1.0), tint := rl.WHITE) {
-    rect_rl := transmute (rl.Rectangle) rect
-    rl.DrawRectangleLinesEx(rect_rl, thick, tint)
 }

@@ -5,7 +5,7 @@ import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:terse"
 import "spacelib:ui"
-import rl_sl "spacelib:raylib"
+import "spacelib:raylib/draw"
 _ :: fmt
 
 draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
@@ -21,7 +21,7 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
 }
 
 draw_text_terse :: proc (text: ^terse.Text, override_color: ^Color = nil, offset := Vec2 {}) {
-    if app.debug_drawing do rl_sl.debug_draw_terse_text(text)
+    if app.debug_drawing do draw.debug_terse_text(text)
 
     for line in text.lines {
         for word in line.words {
@@ -34,14 +34,14 @@ draw_text_terse :: proc (text: ^terse.Text, override_color: ^Color = nil, offset
                 pos := Vec2 { rect.x, rect.y }
                 font := word.font
                 font_rl := (cast (^rl.Font) font.font_ptr)^
-                rl_sl.draw_text(word.text, pos, font_rl, font.height, font.letter_spacing, tint)
+                draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, tint)
             }
         }
     }
 }
 
 draw_ui_dim_rect :: proc (f: ^ui.Frame) {
-    rl_sl.draw_rect(f.rect, {0,0,0,200})
+    draw.rect(f.rect, {0,0,0,200})
 }
 
 draw_ui_border_17 :: proc (f: ^ui.Frame) {
@@ -96,7 +96,7 @@ draw_ui_link :: proc (f: ^ui.Frame) {
 
     if f.hovered {
         border := core.rect_moved(core.rect_inflated(f.text_terse.rect, {8,4}), {2,0}+offset)
-        rl_sl.draw_rect_lines(border, 3, colors[.c3].val)
+        draw.rect_lines(border, 3, colors[.c3].val)
     }
 
     text_color := f.hovered ? &colors[.c8] : &colors[.c6]

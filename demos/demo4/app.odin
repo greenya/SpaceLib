@@ -7,7 +7,7 @@ import "spacelib:core"
 import "spacelib:ui"
 import "spacelib:terse"
 import "spacelib:tracking_allocator"
-import rl_sl "spacelib:raylib"
+import "spacelib:raylib/draw"
 
 Vec2 :: core.Vec2
 Rect :: core.Rect
@@ -61,9 +61,9 @@ app_startup :: proc () {
         },
         overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return
-            rl_sl.debug_draw_frame(f)
-            rl_sl.debug_draw_frame_layout(f)
-            rl_sl.debug_draw_frame_anchors(f)
+            draw.debug_frame(f)
+            draw.debug_frame_layout(f)
+            draw.debug_frame_anchors(f)
         },
     )
 
