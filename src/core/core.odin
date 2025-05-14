@@ -5,6 +5,8 @@ import "core:math"
 import "core:math/ease"
 import "core:math/linalg"
 import "core:math/rand"
+import "core:slice"
+_ :: slice
 
 Vec2 :: [2] f32
 Vec3 :: [3] f32
@@ -150,6 +152,12 @@ vec_orbited_around_vec :: proc (vec, center_vec: Vec2, speed, dt: f32, is_clockw
     new_x := center_vec.x + radius * math.cos(new_angle)
     new_y := center_vec.y + radius * math.sin(new_angle)
     return { new_x, new_y }
+}
+
+map_keys_sorted :: proc (m: $M/map[$K]$V, allocator := context.allocator) -> [] string {
+    keys, _ := slice.map_keys(m, context.temp_allocator)
+    slice.sort(keys)
+    return keys
 }
 
 is_consumed :: #force_inline proc (flag: ^bool) -> bool {
