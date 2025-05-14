@@ -69,5 +69,5 @@ print_report_with_issues_only :: proc () {
     }
 }
 
-@(private)
+@private
 track: mem.Tracking_Allocator

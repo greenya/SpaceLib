@@ -185,7 +185,7 @@ draw_ui :: proc (ui: ^UI) {
     draw_frame_tree(ui.root, ui)
 }
 
-@(private)
+@private
 push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
     assert(ui.phase != .none)
 
@@ -204,7 +204,7 @@ push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
     }
 }
 
-@(private)
+@private
 pop_scissor_rect :: proc (ui: ^UI) {
     assert(ui.phase != .none)
     assert(len(ui.scissor_rects) > 0)

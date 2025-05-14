@@ -10,9 +10,9 @@ import "core:slice"
 import "core:strings"
 import "../core"
 
-@(private) Vec2 :: core.Vec2
-@(private) Rect :: core.Rect
-@(private) Color :: core.Color
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
+@private Color :: core.Color
 
 Terse :: struct {
     rect        : Rect,
@@ -62,12 +62,12 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
-@(private) default_fonts_stack_size     :: 8
-@(private) default_colors_stack_size    :: 8
-@(private) default_valign               :: Vertical_Alignment.middle
-@(private) default_align                :: Horizontal_Alignment.center
-@(private) default_font                 :: ""
-@(private) default_color                :: ""
+@private default_fonts_stack_size   :: 8
+@private default_colors_stack_size  :: 8
+@private default_valign             :: Vertical_Alignment.middle
+@private default_align              :: Horizontal_Alignment.center
+@private default_font               :: ""
+@private default_color              :: ""
 
 create :: proc (
     text                : string,
@@ -106,7 +106,7 @@ create :: proc (
     word_is_icon: bool
 
     for para in strings.split(text, "\n", context.temp_allocator) {
-        line := _append_line(terse, font)
+        line := append_line(terse, font)
 
         cursor = { type=.text, start=0 }
         for i:=0; i<len(para); i+=1 {
@@ -167,7 +167,7 @@ create :: proc (
                             word_is_icon = true
                         case "group":
                             ensure(group == nil, "Groups cannot be nested!")
-                            group = _append_group(terse, command_value)
+                            group = append_group(terse, command_value)
                         case:
                             fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
                         }
@@ -190,10 +190,10 @@ create :: proc (
                     : font->measure_text(word)
 
                 if wrapping_allowed && line.rect.w + size.x > rect.w && line.word_count > 0 {
-                    line = _append_line(terse, font)
+                    line = append_line(terse, font)
                 }
 
-                _append_word(terse, word, size, font, color, word_is_icon, group)
+                append_word(terse, word, size, font, color, word_is_icon, group)
 
                 word = ""
                 word_is_icon = false
@@ -285,8 +285,8 @@ destroy :: proc (terse: ^Terse) {
     free(terse)
 }
 
-@(private)
-_append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
+@private
+append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
     line_rect_y := terse.rect.y
     line_align := default_align
 
@@ -314,16 +314,16 @@ _append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
     return slice.last_ptr(terse.lines[:])
 }
 
-@(private)
-_append_group :: proc (terse: ^Terse, name: string) -> ^Group {
+@private
+append_group :: proc (terse: ^Terse, name: string) -> ^Group {
     group := Group { name=name }
     group.rects.allocator = terse.groups.allocator
     append(&terse.groups, group)
     return slice.last_ptr(terse.groups[:])
 }
 
-@(private)
-_append_word :: proc (
+@private
+append_word :: proc (
     terse   : ^Terse,
     text    : string,
     size    : Vec2,

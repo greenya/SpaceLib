@@ -10,9 +10,6 @@ import "core:strings"
 import "../core"
 import "../terse"
 
-@(private) Vec2 :: core.Vec2
-@(private) Rect :: core.Rect
-
 Frame :: struct {
     parent          : ^Frame,
     order           : int,
@@ -305,7 +302,7 @@ layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
     return f.layout.dir != .none && f.layout.scroll.step != 0
 }
 
-@(private)
+@private
 layout_apply_scroll :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     scroll := &f.layout.scroll
     new_offset := clamp(scroll.offset - dy * scroll.step, scroll.offset_min, scroll.offset_max)
@@ -317,7 +314,7 @@ layout_apply_scroll :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     }
 }
 
-@(private)
+@private
 wheel_actor :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     #partial switch _ in f.actor {
     case Actor_Scrollbar_Content: return wheel_actor_scrollbar_content(f, dy)
@@ -325,7 +322,7 @@ wheel_actor :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     }
 }
 
-@(private)
+@private
 wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     actor := &f.actor.(Actor_Scrollbar_Content)
     thumb := actor.thumb
@@ -351,13 +348,13 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     return
 }
 
-@(private)
+@private
 click_radio :: proc (f: ^Frame) {
     if f.parent != nil do for &child in f.parent.children do if .radio in child.flags do child.selected = false
     f.selected = true
 }
 
-@(private)
+@private
 click_actor :: proc (f: ^Frame) {
     #partial switch a in f.actor {
     case Actor_Scrollbar_Next: wheel(a.content, -1)
@@ -365,19 +362,19 @@ click_actor :: proc (f: ^Frame) {
     }
 }
 
-@(private)
+@private
 drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     if f.actor != nil do drag_actor(f, mouse_pos, captured_pos)
 }
 
-@(private)
+@private
 drag_actor :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     #partial switch a in f.actor {
     case Actor_Scrollbar_Thumb: drag_actor_scrollbar_thumb(f, mouse_pos, captured_pos)
     }
 }
 
-@(private)
+@private
 drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     actor := &f.actor.(Actor_Scrollbar_Thumb)
 
@@ -396,7 +393,7 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     }
 }
 
-@(private)
+@private
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
     terse.destroy(f.terse)
@@ -405,7 +402,7 @@ destroy_frame_tree :: proc (f: ^Frame) {
     free(f)
 }
 
-@(private)
+@private
 update_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     f.prev_hovered = f.hovered
     f.hovered = false
@@ -437,7 +434,7 @@ update_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     if .scissor in f.flags do pop_scissor_rect(ui)
 }
 
-@(private)
+@private
 draw_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     if .hidden in f.flags do return
 
@@ -456,20 +453,20 @@ draw_frame_tree :: proc (f: ^Frame, ui: ^UI) {
     ui.stats.frames_drawn += 1
 }
 
-@(private)
+@private
 mark_frame_tree_rect_dirty :: proc (f: ^Frame, ui: ^UI) {
     f.rect_dirty = true
     for child in f.children do mark_frame_tree_rect_dirty(child, ui)
     ui.stats.frames_total += 1
 }
 
-@(private)
+@private
 update_rect :: proc (f: ^Frame) {
     if f.rect_dirty do if len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
 }
 
-@(private)
+@private
 update_rect_for_children_with_layout :: proc (f: ^Frame) {
     prev_rect: Rect
     has_prev_rect: bool
@@ -558,7 +555,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     }
 }
 
-@(private)
+@private
 get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_size: f32) {
     is_dir_vertical := is_layout_dir_vertical(f)
     dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
@@ -603,12 +600,12 @@ get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_siz
     return
 }
 
-@(private)
+@private
 is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
     return f.layout.dir == .down || f.layout.dir == .up || f.layout.dir == .up_and_down
 }
 
-@(private)
+@private
 update_rect_with_anchors :: proc (f: ^Frame) {
     result_dir := Rect_Dir { r=f.size.x, b=f.size.y }
     result_pin: Rect_Pin
@@ -791,10 +788,10 @@ update_rect_with_anchors :: proc (f: ^Frame) {
     f.rect_dirty = false
 }
 
-@(private) Rect_Dir :: struct { l, t, r, b: f32 }
-@(private) Rect_Pin :: struct { l, t, r, b: bool }
+@private Rect_Dir :: struct { l, t, r, b: f32 }
+@private Rect_Pin :: struct { l, t, r, b: bool }
 
-@(private)
+@private
 transform_rect_dir :: proc (dir: ^Rect_Dir, pin: ^Rect_Pin, dir_next: Rect_Dir, pin_anchors: Rect_Pin) {
     if !pin.l do dir.l = dir_next.l
     if !pin.t do dir.t = dir_next.t

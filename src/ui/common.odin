@@ -2,6 +2,10 @@ package spacelib_ui
 
 import "core:fmt"
 import "core:strings"
+import "../core"
+
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
 
 print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
     if _depth == 0 do fmt.println("-------- Frame tree --------")

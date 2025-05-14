@@ -6,9 +6,9 @@ import "../../core"
 import "../../terse"
 import "../../ui"
 
-@(private) Vec2 :: core.Vec2
-@(private) Rect :: core.Rect
-@(private) Color :: core.Color
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
+@private Color :: core.Color
 
 debug_frame :: proc (f: ^ui.Frame) {
     color := _debug_frame_color(f)
@@ -136,19 +136,19 @@ debug_terse :: proc (t: ^terse.Terse) {
     }
 }
 
-@(private)
+@private
 _debug_text :: proc (str: string, pos: Vec2, tint: Color) {
     font := rl.GetFontDefault()
     text(str, pos, font, 10, 1, tint)
 }
 
-@(private)
+@private
 _debug_text_right :: proc (str: string, pos: Vec2, tint: Color) {
     font := rl.GetFontDefault()
     text_right(str, pos, font, 10, 1, tint)
 }
 
-@(private)
+@private
 _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
     gray        :: Color(rl.GRAY)
     red         :: Color(rl.RED)
@@ -157,7 +157,7 @@ _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
     return f.parent == nil ? gray : f.captured ? red : f.hovered ? yellow : light_gray
 }
 
-@(private)
+@private
 _debug_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
     #partial switch point {
     case .top_left      : return { x, y }
