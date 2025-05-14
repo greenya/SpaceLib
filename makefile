@@ -3,7 +3,7 @@ checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon
 debug_args 		= ${collection_args} ${checker_args} -debug -o:none
 release_args 	= ${collection_args} ${checker_args} -o:speed
 
-run: demo5
+run: demo6
 
 demo1:
 	@if not exist build mkdir build
@@ -24,3 +24,7 @@ demo4:
 demo5:
 	@if not exist build mkdir build
 	@odin run demos/demo5 -out:build/demo5.exe ${debug_args}
+
+demo6:
+	@if not exist build mkdir build
+	@odin run demos/demo6 -out:build/demo6.exe ${debug_args}

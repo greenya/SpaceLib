@@ -50,7 +50,7 @@ Group :: struct {
 Font :: struct {
     font_ptr        : rawptr,
     height          : f32,
-    letter_spacing  : f32,
+    rune_spacing    : f32,
     line_spacing    : f32,
     measure_text    : Measure_Text_Proc,
 }
@@ -62,12 +62,14 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
+@private default_code_start_rune    :: '<'
+@private default_code_end_rune      :: '>'
 @private default_fonts_stack_size   :: 8
 @private default_colors_stack_size  :: 8
 @private default_valign             :: Vertical_Alignment.middle
 @private default_align              :: Horizontal_Alignment.center
-@private default_font               :: ""
-@private default_color              :: ""
+         default_font_name          :: "default" // not private only for "/res" to use it
+@private default_color_name         :: "default"
 
 create :: proc (
     text                : string,
@@ -77,6 +79,9 @@ create :: proc (
     allocator           := context.allocator,
     debug_keep_codes    := false,
 ) -> ^Terse {
+    ensure(query_font != nil)
+    ensure(query_color != nil)
+
     terse := new(Terse, allocator)
     terse.rect = rect
     terse.rect_input = rect
@@ -87,12 +92,13 @@ create :: proc (
 
     if text == "" do return terse
 
-    font := query_font(default_font)
+    font := query_font(default_font_name)
+    ensure(font.measure_text != nil)
     fonts_stack := [default_fonts_stack_size] ^Font {}
     fonts_stack[0] = font
     fonts_stack_idx := 0
 
-    color := query_color(default_color)
+    color := query_color(default_color_name)
     colors_stack := [default_colors_stack_size] Color {}
     colors_stack[0] = color
     colors_stack_idx := 0
@@ -110,12 +116,12 @@ create :: proc (
 
         cursor = { type=.text, start=0 }
         for i:=0; i<len(para); i+=1 {
-            if para[i] == '{' && cursor.type == .text {
+            if para[i] == default_code_start_rune && cursor.type == .text {
                 word = para[cursor.start:i]
                 cursor = { start=i+1, type=.code }
             }
 
-            if para[i] == '}' && cursor.type == .code {
+            if para[i] == default_code_end_rune && cursor.type == .code {
                 code = para[cursor.start:i]
                 cursor = { start=i+1, type=.text }
             }
@@ -152,6 +158,7 @@ create :: proc (
                         switch command_name {
                         case "font":
                             font = query_font(command_value)
+                            ensure(font.measure_text != nil)
                             fonts_stack_idx += 1
                             ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow!")
                             fonts_stack[fonts_stack_idx] = font

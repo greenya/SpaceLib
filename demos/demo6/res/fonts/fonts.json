@@ -1,0 +1,42 @@
+[
+    {
+        "name": "body",
+        "file": "oswald-light.ttf",
+        "height": 28,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "body_lg",
+        "file": "oswald-light.ttf",
+        "height": 36,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "body_hg",
+        "file": "oswald-light.ttf",
+        "height": 48,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "code",
+        "file": "roboto_mono-regular.ttf",
+        "height": 28,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "number_lg",
+        "file": "manrope-bold.ttf",
+        "height": 64,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.15
+    },
+    {
+        "name": "header",
+        "file": "righteous-regular.ttf",
+        "height": 80,
+        "line_spacing_ratio": -0.15
+    }
+]

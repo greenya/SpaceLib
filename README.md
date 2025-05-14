@@ -3,7 +3,7 @@
 * /clock                - clock with time scale support
 * /core                 - core types and utility procs
 * /raylib               - set of helpers when using Raylib
-* /res                  - [planned] resources automation
+* /res                  - resources automation
 * /sdl3                 - [planned] set of helpers when using SDL3
 * /terse                - text layout calculation
 * /tracking_allocator   - tracking allocator

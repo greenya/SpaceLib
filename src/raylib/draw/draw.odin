@@ -2,6 +2,7 @@ package spacelib_raylib_draw
 
 import "core:strings"
 import rl "vendor:raylib"
+import "../../terse"
 
 line :: #force_inline proc (start, end: Vec2, thick: f32, color: Color) {
     color_rl := cast (rl.Color) color
@@ -40,4 +41,17 @@ text_right :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spaci
     actual_pos = pos - { size.x, 0 }
     text(str, actual_pos, font, font_size, font_spacing, tint)
     return
+}
+
+terse :: proc (t: ^terse.Terse) {
+    for word in t.words {
+        if word.is_icon {
+            rect_lines(word.rect, 2, word.color)
+        } else {
+            pos := Vec2 { word.rect.x, word.rect.y }
+            font := word.font
+            font_rl := (cast (^rl.Font) font.font_ptr)^
+            text(word.text, pos, font_rl, font.height, font.rune_spacing, word.color)
+        }
+    }
 }
