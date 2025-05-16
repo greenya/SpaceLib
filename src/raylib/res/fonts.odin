@@ -16,7 +16,7 @@ Font :: struct {
     using font_tr   : terse.Font,
 }
 
-reload_fonts :: proc (res: ^Res, scale_factor := f32(1)) {
+reload_fonts :: proc (res: ^Res, scale := f32(1)) {
     destroy_fonts(res)
 
     json_file_name := default_fonts_json_file_name
@@ -44,9 +44,9 @@ reload_fonts :: proc (res: ^Res, scale_factor := f32(1)) {
         font^ = {
             name            = strings.clone(jf.name),
             file            = file.name,
-            height          = jf.height         * scale_factor,
-            rune_spacing    = jf.rune_spacing   * scale_factor,
-            line_spacing    = jf.line_spacing   * scale_factor,
+            height          = jf.height         * scale,
+            rune_spacing    = jf.rune_spacing   * scale,
+            line_spacing    = jf.line_spacing   * scale,
             measure_text    = measure.text,
         }
 
@@ -58,7 +58,7 @@ reload_fonts :: proc (res: ^Res, scale_factor := f32(1)) {
     }
 
     if terse.default_font_name not_in res.fonts {
-        add_font(res, terse.default_font_name, rl.GetFontDefault(), scale_factor)
+        add_font(res, terse.default_font_name, rl.GetFontDefault(), scale)
     }
 }
 

@@ -43,10 +43,11 @@ text_right :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spaci
     return
 }
 
-terse :: proc (t: ^terse.Terse) {
-    for word in t.words {
+terse :: proc (t: ^terse.Terse, draw_icon_proc: proc (word: ^terse.Word) = nil) {
+    for &word in t.words {
         if word.is_icon {
-            rect_lines(word.rect, 2, word.color)
+            if draw_icon_proc != nil do draw_icon_proc(&word)
+            else                     do rect_lines(word.rect, 2, word.color)
         } else {
             pos := Vec2 { word.rect.x, word.rect.y }
             font := word.font

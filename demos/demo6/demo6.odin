@@ -27,8 +27,9 @@ main :: proc () {
 
     app.res = res.create_resources()
     res.add_files(app.res, #load_directory("res/fonts"))
-    res.add_files(app.res, #load_directory("res/icons"))
+    res.add_files(app.res, #load_directory("res/sprites"))
     res.reload_fonts(app.res)
+    res.reload_sprites(app.res)
 
     res.print_resources(app.res)
 
@@ -43,7 +44,7 @@ main :: proc () {
         for name in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
             font := app.res.fonts[name]
             fmt.sbprintf(&sb, "<font=%s>", name)
-            fmt.sbprintf(&sb, "<group=name>%s</group> (<group=size>%v</group> px): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)
+            fmt.sbprintf(&sb, "<icon=star><group=name>%s</group> (<group=size>%v</group> px): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)
             fmt.sbprint(&sb, "</font>\n\n")
         }
 
@@ -56,10 +57,12 @@ main :: proc () {
         )
 
         if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(tr)
-        draw.terse(tr)
+        draw.terse(tr, draw_terse_icon)
 
-        rl.EndScissorMode()
-        rl.EndMode2D()
+        tex := app.res.textures["sprites"]
+        rect := Rect { f32(rl.GetScreenWidth())-100-f32(tex.width), 50, f32(tex.width), f32(tex.height) }
+        rl.DrawTextureV(tex.texture_rl, { rect.x, rect.y }, rl.WHITE)
+        draw.rect_lines(rect, 1, {255,255,0,255})
 
         rl.DrawFPS(10, 10)
         rl.EndDrawing()
@@ -68,6 +71,23 @@ main :: proc () {
     res.destroy_resources(app.res)
 
     rl.CloseWindow()
+}
+
+draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
+    sprite := app.res.sprites[name]
+    texture := app.res.textures[sprite.texture]
+    rect_rl := transmute (rl.Rectangle) rect
+    tint_rl := cast (rl.Color) tint
+
+    rl.DrawTexturePro(texture.texture_rl, sprite.info, rect_rl, {}, 0, tint_rl)
+    // switch info in sprite.info {
+    // case rl.Rectangle   : rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    // case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    // }
+}
+
+draw_terse_icon :: proc (word: ^terse.Word) {
+    draw_sprite(word.text, word.rect, word.color)
 }
 
 /* -----------------------

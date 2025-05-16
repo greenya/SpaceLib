@@ -6,9 +6,10 @@ package spacelib_raylib_res
 Res :: struct {
     files: map [string] File,
     fonts: map [string] ^Font,
-    // textures: map [string] Texture,
-    // sprites: map [string] Sprite,
-    // audios: map[string] Music/Sound/Wave,
+    textures: map [string] ^Texture,
+    sprites: map [string] ^Sprite,
+    // audios: map [string] Music/Sound/Wave,
+    // colors: map [string] ^Color,
 }
 
 create_resources :: proc () -> ^Res {
@@ -19,5 +20,6 @@ create_resources :: proc () -> ^Res {
 destroy_resources :: proc (res: ^Res) {
     delete(res.files)
     destroy_fonts(res)
+    destroy_sprites_and_textures(res)
     free(res)
 }
