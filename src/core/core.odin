@@ -154,6 +154,18 @@ vec_orbited_around_vec :: proc (vec, center_vec: Vec2, speed, dt: f32, is_clockw
     return { new_x, new_y }
 }
 
+scale_target_size :: proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
+    scale = min(screen.x/target.x, screen.y/target.y)
+    render_w, render_h := target.x*scale, target.y*scale
+    render = {
+        (screen.x - render_w)/2,
+        (screen.y - render_h)/2,
+        render_w,
+        render_h,
+    }
+    return
+}
+
 map_keys_sorted :: proc (m: $M/map[$K]$V, allocator := context.allocator) -> [] string {
     keys, _ := slice.map_keys(m, context.temp_allocator)
     slice.sort(keys)
