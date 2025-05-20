@@ -29,7 +29,10 @@ reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
     gen_atlas_texture(res, "sprites", { 512, 512 }, filter)
 
     json_file_name := default_sprites_json_file_name
-    fmt.assertf(json_file_name in res.files, "File \"%s\" not found.", json_file_name)
+    if json_file_name not_in res.files {
+        return
+    }
+
     json_file := res.files[json_file_name]
 
     json_sprites: [] struct {
