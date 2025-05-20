@@ -39,6 +39,9 @@ main :: proc () {
         rl.BeginDrawing()
         rl.ClearBackground({ 20,40,30,255 })
 
+        tr_rect := core.rect_inflated({ 0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight()) }, {-100,-50})
+        draw_sprite("panel-border-004", core.rect_inflated(tr_rect, {20,20}), {0,255,0,255})
+
         sb := strings.builder_make(context.temp_allocator)
         strings.write_string(&sb, "<left,top>")
         for name in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
@@ -50,7 +53,7 @@ main :: proc () {
 
         tr := terse.create(
             strings.to_string(sb),
-            core.rect_inflated({ 0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight()) }, {-100,-50}),
+            tr_rect,
             #force_inline proc (name: string) -> ^terse.Font { return &app.res.fonts[name].font_tr },
             #force_inline proc (name: string) -> Color { return { 255,255,255,255 } },
             context.temp_allocator,
@@ -79,11 +82,10 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     tint_rl := cast (rl.Color) tint
 
-    rl.DrawTexturePro(texture.texture_rl, sprite.info, rect_rl, {}, 0, tint_rl)
-    // switch info in sprite.info {
-    // case rl.Rectangle   : rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
-    // case rl.NPatchInfo  : rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
-    // }
+    switch info in sprite.info {
+    case rl.Rectangle:  rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    case rl.NPatchInfo: rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    }
 }
 
 draw_terse_icon :: proc (word: ^terse.Word) {

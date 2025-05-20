@@ -1,7 +1,7 @@
 package spacelib_raylib_res
 
-import "core:fmt"
 import "core:encoding/json"
+import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import "../../terse"

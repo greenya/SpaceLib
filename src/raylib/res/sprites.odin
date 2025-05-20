@@ -1,20 +1,22 @@
 package spacelib_raylib_res
 
-// TODO: add support for 9-patch (and 3-patch) sprites: "arrow.np.png" ("arrow.tpv.png", "arrow.tph.png")
+// TODO: add support for 3-patch sprites (vertical and horizontal)
 
+import "core:encoding/json"
 import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import "../../core"
 
+@private default_sprites_json_file_name :: "sprites.json"
+
 Sprite :: struct {
     name    : string,
     texture : string,
-    info    : rl.Rectangle,
-    // info: union {
-    //     rl.Rectangle,
-    //     rl.NPatchInfo,
-    // },
+    info    : union {
+        rl.Rectangle,
+        rl.NPatchInfo,
+    },
 }
 
 Texture :: struct {
@@ -22,9 +24,49 @@ Texture :: struct {
     using texture_rl: rl.Texture,
 }
 
-reload_sprites :: proc (res: ^Res) {
+reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
     destroy_sprites_and_textures(res)
-    gen_atlas_texture(res, "sprites", { 512, 512 }, .TRILINEAR)
+    gen_atlas_texture(res, "sprites", { 512, 512 }, filter)
+
+    json_file_name := default_sprites_json_file_name
+    fmt.assertf(json_file_name in res.files, "File \"%s\" not found.", json_file_name)
+    json_file := res.files[json_file_name]
+
+    json_sprites: [] struct {
+        name            : string,
+        nine_patch      : struct { top, bottom, left, right: f32 },
+        nine_patch_all  : f32,
+    }
+
+    err := json.unmarshal_any(json_file.data, &json_sprites, allocator=context.temp_allocator)
+    ensure(err == nil)
+
+    for js in json_sprites {
+        fmt.assertf(js.name in res.sprites, "Sprite \"%s\" not found.", js.name)
+        sprite := res.sprites[js.name]
+
+        if js.nine_patch != {} {
+            sprite.info = rl.NPatchInfo {
+                layout  = .NINE_PATCH,
+                source  = sprite.info.(rl.Rectangle),
+                top     = i32(js.nine_patch.top),
+                bottom  = i32(js.nine_patch.bottom),
+                left    = i32(js.nine_patch.left),
+                right   = i32(js.nine_patch.right),
+            }
+        }
+
+        if js.nine_patch_all != 0 {
+            sprite.info = rl.NPatchInfo {
+                layout  = .NINE_PATCH,
+                source  = sprite.info.(rl.Rectangle),
+                top     = i32(js.nine_patch_all),
+                bottom  = i32(js.nine_patch_all),
+                left    = i32(js.nine_patch_all),
+                right   = i32(js.nine_patch_all),
+            }
+        }
+    }
 }
 
 @private
