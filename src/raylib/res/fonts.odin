@@ -31,12 +31,14 @@ load_fonts :: proc (res: ^Res, scale := f32(1), default_font_extra_scale := f32(
         rune_spacing_ratio  : f32,
         line_spacing        : f32,
         line_spacing_ratio  : f32,
+        texture_filter      : rl.TextureFilter,
     }
 
     err := json.unmarshal_any(json_file.data, &json_fonts, allocator=context.temp_allocator)
     ensure(err == nil)
 
     for jf in json_fonts {
+        fmt.println(jf)
         fmt.assertf(jf.file in res.files, "File \"%s\" not found.", jf.file)
         file := res.files[jf.file]
 
@@ -54,6 +56,12 @@ load_fonts :: proc (res: ^Res, scale := f32(1), default_font_extra_scale := f32(
         if jf.line_spacing_ratio != 0 do font.line_spacing = jf.line_spacing_ratio * font.height
 
         load_font_data(res, font)
+
+        if jf.texture_filter != .POINT {
+            rl.GenTextureMipmaps(&font.font_rl.texture)
+            rl.SetTextureFilter(font.font_rl.texture, jf.texture_filter)
+        }
+
         res.fonts[font.name] = font
     }
 
