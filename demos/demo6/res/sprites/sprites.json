@@ -14,5 +14,13 @@
     {
         "name": "panel-border-027",
         "nine_patch_all": 16
+    },
+    {
+        "name": "square-yellow",
+        "three_patch_horizontal_all": 8
+    },
+    {
+        "name": "red-button-03",
+        "three_patch_vertical": { "top": 8, "bottom": 12 }
     }
 ]

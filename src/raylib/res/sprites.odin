@@ -1,7 +1,5 @@
 package spacelib_raylib_res
 
-// TODO: add support for 3-patch sprites (vertical and horizontal)
-
 import "core:encoding/json"
 import "core:fmt"
 import "core:strings"
@@ -36,9 +34,13 @@ reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
     json_file := res.files[json_file_name]
 
     json_sprites: [] struct {
-        name            : string,
-        nine_patch      : struct { top, bottom, left, right: f32 },
-        nine_patch_all  : f32,
+        name                        : string,
+        nine_patch                  : struct { top, bottom, left, right: f32 },
+        nine_patch_all              : f32,
+        three_patch_horizontal      : struct { left, right: f32 },
+        three_patch_horizontal_all  : f32,
+        three_patch_vertical        : struct { top, bottom: f32 },
+        three_patch_vertical_all    : f32,
     }
 
     err := json.unmarshal_any(json_file.data, &json_sprites, allocator=context.temp_allocator)
@@ -67,6 +69,42 @@ reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
                 bottom  = i32(js.nine_patch_all),
                 left    = i32(js.nine_patch_all),
                 right   = i32(js.nine_patch_all),
+            }
+        }
+
+        if js.three_patch_horizontal != {} {
+            sprite.info = rl.NPatchInfo {
+                layout  = .THREE_PATCH_HORIZONTAL,
+                source  = sprite.info.(rl.Rectangle),
+                left    = i32(js.three_patch_horizontal.left),
+                right   = i32(js.three_patch_horizontal.right),
+            }
+        }
+
+        if js.three_patch_horizontal_all != 0 {
+            sprite.info = rl.NPatchInfo {
+                layout  = .THREE_PATCH_HORIZONTAL,
+                source  = sprite.info.(rl.Rectangle),
+                left    = i32(js.three_patch_horizontal_all),
+                right   = i32(js.three_patch_horizontal_all),
+            }
+        }
+
+        if js.three_patch_vertical != {} {
+            sprite.info = rl.NPatchInfo {
+                layout  = .THREE_PATCH_VERTICAL,
+                source  = sprite.info.(rl.Rectangle),
+                top     = i32(js.three_patch_vertical.top),
+                bottom  = i32(js.three_patch_vertical.bottom),
+            }
+        }
+
+        if js.three_patch_vertical_all != 0 {
+            sprite.info = rl.NPatchInfo {
+                layout  = .THREE_PATCH_VERTICAL,
+                source  = sprite.info.(rl.Rectangle),
+                top     = i32(js.three_patch_vertical_all),
+                bottom  = i32(js.three_patch_vertical_all),
             }
         }
     }
