@@ -38,7 +38,6 @@ load_fonts :: proc (res: ^Res, scale := f32(1), default_font_extra_scale := f32(
     ensure(err == nil)
 
     for jf in json_fonts {
-        fmt.println(jf)
         fmt.assertf(jf.file in res.files, "File \"%s\" not found.", jf.file)
         file := res.files[jf.file]
 
