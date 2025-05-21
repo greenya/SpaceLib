@@ -178,6 +178,41 @@ is_consumed :: #force_inline proc (flag: ^bool) -> bool {
     return true
 }
 
+// Supports: #rgb, #rrggbb, #rrggbbaa
+color_from_hex :: proc (text: string) -> Color {
+    char_to_u8 :: proc (c: byte) -> u8 {
+        if c>='0' && c<='9' do return c-'0'
+        if c>='A' && c<='F' do return c-'A'+10
+        if c>='a' && c<='f' do return c-'a'+10
+        return 0
+    }
+
+    char_pair_to_u8 :: proc (c1, c2: byte) -> u8 {
+        return char_to_u8(c1) << 4 | char_to_u8(c2)
+    }
+
+    switch len(text) {
+    case 4: // #rgb
+        r := char_to_u8(text[1]); r |= r<<4
+        g := char_to_u8(text[1]); g |= g<<4
+        b := char_to_u8(text[1]); b |= b<<4
+        return {r,g,b,255}
+    case 7: // #rrggbb
+        r := char_pair_to_u8(text[1], text[2])
+        g := char_pair_to_u8(text[3], text[4])
+        b := char_pair_to_u8(text[5], text[6])
+        return {r,g,b,255}
+    case 9: // #rrggbbaa
+        r := char_pair_to_u8(text[1], text[2])
+        g := char_pair_to_u8(text[3], text[4])
+        b := char_pair_to_u8(text[5], text[6])
+        a := char_pair_to_u8(text[7], text[8])
+        return {r,g,b,a}
+    case:
+        return {255,0,255,254}
+    }
+}
+
 alpha :: #force_inline proc (c: Color, ratio: f32) -> Color {
     c := c
     c.a = u8(f32(c.a)*ratio)
