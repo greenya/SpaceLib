@@ -194,8 +194,8 @@ color_from_hex :: proc (text: string) -> Color {
     switch len(text) {
     case 4: // #rgb
         r := char_to_u8(text[1]); r |= r<<4
-        g := char_to_u8(text[1]); g |= g<<4
-        b := char_to_u8(text[1]); b |= b<<4
+        g := char_to_u8(text[2]); g |= g<<4
+        b := char_to_u8(text[3]); b |= b<<4
         return {r,g,b,255}
     case 7: // #rrggbb
         r := char_pair_to_u8(text[1], text[2])
