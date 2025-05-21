@@ -16,8 +16,8 @@ Font :: struct {
     using font_tr   : terse.Font,
 }
 
-reload_fonts :: proc (res: ^Res, scale := f32(1)) {
-    destroy_fonts(res)
+load_fonts :: proc (res: ^Res, scale := f32(1), default_font_extra_scale := f32(2)) {
+    assert(len(res.fonts) == 0)
 
     json_file_name := default_fonts_json_file_name
     fmt.assertf(json_file_name in res.files, "File \"%s\" not found.", json_file_name)
@@ -58,13 +58,12 @@ reload_fonts :: proc (res: ^Res, scale := f32(1)) {
     }
 
     if terse.default_font_name not_in res.fonts {
-        add_font(res, terse.default_font_name, rl.GetFontDefault(), scale)
+        add_font(res, terse.default_font_name, rl.GetFontDefault(), scale * default_font_extra_scale)
     }
 }
 
-@private
 add_font :: proc (res: ^Res, name: string, font_rl: rl.Font, scale_factor := f32(1)) {
-    font_height_base := f32(font_rl.baseSize) * 2
+    font_height_base := f32(font_rl.baseSize)
     font_height := font_height_base * scale_factor
 
     font := new(Font)
@@ -82,7 +81,7 @@ add_font :: proc (res: ^Res, name: string, font_rl: rl.Font, scale_factor := f32
 
 @private
 destroy_fonts :: proc (res: ^Res) {
-    for _, &font in res.fonts {
+    for _, font in res.fonts {
         if font.file != "" { // check if this font is loaded by us
             rl.UnloadFont(font.font_rl)
             delete(font.name)

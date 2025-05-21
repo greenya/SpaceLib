@@ -21,18 +21,38 @@ rect_lines :: #force_inline proc (rect: Rect, thick: f32, color: Color) {
     rl.DrawRectangleLinesEx(rect_rl, thick, color_rl)
 }
 
-text :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) {
+text_by_rl_font :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) {
     cstr := strings.clone_to_cstring(str, context.temp_allocator)
     tint_rl := cast (rl.Color) tint
     rl.DrawTextEx(font, cstr, pos, font_size, font_spacing, tint_rl)
 }
 
-text_center :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
+text_by_tr_font :: proc (str: string, pos: Vec2, font: ^terse.Font, tint: Color) {
+    font_rl := (cast (^rl.Font) font.font_ptr)^
+    text_by_rl_font(str, pos, font_rl, font.height, font.rune_spacing, tint)
+}
+
+text :: proc {
+    text_by_rl_font,
+    text_by_tr_font,
+}
+
+text_center_by_rl_font :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
     cstr := strings.clone_to_cstring(str, context.temp_allocator)
     size := rl.MeasureTextEx(font, cstr, font_size, font_spacing)
     actual_pos = pos - size/2
     text(str, actual_pos, font, font_size, font_spacing, tint)
     return
+}
+
+text_center_by_tr_font :: proc (str: string, pos: Vec2, font: ^terse.Font, tint: Color) -> (actual_pos: Vec2) {
+    font_rl := (cast (^rl.Font) font.font_ptr)^
+    return text_center_by_rl_font(str, pos, font_rl, font.height, font.rune_spacing, tint)
+}
+
+text_center :: proc {
+    text_center_by_rl_font,
+    text_center_by_tr_font,
 }
 
 text_right :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
@@ -49,10 +69,7 @@ terse :: proc (t: ^terse.Terse, draw_icon_proc: proc (word: ^terse.Word) = nil) 
             if draw_icon_proc != nil do draw_icon_proc(&word)
             else                     do rect_lines(word.rect, 2, word.color)
         } else {
-            pos := Vec2 { word.rect.x, word.rect.y }
-            font := word.font
-            font_rl := (cast (^rl.Font) font.font_ptr)^
-            text(word.text, pos, font_rl, font.height, font.rune_spacing, word.color)
+            text(word.text, { word.rect.x, word.rect.y }, word.font, word.color)
         }
     }
 }

@@ -26,10 +26,12 @@ main :: proc () {
     rl.InitWindow(1280, 720, "spacelib demo 6")
 
     app.res = res.create()
+    res.add_files(app.res, #load_directory("res/colors"))
     res.add_files(app.res, #load_directory("res/fonts"))
     res.add_files(app.res, #load_directory("res/sprites"))
-    res.reload_fonts(app.res)
-    res.reload_sprites(app.res)
+    res.load_colors(app.res)
+    res.load_fonts(app.res)
+    res.load_sprites(app.res)
 
     res.print(app.res)
 
@@ -37,40 +39,60 @@ main :: proc () {
         free_all(context.temp_allocator)
 
         rl.BeginDrawing()
-        rl.ClearBackground({ 20,40,30,255 })
+        rl.ClearBackground(app.res.colors["deep_teal"].value.rgba)
 
-        tr_rect := core.rect_inflated({ 0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight()) }, {-100,-50})
-        draw_sprite("panel-border-004", core.rect_inflated(tr_rect, {20,20}), {0,255,0,255})
-
-        sb := strings.builder_make(context.temp_allocator)
-        strings.write_string(&sb, "<left,top>")
-        for name in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
-            font := app.res.fonts[name]
-            fmt.sbprintf(&sb, "<font=%s>", name)
-            fmt.sbprintf(&sb, "<icon=star><group=name>%s</group> (<group=size>%v</group> px): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)
-            fmt.sbprint(&sb, "</font>\n\n")
+        { // draw colors
+            font := app.res.fonts["default"]
+            for name, i in core.map_keys_sorted(app.res.colors, context.temp_allocator) {
+                color := app.res.colors[name]
+                rect := Rect { 20,50,150,20 }
+                rect = core.rect_moved(rect, { 0,rect.h*f32(i) })
+                draw.rect(rect, color)
+                text_pos := core.rect_center(rect)
+                draw.text_center(name, text_pos+{1,1}   , font, Color {0,0,0,128})
+                draw.text_center(name, text_pos         , font, Color {255,255,255,255})
+            }
         }
 
-        tr := create_terse(strings.to_string(sb), tr_rect, context.temp_allocator)
+        tex_rect: Rect
+        { // draw sprites
+            tex := app.res.textures["sprites"]
+            tex_rect = { f32(rl.GetScreenWidth())-100-f32(tex.width), 50, f32(tex.width), f32(tex.height) }
+            rl.DrawTextureV(tex.texture_rl, { tex_rect.x, tex_rect.y }, rl.WHITE)
+            draw.rect_lines(tex_rect, 1, {255,255,0,255})
+        }
 
-        if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(tr)
-        draw_terse(tr)
-
-        tex := app.res.textures["sprites"]
-        tex_rect := Rect { f32(rl.GetScreenWidth())-100-f32(tex.width), 50, f32(tex.width), f32(tex.height) }
-        rl.DrawTextureV(tex.texture_rl, { tex_rect.x, tex_rect.y }, rl.WHITE)
-        draw.rect_lines(tex_rect, 1, {255,255,0,255})
-
-        {
+        { // draw horizontal 3-patch sprite
             bt_height := app.res.sprites["square-yellow"].info.(rl.NPatchInfo).source.height
             bt_rect := Rect { tex_rect.x, tex_rect.y+tex_rect.h+20, tex_rect.w, bt_height }
-            draw_sprite("square-yellow", bt_rect, {160,80,120,255})
-            draw_terse(create_terse("Test 3-Patch Horizontal Texture", bt_rect, context.temp_allocator))
+            draw_sprite("square-yellow", bt_rect)
+            draw_terse(create_terse("<color=indigo>Test 3-Patch Horizontal Texture", bt_rect, context.temp_allocator))
         }
 
-        {
-            bt_rect := Rect { tex_rect.x+tex_rect.w+30, tex_rect.y, 0, tex_rect.h }
+        { // draw vertical 3-patch sprite
+            bt_rect := Rect { tex_rect.x+tex_rect.w+20, tex_rect.y, 0, tex_rect.h }
             draw_sprite("red-button-03", bt_rect)
+        }
+
+        { // draw fonts
+            tr_rect := Rect { 0,0,f32(rl.GetScreenWidth())-tex_rect.w-30,f32(rl.GetScreenHeight()) }
+            tr_rect = core.rect_inflated(tr_rect, {-100-50,-50})
+            tr_rect = core.rect_moved(tr_rect, { 50,0 })
+            draw_sprite("panel-border-004", core.rect_inflated(tr_rect, {20,20}), {0,255,0,255})
+
+            sb := strings.builder_make(context.temp_allocator)
+            strings.write_string(&sb, "<left,top>")
+            for name, i in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
+                clr := core.alpha(app.res.colors["sand"], 1.0 - .15*f32(i))
+                font := app.res.fonts[name]
+                fmt.sbprintf(&sb, "<font=%s,color=%s>", name, core.color_to_hex(clr, context.temp_allocator))
+                fmt.sbprintf(&sb, "<color=sky><icon=star></color><group=name,color=amber>%s</group,/color> (<group=size,color=orange>%v</group> px</color>): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)
+                fmt.sbprint(&sb, "</font,/color>\n\n")
+            }
+
+            tr := create_terse(strings.to_string(sb), tr_rect, context.temp_allocator)
+            if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(tr)
+            draw_terse(tr)
         }
 
         rl.DrawFPS(10, 10)
@@ -86,8 +108,15 @@ create_terse :: proc (text: string, rect: Rect, allocator := context.allocator) 
     return terse.create(
         text,
         rect,
-        #force_inline proc (name: string) -> ^terse.Font { return &app.res.fonts[name].font_tr },
-        #force_inline proc (name: string) -> Color { return { 255,255,255,255 } },
+        #force_inline proc (name: string) -> ^terse.Font {
+            fmt.assertf(name in app.res.fonts, "No font with name \"%s\"", name)
+            return &app.res.fonts[name].font_tr
+        },
+        #force_inline proc (name: string) -> Color {
+            if name[0] == '#' do return core.color_from_hex(name)
+            fmt.assertf(name in app.res.colors, "No color with name \"%s\"", name)
+            return app.res.colors[name]
+        },
         allocator,
     )
 }

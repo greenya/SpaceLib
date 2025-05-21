@@ -68,8 +68,8 @@ Query_Color_Proc    :: proc (name: string) -> Color
 @private default_colors_stack_size  :: 8
 @private default_valign             :: Vertical_Alignment.middle
 @private default_align              :: Horizontal_Alignment.center
-         default_font_name          :: "default" // not private only for "/res" to use it
-@private default_color_name         :: "default"
+         default_font_name          :: "default" // not private only for "/res"
+         default_color_name         :: "default" // not private only for "/res"
 
 create :: proc (
     text                : string,

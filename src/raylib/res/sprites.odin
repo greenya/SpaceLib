@@ -7,6 +7,7 @@ import rl "vendor:raylib"
 import "../../core"
 
 @private default_sprites_json_file_name :: "sprites.json"
+@private default_sprites_texture_name   :: "sprites"
 
 Sprite :: struct {
     name    : string,
@@ -22,9 +23,11 @@ Texture :: struct {
     using texture_rl: rl.Texture,
 }
 
-reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
-    destroy_sprites_and_textures(res)
-    gen_atlas_texture(res, "sprites", { 512, 512 }, filter)
+load_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
+    assert(default_sprites_texture_name not_in res.textures)
+    assert(len(res.sprites) == 0)
+
+    gen_atlas_texture(res, default_sprites_texture_name, { 512, 512 }, filter)
 
     json_file_name := default_sprites_json_file_name
     if json_file_name not_in res.files {
@@ -112,7 +115,7 @@ reload_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
 
 @private
 destroy_sprites_and_textures :: proc (res: ^Res) {
-    for _, &sprite in res.sprites {
+    for _, sprite in res.sprites {
         delete(sprite.name)
         free(sprite)
     }
@@ -120,7 +123,7 @@ destroy_sprites_and_textures :: proc (res: ^Res) {
     delete(res.sprites)
     res.sprites = nil
 
-    for _, &texture in res.textures {
+    for _, texture in res.textures {
         rl.UnloadTexture(texture.texture_rl)
         free(texture)
     }
