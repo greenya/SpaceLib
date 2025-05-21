@@ -31,7 +31,7 @@ main :: proc () {
     res.add_files(app.res, #load_directory("res/sprites"))
     res.load_colors(app.res)
     res.load_fonts(app.res)
-    res.load_sprites(app.res)
+    res.load_sprites(app.res, texture_filter=.TRILINEAR)
 
     res.print(app.res)
 

@@ -23,11 +23,24 @@ Texture :: struct {
     using texture_rl: rl.Texture,
 }
 
-load_sprites :: proc (res: ^Res, filter := rl.TextureFilter.TRILINEAR) {
+load_sprites :: proc (
+    res: ^Res,
+    texture_size_limit  := [2] int { 512, 2048 },
+    texture_sprites_gap := 1,
+    texture_force_pot   := true,
+    texture_filter      := rl.TextureFilter.POINT,
+) {
     assert(default_sprites_texture_name not_in res.textures)
     assert(len(res.sprites) == 0)
 
-    gen_atlas_texture(res, default_sprites_texture_name, { 512, 512 }, filter)
+    gen_atlas_texture(
+        res,
+        default_sprites_texture_name,
+        texture_size_limit,
+        texture_sprites_gap,
+        texture_force_pot,
+        texture_filter,
+    )
 
     json_file_name := default_sprites_json_file_name
     if json_file_name not_in res.files {
@@ -133,9 +146,9 @@ destroy_sprites_and_textures :: proc (res: ^Res) {
 }
 
 @private
-gen_atlas_texture :: proc (res: ^Res, name: string, size: [2] int, filter: rl.TextureFilter) {
-    atlas := rl.GenImageColor(i32(size.x), i32(size.y), {})
-    gap :: 2
+gen_atlas_texture :: proc (res: ^Res, name: string, size_limit: [2] int, gap: int, force_pot: bool, filter: rl.TextureFilter) {
+    atlas := rl.GenImageColor(i32(size_limit.x), i32(size_limit.y), {})
+    gap := i32(gap)
     pos_x, pos_y, max_h := i32(gap), i32(gap), i32(0)
 
     file_ext :: ".png"
@@ -171,6 +184,9 @@ gen_atlas_texture :: proc (res: ^Res, name: string, size: [2] int, filter: rl.Te
 
         res.sprites[sprite.name] = sprite
     }
+
+    rl.ImageCrop(&atlas, { 0, 0, f32(atlas.width), f32(pos_y+max_h+gap) })
+    if force_pot do rl.ImageToPOT(&atlas, {255,0,255,255})
 
     atlas_texture := rl.LoadTextureFromImage(atlas)
     rl.UnloadImage(atlas)
