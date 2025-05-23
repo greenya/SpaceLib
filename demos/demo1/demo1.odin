@@ -1,25 +1,33 @@
 package demo1
 
-import "core:fmt"
 import rl "vendor:raylib"
-import sl "../spacelib"
-import sl_rl "../spacelib_raylib"
+import "spacelib:core"
+import "spacelib:ui"
+import "spacelib:raylib/draw"
+import "spacelib:tracking_allocator"
 
 Game :: struct {
-    ui: struct {
-        root: ^sl.Frame,
-    }
+    ui: ^ui.UI,
 }
 
 game: ^Game
 
 main :: proc () {
+    context.allocator = tracking_allocator.init()
+    defer tracking_allocator.print_report_with_issues_only()
+
+    rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 1")
 
     game = new(Game)
-    game.ui.root = sl.add_frame({})
-    sl.default_draw_proc = sl_rl.draw_frame_debug
+    game.ui = ui.create_ui(
+        overdraw_proc = proc (f: ^ui.Frame) {
+            draw.debug_frame(f)
+            draw.debug_frame_anchors(f)
+            draw.debug_frame_layout(f)
+        },
+    )
 
     init_ui_quick_menu()
     init_ui_minimap()
@@ -29,98 +37,87 @@ main :: proc () {
     init_ui_spell_book()
 
     for !rl.WindowShouldClose() {
-        sl.update_frame_tree(game.ui.root)
+        ui_root_rect := core.Rect { 10, 10, f32(rl.GetScreenWidth())-20, f32(rl.GetScreenHeight())-20 }
+        ui.update_ui(game.ui, ui_root_rect, {})
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.DARKGRAY)
 
-        game.ui.root.rect = { 10, 10, f32(rl.GetScreenWidth())-20, f32(rl.GetScreenHeight())-20 }
-        sl.draw_frame_tree(game.ui.root)
+        ui.draw_ui(game.ui)
 
         rl.EndDrawing()
         free_all(context.temp_allocator)
     }
 
-    sl.destroy_frame_tree(game.ui.root)
+    ui.destroy_ui(game.ui)
     free(game)
 
     rl.CloseWindow()
 }
 
 init_ui_quick_menu :: proc () {
-    root := sl.add_frame({ parent=game.ui.root })
-    sl.add_anchor(root, {})
+    root := ui.add_frame(game.ui.root,
+        { layout={ dir=.right, size={24,40}, gap=4 } },
+        { point=.top_left },
+    )
 
-    count :: 5
-    button_w, button_h :: 24, 40
-    button_big_w, button_big_h :: 64, 64
-    gap :: 4
-
-    prev_rel_frame := root
-    for i in 0..<count {
-        button := sl.add_frame({ parent=root, size={ button_w, button_h } })
-        sl.add_anchor(button, { rel_point=.top_right, rel_frame=prev_rel_frame, offset={ i == 0 ? 0 : gap, 0 } })
-        if i == 0 do button.size = { button_big_w, button_big_h }
-        prev_rel_frame = button
+    for i in 0..<5 {
+        button := ui.add_frame(root)
+        if i == 0 do button.size = {64,64}
     }
 }
 
 init_ui_minimap :: proc () {
-    size :: 200
-    root := sl.add_frame({ parent=game.ui.root, size={ size, size } })
-    sl.add_anchor(root, { point=.top_right })
+    root := ui.add_frame(game.ui.root, { name="minimap", size={200,200} })
+    ui.add_anchor(root, { point=.top_right })
 }
 
 init_ui_task_tracker :: proc () {
     width :: 240
-    gap_top, gap_bottom :: 240, 200
+    gap_top := 40 + ui.get(game.ui.root, "minimap").size.y
+    gap_bottom :: 200
 
-    root := sl.add_frame({ parent=game.ui.root, size={ width, 0 } })
-    sl.add_anchor(root, { point=.top_right, offset={ 0, gap_top } })
-    sl.add_anchor(root, { point=.bottom_right, offset={ 0, -gap_bottom } })
+    root := ui.add_frame(game.ui.root, { size={ width, 0 } })
+    ui.add_anchor(root, { point=.top_right, offset={ 0, gap_top } })
+    ui.add_anchor(root, { point=.bottom_right, offset={ 0, -gap_bottom } })
 }
 
 init_ui_action_bar :: proc () {
-    gap :: 6
-    button_size :: 48
-    button_count :: 8
-    bar_width :: button_count * (button_size+gap) + gap
+    root := ui.add_frame(game.ui.root,
+        { layout={ dir=.left_and_right, align=.end, size={48,48}, gap=6, auto_size=true } },
+        { point=.bottom },
+    )
 
-    root := sl.add_frame({ parent=game.ui.root, size={ bar_width, 0 } })
-    sl.add_anchor(root, { point=.bottom })
-
-    for i in 0..<button_count {
-        button := sl.add_frame({ parent=root, size={ button_size, button_size } })
-        sl.add_anchor(button, { point=.bottom_left, offset={ gap + (gap+button_size)*f32(i), 0 } })
-    }
+    for _ in 0..<8 do ui.add_frame(root)
 }
 
 init_ui_chat_window :: proc () {
     width, height :: 320, 200
     gap :: 10
 
-    root := sl.add_frame({ parent=game.ui.root, size={ width, height } })
-    sl.add_anchor(root, { point=.bottom_left })
+    root := ui.add_frame(game.ui.root, { size={width,height} }, { point=.bottom_left })
 
-    filter_bar := sl.add_frame({ parent=root, size={ 0, 32 } })
-    sl.add_anchor(filter_bar, { offset={ gap, gap } })
-    for i in 0..<4 {
-        button_size :: 32
-        button := sl.add_frame({ parent=filter_bar, size={ button_size, button_size } })
-        sl.add_anchor(button, { offset={ f32(i)*(button_size+8), 0 } })
-    }
+    filter_bar := ui.add_frame(root,
+        { size={0,32}, layout={ dir=.right, size={32,0}, gap=8 } },
+        { offset={gap,gap} },
+    )
 
-    input_bar := sl.add_frame({ parent=root, size={ 0, 32 } })
-    sl.add_anchor(input_bar, { point=.bottom_left, offset={ gap, -gap } })
-    sl.add_anchor(input_bar, { point=.bottom_right, offset={ -gap, -gap } })
+    for _ in 0..<4 do ui.add_frame(filter_bar)
 
-    messages_area := sl.add_frame({ parent=root })
-    sl.add_anchor(messages_area, { rel_point=.bottom_left, rel_frame=filter_bar, offset={ 0, gap } })
-    sl.add_anchor(messages_area, { point=.bottom_right, rel_point=.top_right, rel_frame=input_bar, offset={ 0, -gap } })
+    input_bar := ui.add_frame(root, { size={0,32} },
+        { point=.bottom_left, offset={gap,-gap} },
+        { point=.bottom_right, offset={-gap,-gap} },
+    )
 
-    scroll_bar := sl.add_frame({ parent=messages_area, size={ 16, 0 } })
-    sl.add_anchor(scroll_bar, { point=.top_right, offset={ -gap, gap } })
-    sl.add_anchor(scroll_bar, { point=.bottom_right, offset={ -gap, -gap } })
+    messages_area := ui.add_frame(root, {},
+        { rel_point=.bottom_left, rel_frame=filter_bar, offset={0,gap} },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=input_bar, offset={0,-gap} },
+    )
+
+    ui.add_frame(messages_area, { size={16,0} },
+        { point=.top_right, offset={-gap,gap} },
+        { point=.bottom_right, offset={-gap,-gap} },
+    )
 }
 
 init_ui_spell_book :: proc () {
@@ -132,44 +129,36 @@ init_ui_spell_book :: proc () {
 
     // root
 
-    root := sl.add_frame({ parent=game.ui.root, size={ width, height } })
-    sl.add_anchor(root, { offset={ 0, gap_top } })
+    root := ui.add_frame(game.ui.root, { size={width,height} }, { offset={0,gap_top} })
 
     // categories
 
-    prev_rel_frame := root
-    for i in 0..<3 {
-        button := sl.add_frame({ parent=root, size={ button_size, button_size } })
-        if i == 0 {
-            sl.add_anchor(button, { rel_point=.top_right, offset={ gap_cat, 0 } })
-        } else {
-            sl.add_anchor(button, { rel_point=.bottom_left, rel_frame=prev_rel_frame, offset={ 0, gap_cat } })
-        }
-        prev_rel_frame = button
-    }
+    categories := ui.add_frame(root,
+        { layout={ dir=.down, size={button_size,button_size}, gap=gap_cat } },
+        { rel_point=.top_right, offset={gap_cat,0} },
+    )
+
+    for _ in 0..<3 do ui.add_frame(categories)
 
     // pagination
 
     pag_height :: 32
 
-    page_current := sl.add_frame({ parent=root, size={ 80, pag_height } })
-    sl.add_anchor(page_current, { point=.bottom, offset={ 0, -gap_inner } })
-
-    page_prev := sl.add_frame({ parent=root, size={ pag_height, pag_height } })
-    sl.add_anchor(page_prev, { point=.bottom_left, offset={ gap_inner, -gap_inner } })
-
-    page_next := sl.add_frame({ parent=root, size={ pag_height, pag_height } })
-    sl.add_anchor(page_next, { point=.bottom_right, offset={ -gap_inner, -gap_inner } })
+    ui.add_frame(root, { size={80,pag_height} }, { point=.bottom, offset={0,-gap_inner} })
+    ui.add_frame(root, { size={pag_height,pag_height} }, { point=.bottom_left, offset={gap_inner,-gap_inner} })
+    ui.add_frame(root, { size={pag_height,pag_height} }, { point=.bottom_right, offset={-gap_inner,-gap_inner} })
 
     // spell columns
 
-    col1 := sl.add_frame({ parent=root })
-    sl.add_anchor(col1, { offset={ gap_inner, gap_inner } })
-    sl.add_anchor(col1, { point=.bottom_right, rel_point=.bottom, offset={ -gap_inner/2, -pag_height - 2*gap_inner } })
+    col1 := ui.add_frame(root, {},
+        { offset={gap_inner,gap_inner} },
+        { point=.bottom_right, rel_point=.bottom, offset={-gap_inner/2,-pag_height-2*gap_inner} },
+    )
 
-    col2 := sl.add_frame({ parent=root })
-    sl.add_anchor(col2, { point=.top_right, offset={ -gap_inner, gap_inner } })
-    sl.add_anchor(col2, { point=.bottom_left, rel_point=.bottom_right, rel_frame=col1, offset={ gap_inner, 0 } })
+    col2 := ui.add_frame(root, {},
+        { point=.top_right, offset={-gap_inner,gap_inner} },
+        { point=.bottom_left, rel_point=.bottom_right, rel_frame=col1, offset={gap_inner,0} },
+    )
 
     // spell cards
 
@@ -177,17 +166,14 @@ init_ui_spell_book :: proc () {
     text_height :: 32
     card_gap :: 20
 
-    for col in ([] ^sl.Frame { col1, col2 }) {
+    for col in ([] ^ui.Frame { col1, col2 }) {
         for i in 0..<4 {
-            card := sl.add_frame({ parent=col })
-            sl.add_anchor(card, { offset={ 0, f32(i)*(icon_size+card_gap) } })
-
-            icon := sl.add_frame({ parent=card, size={ icon_size, icon_size } })
-            sl.add_anchor(icon, {})
-
-            text := sl.add_frame({ parent=icon, size={ 0, text_height } })
-            sl.add_anchor(text, { point=.right, rel_frame=col })
-            sl.add_anchor(text, { point=.left, rel_point=.right, offset={ 10, 0 } })
+            card := ui.add_frame(col, {}, { offset={0,f32(i)*(icon_size+card_gap)} })
+            icon := ui.add_frame(card, { size={icon_size,icon_size} }, {})
+            ui.add_frame(icon, { size={0,text_height} },
+                { point=.right, rel_frame=col },
+                { point=.left, rel_point=.right, offset={10,0} },
+            )
         }
     }
 }
