@@ -1,12 +1,29 @@
 package spacelib_core
 
 import "core:slice"
+import "core:strings"
 _ :: slice
 
 is_consumed :: #force_inline proc (flag: ^bool) -> bool {
     if !flag^ do return false
     flag^ = false
     return true
+}
+
+string_prefix_from_slice :: #force_inline proc (s: string, prefixes: [] string) -> string {
+    for prefix in prefixes {
+        assert(prefix != "")
+        if strings.has_prefix(s, prefix) do return prefix
+    }
+    return ""
+}
+
+string_suffix_from_slice :: #force_inline proc (s: string, suffixes: [] string) -> string {
+    for suffix in suffixes {
+        assert(suffix != "")
+        if strings.has_suffix(s, suffix) do return suffix
+    }
+    return ""
 }
 
 map_keys_sorted :: proc (m: $M/map[$K]$V, allocator := context.allocator) -> [] string {
