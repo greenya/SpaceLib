@@ -98,10 +98,10 @@ Font :: struct {
 }
 
 fonts: [Font_ID] Font = {
-    .body       = { name="body",        file_id=.manrope_regular_ttf,       height=32, letter_spacing=0, line_spacing=-4 },
-    .body_bold  = { name="body_bold",   file_id=.manrope_bold_ttf,          height=32, letter_spacing=0, line_spacing=-4 },
-    .body_code  = { name="body_code",   file_id=.roboto_mono_regular_ttf,   height=32, letter_spacing=0, line_spacing=-4 },
-    .header     = { name="header",      file_id=.righteous_regular_ttf,     height=80, letter_spacing=0, line_spacing=-20 },
+    .body       = { name="body",        file_id=.manrope_regular_ttf,       height=32, rune_spacing=0, line_spacing=-4 },
+    .body_bold  = { name="body_bold",   file_id=.manrope_bold_ttf,          height=32, rune_spacing=0, line_spacing=-4 },
+    .body_code  = { name="body_code",   file_id=.roboto_mono_regular_ttf,   height=32, rune_spacing=0, line_spacing=-4 },
+    .header     = { name="header",      file_id=.righteous_regular_ttf,     height=80, rune_spacing=0, line_spacing=-20 },
 }
 
 font_default := &fonts[.body]

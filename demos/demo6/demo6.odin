@@ -101,7 +101,7 @@ main :: proc () {
             sb := strings.builder_make(context.temp_allocator)
             strings.write_string(&sb, "<left,top>")
             for name, i in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
-                clr := core.alpha(app.res.colors["sand"], 1.0 - .15*f32(i))
+                clr := core.alpha(app.res.colors["sand"], clamp(1.0 - .15*f32(i), 0, 1))
                 font := app.res.fonts[name]
                 fmt.sbprintf(&sb, "<font=%s,color=%s>", name, core.color_to_hex(clr, context.temp_allocator))
                 fmt.sbprintf(&sb, "<color=sky><icon=star></color><group=name,color=amber>%s</group,/color> (<group=size,color=orange>%v</group> px</color>): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)

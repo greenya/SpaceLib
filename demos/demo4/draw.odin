@@ -35,7 +35,7 @@ draw_terse :: proc (t: ^terse.Terse, override_color: ^Color = nil, offset := Vec
             pos := Vec2 { rect.x, rect.y }
             font := word.font
             font_rl := (cast (^rl.Font) font.font_ptr)^
-            draw.text(word.text, pos, font_rl, font.height, font.letter_spacing, tint)
+            draw.text(word.text, pos, font_rl, font.height, font.rune_spacing, tint)
         }
     }
 }

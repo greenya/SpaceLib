@@ -52,7 +52,8 @@ app_startup :: proc () {
             return &assets_font(name).font_tr
         },
         terse_query_color_proc = proc (name: string) -> core.Color {
-            return assets_color(name).val
+            if name[0] == '#'   do return core.color_from_hex(name)
+            else                do return assets_color(name).val
         },
         terse_draw_proc = proc (text: ^terse.Terse) {
             draw_terse(text)

@@ -55,7 +55,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     } }, { /*{ point=.center },*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} } })
 
     title_bar := ui.add_frame(root,
-        { size={0,120}, flags={.terse}, text="{font=anaheim_huge,color=c7}Demo Title Text" },
+        { size={0,120}, flags={.terse}, text="<font=anaheim_huge,color=c7>Demo Title Text" },
         { { point=.top_left, offset={0,20} }, { point=.top_right, offset={0,20} } },
     )
 
@@ -72,9 +72,9 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
         ui.add_frame(play_panel,
             { flags={.terse,.terse_height}, text=
-                "{color=c5}Welcome!\n\n"+
-                "Please see {color=c8}How To Play{/color} section if you're new to the game.\n\n"+
-                "Click {color=c8}New Game{/color} below or press ESC to start playing." },
+                "<color=c5>Welcome!\n\n"+
+                "Please see <color=c8>How To Play</color> section if you're new to the game.\n\n"+
+                "Click <color=c8>New Game</color> below or press ESC to start playing." },
             { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } },
         )
 
@@ -95,10 +95,10 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             draw_after=draw_ui_border_17,
         }, { { point=.top_left }, { point=.bottom_right } })
 
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play Music", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Play SFX", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} Do something else", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="{left}{group=tick}{icon=border_15}{/group} And do this too please", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> Play Music", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> Play SFX", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> Do something else", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> And do this too please", draw=draw_ui_checkbox })
 
         // todo: add slider demo (and implement the support)
     }
@@ -121,14 +121,14 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} } })
 
         ui.add_frame(content, { flags={.terse,.terse_height}, text=
-            "{top,left,color=c5,color=c7}All roads lead to Nexus{/color}\n"+
+            "<top,left,color=c5,color=c7>All roads lead to Nexus</color>\n"+
             "Build roads from any existing node. Roads cannot be destroyed. "+
             "Build mines, turrets, and plants on empty nodes. The Nexus node is given "+
             "at the start of the game; if destroyed, the game ends." })
 
         { // test scrolling child frame
             inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=true } })
-            ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="{top,left,color=c7}Test scrolling child frame" })
+            ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="<top,left,color=c7>Test scrolling child frame" })
             sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
                 ui.add_frame(sc, { flags={.terse,.radio}, text=text, draw=draw_ui_button })
@@ -136,7 +136,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         }
 
         ui.add_frame(content, { flags={.terse,.terse_height}, text=
-            "{top,left,color=c5,color=c7}Growing world{/color}\n"+
+            "<top,left,color=c5,color=c7>Growing world</color>\n"+
             "The world expands every 3 minutes. Newly revealed areas contain "+
             "enemy units that will attack your units and nodes. Maximize gold mining, and "+
             "build turrets and plants for unit production." })
@@ -176,7 +176,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         }, { { point=.top_left }, { point=.bottom_right } })
 
         ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
-            "{top,center,color=c5}The game is made for {color=c8}Odin 7 Day Jam{/color} "+
+            "<top,center,color=c5>The game is made for <color=c8>Odin 7 Day Jam</color> "+
             "by Spacemad using Odin and Raylib.\n" })
 
         // ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
@@ -186,13 +186,13 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         //     "using {group=od_link,color=c8}Odin{/color,/group} "+
         //     "and {group=rl_link,color=c8}Raylib{/color,/group}.\n" })
 
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Jam page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Game page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Odin page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="{icon=nav}Open Raylib page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="<icon=nav>Open Jam page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="<icon=nav>Open Game page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="<icon=nav>Open Odin page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_rect}, text="<icon=nav>Open Raylib page", draw=draw_ui_link })
 
         ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
-            "\n{bottom,center,color=c7}Thank you for playing <3" })
+            "\n<bottom,center,color=c7>Thank you for playing <3" })
     }
 
     tab_bar := ui.add_frame(root, { name="tab_bar", layout={ dir=.down, size={0,50}, gap=10 } }, {
@@ -201,11 +201,11 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     })
 
     for info in ([][2] string {
-        { "play"        , "{icon=play}Play " },
-        { "options"     , "{icon=cog}Options " },
-        { "how_to_play" , "{icon=question}How To Play "},
-        { "about"       , "{icon=info}About " },
-        { "exit"        , "{icon=exit}Exit " },
+        { "play"        , "<icon=play>Play " },
+        { "options"     , "<icon=cog>Options " },
+        { "how_to_play" , "<icon=question>How To Play "},
+        { "about"       , "<icon=info>About " },
+        { "exit"        , "<icon=exit>Exit " },
     }) {
         name := info[0]
         text := info[1]
@@ -229,7 +229,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     }
 
     ui.add_frame(root,
-        { order=-1, flags={.terse,.terse_height}, text="{right,color=c3}by Spacemad" },
+        { order=-1, flags={.terse,.terse_height}, text="<right,color=c3>by Spacemad" },
         { { point=.bottom_right, offset={-25,-15} } },
     )
 
@@ -248,7 +248,7 @@ main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     container := ui.add_frame(root, { size={440,0}, draw=draw_ui_panel,
         layout={ dir=.up_and_down, gap=40, pad=40, auto_size=true } }, { { point=.center } })
 
-    ui.add_frame(container, { flags={.terse,.terse_height}, text="{color=c7,font=anaheim_huge,icon=exit}{/font} Exit the game?" })
+    ui.add_frame(container, { flags={.terse,.terse_height}, text="<color=c7,font=anaheim_huge,icon=exit></font> Exit the game?" })
 
     button_row := ui.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
 

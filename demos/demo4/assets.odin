@@ -82,8 +82,8 @@ Font :: struct {
 }
 
 fonts: [Font_ID] Font = {
-    .anaheim_bold_64 = { name="anaheim_huge", file_id=.anaheim_bold_ttf, height=64, letter_spacing=-2, line_spacing=-8 },
-    .anaheim_bold_32 = { name="anaheim_normal", file_id=.anaheim_bold_ttf, height=32, letter_spacing=0, line_spacing=-4 },
+    .anaheim_bold_64 = { name="anaheim_huge", file_id=.anaheim_bold_ttf, height=64, rune_spacing=-2, line_spacing=-8 },
+    .anaheim_bold_32 = { name="anaheim_normal", file_id=.anaheim_bold_ttf, height=32, rune_spacing=0, line_spacing=-4 },
 }
 
 // ----------------------------
@@ -193,13 +193,13 @@ assets_unload :: proc () {
 }
 
 assets_color :: #force_inline proc (name: string) -> ^Color {
-    if name == "" do return &colors[.undefined]
+    if name == terse.default_color_name do return &colors[.undefined]
     for &color in colors do if color.name == name do return &color
     fmt.panicf("[!] Color not found: \"%v\"", name)
 }
 
 assets_font :: #force_inline proc (name: string) -> ^Font {
-    if name == "" do return &fonts[.anaheim_bold_32]
+    if name == terse.default_font_name do return &fonts[.anaheim_bold_32]
     for &font in fonts do if font.name == name do return &font
     fmt.panicf("[!] Font not found: \"%v\"", name)
 }
