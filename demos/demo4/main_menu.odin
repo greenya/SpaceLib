@@ -52,22 +52,24 @@ main_menu_destroy :: proc () {
 main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent, { name=#procedure, /*size={720,480},*/ draw=proc (f: ^ui.Frame) {
         draw_sprite(.panel_3, f.rect, colors[.c2].val.rgba)
-    } }, { /*{ point=.center },*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} } })
+    } }, /*{ point=.center }*/ { point=.top_left, offset={250,100} }, { point=.bottom_right, offset={-250,-100} })
 
     title_bar := ui.add_frame(root,
         { size={0,120}, flags={.terse}, text="<font=anaheim_huge,color=c7>Demo Title Text" },
-        { { point=.top_left, offset={0,20} }, { point=.top_right, offset={0,20} } },
+        { point=.top_left, offset={0,20} },
+        { point=.top_right, offset={0,20} },
     )
 
-    tab_content := ui.add_frame(root, {}, {
+    tab_content := ui.add_frame(root, {},
         { point=.top_left, rel_point=.bottom_left, rel_frame=title_bar, offset={25,0} },
         { point=.bottom_right, offset={-25-225,-25} },
-    })
+    )
 
     {
         play_panel := ui.add_frame(tab_content,
             { name="play_panel", flags={ .hidden }, draw=draw_ui_border_17, },
-            { { point=.top_left }, { point=.bottom_right } },
+            { point=.top_left },
+            { point=.bottom_right },
         )
 
         ui.add_frame(play_panel,
@@ -75,7 +77,8 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
                 "<color=c5>Welcome!\n\n"+
                 "Please see <color=c8>How To Play</color> section if you're new to the game.\n\n"+
                 "Click <color=c8>New Game</color> below or press ESC to start playing." },
-            { { point=.top_left, offset={90,20} }, { point=.top_right, offset={-90,20} } },
+            { point=.top_left, offset={90,20} },
+            { point=.top_right, offset={-90,20} },
         )
 
         ui.add_frame(play_panel, {
@@ -84,7 +87,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             text="New Game",
             draw=draw_ui_button,
             click=proc (f: ^ui.Frame) { fmt.println("new game!") },
-        }, { { point=.bottom, offset={0,-30} } })
+        }, { point=.bottom, offset={0,-30} })
     }
 
     {
@@ -93,7 +96,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             flags={ .hidden, .scissor },
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
-        }, { { point=.top_left }, { point=.bottom_right } })
+        }, { point=.top_left }, { point=.bottom_right })
 
         ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> Play Music", draw=draw_ui_checkbox })
         ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_rect}, text="<left><group=tick><icon=border_15></group> Play SFX", draw=draw_ui_checkbox })
@@ -109,7 +112,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             flags={ .hidden },
             draw=draw_ui_border_17,
             wheel=proc (f: ^ui.Frame, dy: f32) -> bool { return ui.wheel(f, "content", dy) },
-        }, { { point=.top_left }, { point=.bottom_right } })
+        }, { point=.top_left }, { point=.bottom_right })
 
         scrollbar_w :: 50
         scrollbar_btn_h :: 50
@@ -118,7 +121,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             name="content",
             flags={ .scissor },
             layout={ dir=.down, gap=25, scroll={ step=20 } },
-        }, { { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} } })
+        }, { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} })
 
         ui.add_frame(content, { flags={.terse,.terse_height}, text=
             "<top,left,color=c5,color=c7>All roads lead to Nexus</color>\n"+
@@ -141,28 +144,26 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             "enemy units that will attack your units and nodes. Maximize gold mining, and "+
             "build turrets and plants for unit production." })
 
-        scrollbar_track := ui.add_frame(how_to_play_panel, {
-            name="scrollbar_track",
-            size={scrollbar_w,0},
-        }, {
+        scrollbar_track := ui.add_frame(how_to_play_panel,
+            { name="scrollbar_track", size={scrollbar_w,0} },
             { point=.top_left, rel_point=.top_right, rel_frame=content, offset={10,scrollbar_btn_h} },
             { point=.bottom_left, rel_point=.bottom_right, rel_frame=content, offset={10,-scrollbar_btn_h} },
-        })
+        )
 
         scrollbar_thumb := ui.add_frame(scrollbar_track, {
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_stop,
-        }, { { point=.top } })
+        }, { point=.top })
 
         scrollbar_up := ui.add_frame(scrollbar_track, {
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_up,
-        }, { { point=.bottom, rel_point=.top } })
+        }, { point=.bottom, rel_point=.top })
 
         scrollbar_down := ui.add_frame(scrollbar_track, {
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_down,
-        }, { { point=.top, rel_point=.bottom } })
+        }, { point=.top, rel_point=.bottom })
 
         ui.setup_scrollbar_actors(content, scrollbar_thumb, scrollbar_down, scrollbar_up)
     }
@@ -173,7 +174,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             flags={ .hidden, .scissor },
             layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
-        }, { { point=.top_left }, { point=.bottom_right } })
+        }, { point=.top_left }, { point=.bottom_right })
 
         ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
             "<top,center,color=c5>The game is made for <color=c8>Odin 7 Day Jam</color> "+
@@ -195,10 +196,11 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             "\n<bottom,center,color=c7>Thank you for playing <3" })
     }
 
-    tab_bar := ui.add_frame(root, { name="tab_bar", layout={ dir=.down, size={0,50}, gap=10 } }, {
+    tab_bar := ui.add_frame(root,
+        { name="tab_bar", layout={ dir=.down, size={0,50}, gap=10 } },
         { point=.top_left, rel_point=.top_right, rel_frame=tab_content, offset={15,0} },
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
-    })
+    )
 
     for info in ([][2] string {
         { "play"        , "<icon=play>Play " },
@@ -230,7 +232,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
     ui.add_frame(root,
         { order=-1, flags={.terse,.terse_height}, text="<right,color=c3>by Spacemad" },
-        { { point=.bottom_right, offset={-25,-15} } },
+        { point=.bottom_right, offset={-25,-15} },
     )
 
     return root
@@ -243,12 +245,17 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent,
         { name=#procedure, order=10, flags={ .hidden, .solid }, draw=draw_ui_dim_rect },
-        { { point=.top_left }, { point=.bottom_right } })
+        { point=.top_left },
+        { point=.bottom_right },
+    )
 
     container := ui.add_frame(root, { size={440,0}, draw=draw_ui_panel,
-        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=true } }, { { point=.center } })
+        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=true } }, { point=.center })
 
-    ui.add_frame(container, { flags={.terse,.terse_height}, text="<color=c7,font=anaheim_huge,icon=exit></font> Exit the game?" })
+    ui.add_frame(container, {
+        flags={.terse,.terse_height},
+        text="<color=c7,font=anaheim_huge,icon=exit></font> Exit the game?",
+    })
 
     button_row := ui.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
 
