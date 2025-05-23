@@ -13,29 +13,30 @@ import "../../ui"
 debug_frame :: proc (f: ^ui.Frame) {
     color := _debug_frame_color(f)
 
-    if f.rect.w > 0 && f.rect.h > 0 {
-        rect_lines(f.rect, 1, color)
-        if .pass in f.flags do rect({ f.rect.x+f.rect.w-10, f.rect.y, 10, 10 }, core.alpha(color, .2))
-    } else if f.rect.w > 0 {
-        line({ f.rect.x, f.rect.y }, { f.rect.x + f.rect.w, f.rect.y }, 3, color)
-        line({ f.rect.x, f.rect.y-6 }, { f.rect.x, f.rect.y+5 }, 3, color)
-        line({ f.rect.x+f.rect.w, f.rect.y-6 }, { f.rect.x+f.rect.w, f.rect.y + 5 }, 3, color)
-    } else if f.rect.h > 0 {
-        line({ f.rect.x, f.rect.y }, { f.rect.x, f.rect.y+f.rect.h }, 3, color)
-        line({ f.rect.x-6, f.rect.y }, { f.rect.x+5, f.rect.y }, 3, color)
-        line({ f.rect.x-6, f.rect.y+f.rect.h }, { f.rect.x+5, f.rect.y+f.rect.h }, 3, color)
-    } else {
-        line({ f.rect.x-5, f.rect.y+1 }, { f.rect.x+6, f.rect.y+1 }, 3, color)
-        line({ f.rect.x+1, f.rect.y-6 }, { f.rect.x+1, f.rect.y+6 }, 3, color)
-    }
-
     if f.parent == nil {
         cx, cy := f.rect.x + f.rect.w/2, f.rect.y + f.rect.h/2
-        rect_lines(f.rect, 1, core.alpha(color, .1))
+        clr := core.alpha(color, .1)
+        rect_lines(f.rect, 4, clr)
         for d in -2..=+2 {
             df := f32(d) * 200
-            line({ cx+df, f.rect.y }, { cx+df, f.rect.y+f.rect.h }, 1, color)
-            line({ f.rect.x, cy+df }, { f.rect.x+f.rect.w, cy+df }, 1, color)
+            line({ cx+df, f.rect.y }, { cx+df, f.rect.y+f.rect.h }, 4, clr)
+            line({ f.rect.x, cy+df }, { f.rect.x+f.rect.w, cy+df }, 4, clr)
+        }
+    } else {
+        if f.rect.w > 0 && f.rect.h > 0 {
+            rect_lines(f.rect, 1, color)
+            if .pass in f.flags do rect({ f.rect.x+f.rect.w-10, f.rect.y, 10, 10 }, core.alpha(color, .2))
+        } else if f.rect.w > 0 {
+            line({ f.rect.x, f.rect.y }, { f.rect.x + f.rect.w, f.rect.y }, 3, color)
+            line({ f.rect.x, f.rect.y-6 }, { f.rect.x, f.rect.y+5 }, 3, color)
+            line({ f.rect.x+f.rect.w, f.rect.y-6 }, { f.rect.x+f.rect.w, f.rect.y + 5 }, 3, color)
+        } else if f.rect.h > 0 {
+            line({ f.rect.x, f.rect.y }, { f.rect.x, f.rect.y+f.rect.h }, 3, color)
+            line({ f.rect.x-6, f.rect.y }, { f.rect.x+5, f.rect.y }, 3, color)
+            line({ f.rect.x-6, f.rect.y+f.rect.h }, { f.rect.x+5, f.rect.y+f.rect.h }, 3, color)
+        } else {
+            line({ f.rect.x-5, f.rect.y+1 }, { f.rect.x+6, f.rect.y+1 }, 3, color)
+            line({ f.rect.x+1, f.rect.y-6 }, { f.rect.x+1, f.rect.y+6 }, 3, color)
         }
     }
 
