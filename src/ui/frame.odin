@@ -501,7 +501,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             switch f.layout.align {
             case .start : // already aligned
             case .center: rect.y += (f.rect.h-rect.h)/2   - f.layout.pad.y
-            case .end   : rect.h +=  f.rect.h-rect.h    - 2*f.layout.pad.y
+            case .end   : rect.y +=  f.rect.h-rect.h    - 2*f.layout.pad.y
             }
         case .up, .up_and_down, .down:
             switch f.layout.align {
