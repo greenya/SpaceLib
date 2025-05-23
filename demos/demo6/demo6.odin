@@ -29,19 +29,27 @@ main :: proc () {
     rl.InitAudioDevice()
 
     app.res = res.create()
+
     res.add_files(app.res, #load_directory("res/colors"))
     res.add_files(app.res, #load_directory("res/fonts"))
     res.add_files(app.res, #load_directory("res/sprites"))
-    res.add_files(app.res, #load_directory("res/sounds"))
+    res.add_files(app.res, #load_directory("res/audio"))
+
     res.load_colors(app.res)
     res.load_fonts(app.res)
     res.load_sprites(app.res, texture_filter=.BILINEAR)
-    res.load_sounds(app.res)
+    res.load_audio(app.res)
 
     res.print(app.res)
 
+    bg_music := app.res.music["groovy_saturday"]
+    rl.SetMusicVolume(bg_music, .333)
+    rl.PlayMusicStream(bg_music)
+
     for !rl.WindowShouldClose() {
         free_all(context.temp_allocator)
+
+        rl.UpdateMusicStream(bg_music)
 
         if rl.IsKeyPressed(.SPACE) {
             sounds, _ := slice.map_values(app.res.sounds, context.temp_allocator)

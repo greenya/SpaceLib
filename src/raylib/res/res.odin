@@ -1,7 +1,5 @@
 package spacelib_raylib_res
 
-// TODO: add music support
-
 import "core:fmt"
 import rl "vendor:raylib"
 import "../../core"
@@ -13,7 +11,7 @@ Res :: struct {
     textures    : map [string] ^Texture,
     sprites     : map [string] ^Sprite,
     sounds      : map [string] ^Sound,
-    // music: map [string] ^Music,
+    music       : map [string] ^Music,
 }
 
 create :: proc () -> ^Res {
@@ -26,7 +24,7 @@ destroy :: proc (res: ^Res) {
     destroy_colors(res)
     destroy_fonts(res)
     destroy_sprites_and_textures(res)
-    destroy_sounds(res)
+    destroy_sounds_and_music(res)
     free(res)
 }
 
