@@ -8,6 +8,7 @@ import "../../core"
 
 @private default_sprites_json_file_name :: "sprites.json"
 @private default_sprites_texture_name   :: "sprites"
+@private default_sprite_file_ext_list   :: [] string { ".png" }
 
 Sprite :: struct {
     name    : string,
@@ -151,12 +152,13 @@ gen_atlas_texture :: proc (res: ^Res, name: string, size_limit: [2] int, gap: in
     gap := i32(gap)
     pos_x, pos_y, max_h := i32(gap), i32(gap), i32(0)
 
-    file_ext :: ".png"
     for file_name in core.map_keys_sorted(res.files, context.temp_allocator) {
-        if !strings.ends_with(file_name, file_ext) do continue
+        file_ext := core.string_suffix_from_slice(file_name, default_sprite_file_ext_list)
+        if file_ext == "" do continue
 
         file := res.files[file_name]
-        image := rl.LoadImageFromMemory(file_ext, raw_data(file.data), i32(len(file.data)))
+        file_ext_cstr := strings.clone_to_cstring(file_ext, context.temp_allocator)
+        image := rl.LoadImageFromMemory(file_ext_cstr, raw_data(file.data), i32(len(file.data)))
 
         if pos_x+image.width > atlas.width-1 {
             pos_x = gap

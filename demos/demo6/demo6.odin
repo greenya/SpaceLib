@@ -1,6 +1,8 @@
 package demo6
 
 import "core:fmt"
+import "core:math/rand"
+import "core:slice"
 import "core:strings"
 import rl "vendor:raylib"
 import "spacelib:core"
@@ -24,19 +26,27 @@ main :: proc () {
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 6")
+    rl.InitAudioDevice()
 
     app.res = res.create()
     res.add_files(app.res, #load_directory("res/colors"))
     res.add_files(app.res, #load_directory("res/fonts"))
     res.add_files(app.res, #load_directory("res/sprites"))
+    res.add_files(app.res, #load_directory("res/sounds"))
     res.load_colors(app.res)
     res.load_fonts(app.res)
-    res.load_sprites(app.res, texture_filter=.TRILINEAR)
+    res.load_sprites(app.res, texture_filter=.BILINEAR)
+    res.load_sounds(app.res)
 
     res.print(app.res)
 
     for !rl.WindowShouldClose() {
         free_all(context.temp_allocator)
+
+        if rl.IsKeyPressed(.SPACE) {
+            sounds, _ := slice.map_values(app.res.sounds, context.temp_allocator)
+            rl.PlaySound(rand.choice(sounds))
+        }
 
         rl.BeginDrawing()
         rl.ClearBackground(app.res.colors["deep_teal"].value.rgba)
@@ -66,7 +76,7 @@ main :: proc () {
             bt_height := app.res.sprites["square-yellow"].info.(rl.NPatchInfo).source.height
             bt_rect := Rect { tex_rect.x, tex_rect.y+tex_rect.h+20, tex_rect.w, bt_height }
             draw_sprite("square-yellow", bt_rect)
-            draw_terse(create_terse("<color=indigo>Test 3-Patch Horizontal Texture", bt_rect, context.temp_allocator))
+            draw_terse(create_terse("<color=indigo>Press SPACE to play random sound", bt_rect, context.temp_allocator))
         }
 
         { // draw vertical 3-patch sprite
@@ -101,6 +111,7 @@ main :: proc () {
 
     res.destroy(app.res)
 
+    rl.CloseAudioDevice()
     rl.CloseWindow()
 }
 

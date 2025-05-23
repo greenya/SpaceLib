@@ -1,18 +1,19 @@
 package spacelib_raylib_res
 
-// TODO: add audios support
+// TODO: add music support
 
 import "core:fmt"
 import rl "vendor:raylib"
 import "../../core"
 
 Res :: struct {
-    files: map [string] File,
-    colors: map [string] ^Color,
-    fonts: map [string] ^Font,
-    textures: map [string] ^Texture,
-    sprites: map [string] ^Sprite,
-    // audios: map [string] Music/Sound/Wave,
+    files       : map [string] File,
+    colors      : map [string] ^Color,
+    fonts       : map [string] ^Font,
+    textures    : map [string] ^Texture,
+    sprites     : map [string] ^Sprite,
+    sounds      : map [string] ^Sound,
+    // music: map [string] ^Music,
 }
 
 create :: proc () -> ^Res {
@@ -25,6 +26,7 @@ destroy :: proc (res: ^Res) {
     destroy_colors(res)
     destroy_fonts(res)
     destroy_sprites_and_textures(res)
+    destroy_sounds(res)
     free(res)
 }
 
@@ -60,6 +62,11 @@ print :: proc (res: ^Res) {
         case rl.NPatchInfo:
             fmt.printfln("- %s (%vx%v px, %v)", name, info.source.width, info.source.height, info.layout)
         }
+    }
+
+    fmt.printfln("Sounds (%i):", len(res.sounds))
+    for name in core.map_keys_sorted(res.sounds) {
+        fmt.printfln("- %s", name)
     }
 
     fmt.println("---------------------------")
