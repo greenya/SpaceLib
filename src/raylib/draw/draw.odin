@@ -33,8 +33,8 @@ text_by_tr_font :: proc (str: string, pos: Vec2, font: ^terse.Font, tint: Color)
 }
 
 text :: proc {
-    text_by_rl_font,
     text_by_tr_font,
+    text_by_rl_font,
 }
 
 text_center_by_rl_font :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
@@ -51,16 +51,26 @@ text_center_by_tr_font :: proc (str: string, pos: Vec2, font: ^terse.Font, tint:
 }
 
 text_center :: proc {
-    text_center_by_rl_font,
     text_center_by_tr_font,
+    text_center_by_rl_font,
 }
 
-text_right :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
+text_right_by_rl_font :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) -> (actual_pos: Vec2) {
     cstr := strings.clone_to_cstring(str, context.temp_allocator)
     size := rl.MeasureTextEx(font, cstr, font_size, font_spacing)
     actual_pos = pos - { size.x, 0 }
     text(str, actual_pos, font, font_size, font_spacing, tint)
     return
+}
+
+text_right_by_tr_font :: proc (str: string, pos: Vec2, font: ^terse.Font, tint: Color) -> (actual_pos: Vec2) {
+    font_rl := (cast (^rl.Font) font.font_ptr)^
+    return text_right_by_rl_font(str, pos, font_rl, font.height, font.rune_spacing, tint)
+}
+
+text_right :: proc {
+    text_right_by_tr_font,
+    text_right_by_rl_font,
 }
 
 terse :: proc (t: ^terse.Terse, draw_icon_proc: proc (word: ^terse.Word) = nil) {
