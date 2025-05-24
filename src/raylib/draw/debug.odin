@@ -58,6 +58,11 @@ debug_frame :: proc (f: ^ui.Frame) {
     }
 }
 
+debug_frame_tree :: proc (f: ^ui.Frame) {
+    debug_frame(f)
+    for child in f.children do debug_frame_tree(child)
+}
+
 debug_frame_layout :: proc (f: ^ui.Frame) {
     step :: 10
     size :: 20

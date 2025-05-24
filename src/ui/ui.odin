@@ -2,12 +2,14 @@ package spacelib_ui
 
 import "core:slice"
 import "core:time"
+import "../clock"
 import "../core"
 import "../terse"
 
 UI :: struct {
     root                : ^Frame,
 
+    clock               : ^clock.Clock(f32),
     mouse               : Mouse_Input,
     prev_mouse          : Mouse_Input,
 
@@ -63,6 +65,7 @@ Scissor_Clear_Proc  :: proc ()
 Terse_Draw_Proc     :: proc (terse: ^terse.Terse)
 
 create_ui :: proc (
+    clock                   : ^clock.Clock(f32) = nil,
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
@@ -71,13 +74,16 @@ create_ui :: proc (
     overdraw_proc           : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)
-    ui.scissor_set_proc = scissor_set_proc
-    ui.scissor_clear_proc = scissor_clear_proc
-    ui.terse_query_font_proc = terse_query_font_proc
-    ui.terse_query_color_proc = terse_query_color_proc
-    ui.terse_draw_proc = terse_draw_proc
-    ui.overdraw_proc = overdraw_proc
-    ui.root = add_frame(nil, { flags={ .pass } })
+    ui^ = {
+        clock                   = clock,
+        scissor_set_proc        = scissor_set_proc,
+        scissor_clear_proc      = scissor_clear_proc,
+        terse_query_font_proc   = terse_query_font_proc,
+        terse_query_color_proc  = terse_query_color_proc,
+        terse_draw_proc         = terse_draw_proc,
+        overdraw_proc           = overdraw_proc,
+        root                    = add_frame(nil, { ui=ui, flags={.pass} }),
+    }
     return ui
 }
 
@@ -109,8 +115,8 @@ update_ui :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input
     clear(&ui.mouse_frames)
     clear(&ui.auto_hide_frames)
 
-    mark_frame_tree_rect_dirty(ui.root, ui)
-    update_frame_tree(ui.root, ui)
+    prepare_frame_tree(ui.root)
+    update_frame_tree(ui.root)
 
     if !ui.captured.outside {
         #reverse for f in ui.mouse_frames {
@@ -182,7 +188,7 @@ draw_ui :: proc (ui: ^UI) {
     assert(len(ui.scissor_rects) == 0)
     ui.scissor_rect = ui.root.rect
 
-    draw_frame_tree(ui.root, ui)
+    draw_frame_tree(ui.root)
 }
 
 @private

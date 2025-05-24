@@ -1,0 +1,23 @@
+[
+    {
+        "name": "default",
+        "file": "Gauge-Regular.ttf",
+        "height": 24,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "heavy",
+        "file": "Gauge-Heavy.ttf",
+        "height": 24,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    },
+    {
+        "name": "huge",
+        "file": "Gauge-Heavy.ttf",
+        "height": 72,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25
+    }
+]

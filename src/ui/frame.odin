@@ -11,6 +11,8 @@ import "../core"
 import "../terse"
 
 Frame :: struct {
+    ui              : ^UI,
+
     parent          : ^Frame,
     order           : int,
 
@@ -38,6 +40,10 @@ Frame :: struct {
     prev_hovered    : bool,
     captured        : bool,
     selected        : bool,
+
+    animation       : Animation,
+    offset          : Vec2,
+    opacity         : f32,
 }
 
 Flag :: enum {
@@ -120,12 +126,20 @@ Anchor_Point :: enum {
     bottom_right,
 }
 
-Frame_Proc          :: proc (f: ^Frame)
-Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
+Animation :: struct {
+    tick    : Frame_Animation_Tick_Proc,
+    start   : f32,
+    end     : f32,
+}
+
+Frame_Proc                  :: proc (f: ^Frame)
+Frame_Wheel_Proc            :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
+Frame_Animation_Tick_Proc   :: proc (f: ^Frame, ratio: f32)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
     f^ = init
+    f.opacity = 1
 
     assert(f.parent == nil)
     set_parent(f, parent)
@@ -157,6 +171,7 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
         idx, _ := slice.linear_search(f.parent.children[:], f)
         assert(idx >= 0)
         ordered_remove(&f.parent.children, idx)
+        f.ui = nil
     }
 
     f.parent = new_parent
@@ -165,6 +180,7 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
         slice.sort_by(f.parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
             return f1.order < f2.order
         })
+        f.ui = f.parent.ui
     }
 }
 
@@ -172,6 +188,28 @@ set_text :: proc (f: ^Frame, new_text: string) {
     f.text = new_text
     terse.destroy(f.terse)
     f.terse = nil
+}
+
+set_opacity :: proc (f: ^Frame, new_opacity: f32) {
+    f.opacity = new_opacity
+    for child in f.children do set_opacity(child, new_opacity)
+}
+
+animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
+    assert(f != nil)
+    assert(f.ui.clock != nil)
+    assert(tick != nil)
+    assert(dur > 0)
+
+    if f.animation.tick != nil do f.animation.tick(f, 1)
+
+    f.animation = {
+        tick    = tick,
+        start   = f.ui.clock.time,
+        end     = f.ui.clock.time + dur,
+    }
+
+    tick(f, 0)
 }
 
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
@@ -403,7 +441,7 @@ destroy_frame_tree :: proc (f: ^Frame) {
 }
 
 @private
-update_frame_tree :: proc (f: ^Frame, ui: ^UI) {
+update_frame_tree :: proc (f: ^Frame) {
     f.prev_hovered = f.hovered
     f.hovered = false
     f.captured = false
@@ -416,53 +454,61 @@ update_frame_tree :: proc (f: ^Frame, ui: ^UI) {
         should_rebuild := f.terse == nil || (f.terse != nil && f.terse.rect_input != f.rect)
         if should_rebuild {
             terse.destroy(f.terse)
-            f.terse = terse.create(f.text, f.rect, ui.terse_query_font_proc, ui.terse_query_color_proc)
+            f.terse = terse.create(f.text, f.rect, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
             if .terse_height in f.flags do f.size.y = f.terse.rect.h
             if .terse_width in f.flags do f.size.x = f.terse.rect.w
         }
     }
 
-    m_pos := ui.mouse.pos
+    m_pos := f.ui.mouse.pos
     hit_rect := f.rect
     if .terse_rect in f.flags && f.terse != nil do hit_rect = f.terse.rect
-    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, ui.scissor_rect) do append(&ui.mouse_frames, f)
+    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) do append(&f.ui.mouse_frames, f)
 
-    if .auto_hide in f.flags do append(&ui.auto_hide_frames, f)
+    if .auto_hide in f.flags do append(&f.ui.auto_hide_frames, f)
 
-    if .scissor in f.flags do push_scissor_rect(ui, f.rect)
-    for child in f.children do update_frame_tree(child, ui)
-    if .scissor in f.flags do pop_scissor_rect(ui)
+    if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
+    for child in f.children do update_frame_tree(child)
+    if .scissor in f.flags do pop_scissor_rect(f.ui)
 }
 
 @private
-draw_frame_tree :: proc (f: ^Frame, ui: ^UI) {
+draw_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
 
     if f.draw != nil {
         if .terse not_in f.flags || f.terse != nil do f.draw(f)
     } else {
-        if f.terse != nil do ui.terse_draw_proc(f.terse)
+        if f.terse != nil do f.ui.terse_draw_proc(f.terse)
     }
 
-    if ui.overdraw_proc != nil do ui.overdraw_proc(f)
-    if .scissor in f.flags do push_scissor_rect(ui, f.rect)
-    for child in f.children do draw_frame_tree(child, ui)
-    if .scissor in f.flags do pop_scissor_rect(ui)
+    if f.ui.overdraw_proc != nil do f.ui.overdraw_proc(f)
+    if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
+    for child in f.children do draw_frame_tree(child)
+    if .scissor in f.flags do pop_scissor_rect(f.ui)
     if f.draw_after != nil do f.draw_after(f)
 
-    ui.stats.frames_drawn += 1
+    f.ui.stats.frames_drawn += 1
 }
 
 @private
-mark_frame_tree_rect_dirty :: proc (f: ^Frame, ui: ^UI) {
+prepare_frame_tree :: proc (f: ^Frame) {
+    anim := &f.animation
+    if anim.tick != nil {
+        ratio := core.clamp_ratio(f.ui.clock.time, anim.start, anim.end)
+        anim.tick(f, ratio)
+        if ratio == 1 do anim^ = {}
+    }
+
     f.rect_dirty = true
-    for child in f.children do mark_frame_tree_rect_dirty(child, ui)
-    ui.stats.frames_total += 1
+    for child in f.children do prepare_frame_tree(child)
+
+    f.ui.stats.frames_total += 1
 }
 
 @private
 update_rect :: proc (f: ^Frame) {
-    if f.rect_dirty do if len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
 }
 
@@ -511,7 +557,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             }
         }
 
-        child.rect = rect
+        child.rect = core.rect_moved(rect, child.offset)
         child.rect_dirty = false
     }
 
@@ -784,7 +830,12 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         transform_rect_dir(&result_dir, &result_pin, dir, pin_anchors)
     }
 
-    f.rect = { result_dir.l, result_dir.t, result_dir.r - result_dir.l, result_dir.b - result_dir.t }
+    f.rect = {
+        result_dir.l + f.offset.x,
+        result_dir.t + f.offset.y,
+        result_dir.r - result_dir.l,
+        result_dir.b - result_dir.t,
+    }
     f.rect_dirty = false
 }
 
