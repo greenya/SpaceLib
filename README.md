@@ -2,6 +2,7 @@
 
 * /clock                - clock with time scale support
 * /core                 - core types and utility procs
+* /events               - [planned] event bus
 * /raylib               - helpers when using Raylib
 * /sdl3                 - [planned] set of helpers when using SDL3
 * /terse                - text layout calculation
@@ -10,6 +11,8 @@
 * /ui                   - ui manager
 
 ## TODOs
+
+TODO: ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
 
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
