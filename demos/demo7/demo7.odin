@@ -172,43 +172,45 @@ draw_panel_header :: proc (f: ^ui.Frame) {
 draw_slot :: proc (f: ^ui.Frame) {
     font := app.res.fonts["huge"]
     tx_color := core.alpha({40,40,40,255}, f.opacity)
+
     if f.hovered {
         draw.rect_lines(f.rect, 4, tx_color)
-        if f.animation.tick == nil {
+        if f.anim.tick == nil {
             font2 := app.res.fonts["default"]
             sub_text := fmt.tprintf("Hello, %s!", f.text)
             draw.text_center(sub_text, core.rect_center(f.rect)+{0,46}, font2, tx_color)
         }
     }
+
     draw.text_center(f.text, core.rect_center(f.rect)+{0,6}, font, tx_color)
 }
 
-anim_show_slide_up :: proc (f: ^ui.Frame, ratio: f32) {
-    fmt.println(#procedure, f.name, ratio)
+anim_show_slide_up :: proc (f: ^ui.Frame) {
+    fmt.println(#procedure, f.name, f.anim.ratio)
 
-    ui.set_opacity(f, min(1, 3*ratio))
-    f.offset = { 0, 40 * (1 - core.ease_ratio(ratio, .Elastic_Out)) }
-    if ratio == 0 do ui.show(f)
+    ui.set_opacity(f, min(1, 3*f.anim.ratio))
+    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Elastic_Out)) }
+    if f.anim.ratio == 0 do ui.show(f)
 }
 
-anim_hide_slide_down :: proc (f: ^ui.Frame, ratio: f32) {
-    fmt.println(#procedure, f.name, ratio)
+anim_hide_slide_down :: proc (f: ^ui.Frame) {
+    fmt.println(#procedure, f.name, f.anim.ratio)
 
-    ui.set_opacity(f, 1-ratio)
-    f.offset = { 0, 80 * core.ease_ratio(ratio, .Cubic_In) }
-    if ratio == 1 do ui.hide(f)
+    ui.set_opacity(f, 1-f.anim.ratio)
+    f.offset = { 0, 80 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    if f.anim.ratio == 1 do ui.hide(f)
 }
 
-anim_slot_enter_feedback :: proc (f: ^ui.Frame, ratio: f32) {
-    fmt.println(#procedure, f.name, ratio)
+anim_slot_enter_feedback :: proc (f: ^ui.Frame) {
+    fmt.println(#procedure, f.name, f.anim.ratio)
 
     base_w := f.parent.layout.size.x
-    f.size = { base_w + base_w * core.ease_ratio(ratio, .Cubic_Out), 0 }
+    f.size = { base_w + base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
 }
 
-anim_slot_leave_feedback :: proc (f: ^ui.Frame, ratio: f32) {
-    fmt.println(#procedure, f.name, ratio)
+anim_slot_leave_feedback :: proc (f: ^ui.Frame) {
+    fmt.println(#procedure, f.name, f.anim.ratio)
 
     base_w := f.parent.layout.size.x
-    f.size = { base_w*2 - base_w * core.ease_ratio(ratio, .Cubic_Out), 0 }
+    f.size = { base_w*2 - base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
 }

@@ -41,7 +41,7 @@ Frame :: struct {
     captured        : bool,
     selected        : bool,
 
-    animation       : Animation,
+    anim            : Animation,
     offset          : Vec2,
     opacity         : f32,
 }
@@ -130,11 +130,12 @@ Animation :: struct {
     tick    : Frame_Animation_Tick_Proc,
     start   : f32,
     end     : f32,
+    ratio   : f32,
 }
 
 Frame_Proc                  :: proc (f: ^Frame)
 Frame_Wheel_Proc            :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
-Frame_Animation_Tick_Proc   :: proc (f: ^Frame, ratio: f32)
+Frame_Animation_Tick_Proc   :: proc (f: ^Frame)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
@@ -200,15 +201,19 @@ animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
     assert(tick != nil)
     assert(dur > 0)
 
-    if f.animation.tick != nil do f.animation.tick(f, 1)
+    if f.anim.tick != nil {
+        f.anim.ratio = 1
+        f.anim.tick(f)
+    }
 
-    f.animation = {
+    f.anim = {
         tick    = tick,
         start   = f.ui.clock.time,
         end     = f.ui.clock.time + dur,
+        ratio   = 0,
     }
 
-    tick(f, 0)
+    tick(f)
 }
 
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
@@ -492,11 +497,10 @@ draw_frame_tree :: proc (f: ^Frame) {
 
 @private
 prepare_frame_tree :: proc (f: ^Frame) {
-    anim := &f.animation
-    if anim.tick != nil {
-        ratio := core.clamp_ratio(f.ui.clock.time, anim.start, anim.end)
-        anim.tick(f, ratio)
-        if ratio == 1 do anim^ = {}
+    if f.anim.tick != nil {
+        f.anim.ratio = core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)
+        f.anim.tick(f)
+        if f.anim.ratio == 1 do f.anim = {}
     }
 
     f.rect_dirty = true
