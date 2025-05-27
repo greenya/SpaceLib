@@ -9,10 +9,10 @@ import "../terse"
 UI :: struct {
     root                : ^Frame,
 
-    clock               : ^clock.Clock(f32),
     mouse               : Mouse_Input,
     prev_mouse          : Mouse_Input,
 
+    clock               : clock.Clock(f32),
     phase               : Processing_Phase,
     captured            : Captured_Info,
 
@@ -65,7 +65,6 @@ Scissor_Clear_Proc  :: proc ()
 Terse_Draw_Proc     :: proc (terse: ^terse.Terse)
 
 create_ui :: proc (
-    clock                   : ^clock.Clock(f32) = nil,
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
@@ -75,7 +74,6 @@ create_ui :: proc (
 ) -> ^UI {
     ui := new(UI)
     ui^ = {
-        clock                   = clock,
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
         terse_query_font_proc   = terse_query_font_proc,
@@ -84,6 +82,7 @@ create_ui :: proc (
         overdraw_proc           = overdraw_proc,
         root                    = add_frame(nil, { ui=ui, flags={.pass} }),
     }
+    clock.init(&ui.clock)
     return ui
 }
 
@@ -104,6 +103,8 @@ update_ui :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input
         ui.phase = .none
         ui.stats.updating_time = time.tick_since(phase_started)
     }
+
+    clock.tick(&ui.clock)
 
     ui.root.rect = root_rect
     ui.scissor_rect = root_rect

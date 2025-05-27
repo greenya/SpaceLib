@@ -1,7 +1,6 @@
 package demo7
 
 import "core:fmt"
-import "spacelib:clock"
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:raylib/res"
@@ -14,7 +13,6 @@ Rect :: core.Rect
 Color :: core.Color
 
 app: struct {
-    clock: clock.Clock(f32),
     res: ^res.Res,
     ui: ^ui.UI,
 }
@@ -31,9 +29,7 @@ main :: proc () {
     res.add_files(app.res, #load_directory("res/fonts"))
     res.load_fonts(app.res)
 
-    clock.init(&app.clock)
-
-    app.ui = ui.create_ui(&app.clock)
+    app.ui = ui.create_ui()
 
     time_scale_control := ui.add_frame(app.ui.root,
         { layout={ dir=.up_and_down, align=.end, size={120,40}, gap=10 } },
@@ -42,19 +38,19 @@ main :: proc () {
 
     ui.add_frame(time_scale_control, { text="Time Scale", draw=draw_label })
     ui.add_frame(time_scale_control, { text="x0.25", draw=draw_button,
-        click=proc (f: ^ui.Frame) { app.clock.time_scale=.25 },
+        click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=.25 },
     })
     ui.add_frame(time_scale_control, { text="x0.5", draw=draw_button,
-        click=proc (f: ^ui.Frame) { app.clock.time_scale=.5 },
+        click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=.5 },
     })
     ui.add_frame(time_scale_control, { text="x1", draw=draw_button,
-        click=proc (f: ^ui.Frame) { app.clock.time_scale=1 },
+        click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=1 },
     })
     ui.add_frame(time_scale_control, { text="x2", draw=draw_button,
-        click=proc (f: ^ui.Frame) { app.clock.time_scale=2 },
+        click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=2 },
     })
     ui.add_frame(time_scale_control, { text="x4", draw=draw_button,
-        click=proc (f: ^ui.Frame) { app.clock.time_scale=4 },
+        click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=4 },
     })
 
     ui.add_frame(app.ui.root,
@@ -96,8 +92,6 @@ main :: proc () {
     for !rl.WindowShouldClose() {
         free_all(context.temp_allocator)
 
-        clock.tick(&app.clock)
-
         ui.update_ui(app.ui,
             { 0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight()) },
             { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) },
@@ -110,7 +104,7 @@ main :: proc () {
         if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_frame_tree(app.ui.root)
 
         draw.text(
-            fmt.tprintf("clock: %#v", app.clock),
+            fmt.tprintf("clock: %#v", app.ui.clock),
             {10,30}, app.res.fonts["default"], Color {255,255,255,255},
         )
 

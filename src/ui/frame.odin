@@ -197,7 +197,6 @@ set_opacity :: proc (f: ^Frame, new_opacity: f32) {
 
 animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
     assert(f != nil)
-    assert(f.ui.clock != nil)
     assert(tick != nil)
     assert(dur > 0)
 
