@@ -12,6 +12,10 @@
 
 ## TODOs
 
+TODO: ui: add "wait=f32(0)" arg to ui.animate(),
+          add Frame.anim.state (enum: none, waiting, animating)
+          it should do: waiting (if wait>0) -> animating (for dur) -> ratio=0 -> ... ratio=1 -> none
+
 TODO: ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
 
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
