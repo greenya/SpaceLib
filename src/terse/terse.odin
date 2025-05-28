@@ -159,7 +159,7 @@ create :: proc (
                             fonts_stack[fonts_stack_idx] = font
                             line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
                         case "color":
-                            color = query_color(command_value)
+                            color = command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
                             colors_stack_idx += 1
                             ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow!")
                             colors_stack[colors_stack_idx] = color
