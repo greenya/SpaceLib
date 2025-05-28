@@ -22,7 +22,7 @@ main :: proc () {
     assets_load()
 
     // text ::
-    //     "<top,left>Hello, LEFT!\n"+
+    //     "<wrap,top,left>Hello, LEFT!\n"+
     //     "<right>Hello, RIGHT!\n"+
     //     "<center>Hello, CENTER!\n\n"+
     //     "<color=gold>This text is colored GOLD</color>\n"+
@@ -35,7 +35,7 @@ main :: proc () {
     //     "<color=green>\nSome green body text goes here, and here, and here, and here, and even more text goes here...</color> "+
     //     "And now this is default colored text. EOT."
 
-    text0 :: "<top,color=white,font=header><color=gold>1,234<icon=coins></color>\t<color=gray>56<icon=coins></color>\t<color=salmon>78<icon=coins></color></font>\n\n"
+    text0 :: "<wrap,top,color=white,font=header><color=gold>1,234<icon=coins></color>\t<color=gray>56<icon=coins></color>\t<color=salmon>78<icon=coins></color></font>\n\n"
     text1 :: "<left><group=group1>Lorem ipsum dolor</group>: <color=salmon><icon=fire>17 damage</color> consectetur adipiscing elit. Praesent vitae aliquam libero. Praesent malesuada nulla: <font=body_code,color=green>id<color=gold>=</color>ex<color=gold>+</color>sodales<font=body,/color> in auctor ex mattis. Praesent pretium iaculis bibendum."
     text2 :: "In <color=cyan>lacinia <font=body_bold>mauris sed<font=body> tempor </color>tempor. Mauris lacus sem, consequat ac orci vitae, aliquam dapibus nunc. Nulla tempor mi eu quam facilisis sollicitudin. <group=group2>Quisque ultrices laoreet finibus. Proin non ligula mauris. Mauris molestie pellentesque pellentesque.</group> Etiam volutpat vestibulum nisl."
     text3_s :: "<font=body_code>"

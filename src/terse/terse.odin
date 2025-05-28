@@ -12,6 +12,7 @@ import "../core"
 Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
+    wrap        : bool,
     valign      : Vertical_Alignment,
     words       : [dynamic] Word,
     lines       : [dynamic] Line,
@@ -100,8 +101,6 @@ create :: proc (
 
     group: ^Group
 
-    wrapping_allowed := rect.w > 0
-
     cursor: struct { type: enum { text, code }, start: int }
     code, word: string
     word_is_icon: bool
@@ -131,6 +130,7 @@ create :: proc (
                 case "left"     : line.align = .left
                 case "center"   : line.align = .center
                 case "right"    : line.align = .right
+                case "wrap"     : terse.wrap = true
                 case "top"      : terse.valign = .top
                 case "middle"   : terse.valign = .middle
                 case "bottom"   : terse.valign = .bottom
@@ -191,7 +191,7 @@ create :: proc (
                     ? Vec2 { font.height, font.height }\
                     : font->measure_text(word)
 
-                if wrapping_allowed && line.rect.w + size.x > rect.w && line.word_count > 0 {
+                if terse.wrap && line.rect.w + size.x > rect.w && line.word_count > 0 {
                     line = append_line(terse, font)
                 }
 
