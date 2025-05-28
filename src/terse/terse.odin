@@ -104,6 +104,7 @@ create :: proc (
     cursor: struct { type: enum { text, code }, start: int }
     code, word: string
     word_is_icon: bool
+    word_icon_scale: f32
 
     for para in strings.split(text, "\n", context.temp_allocator) {
         line := append_line(terse, font)
@@ -165,7 +166,7 @@ create :: proc (
                             colors_stack[colors_stack_idx] = color
                         case "icon":
                             assert(word == "")
-                            word = command_value
+                            word, word_icon_scale = parse_icon_args(command_value)
                             word_is_icon = true
                         case "group":
                             ensure(group == nil, "Groups cannot be nested!")
@@ -188,7 +189,7 @@ create :: proc (
 
             if word != "" {
                 size := word_is_icon\
-                    ? Vec2 { font.height, font.height }\
+                    ? word_icon_scale * Vec2 { font.height, font.height }\
                     : font->measure_text(word)
 
                 if terse.wrap && line.rect.w + size.x > rect.w && line.word_count > 0 {
@@ -199,6 +200,7 @@ create :: proc (
 
                 word = ""
                 word_is_icon = false
+                word_icon_scale = 0
             }
         }
     }
@@ -359,4 +361,39 @@ append_word :: proc (
         group.word_count += 1
         if group.word_count == 1 do group.word_start_idx = len(terse.words)-1 // word.idx
     }
+}
+
+@private
+parse_icon_args :: proc (text: string) -> (name: string, scale: f32) {
+    name = text
+    scale = 1
+
+    pair_sep_index := strings.index(text, ":")
+    if pair_sep_index >= 0 && pair_sep_index <= len(text)-2 {
+        name = text[0:pair_sep_index]
+        scale = parse_float_value(text[pair_sep_index+1:])
+    }
+
+    return
+}
+
+// this should be enough and quick, but maybe rework it so it would parse normally, e.g.
+// any floating point value; but check the performance, maybe general parsing is very slow (?)
+@private
+parse_float_value :: proc (text: string) -> f32 {
+    digit_before_dot, digit_after_dot: f32
+
+    if len(text) == 2 && text[0] == '.' {
+        // format: ".0", ".1" ... ".9"
+        digit_after_dot = f32(text[1]-'0')
+    } else if len(text) == 3 && text[1] == '.' {
+        // format: "0.0", "0.1", ... "9.9"
+        digit_before_dot = f32(text[0]-'0')
+        digit_after_dot = f32(text[2]-'0')
+    } else if len(text) == 1 {
+        // format: "0", "1", ... "9"
+        digit_before_dot = f32(text[0]-'0')
+    }
+
+    return digit_before_dot + digit_after_dot/10
 }
