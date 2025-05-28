@@ -104,7 +104,7 @@ create :: proc (
     cursor: struct { type: enum { text, code }, start: int }
     code, word: string
     word_is_icon: bool
-    word_icon_scale: f32
+    word_icon_scale: Vec2
 
     for para in strings.split(text, "\n", context.temp_allocator) {
         line := append_line(terse, font)
@@ -147,10 +147,10 @@ create :: proc (
                     ensure(group != nil, "No group to close!")
                     group = nil
                 case:
-                    pair_sep_index := strings.index(command, "=")
-                    if pair_sep_index >= 0 && pair_sep_index <= len(command)-2 {
-                        command_name := command[0:pair_sep_index]
-                        command_value := command[pair_sep_index+1:]
+                    pair_sep_idx := strings.index(command, "=")
+                    if pair_sep_idx >= 0 && pair_sep_idx <= len(command)-2 {
+                        command_name := command[0:pair_sep_idx]
+                        command_value := command[pair_sep_idx+1:]
                         switch command_name {
                         case "font":
                             font = query_font(command_value)
@@ -364,23 +364,33 @@ append_word :: proc (
 }
 
 @private
-parse_icon_args :: proc (text: string) -> (name: string, scale: f32) {
+parse_icon_args :: proc (text: string) -> (name: string, scale: Vec2) {
     name = text
-    scale = 1
+    scale = {1,1}
 
-    pair_sep_index := strings.index(text, ":")
-    if pair_sep_index >= 0 && pair_sep_index <= len(text)-2 {
-        name = text[0:pair_sep_index]
-        scale = parse_float_value(text[pair_sep_index+1:])
+    pair_sep_idx := strings.index(text, ":")
+    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
+        name = text[0:pair_sep_idx]
+        scale = parse_vec(text[pair_sep_idx+1:])
     }
 
     return
 }
 
-// this should be enough and quick, but maybe rework it so it would parse normally, e.g.
-// any floating point value; but check the performance, maybe general parsing is very slow (?)
 @private
-parse_float_value :: proc (text: string) -> f32 {
+parse_vec :: proc (text: string) -> Vec2 {
+    pair_sep_idx := strings.index(text, ":")
+    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
+        return { parse_f32(text[0:pair_sep_idx]), parse_f32(text[pair_sep_idx+1:]) }
+    } else {
+        return parse_f32(text)
+    }
+}
+
+// this should be enough and quick, but maybe rework it so it would parse normally, e.g.
+// any floating point value; but check the performance, maybe general parsing is slow (?)
+@private
+parse_f32 :: proc (text: string) -> f32 {
     digit_before_dot, digit_after_dot: f32
 
     if len(text) == 2 && text[0] == '.' {
@@ -393,6 +403,8 @@ parse_float_value :: proc (text: string) -> f32 {
     } else if len(text) == 1 {
         // format: "0", "1", ... "9"
         digit_before_dot = f32(text[0]-'0')
+    } else {
+        fmt.eprintfln("[!] Failed to parse f32 value in \"%v\"", text)
     }
 
     return digit_before_dot + digit_after_dot/10

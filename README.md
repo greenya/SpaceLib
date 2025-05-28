@@ -12,15 +12,16 @@
 
 ## TODOs
 
-TODO: [?] terse: add support for extra gap for a line, e.g. <gap=.8> should set gap for current line (0.8*font.height), default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0); maybe do not parse float, just have predefined set of values: .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0
+TODO: test if text measuring can be (and should be) improved by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
-TODO: [?] terse: maybe add support for optional icon size: <icon=title^1.75>, should use 1.75*font.height for icon size
+TODO: [?] terse: add support for extra gap for a line, e.g. <gap=.8> should set gap for current line (0.8*font.height), default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0); maybe do not parse float, just have predefined set of values: .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 
-TODO: terse: add support for "image" command <image=title[:left][:right]>, add proc for query image size by name (Query_Image_Proc). Image should support alignment: center (default), left, right:
+TODO: terse: add support for "image" command <image=name[:left][:right]>, add proc for query image size by name (Query_Image_Proc). Image should support alignment: center (default), left, right:
 - when "center", the image starts with new line, positioned at the center, text continues after image from next new line
 - when "left" or "right", image will stick to given size, text should flow on other size of the image, e.g. the image basically affects the following lines width, until image height end
+[MAYBE] do not add "query" proc, but have format like: <image=name:200x200[:left][:right]> width and height are required, if width=0, the width will be input rect.w, if height=0 -- input rect.h
 
 TODO: res: sprite: add support for animations (Sprite.info variant)
     would be nice to support animation names, so its possible to express something like:
