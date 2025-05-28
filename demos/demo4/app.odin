@@ -39,7 +39,7 @@ app_startup :: proc () {
     clock.init(&app.clock)
     app.camera = { zoom=1 }
 
-    app.ui = ui.create_ui(
+    app.ui = ui.create(
         scissor_set_proc = proc (r: Rect) {
             if app.debug_drawing do return
             rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
@@ -82,7 +82,7 @@ app_tick :: proc () {
     app.camera.offset = { app.screen_rect.w/2, app.screen_rect.h/2 }
 
     mouse_input := ui.Mouse_Input { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) }
-    mouse_input_consumed := ui.update_ui(app.ui, app.screen_rect, mouse_input)
+    mouse_input_consumed := ui.tick(app.ui, app.screen_rect, mouse_input)
     if !mouse_input_consumed {
         // fmt.printfln("[world] %v", mouse_input)
     }
@@ -97,7 +97,7 @@ app_draw :: proc () {
     // draw_world()
     rl.EndMode2D()
 
-    ui.draw_ui(app.ui)
+    ui.draw(app.ui)
 
     if app.debug_drawing {
         rect_w, rect_h :: 280, 220
@@ -117,7 +117,7 @@ app_shutdown :: proc () {
     fmt.println(#procedure)
 
     main_menu_destroy()
-    ui.destroy_ui(app.ui)
+    ui.destroy(app.ui)
 
     free(app)
     app = nil

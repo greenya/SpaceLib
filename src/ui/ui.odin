@@ -64,7 +64,7 @@ Scissor_Set_Proc    :: proc (r: Rect)
 Scissor_Clear_Proc  :: proc ()
 Terse_Draw_Proc     :: proc (terse: ^terse.Terse)
 
-create_ui :: proc (
+create :: proc (
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
@@ -86,7 +86,7 @@ create_ui :: proc (
     return ui
 }
 
-destroy_ui :: proc (ui: ^UI) {
+destroy :: proc (ui: ^UI) {
     destroy_frame_tree(ui.root)
     delete(ui.mouse_frames)
     delete(ui.entered_frames)
@@ -95,7 +95,7 @@ destroy_ui :: proc (ui: ^UI) {
     free(ui)
 }
 
-update_ui :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
+tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     ui.stats = {}
     phase_started := time.tick_now()
     ui.phase = .updating
@@ -178,7 +178,7 @@ update_ui :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input
     return
 }
 
-draw_ui :: proc (ui: ^UI) {
+draw :: proc (ui: ^UI) {
     phase_started := time.tick_now()
     ui.phase = .drawing
     defer {

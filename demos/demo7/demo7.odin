@@ -29,7 +29,7 @@ main :: proc () {
     res.add_files(app.res, #load_directory("res/fonts"))
     res.load_fonts(app.res)
 
-    app.ui = ui.create_ui()
+    app.ui = ui.create()
 
     time_scale_control := ui.add_frame(app.ui.root,
         { layout={ dir=.up_and_down, align=.end, size={120,40}, gap=10 } },
@@ -92,7 +92,7 @@ main :: proc () {
     for !rl.WindowShouldClose() {
         free_all(context.temp_allocator)
 
-        ui.update_ui(app.ui,
+        ui.tick(app.ui,
             { 0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight()) },
             { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) },
         )
@@ -100,7 +100,7 @@ main :: proc () {
         rl.BeginDrawing()
         rl.ClearBackground(rl.DARKBROWN)
 
-        ui.draw_ui(app.ui)
+        ui.draw(app.ui)
         if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_frame_tree(app.ui.root)
 
         draw.text(
@@ -112,7 +112,7 @@ main :: proc () {
         rl.EndDrawing()
     }
 
-    ui.destroy_ui(app.ui)
+    ui.destroy(app.ui)
     res.destroy(app.res)
 
     rl.CloseWindow()
