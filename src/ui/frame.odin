@@ -53,7 +53,7 @@ Flag :: enum {
     terse,
     terse_height,
     terse_width,
-    terse_rect,
+    terse_hit_rect,
 }
 
 Layout :: struct {
@@ -454,14 +454,14 @@ update_frame_tree :: proc (f: ^Frame) {
         if should_rebuild {
             terse.destroy(f.terse)
             f.terse = terse.create(f.text, f.rect, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
-            if .terse_height in f.flags do f.size.y = f.terse.rect.h
             if .terse_width in f.flags do f.size.x = f.terse.rect.w
+            if .terse_height in f.flags do f.size.y = f.terse.rect.h
         }
     }
 
     m_pos := f.ui.mouse.pos
     hit_rect := f.rect
-    if .terse_rect in f.flags && f.terse != nil do hit_rect = f.terse.rect
+    if .terse_hit_rect in f.flags && f.terse != nil do hit_rect = f.terse.rect
     if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) do append(&f.ui.mouse_frames, f)
 
     if .auto_hide in f.flags do append(&f.ui.auto_hide_frames, f)
