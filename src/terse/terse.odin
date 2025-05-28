@@ -1,10 +1,5 @@
 package spacelib_terse
 
-// TODO: add support for extra top gap for a line, e.g. {gap=0} should set gap for current line, default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0)
-// TODO: [?] maybe rework "icon" so its size is not Vec2 {font_height,font_height} but is returned by Query_Block_Proc (and rename "icon" to "block")
-// TODO: [?] maybe add support for optional icon size: {icon=title^1.75}, should use 1.75*font.height for icon size
-// TODO: [?] maybe add support for nested groups? need to see good reason with example first
-
 import "core:fmt"
 import "core:slice"
 import "core:strings"

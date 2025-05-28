@@ -1,10 +1,5 @@
 package spacelib_ui
 
-// TODO: add support for automatic child frames generation for each text_terse.groups item
-// - Frame.name should be group name
-// - updating terse should handle child frames (add/remove/update)
-// - the idea is to be able to have enter/leave/click for any group in terse
-
 import "core:slice"
 import "core:strings"
 import "../core"

@@ -1,15 +1,5 @@
 package spacelib_raylib_res
 
-// TODO: add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3
-// should be single sound "book_flip" with 3 variations; need thinking how to make it,
-// but the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random sound.
-// [?] Maybe we need "spacelib:raylib/audio" package to have "play_random(list: [] rl.Sound)"
-// ...maybe not // -- needs thinking
-
-// [?] Maybe just load "book_flip-1" as "book_flip", and extend Sound struct to have
-// "variations: [dynamic] rl.Sound"; keep "using sound_rl" so its possible to just
-// rl.PlaySound() the Sound value directly.
-
 import "core:strings"
 import rl "vendor:raylib"
 import "../../core"
