@@ -33,7 +33,7 @@ Frame :: struct {
     click           : Frame_Proc,
     wheel           : Frame_Wheel_Proc,
     hovered         : bool,
-    prev_hovered    : bool,
+    hovered_prev    : bool,
     captured        : bool,
     selected        : bool,
 
@@ -442,7 +442,7 @@ destroy_frame_tree :: proc (f: ^Frame) {
 
 @private
 update_frame_tree :: proc (f: ^Frame) {
-    f.prev_hovered = f.hovered
+    f.hovered_prev = f.hovered
     f.hovered = false
     f.captured = false
 

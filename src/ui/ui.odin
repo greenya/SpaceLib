@@ -10,7 +10,7 @@ UI :: struct {
     root                : ^Frame,
 
     mouse               : Mouse_Input,
-    prev_mouse          : Mouse_Input,
+    mouse_prev          : Mouse_Input,
 
     clock               : clock.Clock(f32),
     phase               : Processing_Phase,
@@ -110,8 +110,8 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     ui.scissor_rect = root_rect
 
     ui.mouse = mouse
-    lmb_pressed := !ui.prev_mouse.lmb_down && ui.mouse.lmb_down
-    lmb_released := ui.prev_mouse.lmb_down && !ui.mouse.lmb_down
+    lmb_pressed := !ui.mouse_prev.lmb_down && ui.mouse.lmb_down
+    lmb_released := ui.mouse_prev.lmb_down && !ui.mouse.lmb_down
 
     clear(&ui.mouse_frames)
     clear(&ui.auto_hide_frames)
@@ -127,7 +127,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             mouse_input_consumed = true
 
             f.hovered = true
-            if !f.prev_hovered {
+            if !f.hovered_prev {
                 append(&ui.entered_frames, f)
                 if f.enter != nil do f.enter(f)
             }
@@ -158,7 +158,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
     for i := len(ui.entered_frames) - 1; i >= 0; i -= 1 {
         f := ui.entered_frames[i]
-        if f.prev_hovered && !f.hovered {
+        if f.hovered_prev && !f.hovered {
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
         }
@@ -174,7 +174,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     if !mouse_input_consumed && lmb_pressed do ui.captured = { outside=true }
     if ui.captured.outside && lmb_released do ui.captured = {}
 
-    ui.prev_mouse = mouse
+    ui.mouse_prev = mouse
     return
 }
 
