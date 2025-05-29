@@ -415,6 +415,13 @@ parse_vec :: proc (text: string) -> Vec2 {
 parse_f32 :: proc (text: string) -> f32 {
     digit_before_dot, digit_after_dot: f32
 
+    text := text
+    sign := f32(1)
+    if text[0] == '-' {
+        sign = -1
+        text = text[1:]
+    }
+
     if len(text) == 2 && text[0] == '.' {
         // format: ".0", ".1" ... ".9"
         digit_after_dot = f32(text[1]-'0')
@@ -429,5 +436,5 @@ parse_f32 :: proc (text: string) -> f32 {
         fmt.eprintfln("[!] Failed to parse f32 value in \"%v\"", text)
     }
 
-    return digit_before_dot + digit_after_dot/10
+    return sign * (digit_before_dot + digit_after_dot/10)
 }

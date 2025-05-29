@@ -53,11 +53,11 @@ Captured_Info :: struct {
 }
 
 Stats :: struct {
-    updating_time   : time.Duration,
-    drawing_time    : time.Duration,
-    frames_total    : int,
-    frames_drawn    : int,
-    scissors_set    : int,
+    tick_time   : time.Duration,
+    draw_time   : time.Duration,
+    frames_total: int,
+    frames_drawn: int,
+    scissors_set: int,
 }
 
 Scissor_Set_Proc    :: proc (r: Rect)
@@ -101,7 +101,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     ui.phase = .updating
     defer {
         ui.phase = .none
-        ui.stats.updating_time = time.tick_since(phase_started)
+        ui.stats.tick_time = time.tick_since(phase_started)
     }
 
     clock.tick(&ui.clock)
@@ -183,7 +183,7 @@ draw :: proc (ui: ^UI) {
     ui.phase = .drawing
     defer {
         ui.phase = .none
-        ui.stats.drawing_time = time.tick_since(phase_started)
+        ui.stats.draw_time = time.tick_since(phase_started)
     }
 
     assert(len(ui.scissor_rects) == 0)
