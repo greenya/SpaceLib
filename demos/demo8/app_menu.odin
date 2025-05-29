@@ -49,7 +49,7 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     )
 
     ui.add_frame(root,
-        { name="scrap_count", text="<right,font=text_24,color=bw_95>4,076  <icon=cubes:1.3>", flags={.terse,.terse_width,.terse_height} },
+        { name="scrap_count", text_format="<right,font=text_24,color=bw_95>%v  <icon=cubes:1.3>", text="4,076", flags={.terse,.terse_width,.terse_height} },
         { point=.right, offset={-64,0} },
     )
 
@@ -108,7 +108,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     for i in 0..<5 {
         ui.add_frame(ring,
             { name="slot_gear", text="cracked-helm", size=80, draw=draw_slot_box },
-            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 -1.2 -.2*f32(i)) },
+            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 -1.175 -.2*f32(i)) },
         )
     }
 
@@ -132,7 +132,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     for i in 0..<5 {
         ui.add_frame(ring,
             { name="slot_acc", text="skull-ring", size=80, draw=draw_slot_box },
-            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 +1.2 +.2*f32(i)) },
+            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 +1.175 +.2*f32(i)) },
         )
     }
 
@@ -155,14 +155,16 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
         { point=.left, offset={-180,0} },
     )
 
-    stats_basic := ui.add_frame(stats_column, { name="stats_basic", text="<right,font=text_20,color=bw_95>"+\
-        "POWER LEVEL\n\n\n\n"+\
-        "HEALTH\n<font=text_40,color=bw_da>134.5</font,/color>\n"+\
-        "STAMINA\n<font=text_40,color=bw_da>112</font,/color>\n"+\
-        "ARMOR\n<font=text_40,color=bw_da>109.9</font,/color>\n"+\
-        "WEIGHT\n<font=text_40,color=weight_green>47.5</font,/color>",
+    stats_basic := ui.add_frame(stats_column, { name="stats_basic", text_format="<right,font=text_20,color=bw_95>"+
+        "POWER LEVEL\n"+
+        "<gap=2.5>HEALTH\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
+        "STAMINA\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
+        "ARMOR\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
+        "WEIGHT\n<gap=-.2,font=text_40,color=%v>%v</font,/color>",
         flags={.terse,.terse_height},
     })
+
+    ui.set_text(stats_basic, 134.5, 112, 109.9, "weight_med", 47.5)
 
     stats_power_level := ui.add_frame(stats_basic,
         { name="stats_power_level", text="<color=bw_40,icon=ink-swirl:3.3>", flags={.terse,.terse_width,.terse_height} },
@@ -170,23 +172,54 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     )
 
     ui.add_frame(stats_power_level,
-        { name="number", text="<font=text_32_sparse,color=bw_da>15", flags={.terse,.terse_height} },
+        { name="number", text_format="<font=text_32,color=bw_da>%v", text="15", flags={.terse,.terse_height} },
         { point=.center },
     )
 
-    stats_res := ui.add_frame(stats_basic, { name="stats_res", text="<left,font=text_32_sparse,color=bw_da>"+\
-        "<color=res_bleed><icon=drop></color> 6\n"+\
-        "<color=res_fire><icon=candlebright></color> 3\n"+\
-        "<color=res_lightning><icon=power-lightning></color> 1\n"+\
-        "<color=res_poison><icon=crossed-bones></color> 14\n"+\
-        "<color=res_blight><icon=harry-potter-skull></color> 6",
-        flags={.terse,.terse_width,.terse_height},
+    stats_res := ui.add_frame(stats_basic, { name="stats_res", text_format="<left,font=text_32,color=bw_da>"+
+        "<gap=.4,color=res_bleed><icon=drop></color> %v\n"+
+        "<gap=.4,color=res_fire><icon=candlebright></color> %v\n"+
+        "<gap=.4,color=res_lightning><icon=power-lightning></color> %v\n"+
+        "<gap=.4,color=res_poison><icon=crossed-bones></color> %v\n"+
+        "<gap=.4,color=res_blight><icon=harry-potter-skull></color> %v",
+        flags={.terse,.terse_height},
     },
-        { point=.bottom_left, rel_point=.bottom_right, offset={24,-6} },
+        { point=.bottom_left, rel_point=.bottom_right, offset={24,-8} },
     )
+
+    ui.set_text(stats_res, 6, 3, 1, 14, 6)
 
     ui.add_frame(stats_res,
         { size={2,80}, text="bw_1a", draw=draw_color_rect },
         { point=.center, rel_point=.left, offset={-stats_res.anchors[0].offset.x/2,0} },
+    )
+
+    // side traits column
+
+    gap :: "<gap=.3>"
+    pin :: "<icon=round-star>"
+    alt_b :: "<color=res_fire>"
+    alt_e :: "</color>"
+
+    ui.add_frame(ring, { name="traits_columns", text="<left,font=text_20,color=bw_95>"+
+        gap + "Longshot\n"+
+        alt_b+pin+pin+pin+pin+pin+pin+pin+pin+pin+pin+alt_e+"\n"+
+        gap + "Potency\n"+
+        alt_b+pin+pin+pin+pin+pin+pin+pin+pin+pin+alt_e+"\n"+
+        gap + "Vigor\n"+
+        alt_b+pin+alt_e+pin+pin+pin+pin+pin+pin+pin+pin+pin+"\n"+
+        gap + "Expertise\n"+
+        alt_b+pin+pin+alt_e+pin+pin+pin+pin+pin+pin+pin+pin+"\n"+
+        gap + "Amplitude\n"+
+        pin+pin+pin+pin+pin+pin+pin+pin+pin+pin+"\n"+
+        gap + "Siphoner\n"+
+        pin+pin+pin+pin+pin+"\n"+
+        gap + "Endurance\n"+
+        alt_b+pin+pin+alt_e+pin+pin+"\n"+
+        gap + "Spirit\n"+
+        pin+pin+pin+pin,
+        flags={.terse,.terse_height},
+    },
+        { point=.right, offset={100,0} },
     )
 }

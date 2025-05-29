@@ -78,6 +78,10 @@ app_running :: proc () -> bool {
 app_tick :: proc () {
     free_all(context.temp_allocator)
 
+    // ui.set_text(ui.get(app.ui.root, "scrap_count"), app.ui.clock.tick)
+
+    // ui.set_text(ui.get(app.ui.root, "stats_res"), 6, 3, 1, 14, 6)
+
     ui.tick(app.ui,
         { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
         { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) },
@@ -93,7 +97,18 @@ app_draw :: proc () {
     // drawing world goes here
 
     ui.draw(app.ui)
-    if app.debug_drawing do draw.debug_frame_tree(app.ui.root)
+
+    if app.debug_drawing {
+        draw.debug_frame_tree(app.ui.root)
+
+        rect_w, rect_h :: 240, 200
+        rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
+        rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
+        rl.DrawRectangleLinesEx(rect, 2, rl.RED)
+        rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
+        cstr := fmt.ctprintf("%#v", app.ui.stats)
+        rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
+    }
 
     // rl.DrawFPS(10, 10)
     rl.EndDrawing()

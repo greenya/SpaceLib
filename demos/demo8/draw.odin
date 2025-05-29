@@ -45,7 +45,7 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
             } else {
                 draw_sprite(word.text, rect, tint)
             }
-        } else {
+        } else if word.text != " " {
             pos := Vec2 { rect.x, rect.y }
             font := word.font
             font_rl := (cast (^rl.Font) font.font_ptr)^
