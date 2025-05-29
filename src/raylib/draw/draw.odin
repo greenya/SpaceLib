@@ -28,7 +28,7 @@ circle :: #force_inline proc (center: Vec2, radius: f32, color: Color) {
 
 ring :: #force_inline proc (center: Vec2, inner_radius, outer_radius, start_angle, end_angle: f32, segments: int, color: Color) {
     color_rl := rl.Color(color)
-    rl.DrawRing(center, inner_radius, outer_radius, start_angle-90, end_angle-90, i32(segments), color_rl)
+    rl.DrawRing(center, inner_radius, outer_radius, start_angle, end_angle, i32(segments), color_rl)
 }
 
 text_by_rl_font :: proc (str: string, pos: Vec2, font: rl.Font, font_size, font_spacing: f32, tint: Color) {

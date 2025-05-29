@@ -124,7 +124,7 @@ debug_frame_anchors :: proc (f: ^ui.Frame) {
 }
 
 debug_terse :: proc (t: ^terse.Terse) {
-    rect_lines(t.rect_input, 6, {255,128,64,40})
+    rect_lines(t.rect_input, 4, {255,128,64,80})
     rect_lines(t.rect, 1, {255,0,0,160})
     rect(t.rect, {255,0,0,20})
 

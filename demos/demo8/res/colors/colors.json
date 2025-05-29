@@ -1,0 +1,12 @@
+[
+    { "name": "bw_00", "hex": "#000000" },
+    { "name": "bw_11", "hex": "#111111" },
+    { "name": "bw_1a", "hex": "#1a1a1a" },
+    { "name": "bw_40", "hex": "#404040" },
+    { "name": "bw_59", "hex": "#595959" },
+    { "name": "bw_6c", "hex": "#6c6c6c" },
+    { "name": "bw_95", "hex": "#959595" },
+    { "name": "bw_bc", "hex": "#bcbcbc" },
+    { "name": "bw_da", "hex": "#dadada" },
+    { "name": "bw_ff", "hex": "#ffffff" }
+]
