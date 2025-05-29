@@ -8,5 +8,11 @@
     { "name": "bw_95", "hex": "#959595" },
     { "name": "bw_bc", "hex": "#bcbcbc" },
     { "name": "bw_da", "hex": "#dadada" },
-    { "name": "bw_ff", "hex": "#ffffff" }
+    { "name": "bw_ff", "hex": "#ffffff" },
+    { "name": "weight_green", "hex": "#71b465" },
+    { "name": "res_bleed", "hex": "#923e3e" },
+    { "name": "res_fire", "hex": "#9e593d" },
+    { "name": "res_lightning", "hex": "#6e6ea4" },
+    { "name": "res_poison", "hex": "#6baa5f" },
+    { "name": "res_blight", "hex": "#a5a5a5" }
 ]

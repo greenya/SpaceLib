@@ -56,8 +56,8 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
     if app.debug_drawing do draw.debug_terse(t)
 }
 
-draw_black_rect :: proc (f: ^ui.Frame) {
-    draw.rect(f.rect, app.res.colors["bw_00"])
+draw_color_rect :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, app.res.colors[f.text])
 }
 
 draw_menu_item :: proc (f: ^ui.Frame) {

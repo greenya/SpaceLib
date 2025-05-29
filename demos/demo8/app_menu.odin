@@ -23,7 +23,7 @@ app_menu_destroy :: proc () {
 
 app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
-        { name="bar_top", size={0,64}, order=1, draw=draw_black_rect },
+        { name="bar_top", text="bw_00", size={0,64}, order=1, draw=draw_color_rect },
         { point=.top_left },
         { point=.top_right },
     )
@@ -58,7 +58,7 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
 
 app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
-        { name="bar_bottom", size={0,64}, order=1, draw=draw_black_rect },
+        { name="bar_bottom", text="bw_00", size={0,64}, order=1, draw=draw_color_rect },
         { point=.bottom_left },
         { point=.bottom_right },
     )
@@ -147,4 +147,46 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     for _ in 0..<3 {
         ui.add_frame(weapon_bar, { name="slot_weapon", text="wood-axe", draw=draw_slot_box_wide })
     }
+
+    // side stats column
+
+    stats_column := ui.add_frame(ring,
+        { layout={ dir=.up_and_down } },
+        { point=.left, offset={-180,0} },
+    )
+
+    stats_basic := ui.add_frame(stats_column, { name="stats_basic", text="<right,font=text_20,color=bw_95>"+\
+        "POWER LEVEL\n\n\n\n"+\
+        "HEALTH\n<font=text_40,color=bw_da>134.5</font,/color>\n"+\
+        "STAMINA\n<font=text_40,color=bw_da>112</font,/color>\n"+\
+        "ARMOR\n<font=text_40,color=bw_da>109.9</font,/color>\n"+\
+        "WEIGHT\n<font=text_40,color=weight_green>47.5</font,/color>",
+        flags={.terse,.terse_height},
+    })
+
+    stats_power_level := ui.add_frame(stats_basic,
+        { name="stats_power_level", text="<color=bw_40,icon=ink-swirl:3.3>", flags={.terse,.terse_width,.terse_height} },
+        { point=.left, rel_point=.top_right, offset={24,8} },
+    )
+
+    ui.add_frame(stats_power_level,
+        { name="number", text="<font=text_32_sparse,color=bw_da>15", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+
+    stats_res := ui.add_frame(stats_basic, { name="stats_res", text="<left,font=text_32_sparse,color=bw_da>"+\
+        "<color=res_bleed><icon=drop></color> 6\n"+\
+        "<color=res_fire><icon=candlebright></color> 3\n"+\
+        "<color=res_lightning><icon=power-lightning></color> 1\n"+\
+        "<color=res_poison><icon=crossed-bones></color> 14\n"+\
+        "<color=res_blight><icon=harry-potter-skull></color> 6",
+        flags={.terse,.terse_width,.terse_height},
+    },
+        { point=.bottom_left, rel_point=.bottom_right, offset={24,-6} },
+    )
+
+    ui.add_frame(stats_res,
+        { size={2,80}, text="bw_1a", draw=draw_color_rect },
+        { point=.center, rel_point=.left, offset={-stats_res.anchors[0].offset.x/2,0} },
+    )
 }

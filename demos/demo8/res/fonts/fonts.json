@@ -14,5 +14,21 @@
         "rune_spacing_ratio": 0.02,
         "line_spacing_ratio": -0.25,
         "texture_filter": "BILINEAR"
+    },
+    {
+        "name": "text_32_sparse",
+        "file": "Sansation-Bold.ttf",
+        "height": 32,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": 0.3,
+        "texture_filter": "BILINEAR"
+    },
+    {
+        "name": "text_40",
+        "file": "Sansation-Bold.ttf",
+        "height": 40,
+        "rune_spacing_ratio": 0.02,
+        "line_spacing_ratio": -0.25,
+        "texture_filter": "BILINEAR"
     }
 ]
