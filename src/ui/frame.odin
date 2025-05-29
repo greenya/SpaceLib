@@ -1,5 +1,6 @@
 package spacelib_ui
 
+import "core:fmt"
 import "core:slice"
 import "core:strings"
 import "../core"
@@ -43,13 +44,13 @@ Frame :: struct {
 
 Flag :: enum {
     hidden,
+    disabled,
     pass,
     solid,
     scissor,
     check,
     radio,
     auto_hide,
-    disabled,
     terse,
     terse_height,
     terse_width,
@@ -331,7 +332,7 @@ find :: proc (parent: ^Frame, path: string) -> ^Frame {
 
 get :: proc (parent: ^Frame, path: string) -> ^Frame {
     target := find(parent, path)
-    ensure(target != nil, "Path not found, use find() in case its expected")
+    fmt.ensuref(target != nil, "Path \"%s\" not found, use find() in case its expected", path)
     return target
 }
 

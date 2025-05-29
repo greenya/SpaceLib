@@ -40,10 +40,7 @@ debug_frame :: proc (f: ^ui.Frame) {
         }
     }
 
-    if f.text != "" {
-        pos := Vec2 { f.rect.x+4, f.rect.y+2 }
-        _debug_text(f.text, pos, color)
-    }
+    _debug_text(f.name != "" ? f.name : f.text, { f.rect.x+4, f.rect.y+2 }, color)
 
     if f.order != 0 {
         text := fmt.tprintf("[order:%v]", f.order)
