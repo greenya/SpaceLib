@@ -89,33 +89,35 @@ clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intri
     return clamp((value - minimum) / (maximum - minimum), 0.0, 1.0)
 }
 
-random_vec_in_rect :: proc (rect: Rect) -> Vec2 {
+random_vec_in_rect :: #force_inline proc (rect: Rect) -> Vec2 {
     return { rect.x + rect.w*rand.float32(), rect.y + rect.h*rand.float32() }
 }
 
-random_vec_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
+random_vec_in_ring :: #force_inline proc (inner_radius, outer_radius: f32) -> Vec2 {
     dir := linalg.normalize0(Vec2 { rand.float32()*2 - 1, rand.float32()*2 - 1 })
     return dir * rand.float32_range(inner_radius, outer_radius)
 }
 
-vec_moved_towards_vec :: proc (current_vec, target_vec: Vec2, speed, dt: f32) -> (new_vec: Vec2) {
+vec_on_circle :: #force_inline proc (radius, angle_rad: f32) -> Vec2 {
+    return { radius * math.cos(angle_rad), radius * math.sin(angle_rad) }
+}
+
+vec_moved_towards_vec :: #force_inline proc (current_vec, target_vec: Vec2, speed, dt: f32) -> (new_vec: Vec2) {
     dir := linalg.normalize0(target_vec - current_vec)
     return current_vec + dir * speed * dt
 }
 
-vec_orbited_around_vec :: proc (vec, center_vec: Vec2, speed, dt: f32, is_clockwise := true) -> (new_vec: Vec2) {
+vec_orbited_around_vec :: #force_inline proc (vec, center_vec: Vec2, speed, dt: f32, is_clockwise := true) -> (new_vec: Vec2) {
     radius := linalg.distance(center_vec, vec)
     angle := linalg.atan2(vec.y-center_vec.y, vec.x-center_vec.x)
     angular_vel := speed / radius
     new_angle := is_clockwise\
         ?  angle + angular_vel * dt\
         : -angle + angular_vel * dt
-    new_x := center_vec.x + radius * math.cos(new_angle)
-    new_y := center_vec.y + radius * math.sin(new_angle)
-    return { new_x, new_y }
+    return center_vec + vec_on_circle(radius, new_angle)
 }
 
-fit_target_size :: proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
+fit_target_size :: #force_inline proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
     scale = min(screen.x/target.x, screen.y/target.y)
     render_w, render_h := target.x*scale, target.y*scale
     render = {
