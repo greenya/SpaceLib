@@ -22,6 +22,7 @@ Terse :: struct {
 Line :: struct {
     rect            : Rect,
     align           : Horizontal_Alignment,
+    gap             : f32,
     word_start_idx  : int,
     word_count      : int,
 }
@@ -171,6 +172,9 @@ create :: proc (
                         case "group":
                             ensure(group == nil, "Groups cannot be nested!")
                             group = append_group(terse, command_value)
+                        case "gap":
+                            gap_ratio := parse_f32(command_value)
+                            line.gap = gap_ratio * font.height
                         case:
                             fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
                         }
@@ -204,6 +208,8 @@ create :: proc (
             }
         }
     }
+
+    apply_last_line_gap(terse)
 
     last_line := slice.last_ptr(terse.lines[:])
     assert(last_line != nil)
@@ -296,6 +302,8 @@ append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
 
     prev_line := slice.last_ptr(terse.lines[:])
     if prev_line != nil {
+        apply_last_line_gap(terse)
+
         line_rect_y = prev_line.rect.y + prev_line.rect.h + font.line_spacing
         line_align = prev_line.align
 
@@ -316,6 +324,20 @@ append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
 
     append(&terse.lines, line)
     return slice.last_ptr(terse.lines[:])
+}
+
+@private
+apply_last_line_gap :: proc (terse: ^Terse) {
+    if len(terse.lines) < 2 do return // do not apply gap if no lines OR there is only one line
+
+    line := slice.last_ptr(terse.lines[:])
+    if line.gap == 0 do return
+
+    line.rect.y += line.gap
+    for i in 0..<line.word_count {
+        word := &terse.words[line.word_start_idx + i]
+        word.rect.y += line.gap
+    }
 }
 
 @private

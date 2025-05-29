@@ -14,8 +14,6 @@
 
 TODO: test if text measuring can be (and should be) improved by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
-TODO: [?] terse: add support for extra gap for a line, e.g. <gap=.8> should set gap for current line (0.8*font.height), default value is 0, the value is not transferred to next line (e.g. new line starts with gap=0); maybe do not parse float, just have predefined set of values: .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 4.0
-
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 
 TODO: terse: add support for "image" command <image=name[:left][:right]>, add proc for query image size by name (Query_Image_Proc). Image should support alignment: center (default), left, right:
