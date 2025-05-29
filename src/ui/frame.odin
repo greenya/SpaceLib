@@ -23,6 +23,7 @@ Frame :: struct {
     flags           : bit_set [Flag],
     name            : string,
     text            : string,
+    text_format     : string,
     terse           : ^terse.Terse,
     actor           : Actor,
 
@@ -141,6 +142,12 @@ add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Fram
     assert(f.parent == nil)
     set_parent(f, parent)
 
+    if f.text != "" {
+        text := f.text
+        f.text = ""
+        set_text(f, text)
+    }
+
     for a in anchors do add_anchor(f, a)
 
     return f
@@ -181,10 +188,13 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 }
 
-set_text :: proc (f: ^Frame, new_text: string) {
-    f.text = new_text
+set_text :: proc (f: ^Frame, values: ..any) {
+    delete(f.text)
     terse.destroy(f.terse)
     f.terse = nil
+
+    format := f.text_format != "" ? f.text_format : "%v"
+    f.text = fmt.aprintf(format, ..values)
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
@@ -435,6 +445,7 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
     terse.destroy(f.terse)
+    delete(f.text)
     delete(f.children)
     delete(f.anchors)
     free(f)
