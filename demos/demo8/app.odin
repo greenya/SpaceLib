@@ -51,6 +51,12 @@ app_startup :: proc () {
         terse_draw_proc = proc (terse: ^terse.Terse) {
             draw_terse(terse)
         },
+        overdraw_proc = proc (f: ^ui.Frame) {
+            if !app.debug_drawing do return
+            draw.debug_frame(f)
+            draw.debug_frame_layout(f)
+            draw.debug_frame_anchors(f)
+        },
     )
 
     app_menu_create()
@@ -78,9 +84,26 @@ app_running :: proc () -> bool {
 app_tick :: proc () {
     free_all(context.temp_allocator)
 
-    // ui.set_text(ui.get(app.ui.root, "scrap_count"), app.ui.clock.tick)
+    // set some values (every frame) {{{
 
-    // ui.set_text(ui.get(app.ui.root, "stats_res"), 6, 3, 1, 14, 6)
+    t := app.ui.clock.tick
+    w := f32(t%1000)/10
+    wc := w < 20\
+        ? "weight_ar"\
+        : w < 50\
+            ? "weight_lt"\
+            : w < 80\
+                ? "weight_md"\
+                : "weight_hv"
+
+    app.ui->set_text("scrap_count", t)
+    app.ui->set_text("primary/level", 10+t%20)
+    app.ui->set_text("secondary/level", 10+t%20)
+    app.ui->set_text("power/level", 10+t%20)
+    app.ui->set_text("stats_basic", t%400+100, (t/5)%100+50, f32(t%1500)/20, wc, w)
+    app.ui->set_text("stats_res", 100-t%100, 110-t%100, 120-t%100, t%100, 150-t%100)
+
+    // }}}
 
     ui.tick(app.ui,
         { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
@@ -94,22 +117,22 @@ app_draw :: proc () {
     rl.BeginDrawing()
     rl.ClearBackground(app.res.colors["bw_11"].value.rgba)
 
-    // drawing world goes here
-
     ui.draw(app.ui)
 
-    if app.debug_drawing {
-        draw.debug_frame_tree(app.ui.root)
-
-        rect_w, rect_h :: 240, 200
-        rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
-        rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
-        rl.DrawRectangleLinesEx(rect, 2, rl.RED)
-        rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-        cstr := fmt.ctprintf("%#v", app.ui.stats)
-        rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
-    }
-
-    // rl.DrawFPS(10, 10)
+    app_draw_stats()
     rl.EndDrawing()
+}
+
+app_draw_stats :: proc () {
+    @static stats: ui.Stats
+    // if app.ui.clock.tick%8==0 do stats = app.ui.stats
+    stats = app.ui.stats
+
+    rect_w, rect_h :: 240, 200
+    rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
+    rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
+    rl.DrawRectangleLinesEx(rect, 2, rl.RED)
+    rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
+    cstr := fmt.ctprintf("%#v", stats)
+    rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
 }

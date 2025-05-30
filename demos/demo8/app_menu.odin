@@ -11,9 +11,30 @@ App_Menu :: struct {
 app_menu_create :: proc () {
     app.menu = new(App_Menu)
 
-    app_menu_add_bar_top(app.ui.root)
-    app_menu_add_bar_bottom(app.ui.root)
-    app_menu_add_page_character(app.ui.root)
+    root := ui.add_frame(app.ui.root,
+        { name="menu" },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    app_menu_add_bar_top(root)
+    app_menu_add_bar_bottom(root)
+
+    pages := ui.add_frame(root,
+        { name="pages" },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+    )
+
+    app_menu_add_page_fragments(pages)
+    app_menu_add_page_archetype(pages)
+    app_menu_add_page_character(pages)
+    app_menu_add_page_traits(pages)
+    app_menu_add_page_inventory(pages)
+
+    for child in pages.children do ui.hide(child)
+
+    app.ui->click("menu/bar_top/tab_character") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -34,8 +55,28 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { point=.bottom_right },
     )
 
-    for text in ([] string { "FRAGMENTS", "ARCHETYPE", "CHARACTER", "TRAITS", "INVENTORY" }) {
-        ui.add_frame(tabs, { text=text, flags={.radio}, draw=draw_menu_item })
+    for tab in ([][] string {
+        { "tab_fragments", "FRAGMENTS" },
+        { "tab_archetype", "ARCHETYPE" },
+        { "tab_character", "CHARACTER" },
+        { "tab_traits", "TRAITS" },
+        { "tab_inventory", "INVENTORY" },
+    }) {
+        ui.add_frame(tabs, {
+            name    = tab[0],
+            text    = tab[1],
+            flags   = {.radio},
+            draw    = draw_menu_item,
+            click   = proc (f: ^ui.Frame) {
+                switch f.name {
+                case "tab_fragments": app_menu_switch_page("page_fragments")
+                case "tab_archetype": app_menu_switch_page("page_archetype")
+                case "tab_character": app_menu_switch_page("page_character")
+                case "tab_traits"   : app_menu_switch_page("page_traits")
+                case "tab_inventory": app_menu_switch_page("page_inventory")
+                }
+            },
+        })
     }
 
     ui.add_frame(root,
@@ -52,8 +93,6 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { name="scrap_count", text_format="<right,font=text_24,color=bw_95>%v  <icon=cubes:1.3>", text="4,076", flags={.terse,.terse_width,.terse_height} },
         { point=.right, offset={-64,0} },
     )
-
-    ui.click(tabs.children[2]) // preselect default tab (ugly way)
 }
 
 app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
@@ -77,8 +116,8 @@ app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
 app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
         { name="page_character" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=ui.get(parent, "bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=ui.get(parent, "bar_bottom") },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
     )
 
     radius :: 460
@@ -152,27 +191,27 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
 
     stats_column := ui.add_frame(ring,
         { layout={ dir=.up_and_down } },
-        { point=.left, offset={-180,0} },
+        { point=.left, offset={-188,0} },
     )
 
     stats_basic := ui.add_frame(stats_column, { name="stats_basic", text_format="<right,font=text_20,color=bw_95>"+
         "POWER LEVEL\n"+
         "<gap=2.5>HEALTH\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
         "STAMINA\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
-        "ARMOR\n<gap=-.2,font=text_40,color=bw_da>%v</font,/color>\n"+
-        "WEIGHT\n<gap=-.2,font=text_40,color=%v>%v</font,/color>",
+        "ARMOR\n<gap=-.2,font=text_40,color=bw_da>%.1f</font,/color>\n"+
+        "WEIGHT\n<gap=-.2,font=text_40,color=%v>%.1f</font,/color>",
         flags={.terse,.terse_height},
     })
 
-    ui.set_text(stats_basic, 134.5, 112, 109.9, "weight_med", 47.5)
+    ui.set_text(stats_basic, 134.5, 112, 109.9, "weight_lt", 47.5)
 
-    stats_power_level := ui.add_frame(stats_basic,
-        { name="stats_power_level", text="<color=bw_40,icon=ink-swirl:3.3>", flags={.terse,.terse_width,.terse_height} },
+    power := ui.add_frame(stats_basic,
+        { name="power", text="<color=bw_40,icon=ink-swirl:3.3>", flags={.terse,.terse_width,.terse_height} },
         { point=.left, rel_point=.top_right, offset={24,8} },
     )
 
-    ui.add_frame(stats_power_level,
-        { name="number", text_format="<font=text_32,color=bw_da>%v", text="15", flags={.terse,.terse_height} },
+    ui.add_frame(power,
+        { name="level", text_format="<font=text_32,color=bw_da>%v", text="15", flags={.terse,.terse_height} },
         { point=.center },
     )
 
@@ -222,4 +261,88 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     },
         { point=.right, offset={100,0} },
     )
+}
+
+app_menu_add_page_archetype :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_archetype" },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+    )
+
+    ui.add_frame(root,
+        { name="msg", text="<font=text_40,color=bw_6c>ARCHETYPE PAGE GOES HERE...", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+}
+
+app_menu_add_page_fragments :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_fragments" },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+    )
+
+    ui.add_frame(root,
+        { name="msg", text="<font=text_40,color=bw_6c>FRAGMENTS PAGE GOES HERE...", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+}
+
+app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_traits" },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+    )
+
+    ui.add_frame(root,
+        { name="msg", text="<font=text_40,color=bw_6c>TRAITS PAGE GOES HERE...", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+}
+
+app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_inventory" },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+    )
+
+    ui.add_frame(root,
+        { name="msg", text="<font=text_40,color=bw_6c>INVENTORY PAGE GOES HERE...", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+}
+
+app_menu_switch_page :: proc (page_name: string) {
+    f := app.ui->get(page_name)
+
+    for child in f.parent.children {
+        ui.end_animation(child)
+    }
+
+    if .hidden in f.flags {
+        ui.animate(f, app_menu_anim_switch_page, .4)
+    }
+}
+
+app_menu_anim_switch_page :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, f.anim.ratio)
+    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+
+    if f.anim.ratio == 0 {
+        s := ui.first_visible_sibling(f)
+        if s != nil do ui.animate(s, app_menu_anim_slide_down_disappear, .3)
+        ui.show(f)
+    }
+
+    if f.anim.ratio == 1 {
+        ui.show(f, hide_siblings=true)
+    }
+}
+
+app_menu_anim_slide_down_disappear :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, 1-f.anim.ratio)
+    f.offset = { 0, 80 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
 }
