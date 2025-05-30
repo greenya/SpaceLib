@@ -32,6 +32,14 @@ UI :: struct {
     overdraw_proc       : Frame_Proc,
 
     stats               : Stats,
+
+    get                 : proc (ui: ^UI, path: string) -> ^Frame,
+    find                : proc (ui: ^UI, path: string) -> ^Frame,
+    show                : proc (ui: ^UI, path: string, hide_siblings := false),
+    hide                : proc (ui: ^UI, path: string),
+    click               : proc (ui: ^UI, path: string),
+    wheel               : proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
+    set_text            : proc (ui: ^UI, path: string, values: ..any),
 }
 
 Mouse_Input :: struct {
@@ -73,16 +81,28 @@ create :: proc (
     overdraw_proc           : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)
+
     ui^ = {
+        root                    = add_frame(nil, { ui=ui, flags={.pass} }),
+
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
         terse_query_font_proc   = terse_query_font_proc,
         terse_query_color_proc  = terse_query_color_proc,
         terse_draw_proc         = terse_draw_proc,
         overdraw_proc           = overdraw_proc,
-        root                    = add_frame(nil, { ui=ui, flags={.pass} }),
+
+        get                     = ui_get,
+        find                    = ui_find,
+        show                    = ui_show,
+        hide                    = ui_hide,
+        click                   = ui_click,
+        wheel                   = ui_wheel,
+        set_text                = ui_set_text,
     }
+
     clock.init(&ui.clock)
+
     return ui
 }
 
@@ -226,4 +246,39 @@ pop_scissor_rect :: proc (ui: ^UI) {
         ui.scissor_rect = ui.root.rect
         if ui.phase == .drawing && ui.scissor_clear_proc != nil do ui.scissor_clear_proc()
     }
+}
+
+@private
+ui_get :: #force_inline proc (ui: ^UI, path: string) -> ^Frame {
+    return get(ui.root, path)
+}
+
+@private
+ui_find :: #force_inline proc (ui: ^UI, path: string) -> ^Frame {
+    return find(ui.root, path)
+}
+
+@private
+ui_show :: #force_inline proc (ui: ^UI, path: string, hide_siblings := false) {
+    show_by_path(ui.root, path, hide_siblings=hide_siblings)
+}
+
+@private
+ui_hide :: #force_inline proc (ui: ^UI, path: string) {
+    hide_by_path(ui.root, path)
+}
+
+@private
+ui_click :: #force_inline proc (ui: ^UI, path: string) {
+    click_by_path(ui.root, path)
+}
+
+@private
+ui_wheel :: #force_inline proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool) {
+    return wheel_by_path(ui.root, path, dy)
+}
+
+@private
+ui_set_text :: #force_inline proc (ui: ^UI, path: string, values: ..any) {
+    set_text(get(ui.root, path), ..values)
 }
