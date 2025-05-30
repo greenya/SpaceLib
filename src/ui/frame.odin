@@ -207,10 +207,7 @@ animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
     assert(tick != nil)
     assert(dur > 0)
 
-    if f.anim.tick != nil {
-        f.anim.ratio = 1
-        f.anim.tick(f)
-    }
+    end_animation(f)
 
     f.anim = {
         tick    = tick,
@@ -220,6 +217,14 @@ animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
     }
 
     tick(f)
+}
+
+end_animation :: proc (f: ^Frame) {
+    assert(f != nil)
+    if f.anim.tick != nil {
+        f.anim.ratio = 1
+        f.anim.tick(f)
+    }
 }
 
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
