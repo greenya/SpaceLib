@@ -232,8 +232,13 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = n
     if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
 
+first_visible_sibling :: proc (f: ^Frame) -> ^Frame {
+    if f.parent != nil do for child in f.parent.children do if .hidden not_in child.flags do return child
+    return nil
+}
+
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
-    if hide_siblings && f.parent != nil do for &child in f.parent.children do child.flags += { .hidden }
+    if hide_siblings && f.parent != nil do for child in f.parent.children do child.flags += { .hidden }
     f.flags -= { .hidden }
     updated(f)
 }
@@ -398,7 +403,7 @@ wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
 
 @private
 click_radio :: proc (f: ^Frame) {
-    if f.parent != nil do for &child in f.parent.children do if .radio in child.flags do child.selected = false
+    if f.parent != nil do for child in f.parent.children do if .radio in child.flags do child.selected = false
     f.selected = true
 }
 
@@ -465,7 +470,7 @@ update_frame_tree :: proc (f: ^Frame) {
         should_rebuild := f.terse == nil || (f.terse != nil && f.terse.rect_input != f.rect)
         if should_rebuild {
             terse.destroy(f.terse)
-            f.terse = terse.create(f.text, f.rect, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
+            f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
             if .terse_width in f.flags do f.size.x = f.terse.rect.w
             if .terse_height in f.flags do f.size.y = f.terse.rect.h
         }
@@ -582,14 +587,14 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             children_center_x := (first_child_x1 + last_child_x2) / 2
             frame_center_x := f.rect.x + f.rect.w/2
             dx := frame_center_x - children_center_x
-            for &child in f.children do child.rect.x += dx
+            for child in f.children do child.rect.x += dx
         case .up_and_down:
             first_child_y1 := first_child.rect.y
             last_child_y2 := last_child.rect.y + last_child.rect.h
             children_center_y := (first_child_y1 + last_child_y2) / 2
             frame_center_y := f.rect.y + f.rect.h/2
             dy := frame_center_y - children_center_y
-            for &child in f.children do child.rect.y += dy
+            for child in f.children do child.rect.y += dy
         }
 
         content_size, dir_rect_size := get_layout_content_size(f)
@@ -605,8 +610,8 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             scroll.offset_max = max(0, content_size[1] - dir_rect_size)
             scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-            if is_dir_vertical  do for &child in f.children do child.rect.y -= scroll.offset
-            else                do for &child in f.children do child.rect.x -= scroll.offset
+            if is_dir_vertical  do for child in f.children do child.rect.y -= scroll.offset
+            else                do for child in f.children do child.rect.x -= scroll.offset
         }
     }
 }

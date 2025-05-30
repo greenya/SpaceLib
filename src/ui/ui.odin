@@ -39,6 +39,7 @@ UI :: struct {
     hide                : proc (ui: ^UI, path: string),
     click               : proc (ui: ^UI, path: string),
     wheel               : proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
+    animate             : proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dur: f32),
     set_text            : proc (ui: ^UI, path: string, values: ..any),
 }
 
@@ -98,6 +99,7 @@ create :: proc (
         hide                    = ui_hide,
         click                   = ui_click,
         wheel                   = ui_wheel,
+        animate                 = ui_animate,
         set_text                = ui_set_text,
     }
 
@@ -276,6 +278,11 @@ ui_click :: #force_inline proc (ui: ^UI, path: string) {
 @private
 ui_wheel :: #force_inline proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool) {
     return wheel_by_path(ui.root, path, dy)
+}
+
+@private
+ui_animate :: #force_inline proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dur: f32) {
+    animate(get(ui.root, path), tick, dur)
 }
 
 @private
