@@ -59,13 +59,13 @@ Flag :: enum {
 }
 
 Layout :: struct {
-    dir         : Layout_Dir,
-    align       : Layout_Alignment,
-    scroll      : Layout_Scroll,
-    size        : Vec2,
-    gap         : f32,
-    pad         : Vec2,
-    auto_size   : bool,
+    dir             : Layout_Dir,
+    align           : Layout_Alignment,
+    scroll          : Layout_Scroll,
+    size            : Vec2,
+    gap             : f32,
+    pad             : Vec2,
+    auto_size       : Layout_Auto_Size,
 }
 
 Layout_Dir :: enum {
@@ -89,6 +89,12 @@ Layout_Scroll :: struct {
     offset      : f32,
     offset_min  : f32,
     offset_max  : f32,
+}
+
+Layout_Auto_Size :: enum {
+    none,
+    full,
+    dir,
 }
 
 Actor :: union {
@@ -587,32 +593,34 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
 
         #partial switch f.layout.dir {
         case .left_and_right:
-            first_child_x1 := first_child.rect.x
-            last_child_x2 := last_child.rect.x + last_child.rect.w
-            children_center_x := (first_child_x1 + last_child_x2) / 2
-            frame_center_x := f.rect.x + f.rect.w/2
-            dx := frame_center_x - children_center_x
+            first_child_x1      := first_child.rect.x
+            last_child_x2       := last_child.rect.x + last_child.rect.w
+            children_center_x   := (first_child_x1 + last_child_x2) / 2
+            frame_center_x      := f.rect.x + f.rect.w/2
+            dx                  := frame_center_x - children_center_x
             for child in f.children do child.rect.x += dx
         case .up_and_down:
-            first_child_y1 := first_child.rect.y
-            last_child_y2 := last_child.rect.y + last_child.rect.h
-            children_center_y := (first_child_y1 + last_child_y2) / 2
-            frame_center_y := f.rect.y + f.rect.h/2
-            dy := frame_center_y - children_center_y
+            first_child_y1      := first_child.rect.y
+            last_child_y2       := last_child.rect.y + last_child.rect.h
+            children_center_y   := (first_child_y1 + last_child_y2) / 2
+            frame_center_y      := f.rect.y + f.rect.h/2
+            dy                  := frame_center_y - children_center_y
             for child in f.children do child.rect.y += dy
         }
 
-        content_size, dir_rect_size := get_layout_content_size(f)
+        full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f)
         is_dir_vertical := is_layout_dir_vertical(f)
 
-        if f.layout.auto_size {
-            if is_dir_vertical  do f.size.y = content_size[1]
-            else                do f.size.x = content_size[1]
+        if f.layout.auto_size == .full {
+            f.size = full_content_size
+        } else if f.layout.auto_size == .dir {
+            if is_dir_vertical  do f.size.y = dir_content_size[1]
+            else                do f.size.x = dir_content_size[1]
         } else if layout_has_scroll(f) {
             scroll := &f.layout.scroll
 
-            scroll.offset_min = min(0, content_size[0])
-            scroll.offset_max = max(0, content_size[1] - dir_rect_size)
+            scroll.offset_min = min(0, dir_content_size[0])
+            scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
             scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
             if is_dir_vertical  do for child in f.children do child.rect.y -= scroll.offset
@@ -622,13 +630,22 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
 }
 
 @private
-get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_size: f32) {
+get_layout_content_size :: proc (f: ^Frame) -> (full_content_size: Vec2, dir_content_size: Vec2, dir_rect_size: f32) {
     is_dir_vertical := is_layout_dir_vertical(f)
     dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
 
     if len(f.children) > 0 {
-        first_child := f.children[0]
-        last_child := slice.last(f.children[:])
+        fc := f.children[0]
+        lc := slice.last(f.children[:])
+
+        full_content_size = 2*f.layout.pad + {
+            fc.rect.x < lc.rect.x\
+                ? lc.rect.x + lc.rect.w - fc.rect.x\
+                : fc.rect.x + fc.rect.w - lc.rect.x,
+            fc.rect.y < lc.rect.y\
+                ? lc.rect.y + lc.rect.h - fc.rect.y\
+                : fc.rect.y + fc.rect.h - lc.rect.y,
+        }
 
         if is_layout_dir_vertical(f) {
             min_y1: f32
@@ -636,31 +653,33 @@ get_layout_content_size :: proc (f: ^Frame) -> (content_size: Vec2, dir_rect_siz
 
             #partial switch f.layout.dir {
             case .up: // children grow up
-                min_y1 = last_child.rect.y
-                max_y2 = first_child.rect.y + first_child.rect.h
+                min_y1 = lc.rect.y
+                max_y2 = fc.rect.y + fc.rect.h
             case .down, .up_and_down: // children grow down
-                min_y1 = first_child.rect.y
-                max_y2 = last_child.rect.y + last_child.rect.h
+                min_y1 = fc.rect.y
+                max_y2 = lc.rect.y + lc.rect.h
             }
 
-            content_size[0] = min_y1 - f.rect.y - f.layout.pad.y
-            content_size[1] = max_y2 - f.rect.y + f.layout.pad.y
+            dir_content_size[0] = min_y1 - f.rect.y - f.layout.pad.y
+            dir_content_size[1] = max_y2 - f.rect.y + f.layout.pad.y
         } else {
             min_x1: f32
             max_x2: f32
 
             #partial switch f.layout.dir {
             case .left: // children grow left
-                min_x1 = last_child.rect.x
-                max_x2 = first_child.rect.x + first_child.rect.w
+                min_x1 = lc.rect.x
+                max_x2 = fc.rect.x + fc.rect.w
             case .right, .left_and_right: // children grow right
-                min_x1 = first_child.rect.x
-                max_x2 = last_child.rect.x + last_child.rect.w
+                min_x1 = fc.rect.x
+                max_x2 = lc.rect.x + lc.rect.w
             }
 
-            content_size[0] = min_x1 - f.rect.x - f.layout.pad.x
-            content_size[1] = max_x2 - f.rect.x + f.layout.pad.x
+            dir_content_size[0] = min_x1 - f.rect.x - f.layout.pad.x
+            dir_content_size[1] = max_x2 - f.rect.x + f.layout.pad.x
         }
+
+        dir_content_size = { 0, dir_content_size[1]-dir_content_size[0] }
     }
 
     return

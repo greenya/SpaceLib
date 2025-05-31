@@ -39,6 +39,8 @@ TODO: ui: add support for automatic child frames generation for each text_terse.
     // - the idea is to be able to have enter/leave/click for any group in terse
     // - maybe we need to add Frame.draw/enter/leave/click_terse_group for handling events for those dynamic children
 
+TODO: ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
+
 TODO: ui: add "wait=f32(0)" arg to ui.animate(),
     add Frame.anim.state (enum: none, waiting, animating)
     it should do: waiting (if wait>0) -> animating (for dur) -> ratio=0 -> ... ratio=1 -> none

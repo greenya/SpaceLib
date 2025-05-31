@@ -130,7 +130,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             "at the start of the game; if destroyed, the game ends." })
 
         { // test scrolling child frame
-            inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=true } })
+            inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=.dir } })
             ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="<top,left,color=c7>Test scrolling child frame" })
             sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
@@ -250,7 +250,7 @@ main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     )
 
     container := ui.add_frame(root, { size={440,0}, draw=draw_ui_panel,
-        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=true } }, { point=.center })
+        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=.dir } }, { point=.center })
 
     ui.add_frame(container, {
         flags={.terse,.terse_height},
