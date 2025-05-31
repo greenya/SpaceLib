@@ -56,11 +56,11 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     )
 
     for tab in ([][] string {
-        { "tab_fragments", "FRAGMENTS" },
-        { "tab_archetype", "ARCHETYPE" },
-        { "tab_character", "CHARACTER" },
-        { "tab_traits", "TRAITS" },
-        { "tab_inventory", "INVENTORY" },
+        { "tab_fragments"   , "FRAGMENTS" },
+        { "tab_archetype"   , "ARCHETYPE" },
+        { "tab_character"   , "CHARACTER" },
+        { "tab_traits"      , "TRAITS" },
+        { "tab_inventory"   , "INVENTORY" },
     }) {
         ui.add_frame(tabs, {
             name    = tab[0],
@@ -248,7 +248,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.top_right:.top_left },
         )
 
-        icon := is_left ? "ifrit" : "potion-ball"
+        icon := is_left ? "high-shot" : "haunting"
         for _ in 0..<3 {
             ui.add_frame(list, { name="slot_skill", text=icon, draw=draw_slot_box })
         }
@@ -276,7 +276,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.top_right:.top_left },
         )
 
-        icon := is_left ? "sword-wound" : "beer-stein"
+        icon := is_left ? "sword-wound" : "potion-ball"
         for _ in 0..<4 {
             ui.add_frame(list, { name="slot_perk", text=icon, draw=draw_slot_perk_with_cat })
         }
@@ -300,24 +300,36 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
         )
 
         card := ui.add_frame(trait,
-            { name="card", text="evil-book", size={128,192}, draw=draw_trait_card },
+            { name="card", text=is_left?"silver-bullet":"evil-book", size={128,192}, draw=draw_trait_card },
             { point=is_left?.top_right:.top_left, offset={(is_left?-1:1)*24,32} },
         )
 
+        pin :: "<icon=round-star>"
+        alt_b :: "<color=bw_40>"
+        alt_e :: "</color>"
+
         desc: string
         if is_left {
-            desc = "<right,font=text_16,color=bw_95>"+
-                "Is left desc text"
+            desc = "<wrap,right,font=text_16,color=bw_95>"+
+                "<font=text_20,color=bw_ff>Longshot</font,/color>\n"+
+                "<font=text_16,color=bw_6c>Archetype Trait</font,/color>\n"+
+                pin+pin+pin+pin+pin+pin+pin+pin+pin+pin+"\n"+
+                "Increases Weapon Ideal Range by <color=bw_ff>6m</color>.\n\n"+
+                "<color=trait_hl>HUNTER</color> Archetype Trait."
         } else {
-            desc = "<left,font=text_16,color=bw_95>"+
-                "Is NOt left DESC text"
+            desc = "<wrap,left,font=text_16,color=bw_95>"+
+                "<font=text_20,color=bw_ff>Potency</font,/color>\n"+
+                "<font=text_16,color=bw_6c>Archetype Trait</font,/color>\n"+
+                pin+pin+pin+pin+pin+pin+pin+pin+pin+alt_b+pin+alt_e+"\n"+
+                "Increases Consumable Duration by <color=bw_ff>90%</color>.\n\n"+
+                "<color=trait_hl>ALCHEMIST</color> Archetype Trait."
         }
 
         ui.add_frame(card,
-            { name="desc", text=desc, flags={.terse,.terse_height} },
+            { name="desc", text=desc, size={200,0}, flags={.terse,.terse_height} },
             {   point       = is_left ? .right : .left,
                 rel_point   = is_left ? .left : .right,
-                offset      = is_left ? {-40,0} : {40,0},
+                offset      = is_left ? {-24,0} : {24,0},
             },
         )
     }
@@ -340,7 +352,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     primary := app_menu_add_primary_slot(ring)
 
     ui.add_frame(root,
-        { name="skill", text="paw-print", size=80, order=-1, draw=draw_slot_box },
+        { name="skill", text="high-shot", size=80, order=-1, draw=draw_slot_box },
         { point=.right, rel_point=.left, rel_frame=primary, offset={20,0} },
     )
 
