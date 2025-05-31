@@ -34,7 +34,7 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_archetype") // preselect some tab
+    app.ui->click("menu/bar_top/tab_traits") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -232,7 +232,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
     { // skills
         skills := ui.add_frame(line,
             { name="skills" },
-            { point=.top, offset={0,60} },
+            { point=.top, offset={0,50} },
         )
 
         text := is_left\
@@ -299,8 +299,8 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
         )
 
-        card := ui.add_frame(trait,
-            { name="card", text=is_left?"silver-bullet":"evil-book", size={128,192}, draw=draw_trait_card },
+        slot_trait := ui.add_frame(trait,
+            { name="slot_trait", text=is_left?"longshot":"potency", size={100,220}, draw=draw_slot_trait },
             { point=is_left?.top_right:.top_left, offset={(is_left?-1:1)*24,32} },
         )
 
@@ -325,7 +325,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
                 "<color=trait_hl>ALCHEMIST</color> Archetype Trait."
         }
 
-        ui.add_frame(card,
+        ui.add_frame(slot_trait,
             { name="desc", text=desc, size={200,0}, flags={.terse,.terse_height} },
             {   point       = is_left ? .right : .left,
                 rel_point   = is_left ? .left : .right,
@@ -474,10 +474,36 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         { point=.bottom_right },
     )
 
-    ui.add_frame(root,
-        { name="msg", text="<font=text_40,color=bw_6c>TRAITS PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
+    header := ui.add_frame(root, { name="header", text=""+
+        "<font=text_24,color=bw_da>0  <color=bw_95>TRAIT POINTS AVAILABLE\n"+
+        "<gap=.2,font=text_20>0  <color=bw_59>TOTAL TRAIT POINTS",
+        flags={.terse,.terse_height},
+    },
+        { point=.top, offset={0,32} },
     )
+
+    list := ui.add_frame(root,
+        { name="list", layout={ dir=.down, gap=12, auto_size=.full } },
+        { point=.top, rel_point=.bottom, rel_frame=header, offset={0,32} },
+    )
+
+    row_count :: 3
+    col_count :: 8
+
+    trait_ids := [] string {
+        "longshot", "potency", "vigor", "endurance",
+        "spirit", "expertise", "amplitude", "blood_bond",
+        "bloodstream", "siphoner",
+    }
+
+    for row_idx in 0..<3 {
+        row := ui.add_frame(list, { name="row", layout={ dir=.left_and_right, size={100,220}, gap=12, auto_size=.full } })
+        for slot_idx in 0..<8 {
+            trait_idx := row_idx*8 + slot_idx
+            text := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
+            ui.add_frame(row, { name="slot_trait.ex", text=text, draw=draw_slot_trait })
+        }
+    }
 }
 
 app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {

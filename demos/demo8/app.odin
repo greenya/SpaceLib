@@ -15,6 +15,8 @@ Color :: core.Color
 App :: struct {
     res             : ^res.Res,
     ui              : ^ui.UI,
+
+    data            : ^App_Data,
     menu            : ^App_Menu,
 
     debug_drawing   : bool,
@@ -40,6 +42,8 @@ app_startup :: proc () {
     res.load_fonts(app.res)
     res.load_sprites(app.res, texture_filter=.BILINEAR)
     // res.print(app.res)
+
+    app_data_create()
 
     app.ui = ui.create(
         terse_query_font_proc = proc (name: string) -> ^terse.Font {
@@ -68,6 +72,7 @@ app_shutdown :: proc () {
     fmt.println(#procedure)
 
     app_menu_destroy()
+    app_data_destroy()
     ui.destroy(app.ui)
     res.destroy(app.res)
 

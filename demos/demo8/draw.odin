@@ -143,7 +143,7 @@ draw_perk :: proc (name: string, rect: Rect, opacity: f32) {
     draw.rect(rect, bg_color)
 
     br_color := core.alpha(app.res.colors["bw_40"].value, opacity)
-    draw.rect_lines(rect, 3, br_color)
+    draw.rect_lines(rect, 2, br_color)
 
     sp_color := core.alpha(app.res.colors["bw_1a"].value, opacity)
     draw_sprite(name, core.rect_inflated(rect, -8), sp_color)
@@ -167,16 +167,42 @@ draw_slot_perk_with_cat :: proc (f: ^ui.Frame) {
     draw_perk_cat("graduate-cap", rect, f.opacity)
 }
 
-draw_trait_card :: proc (f: ^ui.Frame) {
+draw_slot_trait :: proc (f: ^ui.Frame) {
+    if f.text == "" {
+        br_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+        draw.rect_lines(f.rect, 2, br_color)
+        return
+    }
+
+    trait := app.data.traits[f.text]
+
     bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
     draw.rect(f.rect, bg_color)
-
-    br_color := core.alpha(app.res.colors["bw_40"].value, f.opacity)
-    draw.rect_lines(f.rect, 2, br_color)
 
     rect := f.rect
     rect.y += (rect.h-rect.w)/2
     rect.h = rect.w
-    sp_color := core.alpha(app.res.colors["trait_hl"].value, f.opacity)
-    draw_sprite(f.text, core.rect_inflated(rect, -8), sp_color)
+    sp_color := core.alpha(app.res.colors[trait.active ? "trait_hl" : "bw_95"].value, f.opacity)
+    draw_sprite(trait.icon, core.rect_inflated(rect, -8), sp_color)
+
+    if strings.has_suffix(f.name, ".ex") {
+        nm_rect := core.rect_line_bottom(core.rect_inflated(f.rect, -8), 48)
+        draw_text_center(trait.name, nm_rect, "text_16", sp_color)
+
+        for i := 9; i >= 0; i -= 1 {
+            pr_rect := core.rect_line_bottom(nm_rect, nm_rect.w/10)
+            pr_rect.w /= 10
+            pr_rect.x += f32(i)*pr_rect.w
+
+            pr_color_name := "bw_40"
+            if (i+1) <= trait.points_granted+trait.points_spent do pr_color_name = "bw_95"
+            if (i+1) <= trait.points_granted                    do pr_color_name = "res_fire"
+            pr_color := core.alpha(app.res.colors[pr_color_name].value, f.opacity)
+
+            draw_sprite("round-star", core.rect_inflated(pr_rect, 4), pr_color)
+        }
+    }
+
+    br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
+    draw.rect_lines(f.rect, 2, br_color)
 }
