@@ -9,6 +9,7 @@
     { "name": "bw_bc", "hex": "#bcbcbc" },
     { "name": "bw_da", "hex": "#dadada" },
     { "name": "bw_ff", "hex": "#ffffff" },
+    { "name": "trait_hl", "hex": "#fff1bc" },
     { "name": "weight_ar", "hex": "#10b289" },
     { "name": "weight_lt", "hex": "#71b465" },
     { "name": "weight_md", "hex": "#af9759" },

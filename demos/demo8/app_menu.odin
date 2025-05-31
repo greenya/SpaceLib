@@ -34,7 +34,7 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_character") // preselect some tab
+    app.ui->click("menu/bar_top/tab_archetype") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -80,12 +80,12 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     }
 
     ui.add_frame(root,
-        { name="nav_left", text="<font=text_20,icon=key_Q:1.5>", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_left", text="<font=text_20,icon=key.Q:1.5>", flags={.terse,.terse_width,.terse_height} },
         { point=.right, rel_point=.left, rel_frame=tabs.children[0], offset={-8,0} },
     )
 
     ui.add_frame(root,
-        { name="nav_right", text="<font=text_20,icon=key_E:1.5>", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_right", text="<font=text_20,icon=key.E:1.5>", flags={.terse,.terse_width,.terse_height} },
         { point=.left, rel_point=.right, rel_frame=slice.last(tabs.children[:]), offset={8,0} },
     )
 
@@ -103,84 +103,276 @@ app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
     )
 
     ui.add_frame(root,
-        { name="toggle_stats", text="<left,font=text_20,color=bw_6c><icon=key_R:1.5>  Stats | Loadouts", flags={.terse,.terse_width,.terse_height} },
+        { name="toggle_stats", text="<left,font=text_20,color=bw_6c><icon=key.R:1.5>  Stats | Loadouts", flags={.terse,.terse_width,.terse_height} },
         { point=.left, offset={64,0} },
     )
 
     ui.add_frame(root,
-        { name="nav_back", text="<right,font=text_20,color=bw_6c><icon=key_Esc:2.2:1.5>  Back", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_back", text="<right,font=text_20,color=bw_6c><icon=key.Esc:2.2:1.5>  Back", flags={.terse,.terse_width,.terse_height} },
         { point=.right, offset={-64,0} },
     )
+}
+
+app_menu_add_page_fragments :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_fragments" },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    ui.add_frame(root,
+        { name="msg", text="<font=text_40,color=bw_6c>FRAGMENTS PAGE GOES HERE...", flags={.terse,.terse_height} },
+        { point=.center },
+    )
+}
+
+app_menu_art_ring_radius :: 460
+
+app_menu_pos_on_art_ring :: proc (angle_rad: f32) -> Vec2 {
+    return core.vec_on_circle(app_menu_art_ring_radius, angle_rad)
+}
+
+app_menu_add_primary_slot :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+    root := ui.add_frame(parent,
+        { name="primary", text="wolf-howl", size=120, draw=draw_slot_round },
+        { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 -.75) },
+    )
+
+    ui.add_frame(root,
+        { name="level", text="10", size=32, draw=draw_slot_round_level },
+        { point=.center, rel_point=.left },
+    )
+
+    return root
+}
+
+app_menu_add_secondary_slot :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+    root := ui.add_frame(parent,
+        { name="secondary", text="witch-flight", size=120, draw=draw_slot_round },
+        { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 +.75) },
+    )
+
+    ui.add_frame(root,
+        { name="level", text="8", size=32, draw=draw_slot_round_level },
+        { point=.center, rel_point=.right },
+    )
+
+    return root
+}
+
+app_menu_add_page_archetype :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="page_archetype" },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    ui.add_frame(root,
+        { name="title", text="DEAD TO RIGHTS ISOLATOR", size={400,44}, draw=draw_player_title },
+        { point=.center, offset={0,-390} },
+    )
+
+    // left side
+
+    primary := app_menu_add_primary_slot(root)
+
+    ui.get(primary, "level").anchors[0].rel_point = .bottom
+
+    ui.add_frame(primary,
+        { name="desc", text="<right>"+
+            "<font=text_24,color=bw_da>HUNTER\n"+
+            "<font=text_20,color=bw_95>PRIME ARCHETYPE\n"+
+            "<font=text_16,color=bw_6c>SNIPER WAR MEDAL",
+            flags={.terse,.terse_width,.terse_height},
+        },
+        { point=.right, rel_point=.left, offset={-40,0} },
+    )
+
+    app_menu_add_page_archetype_line_sections(primary, is_left=true)
+
+    // right side
+
+    secondary := app_menu_add_secondary_slot(root)
+
+    ui.get(secondary, "level").anchors[0].rel_point = .bottom
+
+    ui.add_frame(secondary,
+        { name="desc", text="<left>"+
+            "<font=text_24,color=bw_da>ALCHEMIST\n"+
+            "<font=text_20,color=bw_95>SECONDARY ARCHETYPE\n"+
+            "<font=text_16,color=bw_6c>PHILOSOPHER'S STONE",
+            flags={.terse,.terse_width,.terse_height},
+        },
+        { point=.left, rel_point=.right, offset={40,0} },
+    )
+
+    app_menu_add_page_archetype_line_sections(secondary, is_left=false)
+
+    // middle bottom
+
+    prime_perk := ui.add_frame(root,
+        { name="prime_perk", size={300,0}, layout={ dir=.down, align=.center, gap=20, auto_size=.dir } },
+        { point=.top, rel_point=.center, offset={0,40} },
+    )
+
+    ui.add_frame(prime_perk, { name="slot", text="fire-silhouette", size=80, draw=draw_slot_perk })
+    ui.add_frame(prime_perk, { name="desc", text="<wrap,font=text_20,color=bw_95>"+
+        "<font=text_24,color=bw_bc>DEAD TO RIGHTS</font,/color>\n"+
+        "<font=text_16,gap=.6>PRIME PERK</font>\n"+
+        "<gap=.5>Dealing <color=bw_ff>55</color> Base Ranged or Melee Weakspot Damage extends the duration of active Hunter Skills by <color=bw_ff>3.5s</color>. Can extend timer beyond its initial duration.",
+        flags={.terse,.terse_height} })
+}
+
+app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: bool) {
+    line := ui.add_frame(parent,
+        { name="line", text="bw_40", order=-1, size={3,420}, draw=draw_color_rect },
+        { point=.top, rel_point=.bottom },
+    )
+
+    { // skills
+        skills := ui.add_frame(line,
+            { name="skills" },
+            { point=.top, offset={0,60} },
+        )
+
+        text := is_left\
+            ? "<right,font=text_20,color=bw_95>SKILLS <icon=card.polar-star:2>"\
+            : "<left,font=text_20,color=bw_95><icon=card.polar-star:2> SKILLS"
+        ui.add_frame(skills,
+            { name="header", text=text, flags={.terse,.terse_width,.terse_height} },
+            { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
+        )
+
+        list := ui.add_frame(skills,
+            { name="list", layout={ dir=is_left?.left:.right, size=128, gap=8, pad={24,32}, auto_size=.full } },
+            { point=is_left?.top_right:.top_left },
+        )
+
+        icon := is_left ? "ifrit" : "potion-ball"
+        for _ in 0..<3 {
+            ui.add_frame(list, { name="slot_skill", text=icon, draw=draw_slot_box })
+        }
+    }
+
+    { // perks
+        perks := ui.add_frame(line,
+            { name="perks" },
+            {   point       = is_left ? .top_right : .top_left,
+                rel_point   = is_left ? .bottom_right : .bottom_left,
+                rel_frame   = ui.get(line, "skills/list"),
+            },
+        )
+
+        text := is_left\
+            ? "<right,font=text_20,color=bw_95>PERKS <icon=card.fist:2>"\
+            : "<left,font=text_20,color=bw_95><icon=card.fist:2> PERKS"
+        ui.add_frame(perks,
+            { name="header", text=text, flags={.terse,.terse_width,.terse_height} },
+            { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
+        )
+
+        list := ui.add_frame(perks,
+            { name="list", layout={ dir=is_left?.left:.right, size={64,108}, gap=16, pad={24,32}, auto_size=.full } },
+            { point=is_left?.top_right:.top_left },
+        )
+
+        icon := is_left ? "sword-wound" : "beer-stein"
+        for _ in 0..<4 {
+            ui.add_frame(list, { name="slot_perk", text=icon, draw=draw_slot_perk_with_cat })
+        }
+    }
+
+    { // trait
+        trait := ui.add_frame(line,
+            { name="trait" },
+            {   point       = is_left ? .top_right : .top_left,
+                rel_point   = is_left ? .bottom_right : .bottom_left,
+                rel_frame   = ui.get(line, "perks/list"),
+            },
+        )
+
+        text := is_left\
+            ? "<right,font=text_20,color=bw_95>TRAIT <icon=card.hand:2>"\
+            : "<left,font=text_20,color=bw_95><icon=card.hand:2> TRAIT"
+        ui.add_frame(trait,
+            { name="header", text=text, flags={.terse,.terse_width,.terse_height} },
+            { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
+        )
+
+        card := ui.add_frame(trait,
+            { name="card", text="evil-book", size={128,192}, draw=draw_trait_card },
+            { point=is_left?.top_right:.top_left, offset={(is_left?-1:1)*24,32} },
+        )
+
+        desc: string
+        if is_left {
+            desc = "<right,font=text_16,color=bw_95>"+
+                "Is left desc text"
+        } else {
+            desc = "<left,font=text_16,color=bw_95>"+
+                "Is NOt left DESC text"
+        }
+
+        ui.add_frame(card,
+            { name="desc", text=desc, flags={.terse,.terse_height} },
+            {   point       = is_left ? .right : .left,
+                rel_point   = is_left ? .left : .right,
+                offset      = is_left ? {-40,0} : {40,0},
+            },
+        )
+    }
 }
 
 app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
         { name="page_character" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+        { point=.top_left },
+        { point=.bottom_right },
     )
 
-    radius :: 460
-
     ring := ui.add_frame(root,
-        { name="ring", size=2*radius, flags={.pass}, draw=draw_art_ring },
+        { name="ring", size=2*app_menu_art_ring_radius, flags={.pass}, draw=draw_art_ring },
         { point=.center },
     )
 
-    // left side of the ring
+    // left side
 
-    primary := ui.add_frame(ring,
-        { name="primary", text="wolf-howl", size=120, draw=draw_slot_round },
-        { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 -.75) },
-    )
+    primary := app_menu_add_primary_slot(ring)
 
     ui.add_frame(root,
         { name="skill", text="paw-print", size=80, order=-1, draw=draw_slot_box },
         { point=.right, rel_point=.left, rel_frame=primary, offset={20,0} },
     )
 
-    ui.add_frame(primary,
-        { name="level", text="10", size=32, draw=draw_slot_round_level },
-        { point=.center, rel_point=.left },
-    )
-
     for i in 0..<5 {
         ui.add_frame(ring,
             { name="slot_gear", text="cracked-helm", size=80, draw=draw_slot_box },
-            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 -1.175 -.2*f32(i)) },
+            { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 -1.175 -.2*f32(i)) },
         )
     }
 
-    // right side of the ring
+    // right side
 
-    secondary := ui.add_frame(ring,
-        { name="secondary", text="witch-flight", size=120, draw=draw_slot_round },
-        { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 +.75) },
-    )
+    secondary := app_menu_add_secondary_slot(ring)
 
     ui.add_frame(root,
         { name="skill", text="haunting", size=80, order=-1, draw=draw_slot_box },
         { point=.left, rel_point=.right, rel_frame=secondary, offset={-20,0} },
     )
 
-    ui.add_frame(secondary,
-        { name="level", text="8", size=32, draw=draw_slot_round_level },
-        { point=.center, rel_point=.right },
-    )
-
     for i in 0..<5 {
         ui.add_frame(ring,
             { name="slot_acc", text="skull-ring", size=80, draw=draw_slot_box },
-            { point=.center, offset=core.vec_on_circle(radius, -math.τ/4 +1.175 +.2*f32(i)) },
+            { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 +1.175 +.2*f32(i)) },
         )
     }
 
-    // bottom side of the ring
+    // bottom area
 
     weapon_bar := ui.add_frame(ring,
         { layout={ dir=.left_and_right, size={240,80}, gap=16, align=.center } },
-        { point=.left, rel_point=.center, offset=core.vec_on_circle(radius, math.τ/4 +.75) },
-        { point=.right, rel_point=.center, offset=core.vec_on_circle(radius, math.τ/4 -.75) },
+        { point=.left, rel_point=.center, offset=app_menu_pos_on_art_ring(math.τ/4 +.75) },
+        { point=.right, rel_point=.center, offset=app_menu_pos_on_art_ring(math.τ/4 -.75) },
     )
 
     for _ in 0..<3 {
@@ -263,37 +455,11 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     )
 }
 
-app_menu_add_page_archetype :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent,
-        { name="page_archetype" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
-    )
-
-    ui.add_frame(root,
-        { name="msg", text="<font=text_40,color=bw_6c>ARCHETYPE PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
-}
-
-app_menu_add_page_fragments :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent,
-        { name="page_fragments" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
-    )
-
-    ui.add_frame(root,
-        { name="msg", text="<font=text_40,color=bw_6c>FRAGMENTS PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
-}
-
 app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
         { name="page_traits" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+        { point=.top_left },
+        { point=.bottom_right },
     )
 
     ui.add_frame(root,
@@ -305,8 +471,8 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
 app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
         { name="page_inventory" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+        { point=.top_left },
+        { point=.bottom_right },
     )
 
     ui.add_frame(root,

@@ -1,5 +1,11 @@
 [
     {
+        "name": "text_16",
+        "file": "Sansation-Regular.ttf",
+        "height": 16,
+        "texture_filter": "BILINEAR"
+    },
+    {
         "name": "text_20",
         "file": "Sansation-Regular.ttf",
         "height": 20,
@@ -9,6 +15,13 @@
         "name": "text_24",
         "file": "Sansation-Bold.ttf",
         "height": 24,
+        "texture_filter": "BILINEAR"
+    },
+    {
+        "name": "text_24_sparse",
+        "file": "Sansation-Bold.ttf",
+        "height": 24,
+        "rune_spacing_ratio": 0.15,
         "texture_filter": "BILINEAR"
     },
     {

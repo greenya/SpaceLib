@@ -33,6 +33,13 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
     draw_text_center(text, rect, "text_24", tx_color)
 }
 
+draw_icon_card :: proc (name: string, rect: Rect, opacity: f32) {
+    bg_color := core.alpha(app.res.colors["bw_40"].value, opacity)
+    draw_sprite("hexagon", core.rect_inflated(rect, -2), bg_color)
+    sp_color := core.alpha(app.res.colors["bw_bc"].value, opacity)
+    draw_sprite(name, rect, sp_color)
+}
+
 draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
     for word in t.words {
         // if word.in_group do continue
@@ -41,11 +48,10 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
         tint := override_color != "" ? app.res.colors[override_color].value : word.color
         tint = core.alpha(tint, t.opacity)
         if word.is_icon {
-            if strings.has_prefix(word.text, "key_") {
-                draw_icon_key(word.text[4:], rect, t.opacity)
-            } else {
-                draw_sprite(word.text, rect, tint)
-            }
+            has_prefix :: strings.has_prefix
+            if has_prefix(word.text, "key.")        do draw_icon_key(word.text[4:], rect, t.opacity)
+            else if has_prefix(word.text, "card.")  do draw_icon_card(word.text[5:], rect, t.opacity)
+            else                                    do draw_sprite(word.text, rect, tint)
         } else if word.text != " " {
             pos := Vec2 { rect.x, rect.y }
             font := word.font
@@ -76,6 +82,14 @@ draw_art_ring :: proc (f: ^ui.Frame) {
     center := core.rect_center(f.rect)
     radius := f.rect.h/2
     draw.ring(center, radius, radius+8, 0, 360, 64, color)
+}
+
+draw_player_title :: proc (f: ^ui.Frame) {
+    tx_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
+    draw_text_center(f.text, f.rect, "text_24_sparse", tx_color)
+    ln_color := core.alpha(app.res.colors["bw_59"].value, f.opacity)
+    ln_rect := core.rect_line_bottom(f.rect, 3)
+    draw.rect(ln_rect, ln_color)
 }
 
 draw_slot_ring :: proc (f: ^ui.Frame) {
@@ -122,4 +136,47 @@ draw_slot_box_wide :: proc (f: ^ui.Frame) {
         rect.w = rect.h
         draw_sprite(f.text, core.rect_inflated(rect, -8), sp_color)
     }
+}
+
+draw_perk :: proc (name: string, rect: Rect, opacity: f32) {
+    bg_color := core.alpha(app.res.colors["bw_bc"].value, opacity)
+    draw.rect(rect, bg_color)
+
+    br_color := core.alpha(app.res.colors["bw_40"].value, opacity)
+    draw.rect_lines(rect, 3, br_color)
+
+    sp_color := core.alpha(app.res.colors["bw_1a"].value, opacity)
+    draw_sprite(name, core.rect_inflated(rect, -8), sp_color)
+}
+
+draw_perk_cat :: proc (name: string, perk_rect: Rect, opacity: f32) {
+    cat_color := core.alpha(app.res.colors["bw_bc"].value, opacity)
+    cat_rect := core.rect_from_center(core.rect_center(perk_rect)-{0,perk_rect.h/1.1}, {perk_rect.w,perk_rect.h}/1.7)
+    draw_sprite(name, cat_rect, cat_color)
+}
+
+draw_slot_perk :: proc (f: ^ui.Frame) {
+    draw_perk(f.text, f.rect, f.opacity)
+}
+
+draw_slot_perk_with_cat :: proc (f: ^ui.Frame) {
+    rect := f.rect
+    rect.y += rect.h-rect.w
+    rect.h = rect.w
+    draw_perk(f.text, rect, f.opacity)
+    draw_perk_cat("graduate-cap", rect, f.opacity)
+}
+
+draw_trait_card :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+    draw.rect(f.rect, bg_color)
+
+    br_color := core.alpha(app.res.colors["bw_40"].value, f.opacity)
+    draw.rect_lines(f.rect, 2, br_color)
+
+    rect := f.rect
+    rect.y += (rect.h-rect.w)/2
+    rect.h = rect.w
+    sp_color := core.alpha(app.res.colors["trait_hl"].value, f.opacity)
+    draw_sprite(f.text, core.rect_inflated(rect, -8), sp_color)
 }
