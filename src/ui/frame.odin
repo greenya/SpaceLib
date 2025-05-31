@@ -478,7 +478,7 @@ update_frame_tree :: proc (f: ^Frame) {
     update_rect(f)
 
     if .terse in f.flags {
-        should_rebuild := f.terse == nil || (f.terse != nil && f.terse.rect_input != f.rect)
+        should_rebuild := f.terse == nil || (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect))
         if should_rebuild {
             terse.destroy(f.terse)
             f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
@@ -588,21 +588,21 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     }
 
     if len(f.children) > 0 {
-        first_child := f.children[0]
-        last_child := slice.last(f.children[:])
+        fc := f.children[0]
+        lc := slice.last(f.children[:])
 
         #partial switch f.layout.dir {
         case .left_and_right:
-            first_child_x1      := first_child.rect.x
-            last_child_x2       := last_child.rect.x + last_child.rect.w
-            children_center_x   := (first_child_x1 + last_child_x2) / 2
+            fc_x1               := fc.rect.x
+            lc_x2               := lc.rect.x + lc.rect.w
+            children_center_x   := (fc_x1 + lc_x2) / 2
             frame_center_x      := f.rect.x + f.rect.w/2
             dx                  := frame_center_x - children_center_x
             for child in f.children do child.rect.x += dx
         case .up_and_down:
-            first_child_y1      := first_child.rect.y
-            last_child_y2       := last_child.rect.y + last_child.rect.h
-            children_center_y   := (first_child_y1 + last_child_y2) / 2
+            fc_y1               := fc.rect.y
+            lc_y2               := lc.rect.y + lc.rect.h
+            children_center_y   := (fc_y1 + lc_y2) / 2
             frame_center_y      := f.rect.y + f.rect.h/2
             dy                  := frame_center_y - children_center_y
             for child in f.children do child.rect.y += dy
@@ -626,6 +626,11 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             if is_dir_vertical  do for child in f.children do child.rect.y -= scroll.offset
             else                do for child in f.children do child.rect.x -= scroll.offset
         }
+    } else {
+        // FIXME: for some reason, when 0 children and layout.auto_size is used, the parent/siblings "fly" away,
+        // FIXME: e.g. they size grows in 30 frames to infinity. Keeping size != 0 fixes it;
+        // FIXME: investigate the reasoning and fix it
+        if len(f.children) == 0 do f.size = .1
     }
 }
 
@@ -635,17 +640,12 @@ get_layout_content_size :: proc (f: ^Frame) -> (full_content_size: Vec2, dir_con
     dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
 
     if len(f.children) > 0 {
+        full_rect := f.children[0].rect
+        for child in f.children[1:] do core.rect_add_rect(&full_rect, child.rect)
+        full_content_size = 2*f.layout.pad + { full_rect.w, full_rect.h }
+
         fc := f.children[0]
         lc := slice.last(f.children[:])
-
-        full_content_size = 2*f.layout.pad + {
-            fc.rect.x < lc.rect.x\
-                ? lc.rect.x + lc.rect.w - fc.rect.x\
-                : fc.rect.x + fc.rect.w - lc.rect.x,
-            fc.rect.y < lc.rect.y\
-                ? lc.rect.y + lc.rect.h - fc.rect.y\
-                : fc.rect.y + fc.rect.h - lc.rect.y,
-        }
 
         if is_layout_dir_vertical(f) {
             min_y1: f32
