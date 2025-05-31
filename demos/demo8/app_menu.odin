@@ -1,5 +1,6 @@
 package demo8
 
+// import "core:fmt"
 import "core:math"
 import "core:slice"
 import "spacelib:core"
@@ -34,7 +35,7 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_traits") // preselect some tab
+    app.ui->click("menu/bar_top/tab_inventory") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -55,7 +56,7 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { point=.bottom_right },
     )
 
-    for tab in ([][] string {
+    for info in ([] struct { name:string, text:string } {
         { "tab_fragments"   , "FRAGMENTS" },
         { "tab_archetype"   , "ARCHETYPE" },
         { "tab_character"   , "CHARACTER" },
@@ -63,8 +64,8 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { "tab_inventory"   , "INVENTORY" },
     }) {
         ui.add_frame(tabs, {
-            name    = tab[0],
-            text    = tab[1],
+            name    = info.name,
+            text    = info.text,
             flags   = {.radio},
             draw    = draw_menu_item,
             click   = proc (f: ^ui.Frame) {
@@ -496,12 +497,12 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         "bloodstream", "siphoner",
     }
 
-    for row_idx in 0..<3 {
-        row := ui.add_frame(list, { name="row", layout={ dir=.left_and_right, size={100,220}, gap=12, auto_size=.full } })
-        for slot_idx in 0..<8 {
-            trait_idx := row_idx*8 + slot_idx
-            text := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
-            ui.add_frame(row, { name="slot_trait.ex", text=text, draw=draw_slot_trait })
+    for row_idx in 0..<row_count {
+        row := ui.add_frame(list, { name="row", layout={ dir=.right, size={100,220}, gap=12, auto_size=.full } })
+        for col_idx in 0..<col_count {
+            trait_idx := row_idx*col_count + col_idx
+            trait_id := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
+            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait })
         }
     }
 }
@@ -513,10 +514,37 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
         { point=.bottom_right },
     )
 
-    ui.add_frame(root,
-        { name="msg", text="<font=text_40,color=bw_6c>INVENTORY PAGE GOES HERE...", flags={.terse,.terse_height} },
+    sections := ui.add_frame(root,
+        { name="sections", layout={ dir=.down, gap=10, auto_size=.full } },
         { point=.center },
     )
+
+    col_count :: 9
+
+    for info in ([] struct { name:string, text:string, row_count:int, item_ids:[]string } {
+        { "consumables" , "<font=text_16,color=bw_59>CONSUMABLES" , 2, {
+            "bandage", "ammo_box", "black_tar", "liquid_escape",
+        } },
+        { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, {
+            "lighter",
+        } },
+        { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, {
+            "faith_seed", "lost_crystal",
+        } },
+    }) {
+        section := ui.add_frame(sections, { name=info.name, layout={ dir=.down, gap=10, align=.center, auto_size=.full } })
+        ui.add_frame(section, { name="header", text=info.text, flags={.terse,.terse_height,.terse_width} })
+
+        rows := ui.add_frame(section, { layout={ dir=.down, gap=12, auto_size=.full } })
+        for row_idx in 0..<info.row_count {
+            row := ui.add_frame(rows, { layout={ dir=.right, gap=12, auto_size=.full } })
+            for col_idx in 0..<col_count {
+                item_idx := row_idx*col_count + col_idx
+                item_id := item_idx < len(info.item_ids) ? info.item_ids[item_idx] : ""
+                ui.add_frame(row, { size=100, name="slot_item", text=item_id, draw=draw_slot_item })
+            }
+        }
+    }
 }
 
 app_menu_switch_page :: proc (page_name: string) {

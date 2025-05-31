@@ -206,3 +206,22 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)
 }
+
+draw_slot_item :: proc (f: ^ui.Frame) {
+    if f.text == "" {
+        br_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+        draw.rect_lines(f.rect, 2, br_color)
+        return
+    }
+
+    item := app.data.items[f.text]
+
+    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+    draw.rect(f.rect, bg_color)
+
+    sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
+    draw_sprite(item.icon, core.rect_inflated(f.rect, -8), sp_color)
+
+    br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
+    draw.rect_lines(f.rect, 2, br_color)
+}
