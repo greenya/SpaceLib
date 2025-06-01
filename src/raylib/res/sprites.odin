@@ -26,7 +26,7 @@ Texture :: struct {
 
 load_sprites :: proc (
     res: ^Res,
-    texture_size_limit  := [2] int { 512, 2048 },
+    texture_size_limit  := [2] int { 1024, 1024 },
     texture_sprites_gap := 1,
     texture_force_pot   := true,
     texture_filter      := rl.TextureFilter.POINT,
@@ -160,13 +160,13 @@ gen_atlas_texture :: proc (res: ^Res, name: string, size_limit: [2] int, gap: in
         file_ext_cstr := strings.clone_to_cstring(file_ext, context.temp_allocator)
         image := rl.LoadImageFromMemory(file_ext_cstr, raw_data(file.data), i32(len(file.data)))
 
-        if pos_x+image.width > atlas.width-1 {
+        if pos_x+image.width > atlas.width {
             pos_x = gap
             pos_y += gap+max_h
             max_h = 0
         }
 
-        if pos_x+image.width > atlas.width-1 || pos_y+image.height > atlas.height-1 {
+        if pos_x+image.width > atlas.width || pos_y+image.height > atlas.height {
             fmt.eprintfln("[!] Generate atlas texture failed: unable to fit \"%s\"", file_name)
         }
 
