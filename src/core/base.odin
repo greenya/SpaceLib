@@ -30,8 +30,20 @@ rect_half_bottom :: #force_inline proc (r: Rect) -> Rect {
     return { r.x, r.y+r.h/2, r.w, r.h/2 }
 }
 
+rect_line_top :: #force_inline proc (r: Rect, thick: f32) -> Rect {
+    return { r.x, r.y, r.w, thick }
+}
+
 rect_line_bottom :: #force_inline proc (r: Rect, thick: f32) -> Rect {
     return { r.x, r.y+r.h-thick, r.w, thick }
+}
+
+rect_line_left :: #force_inline proc (r: Rect, thick: f32) -> Rect {
+    return { r.x, r.y, thick, r.h }
+}
+
+rect_line_right :: #force_inline proc (r: Rect, thick: f32) -> Rect {
+    return { r.x+r.w-thick, r.y, thick, r.h }
 }
 
 rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
@@ -40,6 +52,16 @@ rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
 
 rect_moved :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
     return { r.x + v.x, r.y + v.y, r.w, r.h }
+}
+
+rect_scaled_from_center :: #force_inline proc (r: Rect, scale: Vec2) -> Rect {
+    w := r.w * scale.x
+    h := r.h * scale.y
+    return { r.x+w/2, r.y+h/2, w, h }
+}
+
+rect_scaled_from_top_left :: #force_inline proc (r: Rect, scale: Vec2) -> Rect {
+    return { r.x, r.y, r.w*scale.x, r.h*scale.y }
 }
 
 rect_from_center :: #force_inline proc (v: Vec2, size: Vec2) -> Rect {
