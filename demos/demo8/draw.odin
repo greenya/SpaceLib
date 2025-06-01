@@ -26,6 +26,11 @@ draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Co
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
+draw_text_right :: proc (text: string, pos: Vec2, font_name: string, color: Color) {
+    font_tr := &app.res.fonts[font_name].font_tr
+    draw.text_right(text, pos, font_tr, color)
+}
+
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
     bg_color := core.alpha(app.res.colors["bw_1a"].value, opacity)
     draw.rect(rect, bg_color)
@@ -221,6 +226,15 @@ draw_slot_item :: proc (f: ^ui.Frame) {
 
     sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
     draw_sprite(item.icon, core.rect_inflated(f.rect, -8), sp_color)
+
+    if item.count > 1 {
+        count_text := fmt.tprintf("x%i", item.count)
+        count_pos := Vec2 { f.rect.x+f.rect.w, f.rect.y } + {-4,4}
+        count_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)
+        count_color_shadow := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+        draw_text_right(count_text, count_pos+{-2,1}, "text_18_bold", count_color_shadow)
+        draw_text_right(count_text, count_pos, "text_18_bold", count_color)
+    }
 
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)

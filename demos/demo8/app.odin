@@ -131,6 +131,10 @@ app_draw :: proc () {
 }
 
 app_draw_stats :: proc () {
+    // if app.debug_drawing {
+    //     res.debug_draw_texture(app.res, "sprites", 100, .2)
+    // }
+
     @static stats: ui.Stats
     // if app.ui.clock.tick%8==0 do stats = app.ui.stats
     stats = app.ui.stats

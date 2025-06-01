@@ -1,5 +1,7 @@
 package demo8
 
+import "spacelib:core"
+
 App_Data :: struct {
     traits  : map [string] App_Data_Trait,
     items   : map [string] App_Data_Item,
@@ -58,15 +60,38 @@ app_data_add_items :: proc () {
     i := &app.data.items
 
     // consumables
-    i["bandage"] = { name="Bandage", icon="bandage-roll", tags={.consumable}, count=15 }
-    i["ammo_box"] = { name="Ammo Box", icon="ammo-box", tags={.consumable}, count=2 }
-    i["black_tar"] = { name="Black Tar", icon="potion-ball", tags={.consumable}, count=4 }
-    i["liquid_escape"] = { name="Liquid Escape", icon="harry-potter-skull", tags={.consumable}, count=1 }
+    i["bandage"] = { name="Bandage", icon="bandage-roll", tags={.consumable}, count=21 }
+    i["ammo_box"] = { name="Ammo Box", icon="ammo-box", tags={.consumable}, count=6 }
+    i["black_tar"] = { name="Black Tar", icon="potion-ball", tags={.consumable}, count=2 }
+    i["liquid_escape"] = { name="Liquid Escape", icon="broken-skull", tags={.consumable}, count=1 }
 
     // quest
     i["lighter"] = { name="Lighter", icon="lighter", tags={.quest}, count=1 }
+    i["broken_tablet"] = { name="Broken Tablet", icon="broken-tablet", tags={.quest}, count=1 }
+    i["crown_coin"] = { name="Crown Coin", icon="crown-coin", tags={.quest}, count=1 }
 
     // material
     i["faith_seed"] = { name="Faith Seed", icon="plant-seed", tags={.material}, count=1 }
-    i["lost_crystal"] = { name="Lost Crystal", icon="floating-crystal", tags={.material}, count=1 }
+    i["lost_crystal"] = { name="Lost Crystal", icon="floating-crystal", tags={.material}, count=7 }
+    i["log"] = { name="Log", icon="log", tags={.material}, count=123 }
+    i["rock"] = { name="Rock", icon="rock", tags={.material}, count=50 }
+    i["crumbling_ball"] = { name="Crumbling Ball", icon="crumbling-ball", tags={.material}, count=1 }
+    i["acid_tube"] = { name="Acid Tube", icon="corked-tube", tags={.material}, count=3 }
+    i["cloth_scrap"] = { name="Cloth Scrap", icon="rolled-cloth", tags={.material}, count=10 }
+    i["chared_berries"] = { name="Chared Berries", icon="elderberry", tags={.material}, count=1 }
+    i["feather"] = { name="Feather", icon="feather", tags={.material}, count=4 }
+    i["paper_sheet"] = { name="Paper Sheet", icon="papers", tags={.material}, count=24 }
+    i["vanilla_flower"] = { name="Vanilla Flower", icon="vanilla-flower", tags={.material}, count=1 }
+    i["black_ore"] = { name="Black Ore", icon="tumor", tags={.material}, count=2 }
+    i["salt"] = { name="Salt", icon="powder", tags={.material}, count=8 }
+}
+
+app_data_item_ids_filter_by_tag :: proc (tag: App_Data_Item_Tag, allocator := context.allocator) -> [] string {
+    result := make([dynamic] string, allocator)
+    for id in core.map_keys_sorted(app.data.items, context.temp_allocator) {
+        if tag in app.data.items[id].tags {
+            append(&result, id)
+        }
+    }
+    return result[:]
 }

@@ -521,17 +521,13 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
 
     col_count :: 9
 
-    for info in ([] struct { name:string, text:string, row_count:int, item_ids:[]string } {
-        { "consumables" , "<font=text_16,color=bw_59>CONSUMABLES" , 2, {
-            "bandage", "ammo_box", "black_tar", "liquid_escape",
-        } },
-        { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, {
-            "lighter",
-        } },
-        { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, {
-            "faith_seed", "lost_crystal",
-        } },
+    for info in ([] struct { name:string, text:string, row_count:int, item_tag: App_Data_Item_Tag } {
+        { "consumables" , "<font=text_16,color=bw_59>CONSUMABLES" , 2, .consumable },
+        { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, .quest },
+        { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, .material },
     }) {
+        item_ids := app_data_item_ids_filter_by_tag(info.item_tag, context.temp_allocator)
+
         section := ui.add_frame(sections, { name=info.name, layout={ dir=.down, gap=10, align=.center, auto_size=.full } })
         ui.add_frame(section, { name="header", text=info.text, flags={.terse,.terse_height,.terse_width} })
 
@@ -540,7 +536,7 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
             row := ui.add_frame(rows, { layout={ dir=.right, gap=12, auto_size=.full } })
             for col_idx in 0..<col_count {
                 item_idx := row_idx*col_count + col_idx
-                item_id := item_idx < len(info.item_ids) ? info.item_ids[item_idx] : ""
+                item_id := item_idx < len(item_ids) ? item_ids[item_idx] : ""
                 ui.add_frame(row, { size=100, name="slot_item", text=item_id, draw=draw_slot_item })
             }
         }
