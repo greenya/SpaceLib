@@ -194,14 +194,14 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
         nm_rect := core.rect_line_bottom(core.rect_inflated(f.rect, -8), 48)
         draw_text_center(trait.name, nm_rect, "text_16", sp_color)
 
-        for i := 9; i >= 0; i -= 1 {
-            pr_rect := core.rect_line_bottom(nm_rect, nm_rect.w/10)
-            pr_rect.w /= 10
-            pr_rect.x += f32(i)*pr_rect.w
+        for lv := max_trait_levels; lv > 0; lv -= 1 {
+            pr_rect := core.rect_line_bottom(nm_rect, nm_rect.w/max_trait_levels)
+            pr_rect.w /= max_trait_levels
+            pr_rect.x += f32(lv-1)*pr_rect.w
 
             pr_color_name := "bw_40"
-            if (i+1) <= trait.points_granted+trait.points_spent do pr_color_name = "bw_95"
-            if (i+1) <= trait.points_granted                    do pr_color_name = "res_fire"
+            if lv <= trait.levels_granted+trait.levels_bought   do pr_color_name = "bw_95"
+            if lv <= trait.levels_granted                       do pr_color_name = "res_fire"
             pr_color := core.alpha(app.res.colors[pr_color_name].value, f.opacity)
 
             draw_sprite("round-star", core.rect_inflated(pr_rect, 4), pr_color)

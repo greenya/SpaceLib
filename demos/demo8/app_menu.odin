@@ -1,6 +1,6 @@
 package demo8
 
-// import "core:fmt"
+import "core:fmt"
 import "core:math"
 import "core:slice"
 import "spacelib:core"
@@ -311,19 +311,21 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
 
         desc: string
         if is_left {
-            desc = "<wrap,right,font=text_16,color=bw_95>"+
+            desc = fmt.tprintf("<wrap,right,font=text_16,color=bw_95>"+
                 "<font=text_20,color=bw_ff>Longshot</font,/color>\n"+
                 "<font=text_16,color=bw_6c>Archetype Trait</font,/color>\n"+
-                pin+pin+pin+pin+pin+pin+pin+pin+pin+pin+"\n"+
-                "Increases Weapon Ideal Range by <color=bw_ff>6m</color>.\n\n"+
-                "<color=trait_hl>HUNTER</color> Archetype Trait."
+                pin+pin+pin+pin+pin+pin+pin+pin+pin+pin+"\n\n"+
+                "%s",
+                app.data.traits["longshot"]->desc(context.temp_allocator),
+            )
         } else {
-            desc = "<wrap,left,font=text_16,color=bw_95>"+
+            desc = fmt.tprintf("<wrap,left,font=text_16,color=bw_95>"+
                 "<font=text_20,color=bw_ff>Potency</font,/color>\n"+
                 "<font=text_16,color=bw_6c>Archetype Trait</font,/color>\n"+
-                pin+pin+pin+pin+pin+pin+pin+pin+pin+alt_b+pin+alt_e+"\n"+
-                "Increases Consumable Duration by <color=bw_ff>90%</color>.\n\n"+
-                "<color=trait_hl>ALCHEMIST</color> Archetype Trait."
+                pin+pin+pin+pin+pin+pin+pin+pin+pin+alt_b+pin+alt_e+"\n\n"+
+                "%s",
+                app.data.traits["potency"]->desc(context.temp_allocator),
+            )
         }
 
         ui.add_frame(slot_trait,
@@ -526,7 +528,7 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
         { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, .quest },
         { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, .material },
     }) {
-        item_ids := app_data_item_ids_filter_by_tag(info.item_tag, context.temp_allocator)
+        item_ids := app_data_item_ids_filtered_by_tag(info.item_tag, context.temp_allocator)
 
         section := ui.add_frame(sections, { name=info.name, layout={ dir=.down, gap=10, align=.center, auto_size=.full } })
         ui.add_frame(section, { name="header", text=info.text, flags={.terse,.terse_height,.terse_width} })

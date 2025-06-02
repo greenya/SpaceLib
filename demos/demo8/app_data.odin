@@ -1,5 +1,7 @@
 package demo8
 
+import "core:fmt"
+import "core:mem"
 import "spacelib:core"
 
 App_Data :: struct {
@@ -7,12 +9,29 @@ App_Data :: struct {
     items   : map [string] App_Data_Item,
 }
 
+max_trait_levels :: 10
+
 App_Data_Trait :: struct {
-    name            : string,
-    icon            : string,
-    points_granted  : int,
-    points_spent    : int,
-    active          : bool,
+    name                : string,
+    desc                : App_Data_Trait_Desc_Proc,
+    level_desc          : App_Data_Trait_Level_Desc_Proc,
+    icon                : string,
+    type                : App_Data_Trait_Type,
+    using player_state  : struct {
+        levels_granted  : int,
+        levels_bought   : int,
+        active          : bool,
+    },
+}
+
+App_Data_Trait_Desc_Proc        :: proc (trait: App_Data_Trait, allocator: mem.Allocator) -> string
+App_Data_Trait_Level_Desc_Proc  :: proc (trait: App_Data_Trait, level: int, allocator: mem.Allocator) -> string
+
+App_Data_Trait_Type :: enum {
+    none,
+    core,
+    hunter,
+    alchemist,
 }
 
 App_Data_Item :: struct {
@@ -44,16 +63,131 @@ app_data_destroy :: proc () {
 app_data_add_traits :: proc () {
     t := &app.data.traits
 
-    t["longshot"] = { name="Longshot", icon="silver-bullet", points_granted=10, active=true }
-    t["potency"] = { name="Potency", icon="evil-book", points_granted=9, active=true }
-    t["vigor"] = { name= "Vigor", icon="fist", points_granted=1, points_spent=9 }
-    t["endurance"] = { name="Endurance", icon="cracked-helm", points_granted=2, points_spent=2 }
-    t["spirit"] = { name="Spirit", icon="candlebright", points_spent=4 }
-    t["expertise"] = { name="Expertise", icon="power-lightning", points_granted=2, points_spent=8 }
-    t["amplitude"] = { name="Amplitude", icon="ink-swirl", points_spent=10 }
-    t["blood_bond"] = { name="Blood Bond", icon="open-wound" }
-    t["bloodstream"] = { name="Bloodstream", icon="gloop" }
-    t["siphoner"] = { name="Siphoner", icon="tesla", points_spent=5 }
+    t["longshot"] = { name="Longshot", icon="silver-bullet", type=.hunter,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := .6 * f32(trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf(
+                "Increases Weapon Ideal Range by <color=bw_ff>%vm</color>.\n\n"+
+                "<color=trait_hl>HUNTER</color> Archetype Trait.",
+                value, allocator=allocator,
+            )
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 60 * level
+            return fmt.aprintf("Level %i: %+v Weapon Ideal Range (cm)", level, value, allocator=allocator)
+        },
+        player_state = { 10, 0, true },
+    }
+
+    t["potency"] = { name="Potency", icon="evil-book", type=.alchemist,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 10 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf(
+                "Increases Consumable Duration by <color=bw_ff>%v%%</color>.\n\n"+
+                "<color=trait_hl>ALCHEMIST</color> Archetype Trait.",
+                value, allocator=allocator,
+            )
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 10 * level
+            return fmt.aprintf("Level %i: %+v%% Consumable Duration", level, value, allocator=allocator)
+        },
+        player_state = { 9, 0, true },
+    }
+
+    t["vigor"] = { name="Vigor", icon="fist", type=.core,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 3 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Increases Max Health by <color=bw_ff>%v</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 3 * level
+            return fmt.aprintf("Level %i: %+v Health", level, value, allocator=allocator)
+        },
+        player_state = { 1, 9, false },
+    }
+
+    t["endurance"] = { name="Endurance", icon="cracked-helm", type=.core,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 3 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Increases Max Stamina by <color=bw_ff>%v</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 3 * level
+            return fmt.aprintf("Level %i: %+v Stamina", level, value, allocator=allocator)
+        },
+        player_state = { 2, 2, false },
+    }
+
+    t["spirit"] = { name="Spirit", icon="candlebright", type=.core,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 2 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Increases Mod Power Generation by <color=bw_ff>%v%%</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 2 * level
+            return fmt.aprintf("Level %i: %+v%% Mod Power Generation", level, value, allocator=allocator)
+        },
+        player_state = { 0, 4, false },
+    }
+
+    t["expertise"] = { name="Expertise", icon="power-lightning", type=.core,
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 2 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Reduces Skill Cooldowns by <color=bw_ff>%v%%</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 2 * level
+            return fmt.aprintf("Level %i: %+v%% Skill Cooldown", level, value, allocator=allocator)
+        },
+        player_state = { 2, 8, false },
+    }
+
+    t["amplitude"] = { name="Amplitude", icon="ink-swirl",
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 5 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Increases AOE and AURA Size by <color=bw_ff>%v%%</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 5 * level
+            return fmt.aprintf("Level %i: %+v%% AOE and AURA Size", level, value, allocator=allocator)
+        },
+        player_state = { 0, 10, false },
+    }
+
+    t["blood_bond"] = { name="Blood Bond", icon="open-wound",
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := 1 * (trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Skill Summons absorb <color=bw_ff>%v%%</color> of damage taken by the caster.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := 1 * level
+            return fmt.aprintf("Level %i: %v%% Damage Absorbed", level, value, allocator=allocator)
+        },
+    }
+
+    t["bloodstream"] = { name="Bloodstream", icon="gloop",
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := .3 * f32(trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Increases Grey Health Regeneration by <color=bw_ff>%.1f/s</color>.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := .3 * f32(level)
+            return fmt.aprintf("Level %i: %.1f/s Grey Health Regeneration", level, value, allocator=allocator)
+        },
+    }
+
+    t["siphoner"] = { name="Siphoner", icon="tesla",
+        desc = proc (trait: App_Data_Trait, allocator := context.allocator) -> string {
+            value := .3 * f32(trait.levels_granted + trait.levels_bought)
+            return fmt.aprintf("Grants <color=bw_ff>%.1f%%</color> base damage as Lifesteal.", value, allocator=allocator)
+        },
+        level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
+            value := .3 * f32(level)
+            return fmt.aprintf("Level %i: %+.1f%% Lifesteal", level, value, allocator=allocator)
+        },
+        player_state = { 0, 5, false },
+    }
 }
 
 app_data_add_items :: proc () {
@@ -86,7 +220,7 @@ app_data_add_items :: proc () {
     i["salt"] = { name="Salt", icon="powder", tags={.material}, count=8 }
 }
 
-app_data_item_ids_filter_by_tag :: proc (tag: App_Data_Item_Tag, allocator := context.allocator) -> [] string {
+app_data_item_ids_filtered_by_tag :: proc (tag: App_Data_Item_Tag, allocator := context.allocator) -> [] string {
     result := make([dynamic] string, allocator)
     for id in core.map_keys_sorted(app.data.items, context.temp_allocator) {
         if tag in app.data.items[id].tags {

@@ -6,6 +6,12 @@
         "texture_filter": "BILINEAR"
     },
     {
+        "name": "text_18",
+        "file": "Sansation-Regular.ttf",
+        "height": 18,
+        "texture_filter": "BILINEAR"
+    },
+    {
         "name": "text_18_bold",
         "file": "Sansation-Bold.ttf",
         "height": 18,
