@@ -8,7 +8,6 @@ import "core:math/rand"
 Vec2 :: [2] f32
 Vec3 :: [3] f32
 Rect :: struct { x, y, w, h: f32 }
-Color :: [4] u8
 
 rect_center :: #force_inline proc (r: Rect) -> Vec2 {
     return { r.x + r.w/2, r.y + r.h/2 }

@@ -3,6 +3,14 @@ package spacelib_core
 import "core:fmt"
 import "core:math"
 
+Color :: [4] u8
+
+white   :: Color {255,255,255,255}
+red     :: Color {255,0,0,255}
+green   :: Color {0,255,0,255}
+blue    :: Color {0,0,255,255}
+black   :: Color {0,0,0,255}
+
 vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
     return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
 }
