@@ -244,12 +244,6 @@ draw_tooltip_before :: proc (f: ^ui.Frame) {
     draw_sprite("stripes-diagonal", f.rect, {80,80,80,255})
 }
 
-draw_tooltip_after :: proc (f: ^ui.Frame) {
-    ln_color := core.alpha(app.res.colors["bw_2c"].value, f.opacity)
-    draw.rect(core.rect_line_top(f.rect, 4), ln_color)
-    draw.rect(core.rect_line_bottom(f.rect, 4), ln_color)
-}
-
 draw_tooltip_title :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)

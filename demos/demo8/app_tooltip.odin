@@ -5,7 +5,10 @@ import "core:strings"
 import "spacelib:ui"
 
 app_tooltip_create :: proc () {
-    root := ui.add_frame(app.ui.root, { name="tooltip", order=9, flags={.pass,.hidden} }, {})
+    root := ui.add_frame(app.ui.root,
+        { name="tooltip", order=9, flags={.pass,.hidden} },
+        {},
+    )
 
     app_tooltip_add_trait(root)
 }
@@ -14,23 +17,27 @@ app_tooltip_destroy :: proc () {
 }
 
 app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent, { name="trait", size={320,0}, layout={ dir=.down, auto_size=.dir },
-        draw=draw_tooltip_before, draw_after=draw_tooltip_after,
-    }, {})
+    root := ui.add_frame(parent,
+        { name="trait", size={340,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_before },
+        { point=.top, rel_point=.mouse, offset={0,30} },
+    )
+
+    ui.add_frame(root, { name="border_top", order=-1, text="bw_2c", size={0,4}, draw=draw_color_rect })
+    ui.add_frame(root, { name="border_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
 
     ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
-        text_format="<font=text_24,color=bw_da>%s", text="[PH] Trait Title" })
+        text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Trait Title" })
 
     ui.add_frame(root, { name="subtitle", flags={.terse,.terse_height}, draw=draw_tooltip_subtitle,
-        text_format="<font=text_18,color=bw_95>%s", text="[PH] Trait Type",
+        text_format="<pad=20:6,wrap,font=text_18,color=bw_95>%s", text="[PH] Trait Type",
     })
 
     ui.add_frame(root, { name="desc", flags={.terse,.terse_height}, draw=draw_tooltip_desc,
-        text_format="<wrap,left,font=text_18,color=bw_da>%s", text="[PH] Trait Desc",
+        text_format="<pad=20:8,wrap,left,font=text_18,color=bw_da>%s", text="[PH] Trait Desc",
     })
 
     ui.add_frame(root, { name="levels", flags={.terse,.terse_height}, draw=draw_tooltip_body,
-        text_format="<left,font=text_18,color=bw_6c>%s", text="[PH] Trait Levels",
+        text_format="<pad=20:8,wrap,left,font=text_18,color=bw_6c>%s", text="[PH] Trait Levels",
     })
 }
 
@@ -72,16 +79,16 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
 
 app_tooltip_show :: proc (target: ^ui.Frame) {
     fmt.println(#procedure, target.name, target.text)
-    app_tooltip_hide(target)
     if target.text == "" do return
 
     switch target.name {
     case "slot_trait.ex": app_tooltip_show_trait(target)
+    case                : fmt.panicf("Unexpected tooltip target: %s", target.name)
     }
 
     tooltip := app.ui->get("tooltip")
     if ui.first_visible_child(tooltip) != nil {
-        tooltip.anchors[0] = { point=.top_left, rel_point=.top_right, rel_frame=target, offset={10,0} }
+        tooltip.anchors[0].rel_frame = target
         ui.show(tooltip)
     }
 }
