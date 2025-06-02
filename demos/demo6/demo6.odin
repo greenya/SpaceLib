@@ -72,28 +72,27 @@ main :: proc () {
             }
         }
 
-        tex_rect: Rect
+        screen_w := f32(rl.GetScreenWidth())
+        // screen_h := f32(rl.GetScreenHeight())
+
         { // draw sprites
-            tex := app.res.textures["sprites"]
-            tex_rect = { f32(rl.GetScreenWidth())-100-f32(tex.width), 50, f32(tex.width), f32(tex.height) }
-            rl.DrawTextureV(tex.texture_rl, { tex_rect.x, tex_rect.y }, rl.WHITE)
-            draw.rect_lines(tex_rect, 1, {255,255,0,255})
+            res.debug_draw_texture(app.res, "sprites", { screen_w-512-80, 80 }, .5 )
         }
 
         { // draw horizontal 3-patch sprite
             bt_height := app.res.sprites["square-yellow"].info.(rl.NPatchInfo).source.height
-            bt_rect := Rect { tex_rect.x, tex_rect.y+tex_rect.h+20, tex_rect.w, bt_height }
+            bt_rect := Rect { screen_w-512-80, 280, 512, bt_height }
             draw_sprite("square-yellow", bt_rect)
             draw_terse(create_terse("<color=indigo>Press SPACE to play random sound", bt_rect, context.temp_allocator))
         }
 
         { // draw vertical 3-patch sprite
-            bt_rect := Rect { tex_rect.x+tex_rect.w+20, tex_rect.y, 0, tex_rect.h }
+            bt_rect := Rect { screen_w-512-80, 340, 0, 200 }
             draw_sprite("red-button-03", bt_rect)
         }
 
         { // draw fonts
-            tr_rect := Rect { 0,0,f32(rl.GetScreenWidth())-tex_rect.w-30,f32(rl.GetScreenHeight()) }
+            tr_rect := Rect { 0,0,f32(rl.GetScreenWidth())-512-30,f32(rl.GetScreenHeight()) }
             tr_rect = core.rect_inflated(tr_rect, {-100-50,-50})
             tr_rect = core.rect_moved(tr_rect, { 50,0 })
             draw_sprite("panel-border-004", core.rect_inflated(tr_rect, {20,20}), {0,255,0,255})
@@ -103,7 +102,7 @@ main :: proc () {
             for name, i in core.map_keys_sorted(app.res.fonts, context.temp_allocator) {
                 clr := core.alpha(app.res.colors["sand"], clamp(1.0 - .15*f32(i), 0, 1))
                 font := app.res.fonts[name]
-                fmt.sbprintf(&sb, "<font=%s,color=%s>", name, core.color_to_hex(clr, context.temp_allocator))
+                fmt.sbprintf(&sb, "<wrap,font=%s,color=%s>", name, core.color_to_hex(clr, context.temp_allocator))
                 fmt.sbprintf(&sb, "<color=sky><icon=star></color><group=name,color=amber>%s</group,/color> (<group=size,color=orange>%v</group> px</color>): 1234567890\nThe quick brown fox jumps over the lazy dog.", name, font.height)
                 fmt.sbprint(&sb, "</font,/color>\n\n")
             }
@@ -127,6 +126,7 @@ create_terse :: proc (text: string, rect: Rect, allocator := context.allocator) 
     return terse.create(
         text,
         rect,
+        1,
         #force_inline proc (name: string) -> ^terse.Font {
             fmt.assertf(name in app.res.fonts, "No font with name \"%s\"", name)
             return &app.res.fonts[name].font_tr
