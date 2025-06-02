@@ -76,8 +76,9 @@ print :: proc (res: ^Res, filter: bit_set [Print_Filter] = ~{}) {
         fmt.printfln("Sprites (%i):", len(res.sprites))
         for name in core.map_keys_sorted(res.sprites) {
             switch info in res.sprites[name].info {
-            case rl.Rectangle:
-                fmt.printfln("- %s (%vx%v px)", name, info.width, info.height)
+            case Rect:
+                wrap_text := res.sprites[name].wrap ? ", wrap" : ""
+                fmt.printfln("- %s (%vx%v px%s)", name, info.w, info.h, wrap_text)
             case rl.NPatchInfo:
                 fmt.printfln("- %s (%vx%v px, %v)", name, info.source.width, info.source.height, info.layout)
             }
