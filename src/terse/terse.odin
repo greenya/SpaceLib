@@ -12,8 +12,9 @@ import "../core"
 Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
-    opacity     : f32,
+    pad         : Vec2,
     wrap        : bool,
+    opacity     : f32,
     valign      : Vertical_Alignment,
     words       : [dynamic] Word,
     lines       : [dynamic] Line,
@@ -76,7 +77,6 @@ create :: proc (
     query_font          : Query_Font_Proc,
     query_color         : Query_Color_Proc,
     allocator           := context.allocator,
-    debug_keep_codes    := false,
 ) -> ^Terse {
     ensure(query_font != nil)
     ensure(query_color != nil)
@@ -178,17 +178,17 @@ create :: proc (
                         case "gap":
                             gap_ratio := parse_f32(command_value)
                             line.gap = gap_ratio * font.height
+                        case "pad":
+                            ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
+                            terse.pad = parse_vec_int(command_value)
+                            terse.lines[0].rect = core.rect_moved(terse.lines[0].rect, terse.pad)
+                            terse.rect = core.rect_inflated(terse.rect, -terse.pad)
                         case:
                             fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
                         }
                     } else {
                         fmt.eprintfln("[!] Unexpected command \"%v\"", command)
                     }
-                }
-
-                if debug_keep_codes {
-                    b := strings.builder_make(context.temp_allocator)
-                    word = fmt.sbprintf(&b, "{{%s}}", code)
                 }
 
                 code = ""
@@ -199,7 +199,7 @@ create :: proc (
                     ? word_icon_scale * Vec2 { font.height, font.height }\
                     : font->measure_text(word)
 
-                if terse.wrap && line.rect.w + size.x > rect.w && line.word_count > 0 {
+                if terse.wrap && line.rect.w + size.x > terse.rect.w && line.word_count > 0 {
                     line = append_line(terse, font)
                 }
 
@@ -218,7 +218,7 @@ create :: proc (
     assert(last_line != nil)
 
     // apply vertical alignment
-    vertical_empty_space := rect.y + rect.h - (last_line.rect.y + last_line.rect.h)
+    vertical_empty_space := terse.rect.y + terse.rect.h - (last_line.rect.y + last_line.rect.h)
     if vertical_empty_space > 0 {
         offset_rect_y := f32(-1)
 
@@ -244,7 +244,7 @@ create :: proc (
         switch line.align {
         case .left: // already aligned
         case .center, .right:
-            offset_rect_x := (rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
+            offset_rect_x := (terse.rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
             line.rect.x += offset_rect_x
             for i in 0..<line.word_count {
                 word := &terse.words[line.word_start_idx + i]
@@ -261,6 +261,14 @@ create :: proc (
         }
     }
 
+    // update terse.rect
+    first_line := slice.first_ptr(terse.lines[:])
+    if first_line != nil {
+        terse.rect = first_line.rect
+        for line in terse.lines[1:] do core.rect_add_rect(&terse.rect, line.rect)
+        terse.rect = core.rect_inflated(terse.rect, terse.pad)
+    }
+
     // generate rects for terse.groups
     for &group in terse.groups {
         prev_line_idx := int(-1)
@@ -272,15 +280,6 @@ create :: proc (
                 core.rect_add_rect(slice.last_ptr(group.rects[:]), word.rect)
             }
             prev_line_idx = word.line_idx
-        }
-    }
-
-    // calculate terse.rect
-    first_line := slice.first_ptr(terse.lines[:])
-    if first_line != nil {
-        terse.rect = first_line.rect
-        for line in terse.lines[1:] {
-            core.rect_add_rect(&terse.rect, line.rect)
         }
     }
 
@@ -440,4 +439,33 @@ parse_f32 :: proc (text: string) -> f32 {
     }
 
     return sign * (digit_before_dot + digit_after_dot/10)
+}
+
+@private
+parse_vec_int :: proc (text: string) -> Vec2 {
+    pair_sep_idx := strings.index(text, ":")
+    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
+        return { f32(parse_int(text[0:pair_sep_idx])), f32(parse_int(text[pair_sep_idx+1:])) }
+    } else {
+        return f32(parse_int(text))
+    }
+}
+
+@private
+parse_int :: proc (text: string) -> int {
+    text := text
+    sign := 1
+    if text[0] == '-' {
+        sign = -1
+        text = text[1:]
+    }
+
+    m := 1
+    result := 0
+    #reverse for c in text {
+        result += m * int(c-'0')
+        m *= 10
+    }
+
+    return sign * result
 }
