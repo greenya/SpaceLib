@@ -243,6 +243,11 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = n
     if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
 
+first_visible_child :: proc (f: ^Frame) -> ^Frame {
+    for child in f.children do if .hidden not_in child.flags do return child
+    return nil
+}
+
 first_visible_sibling :: proc (f: ^Frame) -> ^Frame {
     if f.parent != nil do for child in f.parent.children do if .hidden not_in child.flags do return child
     return nil
