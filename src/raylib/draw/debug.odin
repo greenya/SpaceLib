@@ -168,6 +168,7 @@ _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
 @private
 _debug_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
     #partial switch point {
+    case .mouse         : return rl.GetMousePosition()
     case .top_left      : return { x, y }
     case .top           : return { x+w/2, y }
     case .top_right     : return { x+w, y }

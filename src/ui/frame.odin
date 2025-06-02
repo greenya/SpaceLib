@@ -118,6 +118,7 @@ Anchor :: struct {
 
 Anchor_Point :: enum {
     none,
+    mouse,
     top_left,
     top,
     top_right,
@@ -167,6 +168,7 @@ updated :: proc (f: ^Frame) {
 
 add_anchor :: proc (f: ^Frame, init: Anchor) {
     init := init
+    assert(init.point != .mouse)
     if init.point == .none do init.point = .top_left
     if init.rel_point == .none do init.rel_point = init.point
     append(&f.anchors, init)
@@ -493,9 +495,10 @@ update_frame_tree :: proc (f: ^Frame) {
     }
 
     m_pos := f.ui.mouse.pos
-    hit_rect := f.rect
-    if .terse_hit_rect in f.flags && f.terse != nil do hit_rect = f.terse.rect
-    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) do append(&f.ui.mouse_frames, f)
+    hit_rect := .terse_hit_rect in f.flags && f.terse != nil ? f.terse.rect : f.rect
+    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) {
+        append(&f.ui.mouse_frames, f)
+    }
 
     if .auto_hide in f.flags do append(&f.ui.auto_hide_frames, f)
 
@@ -713,8 +716,12 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         pin_anchors: Rect_Pin
 
         #partial switch anchor.point {
+        case .mouse:
+            panic("Mouse anchor can only be used as rel_point.")
+
         case .top_left:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
@@ -732,6 +739,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .top:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
@@ -749,6 +757,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .top_right:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.r=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.r=rel.x; dir.t=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.t=rel.y
@@ -766,6 +775,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .left:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
@@ -783,6 +793,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .center:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.t=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.t=rel.y
@@ -800,6 +811,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .right:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.r=f.ui.mouse.pos.x; dir.t=f.ui.mouse.pos.y
             case .top_left      : dir.r=rel.x; dir.t=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.t=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.t=rel.y
@@ -817,6 +829,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom_left:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.b=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.b=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.b=rel.y
@@ -834,6 +847,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.l=f.ui.mouse.pos.x; dir.b=f.ui.mouse.pos.y
             case .top_left      : dir.l=rel.x; dir.b=rel.y
             case .top           : dir.l=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.l=rel.x+rel.w; dir.b=rel.y
@@ -851,6 +865,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 
         case .bottom_right:
             #partial switch anchor.rel_point {
+            case .mouse         : dir.r=f.ui.mouse.pos.x; dir.b=f.ui.mouse.pos.y
             case .top_left      : dir.r=rel.x; dir.b=rel.y
             case .top           : dir.r=rel.x+rel.w/2; dir.b=rel.y
             case .top_right     : dir.r=rel.x+rel.w; dir.b=rel.y
@@ -871,6 +886,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         dir.r += anchor.offset.x
         dir.t += anchor.offset.y
         dir.b += anchor.offset.y
+
         transform_rect_dir(&result_dir, &result_pin, dir, pin_anchors)
     }
 
@@ -880,6 +896,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         result_dir.r - result_dir.l,
         result_dir.b - result_dir.t,
     }
+
     f.rect_dirty = false
 }
 
