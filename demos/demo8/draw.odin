@@ -10,14 +10,14 @@ import rl "vendor:raylib"
 
 draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     fmt.assertf(name in app.res.sprites, "Unknown sprite: \"%s\"", name)
+
     sprite := app.res.sprites[name]
-    texture := app.res.textures[sprite.texture]
-    rect_rl := transmute (rl.Rectangle) rect
-    tint_rl := rl.Color(tint)
+    tex_rl := app.res.textures[sprite.texture].texture_rl
 
     switch info in sprite.info {
-    case rl.Rectangle:  rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
-    case rl.NPatchInfo: rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    case Rect           : if sprite.wrap    do draw.texture_wrap    (tex_rl, info, rect, tint=tint)
+                          else              do draw.texture         (tex_rl, info, rect, tint=tint)
+    case rl.NPatchInfo  :                      draw.texture_npatch  (tex_rl, info, rect, tint=tint)
     }
 }
 
@@ -240,30 +240,36 @@ draw_slot_item :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 2, br_color)
 }
 
-draw_tt_before :: proc (f: ^ui.Frame) {
-    // TODO: try use "Stripes Diagonal small 1.png"
-    draw.rect(f.rect, {255,255,0,64})
+draw_tooltip_before :: proc (f: ^ui.Frame) {
+    draw_sprite("stripes-diagonal", f.rect, {80,80,80,255})
 }
 
-draw_tt_after :: proc (f: ^ui.Frame) {
+draw_tooltip_after :: proc (f: ^ui.Frame) {
     ln_color := core.alpha(app.res.colors["bw_2c"].value, f.opacity)
-    draw.rect_lines(f.rect, 2, ln_color)
+    draw.rect(core.rect_line_top(f.rect, 4), ln_color)
+    draw.rect(core.rect_line_bottom(f.rect, 4), ln_color)
 }
 
-draw_tt_title :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(app.res.colors["bw_11"].value, f.opacity)
+draw_tooltip_title :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)
     draw_terse(f.terse)
 }
 
-draw_tt_subtitle :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+draw_tooltip_subtitle :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_11"].value, .9* f.opacity)
     draw.rect(f.rect, bg_color)
     draw_terse(f.terse)
 }
 
-draw_tt_desc :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(app.res.colors["bw_2c"].value, f.opacity)
+draw_tooltip_desc :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_20"].value, .9* f.opacity)
+    draw.rect(f.rect, bg_color)
+    draw_terse(f.terse)
+}
+
+draw_tooltip_body :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_2c"].value, .9* f.opacity)
     draw.rect(f.rect, bg_color)
     draw_terse(f.terse)
 }

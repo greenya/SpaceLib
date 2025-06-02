@@ -15,9 +15,7 @@ Color :: core.Color
 App :: struct {
     res             : ^res.Res,
     ui              : ^ui.UI,
-
     data            : ^App_Data,
-
     debug_drawing   : bool,
 }
 
@@ -40,7 +38,7 @@ app_startup :: proc () {
     res.load_colors(app.res)
     res.load_fonts(app.res)
     res.load_sprites(app.res, texture_filter=.BILINEAR)
-    // res.print(app.res)
+    // res.print(app.res, {.textures,.sprites})
 
     app_data_create()
 
@@ -63,7 +61,7 @@ app_startup :: proc () {
     )
 
     app_menu_create()
-    app_tt_create()
+    app_tooltip_create()
 
     ui.print_frame_tree(app.ui.root)
 }
@@ -71,7 +69,7 @@ app_startup :: proc () {
 app_shutdown :: proc () {
     fmt.println(#procedure)
 
-    app_tt_destroy()
+    app_tooltip_destroy()
     app_menu_destroy()
     app_data_destroy()
     ui.destroy(app.ui)
