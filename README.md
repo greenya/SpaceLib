@@ -12,6 +12,8 @@
 
 ## TODOs
 
+TODO: terse: add support for <pad=30[:20]>, should parse 1 or 2 integers; add Terse.pad:Vec2, the content should be padded by this value
+
 TODO: test if text measuring can be (and should be) improved by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first

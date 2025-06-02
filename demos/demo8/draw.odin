@@ -239,3 +239,31 @@ draw_slot_item :: proc (f: ^ui.Frame) {
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)
 }
+
+draw_tt_before :: proc (f: ^ui.Frame) {
+    // TODO: try use "Stripes Diagonal small 1.png"
+    draw.rect(f.rect, {255,255,0,64})
+}
+
+draw_tt_after :: proc (f: ^ui.Frame) {
+    ln_color := core.alpha(app.res.colors["bw_2c"].value, f.opacity)
+    draw.rect_lines(f.rect, 2, ln_color)
+}
+
+draw_tt_title :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_11"].value, f.opacity)
+    draw.rect(f.rect, bg_color)
+    draw_terse(f.terse)
+}
+
+draw_tt_subtitle :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+    draw.rect(f.rect, bg_color)
+    draw_terse(f.terse)
+}
+
+draw_tt_desc :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_2c"].value, f.opacity)
+    draw.rect(f.rect, bg_color)
+    draw_terse(f.terse)
+}

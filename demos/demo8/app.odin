@@ -17,7 +17,6 @@ App :: struct {
     ui              : ^ui.UI,
 
     data            : ^App_Data,
-    menu            : ^App_Menu,
 
     debug_drawing   : bool,
 }
@@ -64,6 +63,7 @@ app_startup :: proc () {
     )
 
     app_menu_create()
+    app_tt_create()
 
     ui.print_frame_tree(app.ui.root)
 }
@@ -71,6 +71,7 @@ app_startup :: proc () {
 app_shutdown :: proc () {
     fmt.println(#procedure)
 
+    app_tt_destroy()
     app_menu_destroy()
     app_data_destroy()
     ui.destroy(app.ui)

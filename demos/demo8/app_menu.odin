@@ -6,12 +6,7 @@ import "core:slice"
 import "spacelib:core"
 import "spacelib:ui"
 
-App_Menu :: struct {
-}
-
 app_menu_create :: proc () {
-    app.menu = new(App_Menu)
-
     root := ui.add_frame(app.ui.root,
         { name="menu" },
         { point=.top_left },
@@ -35,12 +30,10 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_inventory") // preselect some tab
+    app.ui->click("menu/bar_top/tab_traits") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
-    free(app.menu)
-    app.menu = nil
 }
 
 app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
@@ -479,7 +472,7 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
 
     header := ui.add_frame(root, { name="header", text=""+
         "<font=text_24,color=bw_da>0  <color=bw_95>TRAIT POINTS AVAILABLE\n"+
-        "<gap=.2,font=text_20>0  <color=bw_59>TOTAL TRAIT POINTS",
+        "<gap=.2,font=text_20>38  <color=bw_59>TOTAL TRAIT POINTS",
         flags={.terse,.terse_height},
     },
         { point=.top, offset={0,32} },
@@ -504,7 +497,7 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         for col_idx in 0..<col_count {
             trait_idx := row_idx*col_count + col_idx
             trait_id := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
-            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait })
+            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait, enter=app_tt_show, leave=app_tt_hide })
         }
     }
 }
