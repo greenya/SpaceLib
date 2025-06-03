@@ -525,6 +525,8 @@ update_frame_tree :: proc (f: ^Frame) {
 draw_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
 
+    if f.terse != nil do f.terse.opacity = f.opacity
+
     if f.draw != nil {
         if .terse not_in f.flags || f.terse != nil do f.draw(f)
     } else {
