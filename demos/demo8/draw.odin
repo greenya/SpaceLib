@@ -46,6 +46,7 @@ draw_icon_card :: proc (name: string, rect: Rect, opacity: f32) {
 }
 
 draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
+    assert(t != nil)
     for word in t.words {
         // if word.in_group do continue
 
@@ -248,7 +249,8 @@ draw_slot_item :: proc (f: ^ui.Frame) {
 
     item := app.data.items[f.text]
 
-    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+    bg_color_name := f.name == "slot_gear" ? "bw_11" : "bw_1a"
+    bg_color := core.alpha(app.res.colors[bg_color_name].value, f.opacity)
     draw.rect(f.rect, bg_color)
 
     sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
@@ -307,7 +309,12 @@ draw_tooltip_image :: proc(f: ^ui.Frame) {
     draw_sprite(f.text, rect, sp_color)
 }
 
-draw_tooltip_keys :: proc (f: ^ui.Frame) {
+draw_tooltip_stats :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_18"].value, .9* f.opacity)
+    draw.rect(f.rect, bg_color)
+}
+
+draw_tooltip_actions :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)
     draw_terse(f.terse)

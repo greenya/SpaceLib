@@ -57,6 +57,15 @@ App_Data_Item :: struct {
     icon    : string,
     tags    : bit_set [App_Data_Item_Tag],
     count   : int,
+    stats   : struct {
+        armor,
+        weight,
+        res_bleed,
+        res_fire,
+        res_lightning,
+        res_poison,
+        res_blight: f32,
+    },
 }
 
 App_Data_Item_Tag :: enum {
@@ -64,6 +73,12 @@ App_Data_Item_Tag :: enum {
     curative,
     quest,
     material,
+    gear,
+    head_armor,
+    body_armor,
+    leg_armor,
+    glove_armor,
+    relic,
 }
 
 app_data_create :: proc () {
@@ -295,6 +310,7 @@ app_data_add_items :: proc () {
     i := &app.data.items
 
     // consumables
+
     i["bandage"] = { name="Bandage", icon="bandage-roll", tags={.consumable}, count=21,
         desc="Stops <color=res_bleed>BLEEDING</color> and restores all Grey Health." }
     i["ammo_box"] = { name="Ammo Box", icon="ammo-box", tags={.consumable}, count=6 }
@@ -303,7 +319,8 @@ app_data_add_items :: proc () {
     i["liquid_escape"] = { name="Liquid Escape", icon="broken-skull", tags={.consumable}, count=1,
         desc="When consumed, the hero will be returned to the last activated checkpoint." }
 
-    // quest
+    // quest items
+
     i["lighter"] = { name="Lighter", icon="lighter", tags={.quest}, count=1 }
     i["broken_tablet"] = { name="Broken Tablet", icon="broken-tablet", tags={.quest}, count=1 }
     i["crown_coin"] = { name="Crown Coin", icon="crown-coin", tags={.quest}, count=1 }
@@ -312,7 +329,8 @@ app_data_add_items :: proc () {
     i["cordyceps_gland"] = { name="Cordyceps Gland", icon="tumor", tags={.quest}, count=1,
         desc="Voices and whispers. You hear them every time you hold this wet viscera in your hand. Hundreds of them. Thousands. Dissonant and uncaring." }
 
-    // material
+    // materials
+
     i["faith_seed"] = { name="Faith Seed", icon="plant-seed", tags={.material}, count=1 }
     i["lost_crystal"] = { name="Lost Crystal", icon="floating-crystal", tags={.material}, count=7 }
     i["log"] = { name="Log", icon="log", tags={.material}, count=123 }
@@ -324,6 +342,33 @@ app_data_add_items :: proc () {
     i["paper_sheet"] = { name="Paper Sheet", icon="papers", tags={.material}, count=24 }
     i["vanilla_flower"] = { name="Vanilla Flower", icon="vanilla-flower", tags={.material}, count=1 }
     i["salt"] = { name="Salt", icon="powder", tags={.material}, count=8 }
+
+    // gear
+
+    i["leto_mark_2_helmet"] = { name="Leto Mark II Helmet", icon="visored-helm", tags={.gear,.head_armor}, count=1,
+        desc="While this ironclad helmet is somewhat difficult to breathe in, you feel secure knowing even the heaviest weapon would have little chance of cracking into your skull.",
+        stats={ armor=21.8, weight=11.1, res_bleed=2, res_fire=3, res_lightning=1, res_poison=2, res_blight=1 },
+    }
+    i["academics_overcoat"] = { name="Academic's Overcoat", icon="shoulder-armor", tags={.gear,.body_armor}, count=1,
+        desc="Donning this uniform makes you feel a touch smarter, and you can't help but straighten the necktie whenever it slips loose.",
+        stats={ armor=49.2, weight=20.8, res_bleed=2, res_poison=6, res_blight=3 },
+    }
+    i["academics_trousers"] = { name="Academic's Trousers", icon="leg-armor", tags={.gear,.leg_armor}, count=1,
+        desc="Expensive-looking shoes fit for a lecture hall ... that wouldn't last a week outside it.",
+        stats={ armor=24.6, weight=10.4, res_bleed=2, res_poison=4, res_blight=1 },
+    }
+    i["academics_gloves"] = { name="Academic's Gloves", icon="gloves", tags={.gear,.glove_armor}, count=1,
+        desc="The initials of the Dran who once owned these--and misplaced them often--are embroidered on the wool-lined inside.",
+        stats={ armor=12.3, weight=5.2, res_poison=2, res_blight=1 },
+    }
+
+    // artifacts
+
+    i["resonating_heart"] = { name="Resonating Heart", icon="dragon-orb", tags={.gear,.relic}, count=1,
+        desc="On use, regenerates <color=bw_ff>50%</color> of Max Health over <color=bw_ff>5s</color>. "+
+        "When heal ends, any overhealed Health to self is <color=bw_ff>Doubled</color> and awarded over "+
+        "the next <color=bw_ff>20s</color>.",
+    }
 }
 
 app_data_item_ids_filtered_by_tag :: proc (tag: App_Data_Item_Tag, allocator := context.allocator) -> [] string {

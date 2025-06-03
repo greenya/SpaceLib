@@ -358,9 +358,15 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
         { point=.right, rel_point=.left, rel_frame=primary, offset={20,0} },
     )
 
-    for i in 0..<5 {
+    gear_item_ids := [] string {
+        "leto_mark_2_helmet", "academics_overcoat", "academics_trousers", "academics_gloves",
+        "resonating_heart",
+    }
+
+    for item_id, i in gear_item_ids {
         ui.add_frame(ring,
-            { name="slot_gear", text="cracked-helm", size=80, draw=draw_slot_box },
+            { name="slot_gear", text=item_id, size=80, draw=draw_slot_item,
+                enter=app_tooltip_show, leave=app_tooltip_hide },
             { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 -1.175 -.2*f32(i)) },
         )
     }
