@@ -196,13 +196,15 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     }
 }
 
-set_text :: proc (f: ^Frame, values: ..any) {
+set_text :: proc (f: ^Frame, values: ..any, shown := false) {
     delete(f.text)
     terse.destroy(f.terse)
     f.terse = nil
 
     format := f.text_format != "" ? f.text_format : "%v"
     f.text = fmt.aprintf(format, ..values)
+
+    if shown do show(f)
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
