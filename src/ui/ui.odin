@@ -180,7 +180,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
     for i := len(ui.entered_frames) - 1; i >= 0; i -= 1 {
         f := ui.entered_frames[i]
-        if f.hovered_prev && !f.hovered {
+        if !f.hovered {
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
         }

@@ -475,11 +475,25 @@ destroy_frame_tree :: proc (f: ^Frame) {
 }
 
 @private
-update_frame_tree :: proc (f: ^Frame) {
+prepare_frame_tree :: proc (f: ^Frame) {
+    if f.anim.tick != nil {
+        f.anim.ratio = core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)
+        f.anim.tick(f)
+        if f.anim.ratio == 1 do f.anim = {}
+    }
+
     f.hovered_prev = f.hovered
     f.hovered = false
     f.captured = false
 
+    f.rect_dirty = true
+    for child in f.children do prepare_frame_tree(child)
+
+    f.ui.stats.frames_total += 1
+}
+
+@private
+update_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
 
     update_rect(f)
@@ -524,20 +538,6 @@ draw_frame_tree :: proc (f: ^Frame) {
     if f.draw_after != nil do f.draw_after(f)
 
     f.ui.stats.frames_drawn += 1
-}
-
-@private
-prepare_frame_tree :: proc (f: ^Frame) {
-    if f.anim.tick != nil {
-        f.anim.ratio = core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)
-        f.anim.tick(f)
-        if f.anim.ratio == 1 do f.anim = {}
-    }
-
-    f.rect_dirty = true
-    for child in f.children do prepare_frame_tree(child)
-
-    f.ui.stats.frames_total += 1
 }
 
 @private
