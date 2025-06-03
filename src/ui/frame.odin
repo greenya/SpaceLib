@@ -561,9 +561,9 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     prev_rect: Rect
     has_prev_rect: bool
 
-    children := visible_children(f, context.temp_allocator)
+    vis_children := visible_children(f, context.temp_allocator)
 
-    for child in children {
+    for child in vis_children {
         if .hidden in child.flags do continue
 
         rect := Rect {}
@@ -607,9 +607,9 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         child.rect_dirty = false
     }
 
-    if len(children) > 0 {
-        fc := children[0]
-        lc := slice.last(children[:])
+    if len(vis_children) > 0 {
+        fc := vis_children[0]
+        lc := slice.last(vis_children[:])
 
         #partial switch f.layout.dir {
         case .left_and_right:
@@ -618,17 +618,17 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             children_center_x   := (fc_x1 + lc_x2) / 2
             frame_center_x      := f.rect.x + f.rect.w/2
             dx                  := frame_center_x - children_center_x
-            for child in children do child.rect.x += dx
+            for child in vis_children do child.rect.x += dx
         case .up_and_down:
             fc_y1               := fc.rect.y
             lc_y2               := lc.rect.y + lc.rect.h
             children_center_y   := (fc_y1 + lc_y2) / 2
             frame_center_y      := f.rect.y + f.rect.h/2
             dy                  := frame_center_y - children_center_y
-            for child in children do child.rect.y += dy
+            for child in vis_children do child.rect.y += dy
         }
 
-        full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f)
+        full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f, vis_children)
         is_dir_vertical := is_layout_dir_vertical(f)
 
         if f.layout.auto_size == .full {
@@ -643,14 +643,14 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
             scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-            if is_dir_vertical  do for child in children do child.rect.y -= scroll.offset
-            else                do for child in children do child.rect.x -= scroll.offset
+            if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
+            else                do for child in vis_children do child.rect.x -= scroll.offset
         }
     } else {
         // FIXME: for some reason, when 0 children and layout.auto_size is used, the parent/siblings "fly" away,
         // FIXME: e.g. they size grows in 30 frames to infinity. Keeping size != 0 fixes it;
         // FIXME: investigate the reasoning and fix it
-        if len(children) == 0 do f.size = .1
+        if len(vis_children) == 0 do f.size = .1
 
         // ? maybe this is fixed after using visible_children()
         // ? try replicate with some example
@@ -658,17 +658,17 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
 }
 
 @private
-get_layout_content_size :: proc (f: ^Frame) -> (full_content_size: Vec2, dir_content_size: Vec2, dir_rect_size: f32) {
+get_layout_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_size: Vec2, dir_content_size: Vec2, dir_rect_size: f32) {
     is_dir_vertical := is_layout_dir_vertical(f)
     dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
 
-    if len(f.children) > 0 {
-        full_rect := f.children[0].rect
-        for child in f.children[1:] do core.rect_add_rect(&full_rect, child.rect)
+    if len(vis_children) > 0 {
+        full_rect := vis_children[0].rect
+        for child in vis_children[1:] do core.rect_add_rect(&full_rect, child.rect)
         full_content_size = 2*f.layout.pad + { full_rect.w, full_rect.h }
 
-        fc := f.children[0]
-        lc := slice.last(f.children[:])
+        fc := vis_children[0]
+        lc := slice.last(vis_children[:])
 
         if is_layout_dir_vertical(f) {
             min_y1: f32
