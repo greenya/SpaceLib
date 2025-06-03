@@ -314,6 +314,33 @@ draw_tooltip_stats :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 }
 
+draw_tooltip_resists :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_2c"].value, .9* f.opacity)
+    draw.rect(f.rect, bg_color)
+}
+
+draw_tooltip_resists_item :: proc (f: ^ui.Frame) {
+    sp_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)
+    sp_rect := f.rect
+    sp_rect.h = sp_rect.w
+    sp_rect = core.rect_moved(core.rect_inflated(sp_rect, -6), {0,-4})
+
+    sp_name := "???"
+    switch f.name {
+    case "bleed"    : sp_name = "water-drop"
+    case "fire"     : sp_name = "candlebright"
+    case "lightning": sp_name = "power-lightning"
+    case "poison"   : sp_name = "crossed-bones"
+    case "blight"   : sp_name = "harry-potter-skull"
+    }
+
+    draw_sprite(sp_name, sp_rect, sp_color)
+
+    tx_color := core.alpha(app.res.colors["bw_da"].value, f.opacity)
+    tx_rect := core.rect_moved(sp_rect, {0, sp_rect.h+8})
+    draw_text_center(f.text, tx_rect, "text_32", tx_color)
+}
+
 draw_tooltip_actions :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)

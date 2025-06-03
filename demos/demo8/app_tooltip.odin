@@ -40,6 +40,13 @@ app_tooltip_main_add :: proc (parent: ^ui.Frame) {
         ui.set_text(item, "[PH] stat", 777.7)
     }
 
+    resists := ui.add_frame(root, { name="resists", size={0,80},
+        layout={dir=.left_and_right,size={40,64},gap=4,align=.center}, draw=draw_tooltip_resists })
+
+    for name in ([] string { "bleed", "fire", "lightning", "poison", "blight" }) {
+        ui.add_frame(resists, { name=name, text="??", draw=draw_tooltip_resists_item })
+    }
+
     ui.add_frame(root, { name="desc", flags={.terse,.terse_height}, draw=draw_tooltip_desc,
         text_format="<pad=16:8,wrap,left,font=text_18,color=bw_6c>%s", text="[PH] desc",
     })
@@ -84,6 +91,21 @@ app_tooltip_main_set_stats :: proc (item: App_Data_Item) {
     if ui.first_visible_child(root) != nil do ui.show(root)
 }
 
+app_tooltip_main_set_resists :: proc (item: App_Data_Item) {
+    st := item.stats
+    if st.res_bleed==0 && st.res_fire==0 && st.res_lightning==0 && st.res_poison==0 && st.res_blight==0 do return
+
+    root := app.ui->get("tooltip/main/resists")
+
+    ui.set_text(ui.get(root, "bleed"),      fmt.tprint(st.res_bleed))
+    ui.set_text(ui.get(root, "fire"),       fmt.tprint(st.res_fire))
+    ui.set_text(ui.get(root, "lightning"),  fmt.tprint(st.res_lightning))
+    ui.set_text(ui.get(root, "poison"),     fmt.tprint(st.res_poison))
+    ui.set_text(ui.get(root, "blight"),     fmt.tprint(st.res_blight))
+
+    ui.show(root)
+}
+
 app_tooltip_show_item :: proc (target: ^ui.Frame) {
     root := app_tooltip_main_reset()
     item := app.data.items[target.text]
@@ -108,6 +130,7 @@ app_tooltip_show_item :: proc (target: ^ui.Frame) {
     ui.set_text(image, item.icon, shown=true)
 
     app_tooltip_main_set_stats(item)
+    app_tooltip_main_set_resists(item)
 
     desc := ui.get(root, "desc")
     if item.desc != "" do ui.set_text(desc, item.desc, shown=true)

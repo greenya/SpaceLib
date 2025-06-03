@@ -429,7 +429,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     )
 
     stats_res := ui.add_frame(stats_basic, { name="stats_res", text_format="<left,font=text_32,color=bw_da>"+
-        "<gap=.4,color=res_bleed><icon=drop></color> %v\n"+
+        "<gap=.4,color=res_bleed><icon=water-drop></color> %v\n"+
         "<gap=.4,color=res_fire><icon=candlebright></color> %v\n"+
         "<gap=.4,color=res_lightning><icon=power-lightning></color> %v\n"+
         "<gap=.4,color=res_poison><icon=crossed-bones></color> %v\n"+
