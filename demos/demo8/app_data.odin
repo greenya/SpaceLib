@@ -36,6 +36,7 @@ App_Data_Trait_Type :: enum {
 
 App_Data_Item :: struct {
     name    : string,
+    desc    : string,
     icon    : string,
     tags    : bit_set [App_Data_Item_Tag],
     count   : int,
@@ -43,6 +44,7 @@ App_Data_Item :: struct {
 
 App_Data_Item_Tag :: enum {
     consumable,
+    curative,
     quest,
     material,
 }
@@ -194,21 +196,27 @@ app_data_add_items :: proc () {
     i := &app.data.items
 
     // consumables
-    i["bandage"] = { name="Bandage", icon="bandage-roll", tags={.consumable}, count=21 }
+    i["bandage"] = { name="Bandage", icon="bandage-roll", tags={.consumable}, count=21,
+        desc="Stops <color=res_bleed>BLEEDING</color> and restores all Grey Health." }
     i["ammo_box"] = { name="Ammo Box", icon="ammo-box", tags={.consumable}, count=6 }
-    i["black_tar"] = { name="Black Tar", icon="potion-ball", tags={.consumable}, count=2 }
-    i["liquid_escape"] = { name="Liquid Escape", icon="broken-skull", tags={.consumable}, count=1 }
+    i["oilskin_balm"] = { name="Oilskin Balm", icon="potion-ball", tags={.consumable,.curative}, count=2,
+        desc="Cures <color=blight_rot>ROOT ROT</color> Blight and increases Blight Resistance by <color=bw_ff>25</color>. Lasts <color=bw_ff>19m</color>." }
+    i["liquid_escape"] = { name="Liquid Escape", icon="broken-skull", tags={.consumable}, count=1,
+        desc="When consumed, the hero will be returned to the last activated checkpoint." }
 
     // quest
     i["lighter"] = { name="Lighter", icon="lighter", tags={.quest}, count=1 }
     i["broken_tablet"] = { name="Broken Tablet", icon="broken-tablet", tags={.quest}, count=1 }
     i["crown_coin"] = { name="Crown Coin", icon="crown-coin", tags={.quest}, count=1 }
+    i["corrupted_shard"] = { name="Corrupted Shard", icon="rock", tags={.quest}, count=1,
+        desc="The crystal sizzles with unrefined power, sending, jolts of energy and aberrant whispers through every synapse of your being. Whatever essence once dwelled within this shard, it has long been separated from its source... and inhabited by something new." }
+    i["cordyceps_gland"] = { name="Cordyceps Gland", icon="tumor", tags={.quest}, count=1,
+        desc="Voices and whispers. You hear them every time you hold this wet viscera in your hand. Hundreds of them. Thousands. Dissonant and uncaring." }
 
     // material
     i["faith_seed"] = { name="Faith Seed", icon="plant-seed", tags={.material}, count=1 }
     i["lost_crystal"] = { name="Lost Crystal", icon="floating-crystal", tags={.material}, count=7 }
     i["log"] = { name="Log", icon="log", tags={.material}, count=123 }
-    i["rock"] = { name="Rock", icon="rock", tags={.material}, count=50 }
     i["crumbling_ball"] = { name="Crumbling Ball", icon="crumbling-ball", tags={.material}, count=1 }
     i["acid_tube"] = { name="Acid Tube", icon="corked-tube", tags={.material}, count=3 }
     i["cloth_scrap"] = { name="Cloth Scrap", icon="rolled-cloth", tags={.material}, count=10 }
@@ -216,7 +224,6 @@ app_data_add_items :: proc () {
     i["feather"] = { name="Feather", icon="feather", tags={.material}, count=4 }
     i["paper_sheet"] = { name="Paper Sheet", icon="papers", tags={.material}, count=24 }
     i["vanilla_flower"] = { name="Vanilla Flower", icon="vanilla-flower", tags={.material}, count=1 }
-    i["black_ore"] = { name="Black Ore", icon="tumor", tags={.material}, count=2 }
     i["salt"] = { name="Salt", icon="powder", tags={.material}, count=8 }
 }
 

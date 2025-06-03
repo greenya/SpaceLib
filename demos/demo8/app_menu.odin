@@ -497,7 +497,8 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         for col_idx in 0..<col_count {
             trait_idx := row_idx*col_count + col_idx
             trait_id := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
-            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait, enter=app_tooltip_show, leave=app_tooltip_hide })
+            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait,
+                enter=app_tooltip_show, leave=app_tooltip_hide })
         }
     }
 }
@@ -532,7 +533,8 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
             for col_idx in 0..<col_count {
                 item_idx := row_idx*col_count + col_idx
                 item_id := item_idx < len(item_ids) ? item_ids[item_idx] : ""
-                ui.add_frame(row, { size=100, name="slot_item", text=item_id, draw=draw_slot_item })
+                ui.add_frame(row, { size=100, name="slot_item", text=item_id, draw=draw_slot_item,
+                    enter=app_tooltip_show, leave=app_tooltip_hide })
             }
         }
     }

@@ -9,6 +9,7 @@ app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root, { name="tooltip", order=9, flags={.pass} })
 
     app_tooltip_add_trait(root)
+    app_tooltip_add_item(root)
 
     for child in root.children do ui.hide(child)
 }
@@ -18,7 +19,7 @@ app_tooltip_destroy :: proc () {
 
 app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
-        { name="trait", size={340,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
+        { name="trait", size={360,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { point=.top, rel_point=.mouse, offset={0,30} },
     )
 
@@ -26,7 +27,8 @@ app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
     ui.add_frame(root, { name="border_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
 
     ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
-        text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Trait Title" })
+        text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Trait Title",
+    })
 
     ui.add_frame(root, { name="subtitle", flags={.terse,.terse_height}, draw=draw_tooltip_subtitle,
         text_format="<pad=20:6,wrap,font=text_18,color=bw_95>%s", text="[PH] Trait Type",
@@ -78,12 +80,81 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
     ui.animate(root, app_tooltip_anim_appear, .25)
 }
 
+app_tooltip_add_item :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent,
+        { name="item", size={360,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
+        { point=.top, rel_point=.mouse, offset={0,30} },
+    )
+
+    ui.add_frame(root, { name="border_top", order=-1, text="bw_2c", size={0,4}, draw=draw_color_rect })
+    ui.add_frame(root, { name="border_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
+
+    ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
+        text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Item Title",
+    })
+
+    ui.add_frame(root, { name="subtitle", flags={.terse,.terse_height}, draw=draw_tooltip_subtitle,
+        text_format="<pad=20:6,wrap,font=text_18,color=bw_95>%s", text="[PH] Item Type",
+    })
+
+    ui.add_frame(root, { name="image", size={0,128+16+16}, draw=draw_tooltip_image, text="[PH] Image" })
+
+    ui.add_frame(root, { name="desc", flags={.terse,.terse_height}, draw=draw_tooltip_desc,
+        text_format="<pad=20:8,wrap,left,font=text_18,color=bw_6c>%s", text="[PH] Item Desc",
+    })
+
+    ui.add_frame(root, { name="keys", flags={.terse,.terse_height}, draw=draw_tooltip_keys,
+        text_format="<pad=20:6,font=text_18,color=bw_6c>%s", text="[PH] Keys",
+    })
+}
+
+app_tooltip_show_item :: proc (target: ^ui.Frame) {
+    root := app.ui->get("tooltip/item")
+    item := app.data.items[target.text]
+
+    title := ui.get(root, "title")
+    ui.set_text(title, item.name)
+
+    subtitle := ui.get(root, "subtitle")
+    subtitle_text := "???"
+    if .consumable in item.tags do subtitle_text = "Consumable"
+    if .curative in item.tags   do subtitle_text = "Curative"
+    if .material in item.tags   do subtitle_text = "Crafting Material"
+    if .quest in item.tags      do subtitle_text = "Quest Item"
+    ui.set_text(subtitle, subtitle_text)
+
+    image := ui.get(root, "image")
+    ui.set_text(image, item.icon)
+
+    desc := ui.get(root, "desc")
+    if item.desc != "" {
+        ui.show(desc)
+        ui.set_text(desc, item.desc)
+    } else {
+        ui.hide(desc)
+    }
+
+    { // keys
+        items := make([dynamic] string, context.temp_allocator)
+
+        if .consumable in item.tags do  append(&items, "<icon=key.Spc:3:1.5>  Use")
+                                        append(&items, "<icon=key.RMB:3:1.5>  Inspect")
+
+        keys := ui.get(root, "keys")
+        ui.set_text(keys, strings.join(items[:], "        ", context.temp_allocator))
+    }
+
+    root.anchors[0].rel_frame = target
+    ui.animate(root, app_tooltip_anim_appear, .25)
+}
+
 app_tooltip_show :: proc (target: ^ui.Frame) {
     // fmt.println(#procedure, target.name, target.text)
     if target.text == "" do return
 
     switch target.name {
     case "slot_trait.ex": app_tooltip_show_trait(target)
+    case "slot_item"    : app_tooltip_show_item(target)
     case                : fmt.panicf("Unexpected tooltip target: %s", target.name)
     }
 }

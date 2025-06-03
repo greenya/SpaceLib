@@ -241,7 +241,7 @@ draw_slot_item :: proc (f: ^ui.Frame) {
 }
 
 draw_tooltip_bg :: proc (f: ^ui.Frame) {
-    color := core.alpha({80,80,80,255}, f.opacity)
+    color := core.alpha(app.res.colors["bw_40"].value, f.opacity)
     draw_sprite("stripes-diagonal", f.rect, color)
 }
 
@@ -265,6 +265,21 @@ draw_tooltip_desc :: proc (f: ^ui.Frame) {
 
 draw_tooltip_body :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_2c"].value, .9* f.opacity)
+    draw.rect(f.rect, bg_color)
+    draw_terse(f.terse)
+}
+
+draw_tooltip_image :: proc(f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
+    draw_sprite("criss-cross", f.rect, bg_color)
+
+    sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
+    rect := core.rect_from_center(core.rect_center(f.rect), 128)
+    draw_sprite(f.text, rect, sp_color)
+}
+
+draw_tooltip_keys :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)
     draw_terse(f.terse)
 }
