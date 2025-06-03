@@ -8,8 +8,8 @@ import "spacelib:ui"
 app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root, { name="tooltip", order=9, flags={.pass} })
 
-    app_tooltip_add_trait(root)
-    app_tooltip_add_item(root)
+    app_tooltip_add_trait_template(root)
+    app_tooltip_add_item_template(root)
 
     for child in root.children do ui.hide(child)
 }
@@ -17,14 +17,20 @@ app_tooltip_create :: proc () {
 app_tooltip_destroy :: proc () {
 }
 
-app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
+app_tooltip_add_base_frame :: proc (parent: ^ui.Frame, frame_name: string) -> ^ui.Frame {
     root := ui.add_frame(parent,
-        { name="trait", size={360,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
+        { name=frame_name, size={380,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { point=.top, rel_point=.mouse, offset={0,30} },
     )
 
     ui.add_frame(root, { name="border_top", order=-1, text="bw_2c", size={0,4}, draw=draw_color_rect })
     ui.add_frame(root, { name="border_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
+
+    return root
+}
+
+app_tooltip_add_trait_template :: proc (parent: ^ui.Frame) {
+    root := app_tooltip_add_base_frame(parent, "trait")
 
     ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
         text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Trait Title",
@@ -80,14 +86,37 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
     ui.animate(root, app_tooltip_anim_appear, .25)
 }
 
-app_tooltip_add_item :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent,
-        { name="item", size={360,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
-        { point=.top, rel_point=.mouse, offset={0,30} },
-    )
+app_tooltip_show_skill :: proc (target: ^ui.Frame) {
+    root := app.ui->get("tooltip/item") // reuse "item" view
+    skill := app.data.skills[target.text]
 
-    ui.add_frame(root, { name="border_top", order=-1, text="bw_2c", size={0,4}, draw=draw_color_rect })
-    ui.add_frame(root, { name="border_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
+    title := ui.get(root, "title")
+    ui.set_text(title, skill.name)
+
+    subtitle := ui.get(root, "subtitle")
+    ui.set_text(subtitle, "Archetype Skill")
+
+    image := ui.get(root, "image")
+    ui.set_text(image, skill.icon)
+
+    desc := ui.get(root, "desc")
+    ui.set_text(desc, skill.desc, shown=true)
+
+    { // keys
+        keys := ui.get(root, "keys")
+        if !skill.selected {
+            ui.set_text(keys, "<icon=key.Spc:3:1.5>  Select", shown=true)
+        } else {
+            ui.hide(keys)
+        }
+    }
+
+    root.anchors[0].rel_frame = target
+    ui.animate(root, app_tooltip_anim_appear, .25)
+}
+
+app_tooltip_add_item_template :: proc (parent: ^ui.Frame) {
+    root := app_tooltip_add_base_frame(parent, "item")
 
     ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
         text_format="<pad=20:10,wrap,font=text_24,color=bw_da>%s", text="[PH] Item Title",
@@ -128,8 +157,7 @@ app_tooltip_show_item :: proc (target: ^ui.Frame) {
 
     desc := ui.get(root, "desc")
     if item.desc != "" {
-        ui.show(desc)
-        ui.set_text(desc, item.desc)
+        ui.set_text(desc, item.desc, shown=true)
     } else {
         ui.hide(desc)
     }
@@ -141,7 +169,7 @@ app_tooltip_show_item :: proc (target: ^ui.Frame) {
                                         append(&items, "<icon=key.RMB:3:1.5>  Inspect")
 
         keys := ui.get(root, "keys")
-        ui.set_text(keys, strings.join(items[:], "        ", context.temp_allocator))
+        ui.set_text(keys, strings.join(items[:], "        ", context.temp_allocator), shown=true)
     }
 
     root.anchors[0].rel_frame = target
@@ -153,7 +181,8 @@ app_tooltip_show :: proc (target: ^ui.Frame) {
     if target.text == "" do return
 
     switch target.name {
-    case "slot_trait.ex": app_tooltip_show_trait(target)
+    case "slot_trait"   : app_tooltip_show_trait(target)
+    case "slot_skill"   : app_tooltip_show_skill(target)
     case "slot_item"    : app_tooltip_show_item(target)
     case                : fmt.panicf("Unexpected tooltip target: %s", target.name)
     }

@@ -37,7 +37,7 @@ app_startup :: proc () {
     res.add_files(app.res, #load_directory("res/sprites"))
     res.load_colors(app.res)
     res.load_fonts(app.res)
-    res.load_sprites(app.res, texture_filter=.BILINEAR)
+    res.load_sprites(app.res, texture_size_limit={1024,2048}, texture_filter=.BILINEAR)
     // res.print(app.res, {.textures,.sprites})
 
     app_data_create()
@@ -62,7 +62,6 @@ app_startup :: proc () {
 
     app_menu_create()
     app_tooltip_create()
-
     ui.print_frame_tree(app.ui.root)
 }
 
@@ -130,9 +129,7 @@ app_draw :: proc () {
 }
 
 app_draw_stats :: proc () {
-    // if app.debug_drawing {
-    //     res.debug_draw_texture(app.res, "sprites", 100, .2)
-    // }
+    // res.debug_draw_texture(app.res, "sprites", {10,100}, .25)
 
     @static stats: ui.Stats
     // if app.ui.clock.tick%8==0 do stats = app.ui.stats
@@ -145,14 +142,4 @@ app_draw_stats :: proc () {
     rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
     cstr := fmt.ctprintf("%#v", stats)
     rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
-
-    // pos := Vec2 { app.ui.root.rect.w - 10, app.ui.root.rect.h - 72-20 }
-    // for f in app.ui.entered_frames {
-    //     text := fmt.tprintf("%s, hovered=%v", f.name, f.hovered)
-    //     draw.text_right(text, pos, &app.res.fonts["default"].font_tr, core.brightness(core.blue, .5))
-    //     pos.y -= 20
-    // }
-
-    // tooltip := app.ui->get("tooltip")
-    // fmt.println(tooltip.offset)
 }

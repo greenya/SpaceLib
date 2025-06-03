@@ -97,6 +97,13 @@ draw_player_title :: proc (f: ^ui.Frame) {
     draw.rect(ln_rect, ln_color)
 }
 
+draw_slot_hover_state :: proc (f: ^ui.Frame) {
+    if f.hovered {
+        hb_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)
+        draw.rect_lines(core.rect_inflated(f.rect, 3), 2, hb_color)
+    }
+}
+
 draw_slot_ring :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_11"].value, f.opacity)
     br_color := core.alpha(app.res.colors["bw_40"].value, f.opacity)
@@ -190,7 +197,7 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     sp_color := core.alpha(app.res.colors[trait.active ? "trait_hl" : "bw_95"].value, f.opacity)
     draw_sprite(trait.icon, core.rect_inflated(rect, -8), sp_color)
 
-    if strings.has_suffix(f.name, ".ex") {
+    if !strings.has_suffix(f.name, ".ex") {
         nm_rect := core.rect_line_bottom(core.rect_inflated(f.rect, -8), 48)
         draw_text_center(trait.name, nm_rect, "text_16", sp_color)
 
@@ -210,6 +217,26 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
 
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)
+
+    if !strings.has_suffix(f.name, ".ex") do draw_slot_hover_state(f)
+}
+
+draw_slot_skill :: proc (f: ^ui.Frame) {
+    assert(f.text != "")
+
+    skill := app.data.skills[f.text]
+
+    draw_slot_rect(f)
+
+    if skill.selected && f.order == 0 {
+        sl_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)
+        draw.rect_lines(f.rect, 4, sl_color)
+    }
+
+    sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
+    draw_sprite(skill.icon, core.rect_inflated(f.rect, -8), sp_color)
+
+    draw_slot_hover_state(f)
 }
 
 draw_slot_item :: proc (f: ^ui.Frame) {
@@ -238,6 +265,8 @@ draw_slot_item :: proc (f: ^ui.Frame) {
 
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)
+
+    draw_slot_hover_state(f)
 }
 
 draw_tooltip_bg :: proc (f: ^ui.Frame) {

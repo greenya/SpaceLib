@@ -6,6 +6,7 @@ import "spacelib:core"
 
 App_Data :: struct {
     traits  : map [string] App_Data_Trait,
+    skills  : map [string] App_Data_Skill,
     items   : map [string] App_Data_Item,
 }
 
@@ -34,6 +35,22 @@ App_Data_Trait_Type :: enum {
     alchemist,
 }
 
+App_Data_Skill :: struct {
+    name                : string,
+    desc                : string,
+    type                : App_Data_Skill_Type,
+    icon                : string,
+    using player_state  : struct {
+        selected        : bool,
+    },
+}
+
+App_Data_Skill_Type :: enum {
+    none,
+    hunter,
+    alchemist,
+}
+
 App_Data_Item :: struct {
     name    : string,
     desc    : string,
@@ -52,11 +69,13 @@ App_Data_Item_Tag :: enum {
 app_data_create :: proc () {
     app.data = new(App_Data)
     app_data_add_traits()
+    app_data_add_skills()
     app_data_add_items()
 }
 
 app_data_destroy :: proc () {
     delete(app.data.traits)
+    delete(app.data.skills)
     delete(app.data.items)
     free(app.data)
     app.data = nil
@@ -189,6 +208,86 @@ app_data_add_traits :: proc () {
             return fmt.aprintf("Level %i: %+.1f%% Lifesteal", level, value, allocator=allocator)
         },
         player_state = { 0, 5, false },
+    }
+}
+
+app_data_add_skills :: proc () {
+    s := &app.data.skills
+
+    // hunter
+
+    s["hunters_mark"] = { name="Hunter's Mark", icon="on-sight", type=.hunter, player_state={ true }, desc=
+        "Increases the Hunter's spatial awareness by casting an Aura that automatically applies "+
+        "<color=trait_hl>MARK</color> to all enemies within <color=bw_ff>35m</color>. While senses "+
+        "are heightened, Hunter also gains <color=bw_ff>15%</color> increased Ranged and Melee damage. "+
+        "Lasts <color=bw_ff>25.4s</color>.\n\n"+
+        "Cooldown: <color=bw_ff>56s</color>.\n\n"+
+        "<color=trait_hl>MARK</color>: Crit Chance against <color=trait_hl>MARKED</color> enemies is "+
+        "increased by <color=bw_ff>10%</color> for all allies.",
+    }
+
+    s["hunters_focus"] = { name="Hunter's Focus", icon="bandit", type=.hunter, desc=
+        "Continuously Aiming Down Sights uninterrupted and without shooting for <color=bw_ff>0.5s</color> "+
+        "causes the Hunter to enter a <color=trait_hl>FOCUSED</color> state. Wears off after "+
+        "<color=bw_ff>0.75s</color> of leaving Aim. Lasts <color=bw_ff>25.4s</color>.\n\n"+
+        "<color=trait_hl>FOCUSED</color> reduces Weapon Spread, Recoil, and Sway by "+
+        "<color=bw_ff>50%</color>, and grants <color=bw_ff>25%</color> Ranged & Ranged Weakspot Damage. "+
+        "While <color=trait_hl>FOCUSED</color>, aiming at enemies will automatically apply "+
+        "<color=trait_hl>MARK</color>.\n\n"+
+        "Cooldown: <color=bw_ff>40s</color>.\n\n"+
+        "<color=trait_hl>MARK</color>: Crit Chance against <color=trait_hl>MARKED</color> enemies "+
+        "is increased by <color=bw_ff>10%</color> for all allies.",
+    }
+
+    s["hunters_shroud"] = { name="Hunter's Shroud", icon="shadow-follower", type=.hunter, desc=
+        "Hunter becomes Shrouded, reducing enemy awareness and making them harder to hit while"+
+        "moving. Attacking or activating a Mod or Skill will instantly exit Shroud.\n\n"+
+        "Exiting Shroud applies <color=trait_hl>MARK</color> to all enemies within <color=bw_ff>15m</color> "+
+        "and grants <color=trait_hl>AMBUSH</color> to the Hunter for <color=bw_ff>2s</color>.\n\n"+
+        "<color=trait_hl>AMBUSH</color>: Increases Ranged and Melee Damage by <color=bw_ff>50%</color> "+
+        "which diminishes over its duration. Ranged and Melee attacks apply <color=trait_hl>MARK</color>.\n\n"+
+        "Hunter will automatically Shroud again after <color=bw_ff>1.15s</color> if no offensive actions "+
+        "are performed.\n\n"+
+        "Lasts: <color=bw_ff>15.2s</color>.\n\n"+
+        "Cooldown: <color=bw_ff>72s</color>.\n\n"+
+        "<color=trait_hl>MARK</color>: Crit Chance against <color=trait_hl>MARKED</color> enemies is "+
+        "increased by <color=bw_ff>10%</color> for all allies",
+    }
+
+    // alchemist
+
+    s["vial_stone_mist"] = { name="Vial: Stone Mist", icon="rock", type=.alchemist, desc=
+        "Creates a mysterious vapor cloud which lasts <color=bw_ff>10.2s</color> and applies "+
+        "<color=trait_hl>STONESKIN</color>.\n\n"+
+        "<color=trait_hl>STONESKIN</color> reduces incoming damage by <color=bw_ff>25%</color>, "+
+        "reduces Stagger by <color=bw_ff>1</color>, greatly increases Blight Buildup Decay Rate, "+
+        "and makes the target immune to <color=trait_hl>STATUS</color> Effects. "+
+        "Lasts <color=bw_ff>15.2s</color>.\n\n"+
+        "<color=bw_ff>PRESS</color>: Slam Vial on the ground, creating the effect at the Alchemist's feet.\n\n"+
+        "<color=bw_ff>HOLD & RELEASE</color>: Aim and throw the Vial causing the same effect where it lands.\n\n"+
+        "Cooldown: <color=bw_ff>60s</color>.",
+    }
+
+    s["vial_frenzy_dust"] = { name="Vial: Frenzy Dust", icon="open-wound", type=.alchemist, player_state={ true }, desc=
+        "Creates a mysterious vapor cloud which lasts <color=bw_ff>10.2s</color> and applies "+
+        "<color=trait_hl>FRENZIED</color>.\n\n"+
+        "<color=trait_hl>FRENZIED</color> increases Fire Rate, Reload Speed, and Melee Speed by "+
+        "<color=bw_ff>20%</color>, and Movement Speed by <color=bw_ff>15%</color>. Lasts <color=bw_ff>15.2s</color>.\n\n"+
+        "<color=bw_ff>PRESS</color>: Slam Vial on the ground, creating the effect at the Alchemist's feet.\n\n"+
+        "<color=bw_ff>HOLD & RELEASE</color>: Aim and throw the Vial causing the same effect where it lands.\n\n"+
+        "Cooldown: <color=bw_ff>60s</color>.",
+    }
+
+    s["vial_elixir_of_life"] = { name="Vial: Elixir Of Life", icon="standing-potion", type=.alchemist, desc=
+        "Creates a mysterious vapor cloud that lasts <color=bw_ff>10.2s</color> and applies "+
+        "<color=trait_hl>LIVING WILL</color>.\n\n"+
+        "<color=trait_hl>LIVING WILL</color> grants <color=bw_ff>5</color> Health Regeneration per second, "+
+        "and protects against fatal damage. Can revive downed players. Lasts <color=bw_ff>20.3s</color>.\n\n"+
+        "Revived allies cannot be affected by Living Will for <color=bw_ff>180s</color>. Resets at "+
+        "Worldstone or on death.\n\n"+
+        "<color=bw_ff>PRESS</color>: Slam Vial on the ground, creating the effect at the Alchemist's feet.\n\n"+
+        "<color=bw_ff>HOLD & RELEASE</color>: Aim and throw the Vial causing the same effect where it lands.\n\n"+
+        "Cooldown: <color=bw_ff>72s</color>.",
     }
 }
 

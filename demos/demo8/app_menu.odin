@@ -30,7 +30,7 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_traits") // preselect some tab
+    app.ui->click("menu/bar_top/tab_character") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -242,9 +242,14 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.top_right:.top_left },
         )
 
-        icon := is_left ? "high-shot" : "haunting"
-        for _ in 0..<3 {
-            ui.add_frame(list, { name="slot_skill", text=icon, draw=draw_slot_box })
+        skill_ids := is_left\
+            ? [] string { "hunters_mark", "hunters_focus", "hunters_shroud" }\
+            : [] string { "vial_stone_mist", "vial_frenzy_dust", "vial_elixir_of_life" }
+
+        for skill_id in skill_ids {
+            ui.add_frame(list, { name="slot_skill", text=skill_id, draw=draw_slot_skill,
+                enter=app_tooltip_show, leave=app_tooltip_hide,
+            })
         }
     }
 
@@ -294,7 +299,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
         )
 
         slot_trait := ui.add_frame(trait,
-            { name="slot_trait", text=is_left?"longshot":"potency", size={100,220}, draw=draw_slot_trait },
+            { name="slot_trait.ex", text=is_left?"longshot":"potency", size={100,220}, draw=draw_slot_trait },
             { point=is_left?.top_right:.top_left, offset={(is_left?-1:1)*24,32} },
         )
 
@@ -348,7 +353,8 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     primary := app_menu_add_primary_slot(ring)
 
     ui.add_frame(root,
-        { name="skill", text="high-shot", size=80, order=-1, draw=draw_slot_box },
+        { name="slot_skill", text="hunters_mark", size=80, order=-1, draw=draw_slot_skill,
+            enter=app_tooltip_show, leave=app_tooltip_hide },
         { point=.right, rel_point=.left, rel_frame=primary, offset={20,0} },
     )
 
@@ -364,7 +370,8 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     secondary := app_menu_add_secondary_slot(ring)
 
     ui.add_frame(root,
-        { name="skill", text="haunting", size=80, order=-1, draw=draw_slot_box },
+        { name="slot_skill", text="vial_frenzy_dust", size=80, order=-1, draw=draw_slot_skill,
+            enter=app_tooltip_show, leave=app_tooltip_hide },
         { point=.left, rel_point=.right, rel_frame=secondary, offset={-20,0} },
     )
 
@@ -497,7 +504,7 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         for col_idx in 0..<col_count {
             trait_idx := row_idx*col_count + col_idx
             trait_id := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
-            ui.add_frame(row, { name="slot_trait.ex", text=trait_id, draw=draw_slot_trait,
+            ui.add_frame(row, { name="slot_trait", text=trait_id, draw=draw_slot_trait,
                 enter=app_tooltip_show, leave=app_tooltip_hide })
         }
     }
