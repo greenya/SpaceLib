@@ -240,8 +240,9 @@ draw_slot_item :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 2, br_color)
 }
 
-draw_tooltip_before :: proc (f: ^ui.Frame) {
-    draw_sprite("stripes-diagonal", f.rect, {80,80,80,255})
+draw_tooltip_bg :: proc (f: ^ui.Frame) {
+    color := core.alpha({80,80,80,255}, f.opacity)
+    draw_sprite("stripes-diagonal", f.rect, color)
 }
 
 draw_tooltip_title :: proc (f: ^ui.Frame) {

@@ -145,4 +145,14 @@ app_draw_stats :: proc () {
     rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
     cstr := fmt.ctprintf("%#v", stats)
     rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
+
+    // pos := Vec2 { app.ui.root.rect.w - 10, app.ui.root.rect.h - 72-20 }
+    // for f in app.ui.entered_frames {
+    //     text := fmt.tprintf("%s, hovered=%v", f.name, f.hovered)
+    //     draw.text_right(text, pos, &app.res.fonts["default"].font_tr, core.brightness(core.blue, .5))
+    //     pos.y -= 20
+    // }
+
+    // tooltip := app.ui->get("tooltip")
+    // fmt.println(tooltip.offset)
 }

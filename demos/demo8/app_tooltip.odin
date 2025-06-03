@@ -2,6 +2,7 @@ package demo8
 
 import "core:fmt"
 import "core:strings"
+import "spacelib:core"
 import "spacelib:ui"
 
 app_tooltip_create :: proc () {
@@ -18,7 +19,7 @@ app_tooltip_destroy :: proc () {
 
 app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
     root := ui.add_frame(parent,
-        { name="trait", size={340,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_before },
+        { name="trait", size={340,0}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { point=.top, rel_point=.mouse, offset={0,30} },
     )
 
@@ -89,7 +90,7 @@ app_tooltip_show :: proc (target: ^ui.Frame) {
     tooltip := app.ui->get("tooltip")
     if ui.first_visible_child(tooltip) != nil {
         tooltip.anchors[0].rel_frame = target
-        ui.show(tooltip)
+        ui.animate(tooltip, app_tooltip_anim_appear, .25)
     }
 }
 
@@ -97,6 +98,18 @@ app_tooltip_hide :: proc (target: ^ui.Frame) {
     fmt.println(#procedure, target.name, target.text)
     tooltip := app.ui->get("tooltip")
     if tooltip.anchors[0].rel_frame == target {
-        ui.hide(tooltip)
+        ui.animate(tooltip, app_tooltip_anim_disappear, .15)
     }
+}
+
+app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, f.anim.ratio)
+    f.offset = { 0, 20 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    if f.anim.ratio == 0 do ui.show(f)
+}
+
+app_tooltip_anim_disappear :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, 1-f.anim.ratio)
+    f.offset = { 0, 20 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    if f.anim.ratio == 1 do ui.hide(f)
 }
