@@ -6,12 +6,11 @@ import "spacelib:core"
 import "spacelib:ui"
 
 app_tooltip_create :: proc () {
-    root := ui.add_frame(app.ui.root,
-        { name="tooltip", order=9, flags={.pass,.hidden} },
-        {},
-    )
+    root := ui.add_frame(app.ui.root, { name="tooltip", order=9, flags={.pass} })
 
     app_tooltip_add_trait(root)
+
+    for child in root.children do ui.hide(child)
 }
 
 app_tooltip_destroy :: proc () {
@@ -43,8 +42,8 @@ app_tooltip_add_trait :: proc (parent: ^ui.Frame) {
 }
 
 app_tooltip_show_trait :: proc (target: ^ui.Frame) {
-    trait := app.data.traits[target.text]
     root := app.ui->get("tooltip/trait")
+    trait := app.data.traits[target.text]
 
     title := ui.get(root, "title")
     ui.set_text(title, trait.name)
@@ -59,7 +58,7 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
     desc := ui.get(root, "desc")
     ui.set_text(desc, trait->desc(context.temp_allocator))
 
-    {
+    { // levels
         sb := strings.builder_make(context.temp_allocator)
         for lv in 1..=max_trait_levels {
             lv_current := lv == trait.levels_granted + trait.levels_bought
@@ -75,41 +74,37 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
         ui.set_text(levels, strings.to_string(sb))
     }
 
-    ui.show(root, hide_siblings=true)
+    root.anchors[0].rel_frame = target
+    ui.animate(root, app_tooltip_anim_appear, .25)
 }
 
 app_tooltip_show :: proc (target: ^ui.Frame) {
-    fmt.println(#procedure, target.name, target.text)
+    // fmt.println(#procedure, target.name, target.text)
     if target.text == "" do return
 
     switch target.name {
     case "slot_trait.ex": app_tooltip_show_trait(target)
     case                : fmt.panicf("Unexpected tooltip target: %s", target.name)
     }
-
-    tooltip := app.ui->get("tooltip")
-    if ui.first_visible_child(tooltip) != nil {
-        tooltip.anchors[0].rel_frame = target
-        ui.animate(tooltip, app_tooltip_anim_appear, .25)
-    }
 }
 
 app_tooltip_hide :: proc (target: ^ui.Frame) {
-    fmt.println(#procedure, target.name, target.text)
+    // fmt.println(#procedure, target.name, target.text)
     tooltip := app.ui->get("tooltip")
-    if tooltip.anchors[0].rel_frame == target {
-        ui.animate(tooltip, app_tooltip_anim_disappear, .15)
+    view := ui.first_visible_child(tooltip)
+    if view != nil && view.anchors[0].rel_frame == target {
+        ui.animate(view, app_tooltip_anim_disappear, .15)
     }
 }
 
 app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, f.anim.ratio)
-    f.offset = { 0, 20 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
-    if f.anim.ratio == 0 do ui.show(f)
+    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    if f.anim.ratio == 0 do ui.show(f, hide_siblings=true)
 }
 
 app_tooltip_anim_disappear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, 1-f.anim.ratio)
-    f.offset = { 0, 20 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    f.offset = { 0, 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
     if f.anim.ratio == 1 do ui.hide(f)
 }
