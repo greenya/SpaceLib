@@ -6,16 +6,9 @@ import "spacelib:core"
 import "spacelib:ui"
 
 app_tooltip_create :: proc () {
-    root := ui.add_frame(app.ui.root, { name="tooltip", order=9, flags={.pass} })
-    app_tooltip_main_add(root)
-}
-
-app_tooltip_destroy :: proc () {
-}
-
-app_tooltip_main_add :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent,
-        { name="main", size={372,0}, flags={.hidden}, layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
+    root := ui.add_frame(app.ui.root,
+        { name="tooltip", order=9, flags={.hidden}, size={372,0},
+            layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { point=.top, rel_point=.mouse, offset={0,30} },
     )
 
@@ -60,60 +53,61 @@ app_tooltip_main_add :: proc (parent: ^ui.Frame) {
     })
 }
 
-app_tooltip_main_reset :: proc () -> (root: ^ui.Frame) {
-    root = app.ui->get("tooltip/main")
-    for child in root.children do if child.order == 0 do ui.hide(child)
+app_tooltip_destroy :: proc () {
+}
+
+app_tooltip_reset :: proc () -> (tooltip: ^ui.Frame) {
+    tooltip = app.ui->get("tooltip")
+    for child in tooltip.children do if child.order == 0 do ui.hide(child)
     return
 }
 
-app_tooltip_main_ready :: proc (target: ^ui.Frame) {
-    root := app.ui->get("tooltip/main")
-    root.anchors[0].rel_frame = target
-    ui.animate(root, app_tooltip_anim_appear, .25)
+app_tooltip_ready :: proc (tooltip, target: ^ui.Frame) {
+    tooltip.anchors[0].rel_frame = target
+    ui.animate(tooltip, app_tooltip_anim_appear, .25)
 }
 
-app_tooltip_main_set_stats :: proc (item: App_Data_Item) {
-    root := app.ui->get("tooltip/main/stats")
-    for child in root.children do ui.hide(child)
+app_tooltip_set_stats :: proc (tooltip: ^ui.Frame, item: App_Data_Item) {
+    stats := ui.get(tooltip, "stats")
+    for child in stats.children do ui.hide(child)
 
     set_stat :: proc (root: ^ui.Frame, t: string, v: f32) {
         for child in root.children do if .hidden in child.flags {
             ui.set_text(child, t, v, shown=true)
             return
         }
-        panic("tooltip/main/stats: count overflow")
+        panic("[tooltip] Stats children overflow")
     }
 
     st := item.stats
-    if st.armor != 0    do set_stat(root, "Armor", st.armor)
-    if st.weight != 0   do set_stat(root, "Weight", st.weight)
+    if st.armor != 0    do set_stat(stats, "Armor", st.armor)
+    if st.weight != 0   do set_stat(stats, "Weight", st.weight)
 
-    if ui.first_visible_child(root) != nil do ui.show(root)
+    if ui.first_visible_child(stats) != nil do ui.show(stats)
 }
 
-app_tooltip_main_set_resists :: proc (item: App_Data_Item) {
+app_tooltip_set_resists :: proc (tooltip: ^ui.Frame, item: App_Data_Item) {
     st := item.stats
     if st.res_bleed==0 && st.res_fire==0 && st.res_lightning==0 && st.res_poison==0 && st.res_blight==0 do return
 
-    root := app.ui->get("tooltip/main/resists")
+    resists := ui.get(tooltip, "resists")
 
-    ui.set_text(ui.get(root, "bleed"),      fmt.tprint(st.res_bleed))
-    ui.set_text(ui.get(root, "fire"),       fmt.tprint(st.res_fire))
-    ui.set_text(ui.get(root, "lightning"),  fmt.tprint(st.res_lightning))
-    ui.set_text(ui.get(root, "poison"),     fmt.tprint(st.res_poison))
-    ui.set_text(ui.get(root, "blight"),     fmt.tprint(st.res_blight))
+    ui.set_text(ui.get(resists, "bleed"),       fmt.tprint(st.res_bleed))
+    ui.set_text(ui.get(resists, "fire"),        fmt.tprint(st.res_fire))
+    ui.set_text(ui.get(resists, "lightning"),   fmt.tprint(st.res_lightning))
+    ui.set_text(ui.get(resists, "poison"),      fmt.tprint(st.res_poison))
+    ui.set_text(ui.get(resists, "blight"),      fmt.tprint(st.res_blight))
 
-    ui.show(root)
+    ui.show(resists)
 }
 
-app_tooltip_show_item :: proc (target: ^ui.Frame) {
-    root := app_tooltip_main_reset()
+app_tooltip_show_item :: proc (tooltip, target: ^ui.Frame) {
     item := app.data.items[target.text]
 
-    title := ui.get(root, "title")
+    title := ui.get(tooltip, "title")
     ui.set_text(title, item.name, shown=true)
 
-    subtitle := ui.get(root, "subtitle")
+    subtitle := ui.get(tooltip, "subtitle")
     switch {
     case .quest in item.tags        : ui.set_text(subtitle, "Quest Item", shown=true)
     case .head_armor in item.tags   : ui.set_text(subtitle, "Helmet", shown=true)
@@ -126,13 +120,13 @@ app_tooltip_show_item :: proc (target: ^ui.Frame) {
     case .material in item.tags     : ui.set_text(subtitle, "Crafting Material", shown=true)
     }
 
-    image := ui.get(root, "image")
+    image := ui.get(tooltip, "image")
     ui.set_text(image, item.icon, shown=true)
 
-    app_tooltip_main_set_stats(item)
-    app_tooltip_main_set_resists(item)
+    app_tooltip_set_stats(tooltip, item)
+    app_tooltip_set_resists(tooltip, item)
 
-    desc := ui.get(root, "desc")
+    desc := ui.get(tooltip, "desc")
     if item.desc != "" do ui.set_text(desc, item.desc, shown=true)
 
     { // actions
@@ -142,50 +136,44 @@ app_tooltip_show_item :: proc (target: ^ui.Frame) {
         if .consumable in item.tags do append(&items, "<icon=key.Spc:3:1.5>  Use")
                                        append(&items, "<icon=key.RMB:3:1.5>  Inspect")
 
-        actions := ui.get(root, "actions")
+        actions := ui.get(tooltip, "actions")
         ui.set_text(actions, strings.join(items[:], "        ", context.temp_allocator), shown=true)
     }
-
-    app_tooltip_main_ready(target)
 }
 
-app_tooltip_show_skill :: proc (target: ^ui.Frame) {
-    root := app_tooltip_main_reset()
+app_tooltip_show_skill :: proc (tooltip, target: ^ui.Frame) {
     skill := app.data.skills[target.text]
 
-    title := ui.get(root, "title")
+    title := ui.get(tooltip, "title")
     ui.set_text(title, skill.name, shown=true)
 
-    subtitle := ui.get(root, "subtitle")
+    subtitle := ui.get(tooltip, "subtitle")
     ui.set_text(subtitle, "Archetype Skill", shown=true)
 
-    image := ui.get(root, "image")
+    image := ui.get(tooltip, "image")
     ui.set_text(image, skill.icon, shown=true)
 
-    desc := ui.get(root, "desc")
+    desc := ui.get(tooltip, "desc")
     ui.set_text(desc, skill.desc, shown=true)
 
-    actions := ui.get(root, "actions")
+    actions := ui.get(tooltip, "actions")
     if !skill.selected do ui.set_text(actions, "<icon=key.Spc:3:1.5>  Select", shown=true)
-
-    app_tooltip_main_ready(target)
 }
 
-app_tooltip_show_trait :: proc (target: ^ui.Frame) {
-    root := app_tooltip_main_reset()
+app_tooltip_show_trait :: proc (tooltip, target: ^ui.Frame) {
     trait := app.data.traits[target.text]
 
-    title := ui.get(root, "title")
+    title := ui.get(tooltip, "title")
     ui.set_text(title, trait.name, shown=true)
 
-    subtitle := ui.get(root, "subtitle")
+    subtitle := ui.get(tooltip, "subtitle")
     #partial switch trait.type {
     case .none  : ui.set_text(subtitle, "Trait", shown=true)
     case .core  : ui.set_text(subtitle, "Core Trait", shown=true)
     case        : ui.set_text(subtitle, "Archetype Trait", shown=true)
     }
 
-    desc := ui.get(root, "desc")
+    desc := ui.get(tooltip, "desc")
     ui.set_text(desc, trait->desc(context.temp_allocator), shown=true)
 
     { // levels
@@ -200,39 +188,40 @@ app_tooltip_show_trait :: proc (target: ^ui.Frame) {
             if lv_current   do strings.write_string(&sb, "</color>")
         }
 
-        body := ui.get(root, "body")
+        body := ui.get(tooltip, "body")
         ui.set_text(body, strings.to_string(sb), shown=true)
     }
-
-    app_tooltip_main_ready(target)
 }
 
 app_tooltip_show :: proc (target: ^ui.Frame) {
     // fmt.println(#procedure, target.name, target.text)
-    if target.text == "" do return
+    if target.name == "" || target.text == "" do return
+
+    tooltip := app_tooltip_reset()
 
     switch target.name {
     case "slot_item"    : fallthrough
-    case "slot_gear"    : app_tooltip_show_item(target)
-    case "slot_skill"   : app_tooltip_show_skill(target)
-    case "slot_trait"   : app_tooltip_show_trait(target)
-    case                : fmt.panicf("Unexpected tooltip target: %s", target.name)
+    case "slot_gear"    : app_tooltip_show_item(tooltip, target)
+    case "slot_skill"   : app_tooltip_show_skill(tooltip, target)
+    case "slot_trait"   : app_tooltip_show_trait(tooltip, target)
+    case                : fmt.panicf("[tooltip] Unexpected target: %s", target.name)
     }
+
+    app_tooltip_ready(tooltip, target)
 }
 
 app_tooltip_hide :: proc (target: ^ui.Frame) {
     // fmt.println(#procedure, target.name, target.text)
     tooltip := app.ui->get("tooltip")
-    view := ui.first_visible_child(tooltip)
-    if view != nil && view.anchors[0].rel_frame == target {
-        ui.animate(view, app_tooltip_anim_disappear, .15)
+    if tooltip.anchors[0].rel_frame == target {
+        ui.animate(tooltip, app_tooltip_anim_disappear, .15)
     }
 }
 
 app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, f.anim.ratio)
     f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
-    if f.anim.ratio == 0 do ui.show(f, hide_siblings=true)
+    if f.anim.ratio == 0 do ui.show(f)
 }
 
 app_tooltip_anim_disappear :: proc (f: ^ui.Frame) {

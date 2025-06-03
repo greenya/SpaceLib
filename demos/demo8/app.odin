@@ -37,7 +37,7 @@ app_startup :: proc () {
     res.add_files(app.res, #load_directory("res/sprites"))
     res.load_colors(app.res)
     res.load_fonts(app.res)
-    res.load_sprites(app.res, texture_size_limit={1024,2048}, texture_filter=.BILINEAR)
+    res.load_sprites(app.res, texture_size_limit={1024,2048}, texture_sprites_gap=2, texture_filter=.BILINEAR)
     // res.print(app.res, {.textures,.sprites})
 
     app_data_create()
