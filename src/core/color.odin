@@ -6,6 +6,9 @@ import "core:math"
 Color :: [4] u8
 
 white   :: Color {255,255,255,255}
+yellow  :: Color {255,255,0,255}
+aqua    :: Color {0,255,255,255}
+magenta :: Color {255,0,255,255}
 red     :: Color {255,0,0,255}
 green   :: Color {0,255,0,255}
 blue    :: Color {0,0,255,255}

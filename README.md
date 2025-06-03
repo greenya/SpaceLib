@@ -14,6 +14,8 @@
 
 TODO: test if text measuring can be (and should be) improved by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
+TODO: terse: add support for "tab" command <tab=150>, which should take single integer, should generate empty word with needed width so following word will start at that horizontal pos (e.g. 150px from line.rect.x)
+
 TODO: terse: rework parse_f32, parse_int, parse_vec_i, parse_vec -- should be only parse_vec and parse f32, which just handle any f32 text value
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
@@ -22,6 +24,8 @@ TODO: terse: add support for "image" command <image=name[:left][:right]>, add pr
 - when "center", the image starts with new line, positioned at the center, text continues after image from next new line
 - when "left" or "right", image will stick to given size, text should flow on other size of the image, e.g. the image basically affects the following lines width, until image height end
 [MAYBE] do not add "query" proc, but have format like: <image=name:200x200[:left][:right]> width and height are required, if width=0, the width will be input rect.w, if height=0 -- input rect.h
+
+TODO: res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
 
 TODO: res: sprite: add support for animations (Sprite.info variant)
     would be nice to support animation names, so its possible to express something like:
