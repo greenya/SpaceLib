@@ -257,6 +257,12 @@ first_visible_sibling :: proc (f: ^Frame) -> ^Frame {
     return nil
 }
 
+visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
+    list := make([dynamic] ^Frame, allocator)
+    for child in f.children do if .hidden not_in child.flags do append(&list, child)
+    return list[:]
+}
+
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil do for child in f.parent.children do child.flags += { .hidden }
     f.flags -= { .hidden }
@@ -555,7 +561,9 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     prev_rect: Rect
     has_prev_rect: bool
 
-    for child in f.children {
+    children := visible_children(f, context.temp_allocator)
+
+    for child in children {
         if .hidden in child.flags do continue
 
         rect := Rect {}
@@ -599,9 +607,9 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         child.rect_dirty = false
     }
 
-    if len(f.children) > 0 {
-        fc := f.children[0]
-        lc := slice.last(f.children[:])
+    if len(children) > 0 {
+        fc := children[0]
+        lc := slice.last(children[:])
 
         #partial switch f.layout.dir {
         case .left_and_right:
@@ -610,14 +618,14 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             children_center_x   := (fc_x1 + lc_x2) / 2
             frame_center_x      := f.rect.x + f.rect.w/2
             dx                  := frame_center_x - children_center_x
-            for child in f.children do child.rect.x += dx
+            for child in children do child.rect.x += dx
         case .up_and_down:
             fc_y1               := fc.rect.y
             lc_y2               := lc.rect.y + lc.rect.h
             children_center_y   := (fc_y1 + lc_y2) / 2
             frame_center_y      := f.rect.y + f.rect.h/2
             dy                  := frame_center_y - children_center_y
-            for child in f.children do child.rect.y += dy
+            for child in children do child.rect.y += dy
         }
 
         full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f)
@@ -635,14 +643,17 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
             scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-            if is_dir_vertical  do for child in f.children do child.rect.y -= scroll.offset
-            else                do for child in f.children do child.rect.x -= scroll.offset
+            if is_dir_vertical  do for child in children do child.rect.y -= scroll.offset
+            else                do for child in children do child.rect.x -= scroll.offset
         }
     } else {
         // FIXME: for some reason, when 0 children and layout.auto_size is used, the parent/siblings "fly" away,
         // FIXME: e.g. they size grows in 30 frames to infinity. Keeping size != 0 fixes it;
         // FIXME: investigate the reasoning and fix it
-        if len(f.children) == 0 do f.size = .1
+        if len(children) == 0 do f.size = .1
+
+        // ? maybe this is fixed after using visible_children()
+        // ? try replicate with some example
     }
 }
 
