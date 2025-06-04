@@ -16,7 +16,7 @@ app_tooltip_create :: proc () {
     ui.add_frame(root, { name="line_bottom", order=+1, text="bw_2c", size={0,4}, draw=draw_color_rect })
 
     ui.add_frame(root, { name="title", flags={.terse,.terse_height}, draw=draw_tooltip_title,
-        text_format="<pad=16:10,wrap,font=text_24,color=bw_da>%s", text="[PH] title",
+        text_format="<pad=16:12,wrap,font=text_24,color=bw_da>%s", text="[PH] title",
     })
 
     ui.add_frame(root, { name="subtitle", flags={.terse,.terse_height}, draw=draw_tooltip_subtitle,
@@ -41,7 +41,7 @@ app_tooltip_create :: proc () {
     }
 
     ui.add_frame(root, { name="desc", flags={.terse,.terse_height}, draw=draw_tooltip_desc,
-        text_format="<pad=16:8,wrap,left,font=text_18,color=bw_6c>%s", text="[PH] desc",
+        text_format="<pad=16:10,wrap,left,font=text_18,color=bw_6c>%s", text="[PH] desc",
     })
 
     ui.add_frame(root, { name="body", flags={.terse,.terse_height}, draw=draw_tooltip_body,
@@ -186,6 +186,7 @@ app_tooltip_show_trait :: proc (tooltip, target: ^ui.Frame) {
 
             if lv_current   do strings.write_string(&sb, "<color=bw_da>")
             if lv > 1       do strings.write_rune(&sb, '\n')
+                               strings.write_string(&sb, "<gap=.3>")
                                strings.write_string(&sb, lv_desc)
             if lv_current   do strings.write_string(&sb, "</color>")
         }
