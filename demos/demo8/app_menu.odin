@@ -74,12 +74,12 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     }
 
     ui.add_frame(root,
-        { name="nav_left", text="<font=text_20,icon=key.Q:1.5>", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_left", text="<font=text_20,icon=key.Q:1.5>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_item_nav },
         { point=.right, rel_point=.left, rel_frame=tabs.children[0], offset={-8,0} },
     )
 
     ui.add_frame(root,
-        { name="nav_right", text="<font=text_20,icon=key.E:1.5>", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_right", text="<font=text_20,icon=key.E:1.5>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_item_nav },
         { point=.left, rel_point=.right, rel_frame=slice.last(tabs.children[:]), offset={8,0} },
     )
 
@@ -97,12 +97,12 @@ app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
     )
 
     ui.add_frame(root,
-        { name="toggle_stats", text="<left,font=text_20,color=bw_6c><icon=key.R:1.5>  Stats | Loadouts", flags={.terse,.terse_width,.terse_height} },
+        { name="toggle_stats", text="<left,font=text_20,color=bw_6c><icon=key.R:1.5>  Stats | Loadouts", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_item_nav },
         { point=.left, offset={64,0} },
     )
 
     ui.add_frame(root,
-        { name="nav_back", text="<right,font=text_20,color=bw_6c><icon=key.Esc:2.2:1.5>  Back", flags={.terse,.terse_width,.terse_height} },
+        { name="nav_back", text="<right,font=text_20,color=bw_6c><icon=key.Esc:2.2:1.5>  Back", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_item_nav },
         { point=.right, offset={-64,0} },
     )
 }
@@ -299,7 +299,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
         )
 
         slot_trait := ui.add_frame(trait,
-            { name="slot_trait.ex", text=is_left?"longshot":"potency", size={100,220}, draw=draw_slot_trait },
+            { name="slot_trait.flat", text=is_left?"longshot":"potency", size={100,220}, draw=draw_slot_trait },
             { point=is_left?.top_right:.top_left, offset={(is_left?-1:1)*24,32} },
         )
 

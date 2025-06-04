@@ -83,6 +83,18 @@ draw_menu_item :: proc (f: ^ui.Frame) {
     }
 }
 
+draw_menu_item_nav :: proc (f: ^ui.Frame) {
+    offset := f.captured ? Vec2 {0,2} : {}
+    tx_color := f.entered ? "bw_da" : "bw_6c"
+    draw_terse(f.terse, override_color=tx_color, offset=offset)
+
+    if f.entered {
+        ln_color := core.alpha(app.res.colors["bw_59"], f.opacity)
+        ln_rect := core.rect_moved(core.rect_inflated(f.rect, 5), offset)
+        draw.rect_lines(ln_rect, 2, ln_color)
+    }
+}
+
 draw_art_ring :: proc (f: ^ui.Frame) {
     color := core.alpha(app.res.colors["bw_40"].value, .2*f.opacity)
     center := core.rect_center(f.rect)
@@ -99,7 +111,7 @@ draw_player_title :: proc (f: ^ui.Frame) {
 }
 
 draw_slot_hover_state :: proc (f: ^ui.Frame) {
-    if f.hovered {
+    if f.entered {
         hb_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)
         draw.rect_lines(core.rect_inflated(f.rect, 3), 2, hb_color)
     }
@@ -131,14 +143,6 @@ draw_slot_rect :: proc (f: ^ui.Frame) {
     br_color := core.alpha(app.res.colors["bw_40"].value, f.opacity)
     draw.rect(f.rect, bg_color)
     draw.rect_lines(f.rect, 2, br_color)
-}
-
-draw_slot_box :: proc (f: ^ui.Frame) {
-    draw_slot_rect(f)
-    if f.text != "" {
-        sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
-        draw_sprite(f.text, core.rect_inflated(f.rect, -8), sp_color)
-    }
 }
 
 draw_slot_box_wide :: proc (f: ^ui.Frame) {
@@ -188,6 +192,7 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     }
 
     trait := app.data.traits[f.text]
+    is_flat := strings.has_suffix(f.name, ".flat")
 
     bg_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
     draw.rect(f.rect, bg_color)
@@ -196,9 +201,10 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     rect.y += (rect.h-rect.w)/2
     rect.h = rect.w
     sp_color := core.alpha(app.res.colors[trait.active ? "trait_hl" : "bw_95"].value, f.opacity)
-    draw_sprite(trait.icon, core.rect_inflated(rect, -8), sp_color)
+    hover_ratio := is_flat ? 1 : 1-ui.hover_ratio(f, .Exponential_Out, .333, .Exponential_In, .555)
+    draw_sprite(trait.icon, core.rect_inflated(rect, -8*hover_ratio), sp_color)
 
-    if !strings.has_suffix(f.name, ".ex") {
+    if !is_flat {
         nm_rect := core.rect_line_bottom(core.rect_inflated(f.rect, -8), 48)
         draw_text_center(trait.name, nm_rect, "text_16", sp_color)
 
@@ -219,7 +225,7 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     br_color := core.alpha(app.res.colors["bw_20"].value, f.opacity)
     draw.rect_lines(f.rect, 2, br_color)
 
-    if !strings.has_suffix(f.name, ".ex") do draw_slot_hover_state(f)
+    if !is_flat do draw_slot_hover_state(f)
 }
 
 draw_slot_skill :: proc (f: ^ui.Frame) {
@@ -248,15 +254,16 @@ draw_slot_item :: proc (f: ^ui.Frame) {
     }
 
     item := app.data.items[f.text]
+    is_gear := f.name == "slot_gear"
 
-    bg_color_name := f.name == "slot_gear" ? "bw_11" : "bw_1a"
+    bg_color_name := is_gear ? "bw_11" : "bw_1a"
     bg_color := core.alpha(app.res.colors[bg_color_name].value, f.opacity)
     draw.rect(f.rect, bg_color)
 
     sp_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
     draw_sprite(item.icon, core.rect_inflated(f.rect, -8), sp_color)
 
-    if item.count > 1 {
+    if !is_gear && item.count > 1 {
         count_text := fmt.tprintf("x%i", item.count)
         count_pos := Vec2 { f.rect.x+f.rect.w, f.rect.y } + {-4,4}
         count_color := core.alpha(app.res.colors["bw_95"].value, f.opacity)

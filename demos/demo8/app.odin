@@ -17,6 +17,7 @@ App :: struct {
     ui              : ^ui.UI,
     data            : ^App_Data,
     debug_drawing   : bool,
+    debug_update_ui : bool,
 }
 
 app: ^App
@@ -87,28 +88,26 @@ app_running :: proc () -> bool {
 app_tick :: proc () {
     free_all(context.temp_allocator)
 
-    // set some values (every frame) {{{
+    if app.debug_update_ui {
+        t := app.ui.clock.tick
+        w := f32(t%1000)/10
+        wc := w < 20\
+            ? "weight_ar"\
+            : w < 50\
+                ? "weight_lt"\
+                : w < 80\
+                    ? "weight_md"\
+                    : "weight_hv"
 
-    t := app.ui.clock.tick
-    w := f32(t%1000)/10
-    wc := w < 20\
-        ? "weight_ar"\
-        : w < 50\
-            ? "weight_lt"\
-            : w < 80\
-                ? "weight_md"\
-                : "weight_hv"
-
-    app.ui->set_text("scrap_count", t)
-    app.ui->set_text("page_archetype/primary/level", 10+t%20)
-    app.ui->set_text("page_archetype/secondary/level", 10+t%20)
-    app.ui->set_text("page_character/primary/level", 10+t%20)
-    app.ui->set_text("page_character/secondary/level", 10+t%20)
-    app.ui->set_text("power/level", 10+t%20)
-    app.ui->set_text("stats_basic", t%400+100, (t/5)%100+50, f32(t%1500)/20, wc, w)
-    app.ui->set_text("stats_res", 100-t%100, 110-t%100, 120-t%100, t%100, 150-t%100)
-
-    // }}}
+        app.ui->set_text("scrap_count", t)
+        app.ui->set_text("page_archetype/primary/level", 10+t%20)
+        app.ui->set_text("page_archetype/secondary/level", 10+t%20)
+        app.ui->set_text("page_character/primary/level", 10+t%20)
+        app.ui->set_text("page_character/secondary/level", 10+t%20)
+        app.ui->set_text("power/level", 10+t%20)
+        app.ui->set_text("stats_basic", t%400+100, (t/5)%100+50, f32(t%1500)/20, wc, w)
+        app.ui->set_text("stats_res", 100-t%100, 110-t%100, 120-t%100, t%100, 150-t%100)
+    }
 
     ui.tick(app.ui,
         { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
@@ -116,6 +115,7 @@ app_tick :: proc () {
     )
 
     app.debug_drawing = rl.IsKeyDown(.LEFT_CONTROL)
+    if rl.IsKeyPressed(.SPACE) do app.debug_update_ui ~= true
 }
 
 app_draw :: proc () {
@@ -131,11 +131,24 @@ app_draw :: proc () {
 app_draw_frame_stats :: proc () {
     // draw.debug_res_texture(app.res, "sprites", {10,100}, .25)
 
-    rect_w, rect_h :: 240, 200
+    rect_w, rect_h :: 210, 172
     rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
     rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
     rl.DrawRectangleLinesEx(rect, 2, rl.RED)
-    rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-    cstr := fmt.ctprintf("%#v", app.ui.stats)
-    rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
+
+    st := app.ui.stats
+    cstr := fmt.ctprintf(
+        "fps: %v\n"+
+        "tick_time: %v\n"+
+        "draw_time: %v\n"+
+        "frames_total: %v\n"+
+        "frames_drawn: %v\n"+
+        "[%s] Update values\n"+
+        "    every frame",
+        rl.GetFPS(),
+        st.tick_time, st.draw_time, st.frames_total, st.frames_drawn,
+        app.debug_update_ui ? "X" : "_",
+    )
+
+    rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+10), 20, rl.GREEN)
 }
