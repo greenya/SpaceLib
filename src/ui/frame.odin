@@ -263,6 +263,14 @@ visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Fram
     return list[:]
 }
 
+refresh_rect :: proc (f: ^Frame, repeat := 1) {
+    for _ in 0..<repeat {
+        f.rect_dirty = true
+        for child in f.children do child.rect_dirty = true
+        updated(f)
+    }
+}
+
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil do for child in f.parent.children do child.flags += { .hidden }
     f.flags -= { .hidden }
@@ -506,16 +514,6 @@ update_frame_tree :: proc (f: ^Frame) {
 
     update_rect(f)
 
-    if .terse in f.flags {
-        should_rebuild := f.terse == nil || (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect))
-        if should_rebuild {
-            terse.destroy(f.terse)
-            f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
-            if .terse_width in f.flags do f.size.x = f.terse.rect.w
-            if .terse_height in f.flags do f.size.y = f.terse.rect.h
-        }
-    }
-
     m_pos := f.ui.mouse.pos
     hit_rect := .terse_hit_rect in f.flags && f.terse != nil ? f.terse.rect : f.rect
     if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) {
@@ -554,6 +552,18 @@ draw_frame_tree :: proc (f: ^Frame) {
 update_rect :: proc (f: ^Frame) {
     if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
+    if .terse in f.flags do update_terse(f)
+}
+
+@private
+update_terse :: proc (f: ^Frame) {
+    should_rebuild := f.terse == nil || (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect))
+    if !should_rebuild do return
+
+    terse.destroy(f.terse)
+    f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
+    if .terse_width in f.flags do f.size.x = f.terse.rect.w
+    if .terse_height in f.flags do f.size.y = f.terse.rect.h
 }
 
 @private
