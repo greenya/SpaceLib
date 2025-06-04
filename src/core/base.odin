@@ -114,6 +114,10 @@ clamp_ratio :: #force_inline proc (value, minimum, maximum: $T) -> T where intri
     return clamp((value - minimum) / (maximum - minimum), 0.0, 1.0)
 }
 
+clamp_ratio_span :: #force_inline proc (value, minimum, span: $T) -> T where intrinsics.type_is_float(T) {
+    return clamp((value - minimum) / span, 0.0, 1.0)
+}
+
 random_vec_in_rect :: #force_inline proc (rect: Rect) -> Vec2 {
     return { rect.x + rect.w*rand.float32(), rect.y + rect.h*rand.float32() }
 }
