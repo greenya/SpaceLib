@@ -359,7 +359,10 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     )
 
     gear_item_ids := [] string {
-        "leto_mark_2_helmet", "academics_overcoat", "academics_trousers", "academics_gloves",
+        "leto_mark_2_helmet",
+        "academics_overcoat",
+        "academics_trousers",
+        "academics_gloves",
         "resonating_heart",
     }
 
@@ -381,9 +384,18 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
         { point=.left, rel_point=.right, rel_frame=secondary, offset={-20,0} },
     )
 
-    for i in 0..<5 {
+    accessory_item_ids := [] string {
+        "whispering_marble",
+        "stone_of_expanse",
+        "braided_thorns",
+        "dried_clay_ring",
+        "thalos_eyelet",
+    }
+
+    for item_id, i in accessory_item_ids {
         ui.add_frame(ring,
-            { name="slot_acc", text="skull-ring", size=80, draw=draw_slot_box },
+            { name="slot_gear", text=item_id, size=80, draw=draw_slot_item,
+                enter=app_tooltip_show, leave=app_tooltip_hide },
             { point=.center, offset=app_menu_pos_on_art_ring(-math.τ/4 +1.175 +.2*f32(i)) },
         )
     }

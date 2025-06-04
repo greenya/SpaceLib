@@ -79,6 +79,8 @@ App_Data_Item_Tag :: enum {
     leg_armor,
     glove_armor,
     relic,
+    amulet,
+    ring,
 }
 
 app_data_create :: proc () {
@@ -360,6 +362,24 @@ app_data_add_items :: proc () {
     i["academics_gloves"] = { name="Academic's Gloves", icon="gloves", tags={.gear,.glove_armor}, count=1,
         desc="The initials of the Dran who once owned these--and misplaced them often--are embroidered on the wool-lined inside.",
         stats={ armor=12.3, weight=5.2, res_poison=2, res_blight=1 },
+    }
+
+    // gear: accessories
+
+    i["whispering_marble"] = { name="Whispering Marble", icon="primitive-necklace", tags={.gear,.amulet}, count=1,
+        desc="Grants <color=bw_ff>3</color> stacks of <color=trait_hl>BULWARK</color>. Increases All Damage by <color=bw_ff>2%</color> per stack of <color=trait_hl>BULWARK</color>.",
+    }
+    i["stone_of_expanse"] = { name="Stone of Expanse", icon="skull-ring", tags={.gear,.ring}, count=1,
+        desc="Increases Ranged damage by <color=bw_ff>12%</color>. Reduces all other damage dealt by <color=bw_ff>5%</color>.",
+    }
+    i["braided_thorns"] = { name="Braided Thorns", icon="crown-of-thorns", tags={.gear,.ring}, count=1,
+        desc="Increases Critical Chance by <color=bw_ff>10%</color>.",
+    }
+    i["dried_clay_ring"] = { name="Dried Clay Ring", icon="ink-swirl", tags={.gear,.ring}, count=1,
+        desc="Grants <color=bw_ff>1</color> stack of <color=trait_hl>BULWARK</color>. Increases All Damage by <color=bw_ff>50%</color> of the total Damage Reduction granted by <color=trait_hl>BULWARK</color> stacks.",
+    }
+    i["thalos_eyelet"] = { name="Thalos Eyelet", icon="power-ring", tags={.gear,.ring}, count=1,
+        desc="Grants <color=bw_ff>1</color> stack of <color=trait_hl>BULWARK</color>. Also grants <color=bw_ff>2</color> Stamina Regen per second for each <color=trait_hl>BULWARK</color> stack and increases <color=trait_hl>BULWARK</color> limit from <color=bw_ff>5</color> to <color=bw_ff>6</color>.",
     }
 
     // artifacts

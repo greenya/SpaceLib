@@ -7,7 +7,7 @@ import "spacelib:ui"
 
 app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root,
-        { name="tooltip", order=9, flags={.hidden}, size={372,0},
+        { name="tooltip", order=9, flags={.hidden}, size={384,0},
             layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { rel_point=.mouse },
     )
@@ -110,14 +110,16 @@ app_tooltip_show_item :: proc (tooltip, target: ^ui.Frame) {
     subtitle := ui.get(tooltip, "subtitle")
     switch {
     case .quest in item.tags        : ui.set_text(subtitle, "Quest Item", shown=true)
+    case .curative in item.tags     : ui.set_text(subtitle, "Curative", shown=true)
+    case .consumable in item.tags   : ui.set_text(subtitle, "Consumable", shown=true)
+    case .material in item.tags     : ui.set_text(subtitle, "Crafting Material", shown=true)
     case .head_armor in item.tags   : ui.set_text(subtitle, "Helmet", shown=true)
     case .body_armor in item.tags   : ui.set_text(subtitle, "Body Armor", shown=true)
     case .leg_armor in item.tags    : ui.set_text(subtitle, "Leg Armor", shown=true)
     case .glove_armor in item.tags  : ui.set_text(subtitle, "Glove Armor", shown=true)
     case .relic in item.tags        : ui.set_text(subtitle, "Relic", shown=true)
-    case .curative in item.tags     : ui.set_text(subtitle, "Curative", shown=true)
-    case .consumable in item.tags   : ui.set_text(subtitle, "Consumable", shown=true)
-    case .material in item.tags     : ui.set_text(subtitle, "Crafting Material", shown=true)
+    case .amulet in item.tags       : ui.set_text(subtitle, "Amulet", shown=true)
+    case .ring in item.tags         : ui.set_text(subtitle, "Ring", shown=true)
     }
 
     image := ui.get(tooltip, "image")
