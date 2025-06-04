@@ -124,22 +124,18 @@ app_draw :: proc () {
 
     ui.draw(app.ui)
 
-    app_draw_stats()
+    app_draw_frame_stats()
     rl.EndDrawing()
 }
 
-app_draw_stats :: proc () {
-    // res.debug_draw_texture(app.res, "sprites", {10,100}, .25)
-
-    @static stats: ui.Stats
-    // if app.ui.clock.tick%8==0 do stats = app.ui.stats
-    stats = app.ui.stats
+app_draw_frame_stats :: proc () {
+    // draw.debug_res_texture(app.res, "sprites", {10,100}, .25)
 
     rect_w, rect_h :: 240, 200
     rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
     rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
     rl.DrawRectangleLinesEx(rect, 2, rl.RED)
     rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-    cstr := fmt.ctprintf("%#v", stats)
+    cstr := fmt.ctprintf("%#v", app.ui.stats)
     rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
 }

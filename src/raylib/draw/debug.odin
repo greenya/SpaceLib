@@ -5,6 +5,7 @@ import rl "vendor:raylib"
 import "../../core"
 import "../../terse"
 import "../../ui"
+import "../res"
 
 @private Vec2 :: core.Vec2
 @private Rect :: core.Rect
@@ -142,6 +143,22 @@ debug_terse :: proc (t: ^terse.Terse) {
             _debug_text(group.name, { i_rect.x+2, i_rect.y-size.y }, groups_text_color)
         }
     }
+}
+
+debug_res_texture :: proc (rs: ^res.Res, name: string, pos: Vec2, scale := f32(1)) {
+    assert(name in rs.textures)
+
+    tex := rs.textures[name]
+    rct := Rect { pos.x, pos.y, f32(tex.width)*scale, f32(tex.height)*scale }
+    rl.DrawTextureEx(tex.texture_rl, pos, 0, scale, rl.WHITE)
+
+    br_color := core.Color {255,255,0,255}
+    label_color := core.Color {0,0,0,255}
+    label := fmt.tprintf("%s: %ix%i // mipmaps: %i", name, tex.width, tex.height, tex.mipmaps)
+
+    rect_lines(rct, 1, br_color)
+    rect(core.rect_moved(core.rect_line_top(rct, 14), {0,-14}), br_color)
+    text(label, pos+{4,-11}, rl.GetFontDefault(), 10, 1, label_color)
 }
 
 @private

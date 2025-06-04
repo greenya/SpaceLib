@@ -4,6 +4,9 @@ import "core:fmt"
 import rl "vendor:raylib"
 import "../../core"
 
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
+
 Res :: struct {
     files       : map [string] File,
     colors      : map [string] ^Color,
