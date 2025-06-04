@@ -49,7 +49,7 @@ debug_frame :: proc (f: ^ui.Frame) {
         _debug_text(text, pos, color)
     }
 
-    if f.hovered {
+    if f.entered {
         c := core.rect_center(f.rect)
         line({ c.x-9, c.y }, { c.x+8, c.y }, 1, color)
         line({ c.x, c.y-9 }, { c.x, c.y+8 }, 1, color)
@@ -179,7 +179,7 @@ _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
     red         :: Color(rl.RED)
     yellow      :: Color(rl.YELLOW)
     light_gray  :: Color(rl.LIGHTGRAY)
-    return f.parent == nil ? gray : f.captured ? red : f.hovered ? yellow : light_gray
+    return f.parent == nil ? gray : f.captured ? red : f.entered ? yellow : light_gray
 }
 
 @private

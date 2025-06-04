@@ -148,8 +148,8 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
             mouse_input_consumed = true
 
-            f.hovered = true
-            if !f.hovered_prev {
+            f.entered = true
+            if !f.entered_prev {
                 append(&ui.entered_frames, f)
                 if f.enter != nil do f.enter(f)
             }
@@ -166,7 +166,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             drag(ui.captured.frame, ui.mouse.pos, ui.captured.pos)
 
             if lmb_released {
-                if ui.captured.frame.hovered do click(ui.captured.frame)
+                if ui.captured.frame.entered do click(ui.captured.frame)
                 ui.captured = {}
             }
         }
@@ -180,7 +180,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
     for i := len(ui.entered_frames) - 1; i >= 0; i -= 1 {
         f := ui.entered_frames[i]
-        if !f.hovered {
+        if !f.entered {
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
         }

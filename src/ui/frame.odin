@@ -33,8 +33,8 @@ Frame :: struct {
     leave           : Frame_Proc,
     click           : Frame_Proc,
     wheel           : Frame_Wheel_Proc,
-    hovered         : bool,
-    hovered_prev    : bool,
+    entered         : bool,
+    entered_prev    : bool,
     captured        : bool,
     selected        : bool,
 
@@ -498,8 +498,8 @@ prepare_frame_tree :: proc (f: ^Frame) {
         if f.anim.ratio == 1 do f.anim = {}
     }
 
-    f.hovered_prev = f.hovered
-    f.hovered = false
+    f.entered_prev = f.entered
+    f.entered = false
     f.captured = false
 
     f.rect_dirty = true
