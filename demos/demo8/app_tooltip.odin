@@ -9,7 +9,7 @@ app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root,
         { name="tooltip", order=9, flags={.hidden}, size={372,0},
             layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
-        { point=.top, rel_point=.mouse, offset={0,30} },
+        { rel_point=.mouse },
     )
 
     ui.add_frame(root, { name="line_top", order=-1, text="bw_2c", size={0,4}, draw=draw_color_rect })
@@ -221,11 +221,44 @@ app_tooltip_hide :: proc (target: ^ui.Frame) {
 app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, f.anim.ratio)
     f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
-    if f.anim.ratio == 0 do ui.show(f)
+    if f.anim.ratio == 0 {
+        ui.show(f)
+        ui.refresh_rect(f, repeat=3)
+        app_tooltip_update_anchor(f)
+        ui.refresh_rect(f)
+    }
 }
 
 app_tooltip_anim_disappear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, 1-f.anim.ratio)
     f.offset = { 0, 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
     if f.anim.ratio == 1 do ui.hide(f)
+}
+
+app_tooltip_update_anchor :: proc (f: ^ui.Frame) {
+    gap :: 32
+    ms_pos := f.ui.mouse.pos
+    sc_w, sc_h := f.ui.root.rect.w, f.ui.root.rect.h
+    tt_w, tt_h := f.rect.w, f.rect.h
+
+    if ms_pos.y+tt_h+gap > sc_h {
+        if ms_pos.x < sc_w/2 {
+            f.anchors[0].point = .left
+            f.anchors[0].offset = {30,0}
+        } else {
+            f.anchors[0].point = .right
+            f.anchors[0].offset = {-30,0}
+        }
+    } else {
+        if ms_pos.x+tt_w/2+gap > sc_w {
+            f.anchors[0].point = .right
+            f.anchors[0].offset = {-30,0}
+        } else if ms_pos.x-tt_w/2-gap < 0 {
+            f.anchors[0].point = .left
+            f.anchors[0].offset = {30,0}
+        } else {
+            f.anchors[0].point = .top
+            f.anchors[0].offset = {0,30}
+        }
+    }
 }
