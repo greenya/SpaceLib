@@ -207,6 +207,7 @@ set_text :: proc (f: ^Frame, values: ..any, shown := false) {
     f.text = fmt.aprintf(format, ..values)
 
     if shown do show(f)
+    updated(f)
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
