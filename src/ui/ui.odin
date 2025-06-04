@@ -39,7 +39,7 @@ UI :: struct {
     hide                : proc (ui: ^UI, path: string),
     click               : proc (ui: ^UI, path: string),
     wheel               : proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
-    animate             : proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dur: f32),
+    animate             : proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dt: f32),
     set_text            : proc (ui: ^UI, path: string, values: ..any),
 }
 
@@ -150,6 +150,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
             f.entered = true
             if !f.entered_prev {
+                f.entered_time = ui.clock.time
                 append(&ui.entered_frames, f)
                 if f.enter != nil do f.enter(f)
             }
@@ -181,6 +182,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     for i := len(ui.entered_frames) - 1; i >= 0; i -= 1 {
         f := ui.entered_frames[i]
         if !f.entered {
+            f.left_time = ui.clock.time
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
         }
@@ -281,8 +283,8 @@ ui_wheel :: #force_inline proc (ui: ^UI, path: string, dy: f32) -> (consumed: bo
 }
 
 @private
-ui_animate :: #force_inline proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dur: f32) {
-    animate(get(ui.root, path), tick, dur)
+ui_animate :: #force_inline proc (ui: ^UI, path: string, tick: Frame_Animation_Tick_Proc, dt: f32) {
+    animate(get(ui.root, path), tick, dt)
 }
 
 @private

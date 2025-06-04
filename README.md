@@ -12,6 +12,8 @@
 
 ## TODOs
 
+TODO: ui: rename current "pass" flag to "pass_self"; add support for "pass", which should act as "pass_self" for the frame itself and its children; note: if not effective algo, then maybe add ui.set_pass_frame_tree(f)
+
 TODO: test if text measuring can be (and should be) improved by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
 TODO: terse: add support for "tab" command <tab=150>, which should take single integer, should generate empty word with needed width so following word will start at that horizontal pos (e.g. 150px from line.rect.x)
@@ -49,7 +51,7 @@ TODO: ui: add support for cancelable animations, e.g. ui.cancel_animation(f), wh
 
 TODO: ui: add "wait=f32(0)" arg to ui.animate(),
     add Frame.anim.state (enum: none, waiting, animating)
-    it should do: waiting (if wait>0) -> animating (for dur) -> ratio=0 -> ... ratio=1 -> none
+    it should do: waiting (if wait>0) -> animating (for dt) -> ratio=0 -> ... ratio=1 -> none
 
 TODO: ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
 

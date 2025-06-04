@@ -35,6 +35,8 @@ Frame :: struct {
     wheel           : Frame_Wheel_Proc,
     entered         : bool,
     entered_prev    : bool,
+    entered_time    : f32,
+    left_time       : f32,
     captured        : bool,
     selected        : bool,
 
@@ -212,17 +214,17 @@ set_opacity :: proc (f: ^Frame, new_opacity: f32) {
     for child in f.children do set_opacity(child, new_opacity)
 }
 
-animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dur: f32) {
+animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dt: f32) {
     assert(f != nil)
     assert(tick != nil)
-    assert(dur > 0)
+    assert(dt > 0)
 
     end_animation(f)
 
     f.anim = {
         tick    = tick,
         start   = f.ui.clock.time,
-        end     = f.ui.clock.time + dur,
+        end     = f.ui.clock.time + dt,
         ratio   = 0,
     }
 
@@ -234,6 +236,20 @@ end_animation :: proc (f: ^Frame) {
     if f.anim.tick != nil {
         f.anim.ratio = 1
         f.anim.tick(f)
+    }
+}
+
+hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dt: f32, leave_ease: core.Ease, leave_dt: f32) -> f32 {
+    if f.entered {
+        ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dt)
+        return core.ease_ratio(ratio, enter_ease)
+    } else {
+        if f.left_time != 0 { // prevents default value 0 to be treated as "just left" when ui.clock.time is ~0
+            ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dt)
+            return 1 - core.ease_ratio(ratio, leave_ease)
+        } else {
+            return 0
+        }
     }
 }
 

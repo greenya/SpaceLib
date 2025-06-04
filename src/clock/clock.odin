@@ -22,8 +22,8 @@ tick :: proc (c: ^Clock($T)) {
     c.tick += 1
 
     now := tm.tick_now()
-    dur := tm.tick_diff(c._now, now)
-    dt := f64(c.time_scale) * tm.duration_seconds(dur)
+    diff := tm.tick_diff(c._now, now)
+    dt := f64(c.time_scale) * tm.duration_seconds(diff)
     c.time += T(dt)
 
     c._now = now
