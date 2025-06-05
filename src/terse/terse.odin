@@ -94,12 +94,12 @@ create :: proc (
 
     font := query_font(default_font_name)
     ensure(font.measure_text != nil)
-    fonts_stack := [default_fonts_stack_size] ^Font {}
+    fonts_stack: [default_fonts_stack_size] ^Font
     fonts_stack[0] = font
     fonts_stack_idx := 0
 
     color := query_color(default_color_name)
-    colors_stack := [default_colors_stack_size] Color {}
+    colors_stack: [default_colors_stack_size] Color
     colors_stack[0] = color
     colors_stack_idx := 0
 
@@ -411,8 +411,10 @@ parse_vec :: proc (text: string) -> Vec2 {
     }
 }
 
-// this should be enough and quick, but maybe rework it so it would parse normally, e.g.
-// any floating point value; but check the performance, maybe general parsing is slow (?)
+// parses very very simple float value, from -9.9 to 9.9 only
+// supports absence of optional parts like: X[.0], [0].X
+// note: this should be enough and quick, but maybe rework it so it would parse normally,
+// e.g. any valid floating point value; check the performance, maybe general parsing is slow (?)
 @private
 parse_f32 :: proc (text: string) -> f32 {
     digit_before_dot, digit_after_dot: f32
