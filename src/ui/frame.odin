@@ -60,6 +60,27 @@ Flag :: enum {
     terse_hit_rect,
 }
 
+Anchor :: struct {
+    point       : Anchor_Point,
+    rel_point   : Anchor_Point,
+    rel_frame   : ^Frame,
+    offset      : Vec2,
+}
+
+Anchor_Point :: enum {
+    none,
+    mouse,
+    top_left,
+    top,
+    top_right,
+    left,
+    center,
+    right,
+    bottom_left,
+    bottom,
+    bottom_right,
+}
+
 Layout :: struct {
     dir             : Layout_Dir,
     align           : Layout_Alignment,
@@ -99,6 +120,13 @@ Layout_Auto_Size :: enum {
     dir,
 }
 
+Animation :: struct {
+    tick    : Frame_Animation_Tick_Proc,
+    start   : f32,
+    end     : f32,
+    ratio   : f32,
+}
+
 Actor :: union {
     Actor_Scrollbar_Content,
     Actor_Scrollbar_Next,
@@ -110,34 +138,6 @@ Actor_Scrollbar_Content :: struct { thumb: ^Frame }
 Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
 Actor_Scrollbar_Next    :: struct { content: ^Frame }
 Actor_Scrollbar_Prev    :: struct { content: ^Frame }
-
-Anchor :: struct {
-    point       : Anchor_Point,
-    rel_point   : Anchor_Point,
-    rel_frame   : ^Frame,
-    offset      : Vec2,
-}
-
-Anchor_Point :: enum {
-    none,
-    mouse,
-    top_left,
-    top,
-    top_right,
-    left,
-    center,
-    right,
-    bottom_left,
-    bottom,
-    bottom_right,
-}
-
-Animation :: struct {
-    tick    : Frame_Animation_Tick_Proc,
-    start   : f32,
-    end     : f32,
-    ratio   : f32,
-}
 
 Frame_Proc                  :: proc (f: ^Frame)
 Frame_Wheel_Proc            :: proc (f: ^Frame, dy: f32) -> (consumed: bool)

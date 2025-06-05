@@ -30,7 +30,6 @@ UI :: struct {
     terse_draw_proc         : Terse_Draw_Proc,
 
     overdraw_proc       : Frame_Proc,
-
     stats               : Stats,
 
     get                 : proc (ui: ^UI, path: string) -> ^Frame,
