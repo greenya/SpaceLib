@@ -18,6 +18,8 @@ TODO: test if text measuring can be (and should be) improved by caching font+tex
 
 TODO: terse: add support for "tab" command <tab=150>, which should take single integer, should generate empty word with needed width so following word will start at that horizontal pos (e.g. 150px from line.rect.x)
 
+TODO: terse: add ability to have "<" and ">" in the text as part of the content, probably should support something like "<<test>>" which should give "<test>" as a text for displayed (not interpreted as code sequence)
+
 TODO: terse: rework parse_f32, parse_int, parse_vec_i, parse_vec -- should be only parse_vec and parse f32, which just handle any f32 text value
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
