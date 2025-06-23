@@ -56,7 +56,7 @@ main :: proc () {
         time.stopwatch_reset(&sw)
         time.stopwatch_start(&sw)
         text_rect := Rect { 200, 50, f32(rl.GetScreenWidth())-400, 600 }
-        text_terse := terse.create(text, text_rect, terse_query_font, terse_query_color, context.temp_allocator, debug_keep_codes=false)
+        text_terse := terse.create(text, text_rect, 1, terse_query_font, terse_query_color, context.temp_allocator)
         // defer terse.destroy(text_terse)
         time.stopwatch_stop(&sw)
         dur_measuring := time.stopwatch_duration(sw)

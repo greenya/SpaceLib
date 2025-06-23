@@ -76,7 +76,7 @@ main :: proc () {
         // screen_h := f32(rl.GetScreenHeight())
 
         { // draw sprites
-            res.debug_draw_texture(app.res, "sprites", { screen_w-512-80, 80 }, .5 )
+            draw.debug_res_texture(app.res, "sprites", { screen_w-512-80, 80 }, .5 )
         }
 
         { // draw horizontal 3-patch sprite
@@ -152,7 +152,7 @@ draw_sprite :: proc (name: string, rect: Rect, tint := Color {255,255,255,255}) 
     tint_rl := cast (rl.Color) tint
 
     switch info in sprite.info {
-    case rl.Rectangle:  rl.DrawTexturePro(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
+    case Rect:          rl.DrawTexturePro(texture.texture_rl, transmute (rl.Rectangle) info, rect_rl, {}, 0, tint_rl)
     case rl.NPatchInfo: rl.DrawTextureNPatch(texture.texture_rl, info, rect_rl, {}, 0, tint_rl)
     }
 }

@@ -149,7 +149,7 @@ draw_button :: proc (f: ^ui.Frame) {
     else do draw.rect(rect2, core.alpha(core.brightness(bg_color, -.7), .5))
 
     draw.rect(rect1, bg_color)
-    draw.rect_lines(rect1, 4, core.brightness(bg_color, f.hovered ? .6 : .3))
+    draw.rect_lines(rect1, 4, core.brightness(bg_color, f.entered ? .6 : .3))
     draw.text_center(f.text, core.rect_center(rect1)+{0,4}, font, tx_color)
 }
 
@@ -173,7 +173,7 @@ draw_slot :: proc (f: ^ui.Frame) {
     font := app.res.fonts["huge"]
     tx_color := core.alpha({40,40,40,255}, f.opacity)
 
-    if f.hovered {
+    if f.entered {
         draw.rect_lines(f.rect, 4, tx_color)
         if f.anim.tick == nil {
             font2 := app.res.fonts["default"]

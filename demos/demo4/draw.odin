@@ -67,10 +67,10 @@ draw_ui_button :: proc (f: ^ui.Frame) {
     if f.selected {
         draw_sprite(.panel_4, f.rect, colors[.c5].val)
     } else {
-        draw_sprite(.panel_9, f.rect, f.hovered ? colors[.c4].val : colors[.c3].val)
+        draw_sprite(.panel_9, f.rect, f.entered ? colors[.c4].val : colors[.c3].val)
     }
 
-    text_color: Color = f.hovered ? colors[.c7] : colors[.c6]
+    text_color: Color = f.entered ? colors[.c7] : colors[.c6]
 
     if f.captured {
         draw_terse(f.terse, &text_color)
@@ -82,7 +82,7 @@ draw_ui_button :: proc (f: ^ui.Frame) {
 
 draw_ui_checkbox :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
-    text_color := f.hovered ? &colors[.c8] : &colors[.c6]
+    text_color := f.entered ? &colors[.c8] : &colors[.c6]
     draw_terse(f.terse, text_color, offset)
 
     assert(len(f.terse.groups) == 1)
@@ -96,18 +96,18 @@ draw_ui_checkbox :: proc (f: ^ui.Frame) {
 draw_ui_link :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
 
-    if f.hovered {
+    if f.entered {
         border := core.rect_moved(core.rect_inflated(f.terse.rect, {8,4}), {2,0}+offset)
         draw.rect_lines(border, 3, colors[.c3].val)
     }
 
-    text_color := f.hovered ? &colors[.c8] : &colors[.c6]
+    text_color := f.entered ? &colors[.c8] : &colors[.c6]
     draw_terse(f.terse, text_color, offset)
 }
 
 draw_ui_button_sprite :: proc (f: ^ui.Frame, sprite_id: Sprite_ID) {
-    if f.hovered do draw_sprite(.panel_15, f.rect, colors[.c3].val)
-    draw_sprite(sprite_id, f.rect, f.hovered ? colors[.c6].val : colors[.c5].val)
+    if f.entered do draw_sprite(.panel_15, f.rect, colors[.c3].val)
+    draw_sprite(sprite_id, f.rect, f.entered ? colors[.c6].val : colors[.c5].val)
 }
 
 draw_ui_button_sprite_icon_up :: proc (f: ^ui.Frame) { draw_ui_button_sprite(f, .icon_up) }
