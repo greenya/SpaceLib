@@ -553,7 +553,10 @@ draw_frame_tree :: proc (f: ^Frame) {
     if f.draw != nil {
         if .terse not_in f.flags || f.terse != nil do f.draw(f)
     } else {
-        if f.terse != nil do f.ui.terse_draw_proc(f.terse)
+        if f.terse != nil {
+            assert(f.ui.terse_draw_proc != nil, "UI.terse_draw_proc must not be nil when using terse")
+            f.ui.terse_draw_proc(f.terse)
+        }
     }
 
     if f.ui.overdraw_proc != nil do f.ui.overdraw_proc(f)
@@ -578,6 +581,8 @@ update_terse :: proc (f: ^Frame) {
     if !should_rebuild do return
 
     terse.destroy(f.terse)
+    assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
+    assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
     f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
     if .terse_width in f.flags do f.size.x = f.terse.rect.w
     if .terse_height in f.flags do f.size.y = f.terse.rect.h
