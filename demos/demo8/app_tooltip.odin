@@ -7,7 +7,7 @@ import "spacelib:ui"
 
 app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root,
-        { name="tooltip", order=9, flags={.hidden}, size={384,0},
+        { name="tooltip", order=9, flags={.hidden,.pass}, size={384,0},
             layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { rel_point=.mouse },
     )

@@ -344,7 +344,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     )
 
     ring := ui.add_frame(root,
-        { name="ring", size=2*app_menu_art_ring_radius, flags={.pass}, draw=draw_art_ring },
+        { name="ring", size=2*app_menu_art_ring_radius, flags={.pass_self}, draw=draw_art_ring },
         { point=.center },
     )
 

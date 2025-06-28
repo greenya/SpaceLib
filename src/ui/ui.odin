@@ -83,7 +83,7 @@ create :: proc (
     ui := new(UI)
 
     ui^ = {
-        root                    = add_frame(nil, { ui=ui, flags={.pass} }),
+        root                    = add_frame(nil, { ui=ui, flags={.pass_self} }),
 
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
@@ -142,7 +142,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
     if !ui.captured.outside {
         #reverse for f in ui.mouse_frames {
-            if .pass in f.flags do continue
+            if passed(f) do continue
             if ui.captured.frame != nil && ui.captured.frame != f do continue
 
             mouse_input_consumed = true
@@ -172,7 +172,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
         }
 
         if mouse.wheel_dy != 0 do #reverse for f in ui.mouse_frames {
-            if .pass in f.flags do continue
+            if passed(f) do continue
             consumed := wheel(f, mouse.wheel_dy)
             if consumed do break
         }

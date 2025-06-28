@@ -24,19 +24,19 @@ main :: proc () {
     game = new(Game)
     game.ui.manager = sl.create_manager(sl_rl.debug_draw_frame)
 
-    game.ui.layer_normal = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    game.ui.layer_normal = sl.add_frame({ parent=game.ui.manager.root, pass_self=true })
     sl.add_anchor(game.ui.layer_normal, { point=.top_left })
     sl.add_anchor(game.ui.layer_normal, { point=.bottom_right })
 
-    game.ui.layer_menu = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    game.ui.layer_menu = sl.add_frame({ parent=game.ui.manager.root, pass_self=true })
     sl.add_anchor(game.ui.layer_menu, { point=.top_left })
     sl.add_anchor(game.ui.layer_menu, { point=.bottom_right })
 
-    game.ui.layer_tooltip = sl.add_frame({ parent=game.ui.manager.root, pass=true })
+    game.ui.layer_tooltip = sl.add_frame({ parent=game.ui.manager.root, pass_self=true })
     sl.add_anchor(game.ui.layer_tooltip, { point=.top_left })
     sl.add_anchor(game.ui.layer_tooltip, { point=.bottom_right })
 
-    game.ui.mouse_pos_frame = sl.add_frame({ parent=game.ui.layer_normal, pass=true })
+    game.ui.mouse_pos_frame = sl.add_frame({ parent=game.ui.layer_normal, pass_self=true })
 
     hud_menu_init()
     chat_window_init()

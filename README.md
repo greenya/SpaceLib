@@ -14,8 +14,6 @@
 
 TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
 
-TODO: ui: rename current "pass" flag to "pass_self"; add support for "pass", which should act as "pass_self" for the frame itself and its children; note: if not effective algo, then maybe add ui.set_pass_frame_tree(f)
-
 TODO: terse: add support for "non-breakable space" ("&nbsp;" in HTML); the idea is to be able to add in the middle of the text something like "Cost: 12 345." and be able to express that each word must be on the same like (e.g. breaking between "2" and "3" is most undesirable). Approaches i see:
     - rework <wrap>: add support for <nowrap>; should allow change wrap frag inline, e.g. <wrap> enables wrapping, <nowrap> disables it; make sure it works in a way that each word of text inside "<nowrap>Cost: 12 345.<wrap>" always on the same line
         p.s.: we also can make <wrap> to be a container command, e.g. "</wrap>Cost: 12 345.<wrap>" (assuming we have <wrap> before)

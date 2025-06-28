@@ -49,6 +49,7 @@ Flag :: enum {
     hidden,
     disabled,
     pass,
+    pass_self,
     solid,
     scissor,
     check,
@@ -365,6 +366,12 @@ hidden :: proc (f: ^Frame) -> bool {
 
 disabled :: proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .disabled in i.flags do return true
+    return false
+}
+
+passed :: proc (f: ^Frame) -> bool {
+    if .pass_self in f.flags do return true
+    for i:=f; i!=nil; i=i.parent do if .pass in i.flags do return true
     return false
 }
 
