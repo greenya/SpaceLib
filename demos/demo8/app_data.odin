@@ -341,7 +341,8 @@ app_data_add_items :: proc () {
     i["cloth_scrap"] = { name="Cloth Scrap", icon="rolled-cloth", tags={.material}, count=10 }
     i["chared_berries"] = { name="Chared Berries", icon="elderberry", tags={.material}, count=1 }
     i["feather"] = { name="Feather", icon="feather", tags={.material}, count=4 }
-    i["paper_sheet"] = { name="Paper Sheet", icon="papers", tags={.material}, count=24 }
+    i["paper_sheet"] = { name="Paper Sheet", icon="papers", tags={.material}, count=24,
+        desc="This is very long description text. <nobreak>THIS SENTENCE USES NOBREAK.</> And the normal text goes on and on and on..." }
     i["vanilla_flower"] = { name="Vanilla Flower", icon="vanilla-flower", tags={.material}, count=1 }
     i["salt"] = { name="Salt", icon="powder", tags={.material}, count=8 }
 

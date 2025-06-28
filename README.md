@@ -14,12 +14,6 @@
 
 TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
 
-TODO: terse: add support for "non-breakable space" ("&nbsp;" in HTML); the idea is to be able to add in the middle of the text something like "Cost: 12 345." and be able to express that each word must be on the same like (e.g. breaking between "2" and "3" is most undesirable). Approaches i see:
-    - rework <wrap>: add support for <nowrap>; should allow change wrap frag inline, e.g. <wrap> enables wrapping, <nowrap> disables it; make sure it works in a way that each word of text inside "<nowrap>Cost: 12 345.<wrap>" always on the same line
-        p.s.: we also can make <wrap> to be a container command, e.g. "</wrap>Cost: 12 345.<wrap>" (assuming we have <wrap> before)
-    - add support for <nowrap> command, inside it, all spaces treated as non-breakable, e.g. "<nowrap>Cost: 12 345.</nowrap>"
-    - add support for <nbsp> command, will look ugly but most close to html and probably the easiest to implement, e.g. "Cost:<nbsp>12<nbsp>345."
-
 TODO: terse: add ability to have a line with differently aligned parts -- ability to have a single line with text at left and at right, like in WOW's tooltips ("| Head <---> Leather |", "| Main Hand <---> Mace |")
 
 TODO: terse: add support for "tab" (or "offset") command <tab=150>, which should take single integer, should generate empty word with needed width so following word will start at that horizontal pos (e.g. 150px from line.rect.x)

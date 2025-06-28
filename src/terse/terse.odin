@@ -105,7 +105,9 @@ create :: proc (
 
     group: ^Group
 
-    last_opened_command: enum { none, font, color, group }
+    nobreak: struct { active: bool, last_breakable_word_idx: int }
+
+    last_opened_command: enum { none, font, color, group, nobreak }
 
     cursor: struct { type: enum { text, code }, start: int }
     code, word: string
@@ -135,10 +137,11 @@ create :: proc (
             if code != "" {
                 for &command in strings.split(code, ",", context.temp_allocator) {
                     if command == "/" do switch last_opened_command {
-                    case .none  : panic("Unexpected command \"/\", no command opened previously")
-                    case .font  : command = "/font"
-                    case .color : command = "/color"
-                    case .group : command = "/group"
+                    case .none      : panic("Unexpected command \"/\", no command opened previously")
+                    case .font      : command = "/font"
+                    case .color     : command = "/color"
+                    case .group     : command = "/group"
+                    case .nobreak   : command = "/nobreak"
                     }
 
                     switch command {
@@ -162,6 +165,14 @@ create :: proc (
                     case "/group":
                         ensure(group != nil, "No group to close")
                         group = nil
+                        last_opened_command = .none
+                    case "nobreak":
+                        ensure(!nobreak.active, "\"nobreak\" commands cannot be nested")
+                        nobreak = { true, len(terse.words)-1 }
+                        last_opened_command = .nobreak
+                    case "/nobreak":
+                        ensure(nobreak.active, "No \"nobreak\" to close")
+                        nobreak = {}
                         last_opened_command = .none
                     case:
                         pair_sep_idx := strings.index(command, "=")
@@ -216,11 +227,30 @@ create :: proc (
                     ? word_icon_scale * Vec2 { font.height, font.height }\
                     : font->measure_text(word)
 
-                if terse.wrap && line.rect.w + size.x > terse.rect.w && line.word_count > 0 {
-                    line = append_line(terse, font)
+                line_break_needed := line.rect.w + size.x > terse.rect.w && line.word_count > 0
+                if terse.wrap && line_break_needed {
+                    line_break_allowed := true
+                    nobreak_first_word_idx := -1
+
+                    if nobreak.active {
+                        if nobreak.last_breakable_word_idx != len(terse.words)-1 { // does list have words
+                            first_word_idx := 1 + nobreak.last_breakable_word_idx
+                            if first_word_idx == line.word_start_idx { // start of the line? -- skip append line
+                                line_break_allowed = false
+                            } else {
+                                nobreak_first_word_idx = first_word_idx
+                            }
+                        }
+                    }
+
+                    if line_break_allowed {
+                        line = append_line(terse, font, nobreak_first_word_idx)
+                    }
                 }
 
-                append_word(terse, word, size, font, color, word_is_icon, group)
+                if word != " " || line.word_count != 0 { // skip " " at the start of the line
+                    append_word(terse, word, size, font, color, word_is_icon, group)
+                }
 
                 word = ""
                 word_is_icon = false
@@ -230,6 +260,7 @@ create :: proc (
     }
 
     apply_last_line_gap(terse)
+    for &l in terse.lines do update_line_ending_space(terse, &l)
 
     last_line := slice.last_ptr(terse.lines[:])
     assert(last_line != nil)
@@ -315,7 +346,7 @@ destroy :: proc (terse: ^Terse) {
 }
 
 @private
-append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
+append_line :: proc (terse: ^Terse, font: ^Font, nobreak_first_word_idx := -1) -> ^Line {
     line_rect_y := terse.rect.y
     line_align := default_align
 
@@ -326,14 +357,7 @@ append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
         line_rect_y = prev_line.rect.y + prev_line.rect.h + font.line_spacing
         line_align = prev_line.align
 
-        // re-measure last word of last line in case it ends with space
-        last_word := slice.last_ptr(terse.words[:])
-        if last_word != nil && strings.ends_with(last_word.text, " ") {
-            last_word.text = last_word.text[:len(last_word.text)-1]
-            size := font->measure_text(last_word.text)
-            prev_line.rect.w -= last_word.rect.w - size.x
-            last_word.rect.w = size.x
-        }
+        update_line_width(terse, prev_line)
     }
 
     line := Line {
@@ -341,8 +365,52 @@ append_line :: proc (terse: ^Terse, font: ^Font) -> ^Line {
         align   = line_align,
     }
 
+    // move nobreak words from end of last line to start of new line
+    if nobreak_first_word_idx >= 0 {
+        line.word_start_idx = nobreak_first_word_idx
+        line.word_count = len(terse.words) - line.word_start_idx
+        assert(prev_line != nil)
+        prev_line.word_count -= line.word_count
+
+        word_x_offset := -(terse.words[line.word_start_idx].rect.x - prev_line.rect.x)
+        word_y_offset := line.rect.y - prev_line.rect.y
+        for i in 0..<line.word_count {
+            word := &terse.words[line.word_start_idx + i]
+            word.rect.x += word_x_offset
+            word.rect.y += word_y_offset
+        }
+
+        update_line_width(terse, prev_line)
+        update_line_width(terse, &line)
+    }
+
     append(&terse.lines, line)
     return slice.last_ptr(terse.lines[:])
+}
+
+@private
+update_line_width :: proc (terse: ^Terse, line: ^Line) {
+    if line.word_count > 0 {
+        last_word := &terse.words[line.word_start_idx + line.word_count - 1]
+        first_word_x1 := terse.words[line.word_start_idx].rect.x
+        last_word_x2 := last_word.rect.x + last_word.rect.w
+        line.rect.w = last_word_x2 - first_word_x1
+    } else {
+        line.rect.w = 0
+    }
+}
+
+@private
+update_line_ending_space :: proc (terse: ^Terse, line: ^Line) {
+    if line.word_count > 0 {
+        last_word := &terse.words[line.word_start_idx + line.word_count - 1]
+        if strings.ends_with(last_word.text, " ") {
+            last_word.text = last_word.text[:len(last_word.text)-1]
+            size := last_word.font->measure_text(last_word.text)
+            line.rect.w -= last_word.rect.w - size.x
+            last_word.rect.w = size.x
+        }
+    }
 }
 
 @private
