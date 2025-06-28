@@ -207,7 +207,7 @@ create :: proc (
 
                 word = ""
                 word_is_icon = false
-                word_icon_scale = 0
+                word_icon_scale = {}
             }
         }
     }

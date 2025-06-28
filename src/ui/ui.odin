@@ -50,7 +50,7 @@ Mouse_Input :: struct {
 
 Processing_Phase :: enum {
     none,
-    updating,
+    ticking,
     drawing,
 }
 
@@ -119,7 +119,7 @@ destroy :: proc (ui: ^UI) {
 tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     ui.stats = {}
     phase_started := time.tick_now()
-    ui.phase = .updating
+    ui.phase = .ticking
     defer {
         ui.phase = .none
         ui.stats.tick_time = time.tick_since(phase_started)
@@ -190,7 +190,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     if lmb_pressed do for f in ui.auto_hide_frames {
         if .hidden not_in f.flags {
             _, found := slice.linear_search_reverse(ui.mouse_frames[:], f)
-            if !found do f.flags += { .hidden }
+            if !found do hide(f)
         }
     }
 
