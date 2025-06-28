@@ -1,4 +1,4 @@
-collection_args	= -collection:spacelib=d:/dev/SpaceLib/src
+collection_args	= -collection:spacelib=src
 checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon
 debug_args 		= ${collection_args} ${checker_args} -debug -o:none -keep-executable
 release_args 	= ${collection_args} ${checker_args} -o:speed -keep-executable
