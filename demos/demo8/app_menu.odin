@@ -463,7 +463,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     gap :: "<gap=.3>"
     pin :: "<icon=round-star>"
     alt_b :: "<color=res_fire>"
-    alt_e :: "</color>"
+    alt_e :: "</>"
 
     ui.add_frame(ring, { name="traits_columns", text="<left,font=text_20,color=bw_95>"+
         gap + "Longshot\n"+

@@ -379,15 +379,15 @@ app_data_add_items :: proc () {
         desc="Grants <color=bw_ff>1</color> stack of <color=trait_hl>BULWARK</color>. Increases All Damage by <color=bw_ff>50%</color> of the total Damage Reduction granted by <color=trait_hl>BULWARK</color> stacks.",
     }
     i["thalos_eyelet"] = { name="Thalos Eyelet", icon="power-ring", tags={.gear,.ring}, count=1,
-        desc="Grants <color=bw_ff>1</color> stack of <color=trait_hl>BULWARK</color>. Also grants <color=bw_ff>2</color> Stamina Regen per second for each <color=trait_hl>BULWARK</color> stack and increases <color=trait_hl>BULWARK</color> limit from <color=bw_ff>5</color> to <color=bw_ff>6</color>.",
+        desc="Grants <color=bw_ff>1</> stack of <color=trait_hl>BULWARK</>. Also grants <color=bw_ff>2</> Stamina Regen per second for each <color=trait_hl>BULWARK</> stack and increases <color=trait_hl>BULWARK</> limit from <color=bw_ff>5</> to <color=bw_ff>6</>.",
     }
 
     // artifacts
 
     i["resonating_heart"] = { name="Resonating Heart", icon="dragon-orb", tags={.gear,.relic}, count=1,
-        desc="On use, regenerates <color=bw_ff>50%</color> of Max Health over <color=bw_ff>5s</color>. "+
-        "When heal ends, any overhealed Health to self is <color=bw_ff>Doubled</color> and awarded over "+
-        "the next <color=bw_ff>20s</color>.",
+        desc="On use, regenerates <color=bw_ff>50%</> of Max Health over <color=bw_ff>5s</>. "+
+        "When heal ends, any overhealed Health to self is <color=bw_ff>Doubled</> and awarded over "+
+        "the next <color=bw_ff>20s</>.",
     }
 }
 

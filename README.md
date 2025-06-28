@@ -70,8 +70,6 @@ TODO: [?] ui: maybe add support for logic resolution 1280x720
 
 TODO: [?] ui: add UI.drawing_frames and .updating phase should fill it to be later used in .drawing phase
 
-TODO: [?] terse: add support for "</>" command, should close last opened command, e.g. "font", "color" or "group"; probably will look unintuitive when opening multiple commands in single code, e.g. <font=f1,color=c1>...</>, we could close "color" in this case as its last, but now we introduce dependency on order of commands in the code... seems not nice
-
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 
 TODO: [?] res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; need thinking how to make it, but the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation

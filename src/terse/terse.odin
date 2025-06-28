@@ -93,7 +93,7 @@ create :: proc (
     if text == "" do return terse
 
     font := query_font(default_font_name)
-    ensure(font.measure_text != nil)
+    ensure(font.measure_text != nil, "Font.measure_text must be set")
     fonts_stack: [default_fonts_stack_size] ^Font
     fonts_stack[0] = font
     fonts_stack_idx := 0
@@ -104,6 +104,8 @@ create :: proc (
     colors_stack_idx := 0
 
     group: ^Group
+
+    last_opened_command: enum { none, font, color, group }
 
     cursor: struct { type: enum { text, code }, start: int }
     code, word: string
@@ -131,63 +133,78 @@ create :: proc (
             }
 
             if code != "" {
-                for command in strings.split(code, ",", context.temp_allocator) do switch command {
-                case "left"     : line.align = .left
-                case "center"   : line.align = .center
-                case "right"    : line.align = .right
-                case "wrap"     : terse.wrap = true
-                case "top"      : terse.valign = .top
-                case "middle"   : terse.valign = .middle
-                case "bottom"   : terse.valign = .bottom
-                case "/font":
-                    fonts_stack_idx -= 1
-                    ensure(fonts_stack_idx >= 0, "Fonts stack underflow!")
-                    font = fonts_stack[fonts_stack_idx]
-                case "/color":
-                    colors_stack_idx -= 1
-                    ensure(colors_stack_idx >= 0, "Colors stack underflow!")
-                    color = colors_stack[colors_stack_idx]
-                case "/group":
-                    ensure(group != nil, "No group to close!")
-                    group = nil
-                case:
-                    pair_sep_idx := strings.index(command, "=")
-                    if pair_sep_idx >= 0 && pair_sep_idx <= len(command)-2 {
-                        command_name := command[0:pair_sep_idx]
-                        command_value := command[pair_sep_idx+1:]
-                        switch command_name {
-                        case "font":
-                            font = query_font(command_value)
-                            ensure(font.measure_text != nil)
-                            fonts_stack_idx += 1
-                            ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow!")
-                            fonts_stack[fonts_stack_idx] = font
-                            line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
-                        case "color":
-                            color = command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
-                            colors_stack_idx += 1
-                            ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow!")
-                            colors_stack[colors_stack_idx] = color
-                        case "icon":
-                            assert(word == "")
-                            word, word_icon_scale = parse_icon_args(command_value)
-                            word_is_icon = true
-                        case "group":
-                            ensure(group == nil, "Groups cannot be nested!")
-                            group = append_group(terse, command_value)
-                        case "gap":
-                            gap_ratio := parse_f32(command_value)
-                            line.gap = gap_ratio * font.height
-                        case "pad":
-                            ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
-                            terse.pad = parse_vec_int(command_value)
-                            terse.lines[0].rect = core.rect_moved(terse.lines[0].rect, terse.pad)
-                            terse.rect = core.rect_inflated(terse.rect, -terse.pad)
-                        case:
-                            fmt.eprintfln("[!] Unexpected command pair \"%v\"", command)
+                for &command in strings.split(code, ",", context.temp_allocator) {
+                    if command == "/" do switch last_opened_command {
+                    case .none  : panic("Unexpected command \"/\", no command opened previously")
+                    case .font  : command = "/font"
+                    case .color : command = "/color"
+                    case .group : command = "/group"
+                    }
+
+                    switch command {
+                    case "left"     : line.align = .left
+                    case "center"   : line.align = .center
+                    case "right"    : line.align = .right
+                    case "wrap"     : terse.wrap = true
+                    case "top"      : terse.valign = .top
+                    case "middle"   : terse.valign = .middle
+                    case "bottom"   : terse.valign = .bottom
+                    case "/font":
+                        fonts_stack_idx -= 1
+                        ensure(fonts_stack_idx >= 0, "Fonts stack underflow")
+                        font = fonts_stack[fonts_stack_idx]
+                        last_opened_command = .none
+                    case "/color":
+                        colors_stack_idx -= 1
+                        ensure(colors_stack_idx >= 0, "Colors stack underflow")
+                        color = colors_stack[colors_stack_idx]
+                        last_opened_command = .none
+                    case "/group":
+                        ensure(group != nil, "No group to close")
+                        group = nil
+                        last_opened_command = .none
+                    case:
+                        pair_sep_idx := strings.index(command, "=")
+                        if pair_sep_idx >= 0 && pair_sep_idx <= len(command)-2 {
+                            command_name := command[0:pair_sep_idx]
+                            command_value := command[pair_sep_idx+1:]
+                            switch command_name {
+                            case "font":
+                                font = query_font(command_value)
+                                ensure(font.measure_text != nil, "Font.measure_text must be set")
+                                fonts_stack_idx += 1
+                                ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow")
+                                fonts_stack[fonts_stack_idx] = font
+                                line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
+                                last_opened_command = .font
+                            case "color":
+                                color = command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
+                                colors_stack_idx += 1
+                                ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow")
+                                colors_stack[colors_stack_idx] = color
+                                last_opened_command = .color
+                            case "group":
+                                ensure(group == nil, "Groups cannot be nested")
+                                group = append_group(terse, command_value)
+                                last_opened_command = .group
+                            case "icon":
+                                assert(word == "")
+                                word, word_icon_scale = parse_icon_args(command_value)
+                                word_is_icon = true
+                            case "gap":
+                                gap_ratio := parse_f32(command_value)
+                                line.gap = gap_ratio * font.height
+                            case "pad":
+                                ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
+                                terse.pad = parse_vec_int(command_value)
+                                terse.lines[0].rect = core.rect_moved(terse.lines[0].rect, terse.pad)
+                                terse.rect = core.rect_inflated(terse.rect, -terse.pad)
+                            case:
+                                fmt.panicf("Unknown command pair \"%v\"", command)
+                            }
+                        } else {
+                            fmt.panicf("Unknown command \"%v\"", command)
                         }
-                    } else {
-                        fmt.eprintfln("[!] Unexpected command \"%v\"", command)
                     }
                 }
 
