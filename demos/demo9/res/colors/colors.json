@@ -1,0 +1,6 @@
+[
+    { "name": "bg0", "hex": "#000" },
+    { "name": "bg1", "hex": "#223" },
+    { "name": "pri", "hex": "#fd9" },
+    { "name": "acc", "hex": "#f9f" }
+]

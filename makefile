@@ -3,7 +3,7 @@ checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon
 debug_args 		= ${collection_args} ${checker_args} -debug -o:none -keep-executable
 release_args 	= ${collection_args} ${checker_args} -o:speed -keep-executable
 
-run: demo8
+run: demo9
 
 mkdir:
 	@if not exist build mkdir build
@@ -31,3 +31,6 @@ demo7: mkdir
 
 demo8: mkdir
 	@odin run demos/demo8 -out:build/demo8.exe ${debug_args}
+
+demo9: mkdir
+	@odin run demos/demo9 -out:build/demo9.exe ${debug_args}
