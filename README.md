@@ -16,8 +16,6 @@ TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPkl
 
 TODO: terse: add ability to have a line with differently aligned parts -- ability to have a single line with text at left and at right, like in WOW's tooltips ("| Head <---> Leather |", "| Main Hand <---> Mace |")
 
-TODO: terse: add support for "tab" (or "offset") command <tab=150>, which should take single integer, should generate empty word with needed width so following word will start at that horizontal pos (e.g. 150px from line.rect.x)
-
 TODO: terse: add ability to have "<" and ">" in the text as part of the content, probably should support something like "<<test>>" which should give "<test>" as a text for displayed (not interpreted as code sequence)
 
 TODO: terse: rework parse_f32, parse_int, parse_vec_i, parse_vec -- should be only parse_vec and parse f32, which just handle any f32 text value

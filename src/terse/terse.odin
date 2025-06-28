@@ -110,9 +110,11 @@ create :: proc (
     last_opened_command: enum { none, font, color, group, nobreak }
 
     cursor: struct { type: enum { text, code }, start: int }
-    code, word: string
-    word_is_icon: bool
-    word_icon_scale: Vec2
+    code, word      : string
+    word_is_icon    : bool
+    word_icon_scale : Vec2
+    word_is_tab     : bool
+    word_tab_width  : f32
 
     for para in strings.split(text, "\n", context.temp_allocator) {
         line := append_line(terse, font)
@@ -202,6 +204,16 @@ create :: proc (
                                 assert(word == "")
                                 word, word_icon_scale = parse_icon_args(command_value)
                                 word_is_icon = true
+                            case "tab":
+                                word_tab_width = f32(parse_int(command_value)) // todo: use parse_f32() when it can parse any float
+                                assert(word_tab_width > 0, "Tab value must be greater than 0")
+                                if line.word_count > 0 {
+                                    last_word := &terse.words[line.word_start_idx + line.word_count - 1]
+                                    last_word_x2_local := last_word.rect.x + last_word.rect.w - line.rect.x
+                                    word_tab_width -= last_word_x2_local
+                                }
+                                if word_tab_width > 0 do word_is_tab = true
+
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
                                 line.gap = gap_ratio * font.height
@@ -222,10 +234,12 @@ create :: proc (
                 code = ""
             }
 
-            if word != "" {
+            if word != "" || word_is_tab {
                 size := word_is_icon\
                     ? word_icon_scale * Vec2 { font.height, font.height }\
-                    : font->measure_text(word)
+                    : word_is_tab\
+                        ? Vec2 { word_tab_width, font.height }\
+                        : font->measure_text(word)
 
                 line_break_needed := line.rect.w + size.x > terse.rect.w && line.word_count > 0
                 if terse.wrap && line_break_needed {
@@ -248,13 +262,15 @@ create :: proc (
                     }
                 }
 
-                if word != " " || line.word_count != 0 { // skip " " at the start of the line
+                if word != " " || word_is_tab || line.word_count != 0 { // skip " " at the start of the line
                     append_word(terse, word, size, font, color, word_is_icon, group)
                 }
 
                 word = ""
                 word_is_icon = false
                 word_icon_scale = {}
+                word_is_tab = false
+                word_tab_width = 0
             }
         }
     }

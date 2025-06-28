@@ -175,8 +175,8 @@ app_data_add_traits :: proc () {
             return fmt.aprintf("Reduces Skill Cooldowns by <color=bw_ff>%v%%</color>.", value, allocator=allocator)
         },
         level_desc = proc (trait: App_Data_Trait, level: int, allocator := context.allocator) -> string {
-            value := 2 * level
-            return fmt.aprintf("Level %i: %+v%% Skill Cooldown", level, value, allocator=allocator)
+            value := -2 * level
+            return fmt.aprintf("Level %i:<tab=70>%+v%%<tab=120>Skill Cooldown", level, value, allocator=allocator)
         },
         player_state = { 2, 8, false },
     }
