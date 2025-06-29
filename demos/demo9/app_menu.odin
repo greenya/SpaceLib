@@ -1,5 +1,6 @@
 package demo9
 
+import "core:slice"
 import "spacelib:ui"
 
 app_menu_create :: proc () {
@@ -65,6 +66,16 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
             app_menu_add_bar_top_tab_unspent_points(tab)
         }
     }
+
+    ui.add_frame(root,
+        { name="nav_left", text="<pad=6,font=text_5l,icon=key/Q>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_bar_action_button },
+        { point=.right, rel_point=.left, rel_frame=tabs.children[0], offset={-12,12} },
+    )
+
+    ui.add_frame(root,
+        { name="nav_right", text="<pad=6,font=text_5l,icon=key/E>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_bar_action_button },
+        { point=.left, rel_point=.right, rel_frame=slice.last(tabs.children[:]), offset={12,12} },
+    )
 
     app_menu_update_bar_top()
 }

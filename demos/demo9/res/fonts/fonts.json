@@ -4,5 +4,11 @@
         "file": "Kanit-Light.ttf",
         "height": 32,
         "texture_filter": "BILINEAR"
+    },
+    {
+        "name": "text_5r",
+        "file": "Kanit-Regular.ttf",
+        "height": 32,
+        "texture_filter": "BILINEAR"
     }
 ]
