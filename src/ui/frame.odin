@@ -19,6 +19,7 @@ Frame :: struct {
     rect_dirty      : bool,
     anchors         : [dynamic] Anchor,
     size            : Vec2,
+    size_min        : Vec2,
 
     flags           : bit_set [Flag],
     name            : string,
@@ -580,6 +581,8 @@ update_rect :: proc (f: ^Frame) {
     if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
     if .terse in f.flags do update_terse(f)
+    if f.size.x > 0 && f.size_min.x > 0 do f.size.x = max(f.size.x, f.size_min.x)
+    if f.size.y > 0 && f.size_min.y > 0 do f.size.y = max(f.size.y, f.size_min.y)
 }
 
 @private
