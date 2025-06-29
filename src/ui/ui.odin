@@ -154,7 +154,10 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 if f.enter != nil do f.enter(f)
             }
 
-            if lmb_pressed do ui.captured = { frame=f, pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
+            if lmb_pressed {
+                ui.captured = { frame=f, pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
+                if .no_capture in f.flags do lmb_released = true
+            }
 
             break
         }
