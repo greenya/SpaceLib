@@ -36,7 +36,25 @@ draw_color_rect :: proc (f: ^ui.Frame) {
 }
 
 draw_menu_bar_top_tab :: proc (f: ^ui.Frame) {
-    // draw.rect(f.rect, app.res.colors["acc"])
+    if f.selected {
+        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .25)
+        draw.rect(f.rect, bg_color) // todo: maybe draw gradient sprite
 
+        br_color := core.alpha(app.res.colors["acc"], f.opacity)
+        br_rect := core.rect_line_bottom(f.rect, 4)
+        draw.rect(br_rect, br_color)
+
+        draw_terse(f.terse, "bg0", {0,2})
+    }
+
+    tx_color := f.selected ? "acc" : "pri"
+    draw_terse(f.terse, tx_color)
+}
+
+draw_menu_bar_top_tab_unspent_points :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(app.res.colors["pri"], f.opacity)
+    draw.rect(f.rect, bg_color)
+    br_color := core.brightness(bg_color, -.555)
+    draw.rect_lines(f.rect, 2, br_color)
     draw_terse(f.terse)
 }

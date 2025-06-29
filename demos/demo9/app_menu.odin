@@ -48,10 +48,10 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { "tab_journey"         , "JOURNEY" },
         { "tab_customization"   , "CUSTOMIZATION" },
     }) {
-        ui.add_frame(tabs, {
+        tab := ui.add_frame(tabs, {
             name        = info.name,
             text        = info.text,
-            text_format = "<bottom,font=text_5l,color=pri,pad=20:10>%s",
+            text_format = "<bottom,font=text_5l,pad=20:10>%s",
             flags       = {.radio,.terse,.terse_width},
             draw        = draw_menu_bar_top_tab,
             click       = proc (f: ^ui.Frame) {
@@ -60,9 +60,24 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
                 }
             },
         })
+
+        if tab.name == "tab_research" || tab.name == "tab_skills" {
+            app_menu_add_bar_top_tab_unspent_points(tab)
+        }
     }
 
-    // ...
+    app_menu_update_bar_top()
+}
+
+app_menu_add_bar_top_tab_unspent_points :: proc (parent: ^ui.Frame) {
+    root := ui.add_frame(parent, {
+        name        = "unspent_points",
+        text_format = "<font=text_5l,color=bg0,pad=6:0>%i",
+        size_min    = {32,0},
+        flags       = {.pass,.terse,.terse_width,.terse_height},
+        draw        = draw_menu_bar_top_tab_unspent_points,
+    }, { point=.center, rel_point=.bottom, offset={0,6} })
+    ui.set_text(root, 777)
 }
 
 app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
@@ -88,14 +103,24 @@ app_menu_add_page_journey :: proc (parent: ^ui.Frame) {
 
 app_menu_switch_page :: proc (page_name: string) {
     f := app.ui->get(page_name)
-
-    // for child in f.parent.children {
-    //     ui.end_animation(child)
-    // }
-
-    // if .hidden in f.flags {
-    //     ui.animate(f, app_menu_anim_switch_page, .4)
-    // }
-
     ui.show(f, hide_siblings=true)
+}
+
+app_menu_update_bar_top :: proc () {
+    { // update unspent research points
+        frame := ui.get(app.ui.root, "tab_research/unspent_points")
+        if app.data.player.research_points_avail > 0 {
+            ui.set_text(frame, app.data.player.research_points_avail, shown=true)
+        } else {
+            ui.hide(frame)
+        }
+    }
+    { // update unspent skill points
+        frame := ui.get(app.ui.root, "tab_skills/unspent_points")
+        if app.data.player.skill_points_avail > 0 {
+            ui.set_text(frame, app.data.player.skill_points_avail, shown=true)
+        } else {
+            ui.hide(frame)
+        }
+    }
 }
