@@ -1,11 +1,14 @@
 package demo9
 
+import "core:fmt"
 import "core:strings"
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 import "spacelib:terse"
 import rl "vendor:raylib"
+
+_ :: fmt
 
 draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
     assert(t != nil)
@@ -48,7 +51,7 @@ draw_color_rect :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, color)
 }
 
-draw_menu_bar_action_button :: proc (f: ^ui.Frame) {
+draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
     draw_terse(f.terse, offset=offset)
 
@@ -59,29 +62,29 @@ draw_menu_bar_action_button :: proc (f: ^ui.Frame) {
     draw.rect_lines(ln_rect, 1, ln_color)
 }
 
-draw_menu_bar_top_tab :: proc (f: ^ui.Frame) {
+draw_screen_tab :: proc (f: ^ui.Frame) {
     if f.selected {
-        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .25)
-        draw.rect(f.rect, bg_color) // todo: maybe draw gradient sprite
+        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .5)
+        draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
 
         br_color := core.alpha(app.res.colors["acc"], f.opacity)
         br_rect := core.rect_line_bottom(f.rect, 4)
         draw.rect(br_rect, br_color)
 
-        br_left_rect := core.rect_line_left(f.rect, .5)
-        draw.rect(br_left_rect, br_color)
-
-        br_right_rect := core.rect_line_right(f.rect, .5)
-        draw.rect(br_right_rect, br_color)
-
-        draw_terse(f.terse, "bg0", {0,2})
+        draw.rect_gradient(core.rect_line_left(f.rect, 1), {}, {}, br_color, br_color)
+        draw.rect_gradient(core.rect_line_right(f.rect, 1), {}, {}, br_color, br_color)
+    } else {
+        hover_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
+        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .4 * hover_ratio)
+        draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
     }
 
     tx_color := f.selected ? "acc" : "pri"
+    draw_terse(f.terse, "bg0", {0,2})
     draw_terse(f.terse, tx_color)
 }
 
-draw_menu_bar_top_tab_unspent_points :: proc (f: ^ui.Frame) {
+draw_screen_tab_unspent_points :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["pri"], f.opacity)
     draw.rect(f.rect, bg_color)
     br_color := core.brightness(bg_color, -.555)

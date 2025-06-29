@@ -1,7 +1,11 @@
 package demo9
 
+import "core:fmt"
 import "core:slice"
+import "spacelib:core"
 import "spacelib:ui"
+
+_ :: fmt
 
 app_menu_create :: proc () {
     root := ui.add_frame(app.ui.root,
@@ -53,11 +57,21 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
             name        = info.name,
             text        = info.text,
             text_format = "<bottom,font=text_5l,pad=20:10>%s",
-            flags       = {.radio,.terse,.terse_width},
-            draw        = draw_menu_bar_top_tab,
+            flags       = {.no_capture,.radio,.terse,.terse_width},
+            draw        = draw_screen_tab,
             click       = proc (f: ^ui.Frame) {
                 switch f.name {
                 case "tab_journey": app_menu_switch_page("page_journey")
+                }
+
+                {
+                    unspent_points := app.ui->get("bar_top/tab_research/unspent_points")
+                    anim_fade_start(unspent_points, f.name != "tab_research")
+                }
+
+                {
+                    unspent_points := app.ui->get("bar_top/tab_skills/unspent_points")
+                    anim_fade_start(unspent_points, f.name != "tab_skills")
                 }
             },
         })
@@ -68,12 +82,12 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     }
 
     ui.add_frame(root,
-        { name="nav_left", text="<pad=6,font=text_5l,icon=key/Q>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_bar_action_button },
+        { name="nav_left", text="<pad=6,font=text_5l,icon=key/Q>", flags={.terse,.terse_width,.terse_height}, draw=draw_button },
         { point=.right, rel_point=.left, rel_frame=tabs.children[0], offset={-12,12} },
     )
 
     ui.add_frame(root,
-        { name="nav_right", text="<pad=6,font=text_5l,icon=key/E>", flags={.terse,.terse_width,.terse_height}, draw=draw_menu_bar_action_button },
+        { name="nav_right", text="<pad=6,font=text_5l,icon=key/E>", flags={.terse,.terse_width,.terse_height}, draw=draw_button },
         { point=.left, rel_point=.right, rel_frame=slice.last(tabs.children[:]), offset={12,12} },
     )
 
@@ -81,14 +95,13 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
 }
 
 app_menu_add_bar_top_tab_unspent_points :: proc (parent: ^ui.Frame) {
-    root := ui.add_frame(parent, {
+    ui.add_frame(parent, {
         name        = "unspent_points",
         text_format = "<font=text_5l,color=bg0,pad=6:0>%i",
         size_min    = {32,0},
         flags       = {.pass,.terse,.terse_width,.terse_height},
-        draw        = draw_menu_bar_top_tab_unspent_points,
+        draw        = draw_screen_tab_unspent_points,
     }, { point=.center, rel_point=.bottom, offset={0,6} })
-    ui.set_text(root, 777)
 }
 
 app_menu_add_bar_bottom :: proc (parent: ^ui.Frame) {
@@ -134,4 +147,24 @@ app_menu_update_bar_top :: proc () {
             ui.hide(frame)
         }
     }
+}
+
+anim_fade_start :: proc (f: ^ui.Frame, show: bool) {
+    if show {
+        if f.opacity < 1 do ui.animate(f, anim_fade_in, .3)
+    } else {
+        if f.opacity > 0 do ui.animate(f, anim_fade_out, .3)
+    }
+}
+
+anim_fade_out :: proc (f: ^ui.Frame) {
+    ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+    ui.set_opacity(f, 1-ratio)
+    f.offset.y = ratio*10
+}
+
+anim_fade_in :: proc (f: ^ui.Frame) {
+    ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+    ui.set_opacity(f, ratio)
+    f.offset.y = (1-ratio)*10
 }
