@@ -1,14 +1,22 @@
-package demo9
+package demo9_partials
 
 import "core:fmt"
 import "core:strings"
+import rl "vendor:raylib"
+
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 import "spacelib:terse"
-import rl "vendor:raylib"
+
+import "../colors"
+import "../fonts"
 
 _ :: fmt
+
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
+@private Color :: core.Color
 
 draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
     assert(t != nil)
@@ -16,7 +24,7 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
         // if word.in_group do continue
 
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-        tint := override_color != "" ? app.res.colors[override_color].value : word.color
+        tint := override_color != "" ? colors.get(override_color) : word.color
         tint = core.alpha(tint, t.opacity)
         if word.is_icon {
             has_prefix :: strings.has_prefix
@@ -31,23 +39,23 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
         }
     }
 
-    if app.debug_drawing do draw.debug_terse(t)
+    // if app.debug_drawing do draw.debug_terse(t)
 }
 
 draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Color) {
-    font_tr := &app.res.fonts[font_name].font_tr
+    font_tr := &fonts.get(font_name).font_tr
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
-    bg_color := core.alpha(app.res.colors["pri"].value, opacity)
+    bg_color := core.alpha(colors.primary, opacity)
     draw.rect(rect, bg_color)
-    tx_color := core.alpha(app.res.colors["bg0"].value, opacity)
-    draw_text_center(text, rect, "text_5r", tx_color)
+    tx_color := core.alpha(colors.bg0, opacity)
+    draw_text_center(text, rect, "text_4r", tx_color)
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {
-    color := core.alpha(app.res.colors[f.text], f.opacity)
+    color := core.alpha(colors.get(f.text), f.opacity)
     draw.rect(f.rect, color)
 }
 
@@ -55,19 +63,17 @@ draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
     draw_terse(f.terse, offset=offset)
 
-    ln_color_name := f.entered ? "acc" : "pri"
-    ln_color := core.alpha(app.res.colors[ln_color_name], f.opacity)
-
+    ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity)
     ln_rect := core.rect_moved(f.rect, offset)
     draw.rect_lines(ln_rect, 1, ln_color)
 }
 
 draw_screen_tab :: proc (f: ^ui.Frame) {
     if f.selected {
-        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .5)
+        bg_color := core.alpha(colors.accent, f.opacity * .5)
         draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
 
-        br_color := core.alpha(app.res.colors["acc"], f.opacity)
+        br_color := core.alpha(colors.accent, f.opacity)
         br_rect := core.rect_line_bottom(f.rect, 4)
         draw.rect(br_rect, br_color)
 
@@ -75,17 +81,16 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient(core.rect_line_right(f.rect, 1), {}, {}, br_color, br_color)
     } else {
         hover_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
-        bg_color := core.alpha(app.res.colors["acc"], f.opacity * .4 * hover_ratio)
+        bg_color := core.alpha(colors.accent, f.opacity * .4 * hover_ratio)
         draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
     }
 
-    tx_color := f.selected ? "acc" : "pri"
     draw_terse(f.terse, "bg0", {0,2})
-    draw_terse(f.terse, tx_color)
+    draw_terse(f.terse, f.selected ? "accent" : "primary")
 }
 
-draw_screen_tab_unspent_points :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(app.res.colors["pri"], f.opacity)
+draw_screen_tab_points :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(colors.primary, f.opacity)
     draw.rect(f.rect, bg_color)
     br_color := core.brightness(bg_color, -.555)
     draw.rect_lines(f.rect, 2, br_color)

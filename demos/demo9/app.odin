@@ -2,21 +2,20 @@ package demo9
 
 import "core:fmt"
 import rl "vendor:raylib"
+
 import "spacelib:core"
 import "spacelib:raylib/draw"
-import "spacelib:raylib/res"
 import "spacelib:terse"
 import "spacelib:ui"
 
-Vec2 :: core.Vec2
-Rect :: core.Rect
-Color :: core.Color
+import "data"
+import "colors"
+import "fonts"
+import "partials"
+import "screens"
 
 App :: struct {
-    res             : ^res.Res,
-    ui              : ^ui.UI,
-    data            : ^App_Data,
-    debug_drawing   : bool,
+    ui: ^ui.UI,
 }
 
 app: ^App
@@ -27,50 +26,43 @@ app_startup :: proc () {
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 9")
-    rl.MaximizeWindow()
+    // rl.MaximizeWindow()
+
+    data.create()
+    fonts.create()
 
     app = new(App)
-
-    app.res = res.create()
-    res.add_files(app.res, #load_directory("res/colors"))
-    res.add_files(app.res, #load_directory("res/fonts"))
-    // res.add_files(app.res, #load_directory("res/sprites"))
-    res.load_colors(app.res)
-    res.load_fonts(app.res)
-    // res.load_sprites(app.res, texture_size_limit={1024,2048}, texture_sprites_gap=2, texture_filter=.BILINEAR)
-    // res.print(app.res, {.textures,.sprites})
-
-    app_data_create()
-
     app.ui = ui.create(
         terse_query_font_proc = proc (name: string) -> ^terse.Font {
-            return &app.res.fonts[name].font_tr
+            return &fonts.get(name).font_tr
         },
         terse_query_color_proc = proc (name: string) -> core.Color {
-            return app.res.colors[name].value
+            return colors.get(name)
         },
         terse_draw_proc = proc (terse: ^terse.Terse) {
-            draw_terse(terse)
+            partials.draw_terse(terse)
         },
         overdraw_proc = proc (f: ^ui.Frame) {
-            if !app.debug_drawing do return
+            if !rl.IsKeyDown(.LEFT_CONTROL) do return
             draw.debug_frame(f)
             draw.debug_frame_layout(f)
             draw.debug_frame_anchors(f)
         },
     )
 
-    app_menu_create()
+    screens.init(app.ui.root)
+    // screens.open(app.ui.root, "opening")
+    screens.open(app.ui.root, "player", "tab_journey")
+
     ui.print_frame_tree(app.ui.root)
 }
 
 app_shutdown :: proc () {
     fmt.println(#procedure)
 
-    app_menu_destroy()
-    app_data_destroy()
     ui.destroy(app.ui)
-    res.destroy(app.res)
+    fonts.destroy()
+    data.destroy()
 
     free(app)
     app = nil
@@ -89,8 +81,6 @@ app_tick :: proc () {
         { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
         { rl.GetMousePosition(), rl.GetMouseWheelMove(), rl.IsMouseButtonDown(.LEFT) },
     )
-
-    app.debug_drawing = rl.IsKeyDown(.LEFT_CONTROL)
 }
 
 app_draw :: proc () {
