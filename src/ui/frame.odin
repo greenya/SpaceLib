@@ -361,6 +361,49 @@ click :: proc {
     click_by_path,
 }
 
+select_next_child :: proc (parent: ^Frame, allow_rotation := true) {
+    should_select_next := false
+
+    for child in parent.children {
+        if should_select_next && selectable(child) {
+            click(child)
+            return
+        }
+        if child.selected do should_select_next = true
+    }
+
+    if should_select_next && allow_rotation {
+        for child in parent.children {
+            if !child.selected && selectable(child) {
+                click(child)
+                return
+            }
+        }
+    }
+}
+
+select_prev_child :: proc (parent: ^Frame, allow_rotation := true) {
+    // note: the code is identical to select_next_child(), only #reverse directives were added
+    should_select_next := false
+
+    #reverse for child in parent.children {
+        if should_select_next && selectable(child) {
+            click(child)
+            return
+        }
+        if child.selected do should_select_next = true
+    }
+
+    if should_select_next && allow_rotation {
+        #reverse for child in parent.children {
+            if !child.selected && selectable(child) {
+                click(child)
+                return
+            }
+        }
+    }
+}
+
 hidden :: proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .hidden in i.flags do return true
     return false
@@ -411,6 +454,12 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
     return target
 }
 
+@private
+selectable :: #force_inline proc (f: ^Frame) -> bool {
+    return f.flags & {.hidden,.disabled} == {}
+}
+
+@private
 layout_has_scroll :: #force_inline proc (f: ^Frame) -> bool {
     return f.layout.dir != .none && f.layout.scroll.step != 0
 }
