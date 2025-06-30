@@ -12,18 +12,21 @@ Font :: struct {
 default: ^Font
 text_4l: ^Font
 text_4r: ^Font
+text_4m: ^Font
 
 get :: #force_inline proc (name: string) -> ^Font {
     switch name {
     case "text_4l"  : return text_4l
     case "text_4r"  : return text_4r
+    case "text_4m"  : return text_4m
     case            : return default
     }
 }
 
 create :: proc () {
-    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=32)
-    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=32)
+    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28)
+    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28)
+    text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28)
     default = create_font_default(scale=2)
 }
 
@@ -31,6 +34,7 @@ destroy :: proc () {
     destroy_font(default, should_unload_font=false)
     destroy_font(text_4l)
     destroy_font(text_4r)
+    destroy_font(text_4m)
 }
 
 @private

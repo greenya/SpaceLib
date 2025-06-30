@@ -28,6 +28,7 @@ ease_rect :: proc (from, to: Rect, ratio: f32, easing := Ease.Linear) -> Rect {
 
 ease_color :: proc (from, to: Color, ratio: f32, easing := Ease.Linear) -> Color {
     ratio := easing != .Linear ? #force_inline ease.ease(easing, ratio) : ratio
+    // FIXME
     return {
         from[0] + u8(f32(to[0] - from[0]) * ratio),
         from[1] + u8(f32(to[1] - from[1]) * ratio),

@@ -7,10 +7,10 @@ import "spacelib:ui"
 import "opening"
 import "player"
 
-init :: proc (parent: ^ui.Frame) {
+add_to :: proc (parent: ^ui.Frame) {
     screens := ui.add_frame(parent, { name="screens" }, {point=.top_left}, {point=.bottom_right})
-    opening.create(screens)
-    player.create(screens)
+    opening.add_to(screens)
+    player.add_to(screens)
 }
 
 open :: proc (parent: ^ui.Frame, screen_name: string, tab_name := "") {

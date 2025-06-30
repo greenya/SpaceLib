@@ -18,13 +18,13 @@ _ :: fmt
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
+draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}) {
     assert(t != nil)
     for word in t.words {
         // if word.in_group do continue
 
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-        tint := override_color != "" ? colors.get(override_color) : word.color
+        tint := color != nil ? color.? : word.color
         tint = core.alpha(tint, t.opacity)
         if word.is_icon {
             has_prefix :: strings.has_prefix
@@ -51,7 +51,7 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
     bg_color := core.alpha(colors.primary, opacity)
     draw.rect(rect, bg_color)
     tx_color := core.alpha(colors.bg0, opacity)
-    draw_text_center(text, rect, "text_4r", tx_color)
+    draw_text_center(text, rect, "text_4m", tx_color)
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {
@@ -63,9 +63,21 @@ draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
     draw_terse(f.terse, offset=offset)
 
-    ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity)
+    // hv_ratio := .5 + .5 * ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
+    // hv_ratio := ui.hover_ratio(f, .Linear, .333, .Linear, .333)
+    // ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio, .Linear)
+    // ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity * hv_ratio)
+    // ln_color := f.entered ? core.alpha(colors.accent, f.opacity) : core.alpha(colors.accent, f.opacity)
+    // ln_color := f.entered ? core.alpha(colors.accent, f.opacity) : core.alpha(colors.primary, f.opacity * .3)
+
+    hv_ratio := ui.hover_ratio(f, .Linear, .555, .Linear, .555)
+    ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio, .Cubic_Out)
     ln_rect := core.rect_moved(f.rect, offset)
     draw.rect_lines(ln_rect, 1, ln_color)
+
+    if f.name == "close" {
+        fmt.println(hv_ratio, ln_color)
+    }
 }
 
 draw_screen_tab :: proc (f: ^ui.Frame) {
@@ -85,8 +97,8 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
     }
 
-    draw_terse(f.terse, "bg0", {0,2})
-    draw_terse(f.terse, f.selected ? "accent" : "primary")
+    draw_terse(f.terse, colors.bg0, {0,2})
+    draw_terse(f.terse, f.selected ? colors.accent : colors.primary)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {

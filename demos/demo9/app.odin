@@ -50,9 +50,9 @@ app_startup :: proc () {
         },
     )
 
-    screens.init(app.ui.root)
-    // screens.open(app.ui.root, "opening")
-    screens.open(app.ui.root, "player", "tab_journey")
+    screens.add_to(app.ui.root)
+    screens.open(app.ui.root, "opening")
+    // screens.open(app.ui.root, "player", "journey")
 
     ui.print_frame_tree(app.ui.root)
 }
