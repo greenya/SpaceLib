@@ -20,6 +20,8 @@ vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
 
 // Supports: #rgb, #rrggbb, #rrggbbaa
 color_from_hex :: proc (text: string) -> Color {
+    assert(len(text) > 0 && text[0] == '#')
+
     char_to_u8 :: proc (c: byte) -> u8 {
         if c>='0' && c<='9' do return c-'0'
         if c>='A' && c<='F' do return c-'A'+10
