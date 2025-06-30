@@ -424,6 +424,8 @@ find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
     is_text := false
     rule_text := rule
 
+    if rule == ".." do return parent.parent
+
     if strings.starts_with(rule, "text=") {
         is_text = true
         rule_text = rule[5:]
