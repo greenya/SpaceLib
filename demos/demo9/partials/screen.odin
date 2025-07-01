@@ -14,59 +14,6 @@ add_screen_base :: proc (screen: ^ui.Frame) {
     )
 }
 
-add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab, page: ^ui.Frame) {
-    tab = ui.add_frame(ui.get(screen, "tabs"), {
-        name        = name,
-        text        = text,
-        text_format = "<bottom,font=text_4l,pad=20:10>%s",
-        flags       = {.no_capture,.radio,.terse,.terse_width},
-        draw        = draw_screen_tab,
-        click       = on_screen_tab_click,
-    })
-
-    ui.add_frame(tab, {
-        name        = "points",
-        text_format = "<font=text_4m,color=bg0,pad=6:0>%i",
-        size_min    = {32,0},
-        flags       = {.hidden,.pass,.terse,.terse_width,.terse_height},
-        draw        = draw_screen_tab_points,
-    }, { point=.center, rel_point=.bottom, offset={0,6} })
-
-    page = ui.add_frame(ui.get(screen, "pages"),
-        { name=name, text="bg1" , draw=draw_color_rect },
-        { point=.top_left },
-        { point=.bottom_right },
-    )
-
-    if len(tab.parent.children) > 1 {
-        ui.show(ui.get(screen, "nav_next"))
-        ui.show(ui.get(screen, "nav_prev"))
-    }
-
-    return
-}
-
-add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
-    return ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
-        name    = name,
-        text    = fmt.tprintf("<pad=12:6,font=text_4l,color=primary> %s", text),
-        flags   = {.terse,.terse_width,.terse_height},
-        draw    = draw_button,
-    })
-}
-
-add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text, key: string) -> ^ui.Frame {
-    assert(len(key) == 1 || len(key) == 3 || len(key) == 6) // "H", "Esc", "L.Ctrl"
-    key_width_ratios := [] string { "?", "1", "?", "1.4", "?", "?", "2" }
-    key_width_ratio := key_width_ratios[len(key)]
-    return ui.add_frame(ui.get(screen, "footer_bar/key_buttons"), {
-        name    = name,
-        text    = fmt.tprintf("<pad=12:6,font=text_4l,color=primary,icon=key/%s:%s:1> %s", key, key_width_ratio, text),
-        flags   = {.terse,.terse_width,.terse_height},
-        draw    = draw_button,
-    })
-}
-
 @private
 add_header_bar :: proc (screen: ^ui.Frame) {
     header_bar := ui.add_frame(screen,
@@ -107,8 +54,8 @@ add_footer_bar :: proc (screen: ^ui.Frame) {
     )
 
     ui.add_frame(footer_bar,
-        { name="pyramid_buttons", layout={ dir=.right, align=.center, gap=20 } },
-        { point=.left, offset={30,0} },
+        { name="pyramid_buttons", layout={ dir=.right, align=.end, gap=20 } },
+        { point=.bottom_left, offset={30,0} },
     )
 
     ui.add_frame(footer_bar,
@@ -117,8 +64,69 @@ add_footer_bar :: proc (screen: ^ui.Frame) {
     )
 }
 
+add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab, page: ^ui.Frame) {
+    tab = ui.add_frame(ui.get(screen, "tabs"), {
+        name        = name,
+        text        = text,
+        text_format = "<bottom,font=text_4l,pad=20:10>%s",
+        flags       = {.no_capture,.radio,.terse,.terse_width},
+        draw        = draw_screen_tab,
+        click       = on_screen_tab_click,
+    })
+
+    ui.add_frame(tab, {
+        name        = "points",
+        text_format = "<font=text_4m,color=bg0,pad=6:0>%i",
+        size_min    = {32,0},
+        flags       = {.hidden,.pass,.terse,.terse_width,.terse_height},
+        draw        = draw_screen_tab_points,
+    }, { point=.center, rel_point=.bottom, offset={0,6} })
+
+    page = ui.add_frame(ui.get(screen, "pages"),
+        { name=name, text="bg1" , draw=draw_color_rect },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    if len(tab.parent.children) > 1 {
+        ui.show(ui.get(screen, "nav_next"))
+        ui.show(ui.get(screen, "nav_prev"))
+    }
+
+    return
+}
+
 @private
 on_screen_tab_click :: proc (f: ^ui.Frame) {
     page := ui.get(f, fmt.tprintf("../../../pages/%s", f.name))
     ui.show(page, hide_siblings=true)
+}
+
+add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
+    button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
+        name    = name,
+        size    = {250,125},
+        draw    = draw_pyramid_button,
+    })
+
+    ui.add_frame(button, {
+        name    = "title",
+        text    = fmt.tprintf("<pad=6:0,font=text_4r,color=primary> %s", text),
+        flags   = {.pass_self,.terse,.terse_width,.terse_height},
+        draw    = draw_pyramid_button_title,
+    }, { point=.center, rel_point=.bottom, offset={0,-80} })
+
+    return button
+}
+
+add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text, key: string) -> ^ui.Frame {
+    assert(len(key) == 1 || len(key) == 3 || len(key) == 6) // "H", "Esc", "L.Ctrl"
+    key_width_ratios := [] string { "?", "1", "?", "1.4", "?", "?", "2" }
+    key_width_ratio := key_width_ratios[len(key)]
+    return ui.add_frame(ui.get(screen, "footer_bar/key_buttons"), {
+        name    = name,
+        text    = fmt.tprintf("<pad=12:6,font=text_4l,color=primary,icon=key/%s:%s:1> %s", key, key_width_ratio, text),
+        flags   = {.terse,.terse_width,.terse_height},
+        draw    = draw_button,
+    })
 }

@@ -89,7 +89,7 @@ app_draw :: proc () {
 
     ui.draw(app.ui)
 
-    app_draw_frame_stats()
+    // app_draw_frame_stats()
     rl.EndDrawing()
 }
 

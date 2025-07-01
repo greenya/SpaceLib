@@ -18,8 +18,11 @@ _ :: fmt
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}) {
+draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false) {
     assert(t != nil)
+
+    if drop_shadow do draw_terse(t, colors.bg0, {0,2})
+
     for word in t.words {
         // if word.in_group do continue
 
@@ -54,6 +57,37 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
     draw_text_center(text, rect, "text_4m", tx_color)
 }
 
+draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
+    // todo: maybe replace this madness with 3-patch horizontal sprite
+
+    x1 := t.rect.x
+    y1 := t.rect.y
+    x2 := t.rect.x+t.rect.w
+    y2 := t.rect.y+t.rect.h
+    yc := (y1+y2)/2
+    xl := x1-(yc-y1)
+    xr := x2+(yc-y1)
+    c := colors.primary
+
+    // top and bottom lines
+    draw.line({x1,y1}, {x2,y1}, 2, c)
+    draw.line({x1,y2}, {x2,y2}, 2, c)
+
+    // left corner
+    draw.line({x1,y1}, {xl,yc}, 2, c)
+    draw.line({x1,y2}, {xl,yc}, 2, c)
+
+    // right corner
+    draw.line({x2,y1}, {xr,yc}, 2, c)
+    draw.line({x2,y2}, {xr,yc}, 2, c)
+
+    // middle lines
+    draw.rect_gradient({ x=limit_x, y=yc-1, w=xl-limit_x, h=3 }, {}, c, {}, c)
+    draw.rect_gradient({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=3 }, c, {}, c, {})
+
+    draw_terse(t, drop_shadow=true)
+}
+
 draw_color_rect :: proc (f: ^ui.Frame) {
     color := core.alpha(colors.get(f.text), f.opacity)
     draw.rect(f.rect, color)
@@ -63,21 +97,18 @@ draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
     draw_terse(f.terse, offset=offset)
 
-    // hv_ratio := .5 + .5 * ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
-    // hv_ratio := ui.hover_ratio(f, .Linear, .333, .Linear, .333)
-    // ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio, .Linear)
-    // ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity * hv_ratio)
-    // ln_color := f.entered ? core.alpha(colors.accent, f.opacity) : core.alpha(colors.accent, f.opacity)
-    // ln_color := f.entered ? core.alpha(colors.accent, f.opacity) : core.alpha(colors.primary, f.opacity * .3)
-
-    hv_ratio := ui.hover_ratio(f, .Linear, .555, .Linear, .555)
-    ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio, .Cubic_Out)
+    ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity)
     ln_rect := core.rect_moved(f.rect, offset)
     draw.rect_lines(ln_rect, 1, ln_color)
+}
 
-    if f.name == "close" {
-        fmt.println(hv_ratio, ln_color)
-    }
+draw_pyramid_button :: proc (f: ^ui.Frame) {
+    draw.rect_lines(f.rect, 2, f.entered ? colors.accent : colors.primary)
+}
+
+draw_pyramid_button_title :: proc (f: ^ui.Frame) {
+    button_rect := f.parent.rect
+    draw_hexagon_header(f.terse, button_rect.x, button_rect.w)
 }
 
 draw_screen_tab :: proc (f: ^ui.Frame) {
@@ -97,8 +128,7 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
     }
 
-    draw_terse(f.terse, colors.bg0, {0,2})
-    draw_terse(f.terse, f.selected ? colors.accent : colors.primary)
+    draw_terse(f.terse, f.selected ? colors.accent : colors.primary, drop_shadow=true)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {
