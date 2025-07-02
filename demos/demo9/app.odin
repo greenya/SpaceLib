@@ -13,6 +13,7 @@ import "colors"
 import "fonts"
 import "partials"
 import "screens"
+import "sprites"
 
 App :: struct {
     ui: ^ui.UI,
@@ -30,6 +31,7 @@ app_startup :: proc () {
 
     data.create()
     fonts.create()
+    sprites.create()
 
     app = new(App)
     app.ui = ui.create(
@@ -61,6 +63,7 @@ app_shutdown :: proc () {
     fmt.println(#procedure)
 
     ui.destroy(app.ui)
+    sprites.destroy()
     fonts.destroy()
     data.destroy()
 

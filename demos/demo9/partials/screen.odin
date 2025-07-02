@@ -102,12 +102,20 @@ on_screen_tab_click :: proc (f: ^ui.Frame) {
     ui.show(page, hide_siblings=true)
 }
 
-add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
+add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string) -> ^ui.Frame {
     button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
         name    = name,
         size    = {250,125},
         draw    = draw_pyramid_button,
     })
+
+    ui.add_frame(button, {
+        name    = "icon",
+        text    = icon,
+        size    = 46,
+        flags   = {.pass_self},
+        draw    = draw_pyramid_button_icon,
+    }, { point=.bottom, offset={0,-12} })
 
     ui.add_frame(button, {
         name    = "title",
