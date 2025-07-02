@@ -245,11 +245,15 @@ end_animation :: proc (f: ^Frame) {
 
 hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dt: f32, leave_ease: core.Ease, leave_dt: f32) -> f32 {
     if f.entered {
-        ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dt)
+        left_ratio_interrupted := 1 - clamp((f.entered_time - f.left_time)/leave_dt, 0, 1)
+        enter_ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dt)
+        ratio := clamp(left_ratio_interrupted + enter_ratio, 0, 1)
         return core.ease_ratio(ratio, enter_ease)
     } else {
+        enter_ratio_interrupted := clamp((f.left_time - f.entered_time)/enter_dt, 0, 1)
         if f.left_time != 0 { // prevents default value 0 to be treated as "just left" when ui.clock.time is ~0
-            ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dt)
+            left_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dt)
+            ratio := clamp(1 - enter_ratio_interrupted + left_ratio, 0, 1)
             return 1 - core.ease_ratio(ratio, leave_ease)
         } else {
             return 0
