@@ -54,8 +54,8 @@ draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Co
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
-    bg_color := core.alpha(colors.primary, opacity)
-    draw.rect(rect, bg_color)
+    bg_color := core.alpha(colors.primary, opacity * .75)
+    draw.rect_rounded(rect, .3, 4, bg_color)
     tx_color := core.alpha(colors.bg0, opacity)
     draw_text_center(text, rect, "text_4m", tx_color)
 }
@@ -105,6 +105,17 @@ draw_button :: proc (f: ^ui.Frame) {
     ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity)
     ln_rect := core.rect_moved(f.rect, offset)
     draw.rect_lines(ln_rect, 1, ln_color)
+}
+
+draw_diamond_button :: proc (f: ^ui.Frame) {
+    draw.diamond(f.rect, colors.bg1)
+
+    ln_color := core.brightness(f.entered ? colors.accent : colors.primary, -.4)
+    draw.diamond_lines(f.rect, 3, core.alpha(ln_color, f.opacity))
+
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Linear, .222)
+    sp_color := core.brightness(colors.primary, -.5 * (1-hv_ratio))
+    draw_sprite(f.text, core.rect_inflated(f.rect, -15), sp_color)
 }
 
 draw_pyramid_button :: proc (f: ^ui.Frame) {
