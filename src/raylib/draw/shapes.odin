@@ -40,3 +40,8 @@ ring :: #force_inline proc (center: Vec2, inner_radius, outer_radius, start_angl
     color_rl := rl.Color(color)
     rl.DrawRing(center, inner_radius, outer_radius, start_angle, end_angle, i32(segments), color_rl)
 }
+
+triangle_fan :: #force_inline proc (points: [] Vec2, color: Color) {
+    color_rl := rl.Color(color)
+    rl.DrawTriangleFan(raw_data(points), i32(len(points)), color_rl)
+}
