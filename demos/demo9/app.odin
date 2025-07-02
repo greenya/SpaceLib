@@ -30,6 +30,7 @@ app_startup :: proc () {
     // rl.MaximizeWindow()
 
     data.create()
+    colors.create()
     fonts.create()
     sprites.create()
 
@@ -65,6 +66,7 @@ app_shutdown :: proc () {
     ui.destroy(app.ui)
     sprites.destroy()
     fonts.destroy()
+    colors.destroy()
     data.destroy()
 
     free(app)
