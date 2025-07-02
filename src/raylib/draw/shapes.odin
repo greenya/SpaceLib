@@ -19,6 +19,18 @@ rect_lines :: #force_inline proc (rect: Rect, thick: f32, color: Color) {
     rl.DrawRectangleLinesEx(rect_rl, thick, color_rl)
 }
 
+rect_rounded :: #force_inline proc (rect: Rect, roundness_ratio: f32, segments: int, color: Color) {
+    rect_rl := transmute (rl.Rectangle) rect
+    color_rl := rl.Color(color)
+    rl.DrawRectangleRounded(rect_rl, roundness_ratio, i32(segments), color_rl)
+}
+
+rect_rounded_lines :: #force_inline proc (rect: Rect, roundness_ratio: f32, segments: int, thick: f32, color: Color) {
+    rect_rl := transmute (rl.Rectangle) rect
+    color_rl := rl.Color(color)
+    rl.DrawRectangleRoundedLinesEx(rect_rl, roundness_ratio, i32(segments), thick, color_rl)
+}
+
 rect_gradient :: #force_inline proc (rect: Rect, top_left, top_right, bottom_left, bottom_right: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     top_left_rl := rl.Color(top_left)
