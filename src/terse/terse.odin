@@ -92,6 +92,9 @@ create :: proc (
 
     if text == "" do return terse
 
+    alpha := f32(1)
+    brightness := f32(0)
+
     font := query_font(default_font_name)
     ensure(font.measure_text != nil, "Font.measure_text must be set")
     fonts_stack: [default_fonts_stack_size] ^Font
@@ -182,6 +185,10 @@ create :: proc (
                             command_name := command[0:pair_sep_idx]
                             command_value := command[pair_sep_idx+1:]
                             switch command_name {
+                            case "alpha":
+                                alpha = parse_f32(command_value)
+                            case "brightness":
+                                brightness = parse_f32(command_value)
                             case "font":
                                 font = query_font(command_value)
                                 ensure(font.measure_text != nil, "Font.measure_text must be set")
@@ -213,7 +220,6 @@ create :: proc (
                                     word_tab_width -= last_word_x2_local
                                 }
                                 if word_tab_width > 0 do word_is_tab = true
-
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
                                 line.gap = gap_ratio * font.height
@@ -263,7 +269,8 @@ create :: proc (
                 }
 
                 if word != " " || word_is_tab || line.word_count != 0 { // skip " " at the start of the line
-                    append_word(terse, word, size, font, color, word_is_icon, group)
+                    word_color := core.alpha(core.brightness(color, brightness), alpha)
+                    append_word(terse, word, size, font, word_color, word_is_icon, group)
                 }
 
                 word = ""
