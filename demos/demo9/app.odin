@@ -109,7 +109,7 @@ app_draw :: proc () {
 app_draw_frame_stats :: proc () {
     // draw.debug_res_texture(app.res, "sprites", {10,100}, .25)
 
-    rect_w, rect_h :: 210, 130
+    rect_w, rect_h :: 210, 150
     rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-90, rect_w, rect_h }
     rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
     rl.DrawRectangleLinesEx(rect, 2, rl.RED)
@@ -120,9 +120,10 @@ app_draw_frame_stats :: proc () {
         "tick_time: %v\n"+
         "draw_time: %v\n"+
         "frames_total: %v\n"+
-        "frames_drawn: %v",
+        "frames_drawn: %v\n"+
+        "scissors_set: %v",
         rl.GetFPS(),
-        st.tick_time, st.draw_time, st.frames_total, st.frames_drawn,
+        st.tick_time, st.draw_time, st.frames_total, st.frames_drawn, st.scissors_set,
     )
 
     rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+10), 20, rl.GREEN)
