@@ -3,6 +3,8 @@ package demo9_partials
 import "core:fmt"
 import "spacelib:ui"
 
+screen_pad :: 50
+
 add_screen_base :: proc (screen: ^ui.Frame) {
     add_header_bar(screen)
     add_footer_bar(screen)
@@ -55,12 +57,12 @@ add_footer_bar :: proc (screen: ^ui.Frame) {
 
     ui.add_frame(footer_bar,
         { name="pyramid_buttons", layout={ dir=.right, align=.end, gap=20 } },
-        { point=.bottom_left, offset={30,0} },
+        { point=.bottom_left, offset={screen_pad,0} },
     )
 
     ui.add_frame(footer_bar,
         { name="key_buttons", layout={ dir=.left, align=.center, gap=6 } },
-        { point=.right, offset={-30,0} },
+        { point=.right, offset={-screen_pad,0} },
     )
 }
 
@@ -121,7 +123,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
         name    = "title",
         text    = fmt.tprintf("<pad=6:0,font=text_4r,color=primary> %s", text),
         flags   = {.pass_self,.terse,.terse_width,.terse_height},
-        draw    = draw_hexagon_rect,
+        draw    = draw_hexagon_rect_with_half_transparent_bg,
     }, { point=.center, rel_point=.bottom, offset={0,-80} })
 
     return button

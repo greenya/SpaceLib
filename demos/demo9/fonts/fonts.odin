@@ -17,11 +17,11 @@ text_6l: ^Font
 text_8l: ^Font
 
 create :: proc () {
-    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28, line_spacing_ratio=-.25)
-    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28, line_spacing_ratio=-.25)
-    text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28, line_spacing_ratio=-.25)
-    text_6l = create_font_from_data(#load("Kanit-Light.ttf"), height=46)
-    text_8l = create_font_from_data(#load("Kanit-Light.ttf"), height=82)
+    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
+    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
+    text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
+    text_6l = create_font_from_data(#load("Kanit-Light.ttf"), height=46, filter=.BILINEAR)
+    text_8l = create_font_from_data(#load("Kanit-Light.ttf"), height=82, filter=.BILINEAR)
     default = create_font_default(scale=2)
 }
 
@@ -62,7 +62,13 @@ create_font_default :: proc (scale := f32(1)) -> ^Font {
 }
 
 @private
-create_font_from_data :: proc (data: [] byte, height: f32, rune_spacing_ratio := f32(0), line_spacing_ratio := f32(0)) -> ^Font {
+create_font_from_data :: proc (
+    data                : [] byte,
+    height              : f32,
+    rune_spacing_ratio  := f32(0),
+    line_spacing_ratio  := f32(0),
+    filter              := rl.TextureFilter.POINT,
+) -> ^Font {
     font := new(Font)
     font^ = {
         height          = height,
@@ -72,6 +78,12 @@ create_font_from_data :: proc (data: [] byte, height: f32, rune_spacing_ratio :=
         font_rl         = rl.LoadFontFromMemory(".ttf", raw_data(data), i32(len(data)), i32(height), nil, 0),
     }
     font.font_ptr = &font.font_rl
+
+    if filter != .POINT {
+        rl.GenTextureMipmaps(&font.font_rl.texture)
+        rl.SetTextureFilter(font.font_rl.texture, filter)
+    }
+
     return font
 }
 

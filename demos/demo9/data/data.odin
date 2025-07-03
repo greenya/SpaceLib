@@ -1,10 +1,8 @@
 package demo9_data
 
 Info :: struct {
-    notification: struct {
-        title   : string,
-        content : string,
-    },
+    welcome         : struct { title: string, content: string },
+    notification    : struct { title: string, content: string },
 }
 
 Player :: struct {
@@ -20,6 +18,10 @@ player: ^Player
 create :: proc () {
     info = new(Info)
     info^ = {
+        welcome = {
+            title   = "WELCOME TO ARRAKIS",
+            content = "A beginning is the time for taking the most delicate care that the balances are correct.",
+        },
         notification = {
             title   = "ITEM LOSS ON TRAVEL",
             content = "" +

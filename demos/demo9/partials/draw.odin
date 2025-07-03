@@ -46,7 +46,7 @@ draw_terse :: proc (t: ^terse.Terse, color := "", offset := Vec2 {}, drop_shadow
         }
     }
 
-    // if app.debug_drawing do draw.debug_terse(t)
+    if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(t)
 }
 
 draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
@@ -64,11 +64,11 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum { box
     draw_text_center(text, rect, "text_4m", tx_color)
 }
 
-draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
-    x1 := t.rect.x
-    y1 := t.rect.y
-    x2 := t.rect.x+t.rect.w
-    y2 := t.rect.y+t.rect.h
+draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, bg_opacity := f32(1)) {
+    x1 := rect.x
+    y1 := rect.y
+    x2 := rect.x+rect.w
+    y2 := rect.y+rect.h
     yc := (y1+y2)/2
     xl := x1-(yc-y1)
     xr := x2+(yc-y1)
@@ -76,7 +76,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
     c := core.alpha(colors.primary, t.opacity)
 
     // background
-    bg_color := core.alpha(colors.bg0, t.opacity * .5)
+    bg_color := core.alpha(colors.bg0, t.opacity * bg_opacity)
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
 
     // top and bottom lines
@@ -92,8 +92,8 @@ draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
     draw.line({x2,y2}, {xr,yc}, th, c)
 
     // middle lines
-    if limit_x<xl           do draw.rect_gradient({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, {}, c, {}, c)
-    if limit_x+limit_w>xr   do draw.rect_gradient({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, {}, c, {})
+    if limit_x<xl           do draw.rect_gradient_horizontal({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, {}, c)
+    if limit_x+limit_w>xr   do draw.rect_gradient_horizontal({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, {})
 
     draw_terse(t, drop_shadow=true)
 }
@@ -103,34 +103,67 @@ draw_color_rect :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, color)
 }
 
+draw_image_placeholder :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha({20,20,20,255}, f.opacity)
+    draw.rect(f.rect, bg_color)
+
+    tx_color := core.alpha({60,60,60,255}, f.opacity)
+    draw_text_center("IMAGE PLACEHOLDER", f.rect, "text_4l", tx_color)
+}
+
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
-    draw_hexagon_header(f.terse, parent_rect.x, parent_rect.w)
+    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w)
+}
+
+draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w)
+}
+
+draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, bg_opacity=.5)
 }
 
 draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {
     color := core.alpha(colors.get(f.text), f.opacity)
-    draw.rect_gradient(f.rect, color, color, {}, {})
+    draw.rect_gradient_vertical(f.rect, color, {})
+}
+
+draw_gradient_fade_up_and_down_rect :: proc (f: ^ui.Frame) {
+    color := core.alpha(colors.get(f.text), f.opacity)
+    draw.rect_gradient_vertical(core.rect_half_top(f.rect), {}, color)
+    draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, {})
 }
 
 draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
-    draw_terse(f.terse, offset=offset)
+    rect := core.rect_moved(f.rect, offset)
+    hv_ratio := ui.hover_ratio(f, .Linear, .155, .Linear, .155)
 
-    ln_color := core.alpha(f.entered ? colors.accent : colors.primary, f.opacity)
-    ln_rect := core.rect_moved(f.rect, offset)
-    draw.rect_lines(ln_rect, 1, ln_color)
+    bg_top_color := core.brightness(colors.primary, -.9*(1-hv_ratio*.3))
+    bg_bottom_color := core.brightness(colors.bg1, -.9)
+    if f.captured do bg_top_color, bg_bottom_color = bg_bottom_color, bg_top_color
+    draw.rect_gradient_vertical(rect, bg_top_color, bg_bottom_color)
+
+    ln_color := core.alpha(colors.primary, f.opacity*.3 + hv_ratio*.7)
+    draw.rect_lines(rect, 1, ln_color)
+
+    draw_terse(f.terse, offset=offset)
 }
 
 draw_diamond_button :: proc (f: ^ui.Frame) {
-    draw.diamond(f.rect, colors.bg1)
+    hv_ratio := ui.hover_ratio(f, .Linear, .111, .Linear, .111)
+    rect := core.rect_inflated(f.rect, hv_ratio*5)
+
+    draw.diamond(rect, colors.bg1)
 
     ln_color := core.brightness(f.entered ? colors.accent : colors.primary, -.4)
-    draw.diamond_lines(f.rect, 3, core.alpha(ln_color, f.opacity))
+    draw.diamond_lines(rect, 3, core.alpha(ln_color, f.opacity))
 
-    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Linear, .222)
     sp_color := core.brightness(colors.primary, -.5 * (1-hv_ratio))
-    draw_sprite(f.text, core.rect_inflated(f.rect, -15), sp_color)
+    draw_sprite(f.text, core.rect_inflated(rect, -rect.w/4), sp_color)
 }
 
 draw_pyramid_button :: proc (f: ^ui.Frame) {
@@ -147,18 +180,18 @@ draw_pyramid_button_icon :: proc (f: ^ui.Frame) {
 draw_screen_tab :: proc (f: ^ui.Frame) {
     if f.selected {
         bg_color := core.alpha(colors.accent, f.opacity * .5)
-        draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
+        draw.rect_gradient_vertical(f.rect, {}, bg_color)
 
         br_color := core.alpha(colors.accent, f.opacity)
         br_rect := core.rect_line_bottom(f.rect, 4)
         draw.rect(br_rect, br_color)
 
-        draw.rect_gradient(core.rect_line_left(f.rect, 1), {}, {}, br_color, br_color)
-        draw.rect_gradient(core.rect_line_right(f.rect, 1), {}, {}, br_color, br_color)
+        draw.rect_gradient_vertical(core.rect_line_left(f.rect, 1), {}, br_color)
+        draw.rect_gradient_vertical(core.rect_line_right(f.rect, 1), {}, br_color)
     } else {
-        hover_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
-        bg_color := core.alpha(colors.accent, f.opacity * .4 * hover_ratio)
-        draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
+        hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
+        bg_color := core.alpha(colors.accent, f.opacity * .4 * hv_ratio)
+        draw.rect_gradient_vertical(f.rect, {}, bg_color)
     }
 
     draw_terse(f.terse, color=f.selected?"accent":"primary", drop_shadow=true)
