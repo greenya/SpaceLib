@@ -121,7 +121,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
         name    = "title",
         text    = fmt.tprintf("<pad=6:0,font=text_4r,color=primary> %s", text),
         flags   = {.pass_self,.terse,.terse_width,.terse_height},
-        draw    = draw_pyramid_button_title,
+        draw    = draw_hexagon_rect,
     }, { point=.center, rel_point=.bottom, offset={0,-80} })
 
     return button

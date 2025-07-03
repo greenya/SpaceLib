@@ -56,7 +56,7 @@ add_research_page :: proc (screen: ^ui.Frame) {
     tab, page := partials.add_screen_tab_and_page(screen, "research", "RESEARCH")
 
     tab_points := ui.get(tab, "points")
-    ui.set_text(tab_points, data.player.research_points_avail, shown=true)
+    ui.set_text(tab_points, data.player.intel_points_avail, shown=true)
 
     ui.add_frame(page,
         { name="msg", text="<font=text_4l,color=primary>RESEARCH PAGE GOES HERE...", flags={.terse,.terse_height} },

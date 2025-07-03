@@ -28,18 +28,19 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false) {
+draw_terse :: proc (t: ^terse.Terse, color := "", offset := Vec2 {}, drop_shadow := false) {
     assert(t != nil)
 
-    if drop_shadow do draw_terse(t, colors.bg0, {0,2})
+    if drop_shadow do draw_terse(t, color="bg0", offset={0,2})
 
     for word in t.words {
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-        tint := color != nil ? color.? : word.color
+        tint := color != "" ? colors.get(color) : word.color
         tint = core.alpha(tint, t.opacity)
         if word.is_icon {
-            if strings.has_prefix(word.text, "key/")    do draw_icon_key(word.text[4:], rect, t.opacity)
-            else                                        do draw_sprite(word.text, rect, tint)
+            if      strings.has_prefix(word.text, "key/")   do draw_icon_key(word.text[4:], rect, t.opacity, .box)
+            else if strings.has_prefix(word.text, "key2/")  do draw_icon_key(word.text[5:], rect, t.opacity, .diamond)
+            else                                            do draw_sprite(word.text, rect, tint)
         } else if word.text != "" && word.text != " " {
             draw.text(word.text, {rect.x,rect.y}, word.font, tint)
         }
@@ -48,14 +49,17 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
     // if app.debug_drawing do draw.debug_terse(t)
 }
 
-draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Color) {
-    font_tr := &fonts.get(font_name).font_tr
+draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
+    font_tr := &fonts.get(font).font_tr
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
-draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
+draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum { box, diamond }) {
     bg_color := core.alpha(colors.primary, opacity * .75)
-    draw.rect_rounded(rect, .3, 4, bg_color)
+    switch shape {
+    case .box       : draw.rect_rounded(rect, .3, 4, bg_color)
+    case .diamond   : draw.diamond(rect, bg_color)
+    }
     tx_color := core.alpha(colors.bg0, opacity)
     draw_text_center(text, rect, "text_4m", tx_color)
 }
@@ -68,6 +72,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
     yc := (y1+y2)/2
     xl := x1-(yc-y1)
     xr := x2+(yc-y1)
+    th := f32(1)
     c := core.alpha(colors.primary, t.opacity)
 
     // background
@@ -75,20 +80,20 @@ draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
 
     // top and bottom lines
-    draw.line({x1,y1}, {x2,y1}, 2, c)
-    draw.line({x1,y2}, {x2,y2}, 2, c)
+    draw.line({x1,y1}, {x2,y1}, th, c)
+    draw.line({x1,y2}, {x2,y2}, th, c)
 
     // left corner
-    draw.line({x1,y1}, {xl,yc}, 2, c)
-    draw.line({x1,y2}, {xl,yc}, 2, c)
+    draw.line({x1,y1}, {xl,yc}, th, c)
+    draw.line({x1,y2}, {xl,yc}, th, c)
 
     // right corner
-    draw.line({x2,y1}, {xr,yc}, 2, c)
-    draw.line({x2,y2}, {xr,yc}, 2, c)
+    draw.line({x2,y1}, {xr,yc}, th, c)
+    draw.line({x2,y2}, {xr,yc}, th, c)
 
     // middle lines
-    draw.rect_gradient({ x=limit_x, y=yc-1, w=xl-limit_x, h=2 }, {}, c, {}, c)
-    draw.rect_gradient({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=2 }, c, {}, c, {})
+    if limit_x<xl           do draw.rect_gradient({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, {}, c, {}, c)
+    if limit_x+limit_w>xr   do draw.rect_gradient({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, {}, c, {})
 
     draw_terse(t, drop_shadow=true)
 }
@@ -96,6 +101,16 @@ draw_hexagon_header :: proc (t: ^terse.Terse, limit_x, limit_w: f32) {
 draw_color_rect :: proc (f: ^ui.Frame) {
     color := core.alpha(colors.get(f.text), f.opacity)
     draw.rect(f.rect, color)
+}
+
+draw_hexagon_rect :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    draw_hexagon_header(f.terse, parent_rect.x, parent_rect.w)
+}
+
+draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {
+    color := core.alpha(colors.get(f.text), f.opacity)
+    draw.rect_gradient(f.rect, color, color, {}, {})
 }
 
 draw_button :: proc (f: ^ui.Frame) {
@@ -123,11 +138,6 @@ draw_pyramid_button :: proc (f: ^ui.Frame) {
     draw_sprite("shape_pilar_gradient", f.rect, core.alpha(sp_color, f.opacity))
 }
 
-draw_pyramid_button_title :: proc (f: ^ui.Frame) {
-    button_rect := f.parent.rect
-    draw_hexagon_header(f.terse, button_rect.x, button_rect.w)
-}
-
 draw_pyramid_button_icon :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f.parent, .Cubic_Out, .333, .Linear, .222)
     sp_color := core.brightness(colors.primary, -.5 * (1-hv_ratio))
@@ -151,7 +161,7 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient(f.rect, {}, {}, bg_color, bg_color)
     }
 
-    draw_terse(f.terse, f.selected ? colors.accent : colors.primary, drop_shadow=true)
+    draw_terse(f.terse, color=f.selected?"accent":"primary", drop_shadow=true)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {
@@ -160,4 +170,10 @@ draw_screen_tab_points :: proc (f: ^ui.Frame) {
     br_color := core.brightness(bg_color, -.555)
     draw.rect_lines(f.rect, 2, br_color)
     draw_terse(f.terse)
+}
+
+draw_game_title :: proc (f: ^ui.Frame) {
+    color := core.alpha(colors.primary, f.opacity * .3)
+    draw_text_center("D    U    N    E", core.rect_half_top(f.rect), "text_8l", color)
+    draw_text_center("A  W  A  K  E  N  I  N  G", core.rect_half_bottom(f.rect), "text_6l", color)
 }

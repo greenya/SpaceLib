@@ -51,6 +51,14 @@ app_startup :: proc () {
             draw.debug_frame_layout(f)
             draw.debug_frame_anchors(f)
         },
+        scissor_set_proc = proc (r: core.Rect) {
+            if rl.IsKeyDown(.LEFT_CONTROL) do return
+            rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
+        },
+        scissor_clear_proc = proc () {
+            if rl.IsKeyDown(.LEFT_CONTROL) do return
+            rl.EndScissorMode()
+        },
     )
 
     screens.add_to(app.ui.root)

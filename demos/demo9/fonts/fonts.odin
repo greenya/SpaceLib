@@ -13,11 +13,15 @@ default: ^Font
 text_4l: ^Font
 text_4r: ^Font
 text_4m: ^Font
+text_6l: ^Font
+text_8l: ^Font
 
 create :: proc () {
-    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28)
-    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28)
-    text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28)
+    text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28, line_spacing_ratio=-.25)
+    text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28, line_spacing_ratio=-.25)
+    text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28, line_spacing_ratio=-.25)
+    text_6l = create_font_from_data(#load("Kanit-Light.ttf"), height=46)
+    text_8l = create_font_from_data(#load("Kanit-Light.ttf"), height=82)
     default = create_font_default(scale=2)
 }
 
@@ -26,6 +30,8 @@ destroy :: proc () {
     destroy_font(text_4l)
     destroy_font(text_4r)
     destroy_font(text_4m)
+    destroy_font(text_6l)
+    destroy_font(text_8l)
 }
 
 get :: #force_inline proc (name: string) -> ^Font {
@@ -33,6 +39,8 @@ get :: #force_inline proc (name: string) -> ^Font {
     case "text_4l"  : return text_4l
     case "text_4r"  : return text_4r
     case "text_4m"  : return text_4m
+    case "text_6l"  : return text_6l
+    case "text_8l"  : return text_8l
     case            : return default
     }
 }

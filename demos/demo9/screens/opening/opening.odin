@@ -20,20 +20,12 @@ add_to :: proc (parent: ^ui.Frame) {
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
     partials.add_screen_footer_key_button(screen, "account", "Account", key="A")
 
-    add_home_page(screen)
     add_social_links(screen)
     add_account_info(screen)
 
+    add_home_page(screen)
+
     ui.click(screen, "header_bar/tabs/home")
-}
-
-add_home_page :: proc (screen: ^ui.Frame) {
-    _, page := partials.add_screen_tab_and_page(screen, "home", "HOME")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>HOME PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
 }
 
 add_social_links :: proc (screen: ^ui.Frame) {
@@ -48,8 +40,8 @@ add_social_links :: proc (screen: ^ui.Frame) {
     ui.add_frame(social_links, { text="envelope", draw=partials.draw_diamond_button })
 
     ui.add_frame(header_bar,
-        { name="social_links_bg_line", order=-1, size={0,2}, text="primary_d2", draw=partials.draw_color_rect },
-        { point=.right, rel_frame=header_bar },
+        { name="social_links_bg_line", flags={.pass}, order=-1, size={0,1}, text="primary_d2", draw=partials.draw_color_rect },
+        { point=.right },
         { point=.left, rel_frame=social_links },
     )
 }
@@ -60,4 +52,59 @@ add_account_info :: proc (screen: ^ui.Frame) {
         { point=.left, offset={30,0} },
     )
     ui.set_text(account_info, data.player.account_name, data.player.character_name)
+}
+
+add_home_page :: proc (screen: ^ui.Frame) {
+    _, page := partials.add_screen_tab_and_page(screen, "home", "HOME")
+
+    // add_home_page_welcome_area(page)
+    add_home_page_notification_area(page)
+    add_home_page_game_title(page)
+}
+
+add_home_page_notification_area :: proc (page: ^ui.Frame) {
+    notifications_area := ui.add_frame(page,
+        { name="notifications_area", size={400,0}, flags={.hidden}, text="#0005", draw=partials.draw_gradient_fade_down_rect },
+        { point=.top_right, offset={-30,160} },
+        { point=.bottom_right, offset={-30,-160} },
+    )
+
+    header := ui.add_frame(notifications_area,
+        { name="header", text="<left,font=text_4l,color=primary_l2,pad=0:2,tab=20>NOTIFICATIONS<tab=400>", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect },
+        { point=.bottom_left, rel_point=.top_left },
+        { point=.bottom_right, rel_point=.top_right },
+    )
+    ui.add_frame(header,
+        { name="icon", text="<left,font=text_4l,color=primary,icon=key2/!:.9>", flags={.terse,.terse_height,.terse_width} },
+        { point=.center, rel_point=.left, offset={1,0} },
+    )
+
+    title := ui.add_frame(notifications_area,
+        { name="title", text_format="<left,pad=6:0,font=text_4l,color=primary_d2>%s", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect },
+        { point=.top_left, offset={0,10} },
+        { point=.top_right, offset={0,10} },
+    )
+
+    scroll_container := ui.add_frame(notifications_area,
+        { name="scroll_container", layout={dir=.down,scroll={step=5}}, flags={.scissor} },
+        { point=.top_left, rel_point=.bottom_left, offset={0,10}, rel_frame=title },
+        { point=.bottom_right },
+    )
+
+    content := ui.add_frame(scroll_container,
+        { name="content", text_format="<wrap,pad=20:0,left,font=text_4r,color=primary_d2>%s", flags={.terse,.terse_height} },
+    )
+
+    if data.info.notification.title != "" {
+        ui.set_text(title, data.info.notification.title)
+        ui.set_text(content, data.info.notification.content)
+        ui.show(notifications_area)
+    }
+}
+
+add_home_page_game_title :: proc (page: ^ui.Frame) {
+    ui.add_frame(page,
+        { name="game_title", flags={.pass}, size={280,80}, draw=partials.draw_game_title },
+        { point=.bottom_right, offset={-30,-60} },
+    )
 }
