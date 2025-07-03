@@ -40,6 +40,30 @@ TODO: res: sprite: add support for animations (Sprite.info variant)
     draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
     simple animation has single sequence named "default"
 
+TODO: ui: add global opacity handling
+
+    The idea is to allow any frame drawing function to not worry about f.opacity, as long as any drawing is done using raylib/draw.* procs. A lot of calls like "core.alpha(..., f.opacity)" should be possible to get rid of. In case when some manual drawing needed directly using Raylib, the actual opacity can be read using draw.opacity().
+
+    The following steps i see needs to be done:
+
+    - raylib/draw & terse:
+        - add set_opacity(f32), opacity() -> f32, @private _opacity := f32(1)
+        - every drawing proc (shapes and text) should tweak alpha of the color before drawing, maybe something like:
+            color_rl := rl.Color(core.alpha(color, _opacity))
+        - remove Terse.opacity, i guess we don't need it anymore
+    - ui:
+        - ui.create() should allow optional opacity set proc, so the ui creating can be extended with:
+            opacity_set_proc = proc (o: f32) {
+                draw.set_opacity(o)
+            },
+        - after drawing frame tree, reset opacity to 1, something like:
+            if f.ui.opacity_set_proc != nil do f.ui.opacity_set_proc(1)
+        - inside frame drawing, before any drawing we set frame' opacity, like:
+            if f.ui.opacity_set_proc != nil do f.ui.opacity_set_proc(f.opacity)
+        - notes:
+            * we do not use opacity stack, as we expect to set opacity for every frame
+            * we always restore opacity to 1.0; this should be fine, but if not, then we need to add f.ui.opacity_get_proc() and save the value to restore it after the drawing; lets keep blind 1.0 for now
+
 TODO: ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
 
 TODO: ui: add "wait=f32(0)" arg to ui.animate(),
