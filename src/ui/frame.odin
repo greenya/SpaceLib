@@ -20,6 +20,7 @@ Frame :: struct {
     anchors         : [dynamic] Anchor,
     size            : Vec2,
     size_min        : Vec2,
+    size_aspect     : f32,
 
     flags           : bit_set [Flag],
     name            : string,
@@ -1000,6 +1001,11 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         result_dir.t + f.offset.y,
         result_dir.r - result_dir.l,
         result_dir.b - result_dir.t,
+    }
+
+    if f.size_aspect != 0 {
+        if      f.rect.w>1 && f.rect.h==0 do f.rect.h = f.rect.w/f.size_aspect
+        else if f.rect.h>1 && f.rect.w==0 do f.rect.w = f.rect.h*f.size_aspect
     }
 
     f.rect_dirty = false
