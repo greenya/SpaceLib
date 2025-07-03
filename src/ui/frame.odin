@@ -661,6 +661,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     has_prev_rect: bool
 
     vis_children := visible_children(f, context.temp_allocator)
+    is_dir_vertical := is_layout_dir_vertical(f)
 
     for child in vis_children {
         if .hidden in child.flags do continue
@@ -668,6 +669,11 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         rect := Rect {}
         rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w-2*f.layout.pad.x
         rect.h = child.size.y != 0 ? child.size.y : f.layout.size.y != 0 ? f.layout.size.y : f.rect.h-2*f.layout.pad.y
+
+        if child.size_aspect != 0 {
+            if is_dir_vertical  do rect.h = rect.w/child.size_aspect
+            else                do rect.w = rect.h*child.size_aspect
+        }
 
         #partial switch f.layout.dir {
         case .left:
@@ -728,7 +734,6 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         }
 
         full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f, vis_children)
-        is_dir_vertical := is_layout_dir_vertical(f)
 
         if f.layout.auto_size == .full {
             f.size = full_content_size
