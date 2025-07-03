@@ -88,16 +88,12 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     )
 
     ui.add_frame(scroll_container,
-        { name="banner", size={0,520/(16./9)}, draw=partials.draw_image_placeholder },
+        { name="banner", size_aspect=16./9, draw=partials.draw_image_placeholder },
     )
 
     content := ui.add_frame(scroll_container,
         { name="content", text_format="<wrap,pad=20:10,left,font=text_4r,color=primary_d2>%s", flags={.terse,.terse_height} },
     )
-
-    // ui.add_frame(scroll_container,
-    //     { name="line_bottom", size={0,1}, text="primary_d6", draw=partials.draw_color_rect },
-    // )
 
     ui.set_text(header, data.info.welcome.title)
     ui.set_text(content, data.info.welcome.content)
