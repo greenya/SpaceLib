@@ -744,14 +744,6 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
             else                do for child in vis_children do child.rect.x -= scroll.offset
         }
-    } else {
-        // FIXME: for some reason, when 0 children and layout.auto_size is used, the parent/siblings "fly" away,
-        // FIXME: e.g. they size grows in 30 frames to infinity. Keeping size != 0 fixes it;
-        // FIXME: investigate the reasoning and fix it
-        if len(vis_children) == 0 do f.size = .1
-
-        // ? maybe this is fixed after using visible_children()
-        // ? try replicate with some example
     }
 }
 
