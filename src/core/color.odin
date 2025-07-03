@@ -18,7 +18,7 @@ vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
     return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
 }
 
-// Supports: #rgb, #rrggbb, #rrggbbaa
+// Supports: #rgb, #rgba, #rrggbb, #rrggbbaa
 color_from_hex :: proc (text: string) -> Color {
     assert(len(text) > 0 && text[0] == '#')
 
@@ -39,6 +39,12 @@ color_from_hex :: proc (text: string) -> Color {
         g := char_to_u8(text[2]); g |= g<<4
         b := char_to_u8(text[3]); b |= b<<4
         return {r,g,b,255}
+    case 5: // #rgba
+        r := char_to_u8(text[1]); r |= r<<4
+        g := char_to_u8(text[2]); g |= g<<4
+        b := char_to_u8(text[3]); b |= b<<4
+        a := char_to_u8(text[4]); a |= a<<4
+        return {r,g,b,a}
     case 7: // #rrggbb
         r := char_pair_to_u8(text[1], text[2])
         g := char_pair_to_u8(text[3], text[4])

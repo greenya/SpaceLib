@@ -22,8 +22,6 @@ create :: proc () {
     bg1     = add_color("bg1"     , core.color_from_hex("#223"))
     primary = add_color("primary" , core.color_from_hex("#fd9"), with_variations=true)
     accent  = add_color("accent"  , core.color_from_hex("#f9f"), with_variations=true)
-
-    fmt.println(colors)
 }
 
 destroy :: proc () {
