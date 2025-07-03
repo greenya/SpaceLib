@@ -213,13 +213,12 @@ create :: proc (
                                 word_is_icon = true
                             case "tab":
                                 word_tab_width = f32(parse_int(command_value)) // todo: use parse_f32() when it can parse any float
-                                assert(word_tab_width > 0, "Tab value must be greater than 0")
                                 if line.word_count > 0 {
                                     last_word := &terse.words[line.word_start_idx + line.word_count - 1]
                                     last_word_x2_local := last_word.rect.x + last_word.rect.w - line.rect.x
                                     word_tab_width -= last_word_x2_local
                                 }
-                                if word_tab_width > 0 do word_is_tab = true
+                                if word_tab_width != 0 do word_is_tab = true
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
                                 line.gap = gap_ratio * font.height
