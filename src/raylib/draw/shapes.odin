@@ -43,6 +43,14 @@ rect_gradient :: #force_inline proc (rect: Rect, top_left, top_right, bottom_lef
     rl.DrawRectangleGradientEx(rect_rl, top_left_rl, bottom_left_rl, bottom_right_rl, top_right_rl)
 }
 
+rect_gradient_vertical :: #force_inline proc (rect: Rect, top, bottom: Color) {
+    rect_gradient(rect, top, top, bottom, bottom)
+}
+
+rect_gradient_horizontal :: #force_inline proc (rect: Rect, left, right: Color) {
+    rect_gradient(rect, left, right, left, right)
+}
+
 diamond :: #force_inline proc (rect: Rect, color: Color) {
     c := Vec2 { rect.x+rect.w/2, rect.y+rect.h/2 }
     rect_x2 := rect.x + rect.w
