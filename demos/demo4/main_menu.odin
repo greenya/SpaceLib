@@ -244,7 +244,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
 main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     root := ui.add_frame(parent,
-        { name=#procedure, order=10, flags={ .hidden, .solid }, draw=draw_ui_dim_rect },
+        { name=#procedure, order=10, flags={ .hidden, .block_wheel }, draw=draw_ui_dim_rect },
         { point=.top_left },
         { point=.bottom_right },
     )

@@ -25,7 +25,7 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
     if .disabled in f.flags     do fmt.sbprintf(&sb, " disabled")
     if .pass in f.flags         do fmt.sbprintf(&sb, " pass")
     if .pass_self in f.flags    do fmt.sbprintf(&sb, " pass_self")
-    if .solid in f.flags        do fmt.sbprint (&sb, " solid")
+    if .block_wheel in f.flags  do fmt.sbprint (&sb, " block_wheel")
     if .scissor in f.flags      do fmt.sbprint (&sb, " scissor")
     if .check in f.flags        do fmt.sbprint (&sb, " check")
     if .radio in f.flags        do fmt.sbprint (&sb, " radio")

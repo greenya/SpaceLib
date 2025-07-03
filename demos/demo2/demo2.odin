@@ -75,7 +75,7 @@ main :: proc () {
 }
 
 hud_menu_init :: proc () {
-    root := sl.add_frame({ parent=game.ui.layer_normal, solid=true })
+    root := sl.add_frame({ parent=game.ui.layer_normal })
     sl.add_anchor(root, {})
 
     count :: 5
@@ -100,7 +100,7 @@ chat_window_init :: proc () {
     width, height :: 320, 200
     gap :: 10
 
-    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height }, solid=true })
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height } })
     sl.add_anchor(root, { point=.bottom_left })
 
     filter_bar := sl.add_frame({ parent=root, size={ 0, 32 } })
@@ -144,7 +144,7 @@ action_bar_init :: proc () {
     }
 
     { // init context menu
-        menu := sl.add_frame({ parent=game.ui.layer_menu, size={ 200, 200 }, text="context menu (auto_hide)", solid=true, hidden=true, auto_hide=true })
+        menu := sl.add_frame({ parent=game.ui.layer_menu, size={ 200, 200 }, text="context menu (auto_hide)", hidden=true, auto_hide=true })
         sl.add_anchor(menu, { point=.bottom, rel_point=.top, offset={ 0, -10 } })
         action_bar_context_menu = menu
 
@@ -181,7 +181,7 @@ spell_book_init :: proc () {
 
     // root
 
-    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height }, solid=true })
+    root := sl.add_frame({ parent=game.ui.layer_normal, size={ width, height } })
     sl.add_anchor(root, { offset={ 0, gap_top } })
 
     // categories

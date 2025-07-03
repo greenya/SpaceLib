@@ -52,7 +52,7 @@ Flag :: enum {
     pass,
     pass_self,
     no_capture,
-    solid,
+    block_wheel,
     scissor,
     check,
     radio,
@@ -331,7 +331,7 @@ wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if layout_has_scroll(f) && layout_apply_scroll(f, dy)   do consumed = true
     if f.actor != nil && wheel_actor(f, dy)                 do consumed = true
     if f.wheel != nil && f.wheel(f, dy)                     do consumed = true
-    if .solid in f.flags                                    do consumed = true
+    if .block_wheel in f.flags                              do consumed = true
 
     return
 }
