@@ -40,7 +40,8 @@ add_social_links :: proc (screen: ^ui.Frame) {
     ui.add_frame(social_links, { text="envelope", draw=partials.draw_diamond_button })
 
     ui.add_frame(header_bar,
-        { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4", draw=partials.draw_color_rect },
+        { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4",
+            draw=partials.draw_color_rect },
         { point=.right },
         { point=.left, rel_frame=social_links },
     )
@@ -70,7 +71,8 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     )
 
     header := ui.add_frame(welcome_area,
-        { name="header", text_format="<font=text_6l,color=primary_l2,pad=0:4>%s", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect_wide },
+        { name="header", flags={.terse,.terse_height}, text_format="<font=text_6l,color=primary_l2,pad=0:4>%s",
+            draw=partials.draw_hexagon_rect_wide },
         { point=.top_left, offset={0,180} },
         { point=.top_right, offset={0,180} },
     )
@@ -97,6 +99,18 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
 
     ui.set_text(header, data.info.welcome.title)
     ui.set_text(content, data.info.welcome.content)
+
+    buttons_bar := ui.add_frame(welcome_area,
+        { name="buttons_bar", size={0,60}, layout={dir=.left_and_right,size={200,0},gap=30} },
+        { point=.bottom_left, rel_point=.top_left, rel_frame=header, offset={0,-40} },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=header, offset={0,-40} },
+    )
+
+    ui.add_frame(buttons_bar, { name="continue", text="<font=text_6l,pad=0:4>CONTINUE", flags={.terse},
+        draw=partials.draw_featured_button })
+
+    ui.add_frame(buttons_bar, { name="servers", text="<font=text_6l,pad=0:4>SERVERS", flags={.terse},
+        draw=partials.draw_featured_button })
 }
 
 add_home_page_notification_area :: proc (page: ^ui.Frame) {

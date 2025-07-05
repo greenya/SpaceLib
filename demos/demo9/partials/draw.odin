@@ -28,14 +28,14 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, color := "", offset := Vec2 {}, drop_shadow := false) {
+draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false) {
     assert(t != nil)
 
-    if drop_shadow do draw_terse(t, color="bg0", offset={0,2})
+    if drop_shadow do draw_terse(t, colors.bg0, offset={0,2})
 
     for word in t.words {
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-        tint := color != "" ? colors.get(color) : word.color
+        tint := color != nil ? color.? : word.color
         tint = core.alpha(tint, t.opacity)
         if word.is_icon {
             if      strings.has_prefix(word.text, "key/")   do draw_icon_key(word.text[4:], rect, t.opacity, .box)
@@ -76,7 +76,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     c := core.alpha(colors.primary, t.opacity)
 
     // background
-    bg_color := core.alpha(colors.bg0, t.opacity * bg_opacity)
+    bg_color := core.alpha(colors.bg1, t.opacity * bg_opacity)
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
 
     // top and bottom lines
@@ -153,6 +153,31 @@ draw_button :: proc (f: ^ui.Frame) {
     draw_terse(f.terse, offset=offset)
 }
 
+draw_featured_button :: proc (f: ^ui.Frame) {
+    rect := core.rect_inflated(f.rect, f.captured ? -2 : 0)
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
+
+    if hv_ratio > 0 {
+        cr_center := f.ui.mouse.pos
+        cr_radius := f.rect.h * 1.777
+        cr_inner_color := core.alpha(colors.accent, hv_ratio * .3)
+        draw.circle_gradient(cr_center, cr_radius, cr_inner_color, {})
+    }
+
+    bg_color := core.brightness(core.alpha(colors.accent, .5), -.8 + hv_ratio/3)
+    draw.rect(rect, bg_color)
+
+    br_color := core.alpha(colors.primary, f.opacity*.3 + hv_ratio*.7)
+    draw.rect_lines(rect, 1 + hv_ratio*2, br_color)
+
+    ln_rect := core.rect_inflated(rect, 2 + (1-hv_ratio)*10)
+    ln_color := core.alpha(br_color, hv_ratio)
+    draw.rect_lines(ln_rect, 1, ln_color)
+
+    tx_color := core.brightness(colors.primary, hv_ratio/2)
+    draw_terse(f.terse, tx_color, drop_shadow=true)
+}
+
 draw_diamond_button :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Linear, .111, .Linear, .111)
     rect := core.rect_inflated(f.rect, hv_ratio*5)
@@ -194,7 +219,8 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient_vertical(f.rect, {}, bg_color)
     }
 
-    draw_terse(f.terse, color=f.selected?"accent":"primary", drop_shadow=true)
+    tx_color := f.selected ? colors.accent : colors.primary
+    draw_terse(f.terse, tx_color, drop_shadow=true)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {

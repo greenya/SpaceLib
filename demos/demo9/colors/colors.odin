@@ -11,6 +11,7 @@ import "spacelib:core"
 default : Color
 bg0     : Color
 bg1     : Color
+bg2     : Color
 primary : Color
 accent  : Color
 
@@ -19,7 +20,8 @@ create :: proc () {
 
     default = add_color("default" , core.red)
     bg0     = add_color("bg0"     , core.black)
-    bg1     = add_color("bg1"     , core.color_from_hex("#223"))
+    bg1     = add_color("bg1"     , core.color_from_hex("#151515"))
+    bg2     = add_color("bg2"     , core.color_from_hex("#223"))
     primary = add_color("primary" , core.color_from_hex("#fd9"), with_variations=true)
     accent  = add_color("accent"  , core.color_from_hex("#f9f"), with_variations=true)
 }

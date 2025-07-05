@@ -85,7 +85,7 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
     }, { point=.center, rel_point=.bottom, offset={0,6} })
 
     page = ui.add_frame(ui.get(screen, "pages"),
-        { name=name, text="bg1" , draw=draw_color_rect },
+        { name=name, text="bg2" , draw=draw_color_rect },
         { point=.top_left },
         { point=.bottom_right },
     )
