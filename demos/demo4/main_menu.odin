@@ -217,10 +217,10 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             { name=name, flags={.terse}, text=text, draw=draw, click=proc (f: ^ui.Frame) {
                 menu := app.main_menu
                 switch f.name {
-                case "play"         : ui.show(menu.menu_panel, "play_panel", hide_siblings=true)
-                case "options"      : ui.show(menu.menu_panel, "options_panel", hide_siblings=true)
-                case "how_to_play"  : ui.show(menu.menu_panel, "how_to_play_panel", hide_siblings=true)
-                case "about"        : ui.show(menu.menu_panel, "about_panel", hide_siblings=true)
+                case "play"         : ui.show(menu.menu_panel, "~play_panel", hide_siblings=true)
+                case "options"      : ui.show(menu.menu_panel, "~options_panel", hide_siblings=true)
+                case "how_to_play"  : ui.show(menu.menu_panel, "~how_to_play_panel", hide_siblings=true)
+                case "about"        : ui.show(menu.menu_panel, "~about_panel", hide_siblings=true)
                 case "exit"         : ui.show(menu.exit_dialog)
                 }
             },

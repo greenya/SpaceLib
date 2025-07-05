@@ -655,9 +655,19 @@ update_terse :: proc (f: ^Frame) {
     if !should_rebuild do return
 
     terse.destroy(f.terse)
+
     assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
     assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
-    f.terse = terse.create(f.text, f.rect, f.opacity, f.ui.terse_query_font_proc, f.ui.terse_query_color_proc)
+
+    f.terse = terse.create(
+        f.text,
+        f.rect,
+        f.ui.terse_query_font_proc,
+        f.ui.terse_query_color_proc,
+        f.ui.scissor_rect,
+        f.opacity,
+    )
+
     if .terse_width in f.flags do f.size.x = f.terse.rect.w
     if .terse_height in f.flags do f.size.y = f.terse.rect.h
 }

@@ -126,7 +126,6 @@ create_terse :: proc (text: string, rect: Rect, allocator := context.allocator) 
     return terse.create(
         text,
         rect,
-        1,
         #force_inline proc (name: string) -> ^terse.Font {
             fmt.assertf(name in app.res.fonts, "No font with name \"%s\"", name)
             return &app.res.fonts[name].font_tr
@@ -136,7 +135,7 @@ create_terse :: proc (text: string, rect: Rect, allocator := context.allocator) 
             fmt.assertf(name in app.res.colors, "No color with name \"%s\"", name)
             return app.res.colors[name]
         },
-        allocator,
+        allocator=allocator,
     )
 }
 

@@ -18,8 +18,8 @@ app_menu_create :: proc () {
 
     pages := ui.add_frame(root,
         { name="pages" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("bar_top") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("bar_bottom") },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=app.ui->get("~bar_top") },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=app.ui->get("~bar_bottom") },
     )
 
     app_menu_add_page_fragments(pages)
@@ -30,7 +30,7 @@ app_menu_create :: proc () {
 
     for child in pages.children do ui.hide(child)
 
-    app.ui->click("menu/bar_top/tab_character") // preselect some tab
+    app.ui->click("menu/bar_top/~tab_character") // preselect some tab
 }
 
 app_menu_destroy :: proc () {
@@ -566,7 +566,8 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
 }
 
 app_menu_switch_page :: proc (page_name: string) {
-    f := app.ui->get(page_name)
+    page_name_rule := fmt.tprintf("menu/pages/%s", page_name)
+    f := app.ui->get(page_name_rule)
 
     for child in f.parent.children {
         ui.end_animation(child)

@@ -12,6 +12,7 @@ import "../core"
 Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
+    scissor     : Rect,
     pad         : Vec2,
     wrap        : bool,
     opacity     : f32,
@@ -71,12 +72,13 @@ Query_Color_Proc    :: proc (name: string) -> Color
          default_color_name         :: "default"
 
 create :: proc (
-    text                : string,
-    rect                : Rect,
-    opacity             : f32,
-    query_font          : Query_Font_Proc,
-    query_color         : Query_Color_Proc,
-    allocator           := context.allocator,
+    text        : string,
+    rect        : Rect,
+    query_font  : Query_Font_Proc,
+    query_color : Query_Color_Proc,
+    scissor     := Rect {},
+    opacity     := f32(1),
+    allocator   := context.allocator,
 ) -> ^Terse {
     ensure(query_font != nil)
     ensure(query_color != nil)
@@ -84,6 +86,7 @@ create :: proc (
     terse := new(Terse, allocator)
     terse.rect = rect
     terse.rect_input = rect
+    terse.scissor = scissor
     terse.opacity = opacity
     terse.valign = default_valign
     terse.words.allocator = allocator
