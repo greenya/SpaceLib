@@ -40,8 +40,6 @@ TODO: res: sprite: add support for animations (Sprite.info variant)
     draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
     simple animation has single sequence named "default"
 
-TODO: ui: rework horizontal alignment commands to be containers, e.g. "<left>...</>"
-
 TODO: ui: key press handling
 
     The idea is to be able express frame handles "Esc" or "A" and when that happens, the frame gets "click". Ideally, we want to add all the structure, which will include multiple elements wanting "Esc" (or any other button), but the UI should automatically route "click" to correct one, checking visibility and hierarchy of the frame; it should be possible to open dialog which would close by "Esc" and the "Esc" is also visible below, as dialog has semitransparent layer and the tree is visible below. Any single key can be handled only be single frame at any time, e.g. even if we have tab bar with "Q" and "E" navigation and another tab bar with same keys is shown, only one should consume the key input.

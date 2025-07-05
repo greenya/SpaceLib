@@ -29,16 +29,17 @@ Frame :: struct {
     terse           : ^terse.Terse,
     actor           : Actor,
 
+    tick            : Frame_Proc,
     draw            : Frame_Proc,
     draw_after      : Frame_Proc,
     enter           : Frame_Proc,
-    leave           : Frame_Proc,
-    click           : Frame_Proc,
-    wheel           : Frame_Wheel_Proc,
     entered         : bool,
     entered_prev    : bool,
     entered_time    : f32,
+    leave           : Frame_Proc,
     left_time       : f32,
+    click           : Frame_Proc,
+    wheel           : Frame_Wheel_Proc,
     captured        : bool,
     selected        : bool,
 
@@ -614,6 +615,8 @@ update_frame_tree :: proc (f: ^Frame) {
     if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
     for child in f.children do update_frame_tree(child)
     if .scissor in f.flags do pop_scissor_rect(f.ui)
+
+    if f.tick != nil do f.tick(f)
 }
 
 @private
