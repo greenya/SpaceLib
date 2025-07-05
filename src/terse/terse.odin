@@ -267,7 +267,7 @@ create :: proc (
                     }
                 }
 
-                if word != " " || word_is_tab || line.word_count != 0 { // skip " " at the start of the line
+                if word != " " || word_is_tab || line_has_printable_words(terse, line) { // skip " " at the start of the line
                     word_color := core.alpha(core.brightness(color, brightness), alpha)
                     append_word(terse, word, size, font, word_color, word_is_icon, group)
                 }
@@ -447,6 +447,15 @@ apply_last_line_gap :: proc (terse: ^Terse) {
         word := &terse.words[line.word_start_idx + i]
         word.rect.y += line.gap
     }
+}
+
+@private
+line_has_printable_words :: proc (terse: ^Terse, line: ^Line) -> bool {
+    for i in 0..<line.word_count {
+        word := &terse.words[line.word_start_idx + i]
+        if len(word.text) > 0 && word.text != " " do return true
+    }
+    return false
 }
 
 @private
