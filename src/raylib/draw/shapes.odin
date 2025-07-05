@@ -87,6 +87,12 @@ circle :: #force_inline proc (center: Vec2, radius: f32, color: Color) {
     rl.DrawCircleV(center, radius, color_rl)
 }
 
+circle_gradient :: #force_inline proc (center: Vec2, radius: f32, inner_color, outer_color: Color) {
+    inner_color_rl := rl.Color(inner_color)
+    outer_color_rl := rl.Color(outer_color)
+    rl.DrawCircleGradient(i32(center.x), i32(center.y), radius, inner_color_rl, outer_color_rl)
+}
+
 ring :: #force_inline proc (center: Vec2, inner_radius, outer_radius, start_angle, end_angle: f32, segments: int, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawRing(center, inner_radius, outer_radius, start_angle, end_angle, i32(segments), color_rl)
