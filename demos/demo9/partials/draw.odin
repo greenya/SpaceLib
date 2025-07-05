@@ -35,8 +35,11 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
 
     for word in t.words {
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
+        if core.rect_intersection(rect, t.scissor) == {} do continue
+
         tint := color != nil ? color.? : word.color
         tint = core.alpha(tint, t.opacity)
+
         if word.is_icon {
             if      strings.has_prefix(word.text, "key/")   do draw_icon_key(word.text[4:], rect, t.opacity, .box)
             else if strings.has_prefix(word.text, "key2/")  do draw_icon_key(word.text[5:], rect, t.opacity, .diamond)

@@ -61,8 +61,9 @@ app_startup :: proc () {
         },
     )
 
-    screens.add_to(app.ui.root)
-    screens.open(app.ui.root, "opening")
+    screens.add(app.ui.root)
+    // screens.open(app.ui.root, "opening")
+    screens.open(app.ui.root, "credits")
     // screens.open(app.ui.root, "player", "journey")
 
     ui.print_frame_tree(app.ui.root)
@@ -102,7 +103,7 @@ app_draw :: proc () {
 
     ui.draw(app.ui)
 
-    // app_draw_frame_stats()
+    app_draw_frame_stats()
     rl.EndDrawing()
 }
 

@@ -5,7 +5,7 @@ import "spacelib:ui"
 import "../../data"
 import "../../partials"
 
-add_to :: proc (parent: ^ui.Frame) {
+add :: proc (parent: ^ui.Frame) {
     screen := ui.add_frame(parent,
         { name="opening" },
         { point=.top_left },
