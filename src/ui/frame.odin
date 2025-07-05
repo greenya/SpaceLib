@@ -425,26 +425,6 @@ passed :: proc (f: ^Frame) -> bool {
     return false
 }
 
-find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
-    is_text := false
-    rule_text := rule
-
-    if rule == ".." do return parent.parent
-
-    if strings.starts_with(rule, "text=") {
-        is_text = true
-        rule_text = rule[5:]
-    }
-
-    for child in parent.children {
-        if  is_text && child.text == rule_text do return child
-        if !is_text && child.name == rule_text do return child
-        found_child := find_by_rule(child, rule)
-        if found_child != nil do return found_child
-    }
-    return nil
-}
-
 find :: proc (parent: ^Frame, path: string) -> ^Frame {
     found_child := parent
     for name in strings.split(path, "/", context.temp_allocator) {
@@ -459,6 +439,33 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
     target := find(parent, path)
     fmt.ensuref(target != nil, "Path \"%s\" not found, use find() in case its expected", path)
     return target
+}
+
+@private
+find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
+    rule := rule
+    allow_non_direct_child := false
+
+    if rule == ".." do return parent.parent
+
+    if len(rule) > 0 && rule[0] == '~' {
+        rule = rule[1:]
+        allow_non_direct_child = true
+    }
+
+    for child in parent.children {
+        if child.name == rule do return child
+        found_child := find_by_rule(child, rule)
+        if found_child != nil {
+            if found_child.parent != parent && !allow_non_direct_child {
+                found_child = nil
+            } else {
+                return found_child
+            }
+        }
+    }
+
+    return nil
 }
 
 @private
