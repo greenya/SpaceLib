@@ -3,6 +3,7 @@ package demo9_screens_opening
 import "spacelib:ui"
 
 import "../../data"
+import "../../events"
 import "../../partials"
 
 add :: proc (parent: ^ui.Frame) {
@@ -14,7 +15,11 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
     partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="cog")
-    partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="stabbed-note")
+    partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="stabbed-note",
+        click=proc (f: ^ui.Frame) {
+            events.send("open_screen", "credits")
+        },
+    )
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")

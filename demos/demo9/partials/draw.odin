@@ -239,3 +239,14 @@ draw_game_title :: proc (f: ^ui.Frame) {
     draw_text_center("D    U    N    E", core.rect_half_top(f.rect), "text_8l", color)
     draw_text_center("A  W  A  K  E  N  I  N  G", core.rect_half_bottom(f.rect), "text_6l", color)
 }
+
+draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
+    // if mouse captured we use hover ratio 1 to make sure it stays visibly selected;
+    // not ideal, as it will drop to 0 instantly when mouse released away from the frame
+    hv_ratio := f.captured\
+        ? 1\
+        : ui.hover_ratio(f, .Cubic_Out, .123, .Cubic_In, .123)
+    color := core.alpha(colors.primary, f.opacity)
+    rect := core.rect_inflated(f.rect, { -8 + 4*hv_ratio, 0 })
+    draw.rect(rect, color)
+}

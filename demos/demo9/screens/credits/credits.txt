@@ -14,7 +14,7 @@ This whole text is measured via spacelib:terse package. Here are some supported 
 
 <left>There is no way at the moment to display text aligned to different sides on the same line.
 
-We can show tabulated text (very simple, no wrapping, and we cannot align column names or values to the center below); we can change font, the line height will be the highest font and other words will be mid-aligned vertically (at the moment there is no way to specify alignment):
+We can show tabulated text (very simple, no wrapping, and we cannot align column names or values to the center below); we can change font, the line height will be the highest font and other words will be mid-aligned vertically (at the moment there is no way to specify different alignment):
 
 <font=text_4m>Item<tab=200>Value<tab=400>Enabled?</>
 Alpha<tab=200>1,000<tab=400>Yes
@@ -23,7 +23,7 @@ Gamma<tab=200><font=text_8l>3,000</><tab=400>Yes
 Delta<tab=200><font=text_6l>4,000</><tab=400>N/A
 Epsilon<tab=200>5,000<tab=400>N/A
 
-<left>                      All spaces from left and right are trimmed.
+<left>                      All leading spaces are trimmed.
 <tab=200>                   Use tab=X to move cursor to X. This line uses "tab=200".
 
 Following text in quotes always displayed on a same line, if it wraps, it goes to next line as a whole: <nobreak>"This text uses nobreak command"</> and this text can break to the next line as before.

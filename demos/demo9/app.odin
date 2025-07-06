@@ -8,8 +8,9 @@ import "spacelib:raylib/draw"
 import "spacelib:terse"
 import "spacelib:ui"
 
-import "data"
 import "colors"
+import "data"
+import "events"
 import "fonts"
 import "partials"
 import "screens"
@@ -33,6 +34,7 @@ app_startup :: proc () {
     colors.create()
     fonts.create()
     sprites.create()
+    events.create()
 
     app = new(App)
     app.ui = ui.create(
@@ -62,17 +64,19 @@ app_startup :: proc () {
     )
 
     screens.add(app.ui.root)
-    // screens.open(app.ui.root, "opening")
-    screens.open(app.ui.root, "credits")
-    // screens.open(app.ui.root, "player", "journey")
 
     ui.print_frame_tree(app.ui.root)
+
+    events.send("open_screen", "opening")
+    // events.send("open_screen", "credits")
+    // events.send("open_screen", "player", "journey")
 }
 
 app_shutdown :: proc () {
     fmt.println(#procedure)
 
     ui.destroy(app.ui)
+    events.destroy()
     sprites.destroy()
     fonts.destroy()
     colors.destroy()
