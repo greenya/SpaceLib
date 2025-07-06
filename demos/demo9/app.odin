@@ -65,11 +65,11 @@ app_startup :: proc () {
 
     screens.add(app.ui.root)
 
-    ui.print_frame_tree(app.ui.root)
+    ui.print_frame_tree(app.ui.root /*, depth_max=2*/)
 
-    events.send("open_screen", "opening")
-    // events.send("open_screen", "credits")
-    // events.send("open_screen", "player", "journey")
+    events.send_open_screen("opening", anim=false)
+    // events.send_open_screen("credits", anim=false)
+    // events.send_open_screen("player", "journey", anim=false)
 }
 
 app_shutdown :: proc () {
@@ -112,7 +112,8 @@ app_draw :: proc () {
 }
 
 app_draw_frame_stats :: proc () {
-    // draw.debug_res_texture(app.res, "sprites", {10,100}, .25)
+    // tex := sprites.textures[0]
+    // draw.texture(sprites.textures[0]^, {0,0,f32(tex.width),f32(tex.height)}, {0,0,f32(tex.width),f32(tex.height)})
 
     rect_w, rect_h :: 210, 150
     rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-90, rect_w, rect_h }

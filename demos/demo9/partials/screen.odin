@@ -6,6 +6,8 @@ import "spacelib:ui"
 screen_pad :: 50
 
 add_screen_base :: proc (screen: ^ui.Frame) {
+    ui.hide(screen)
+
     add_header_bar(screen)
     add_footer_bar(screen)
 
@@ -108,7 +110,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
     button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
         name    = name,
         size    = {250,125},
-        draw    = draw_pyramid_button,
+        draw    = draw_screen_pyramid_button,
         click   = click,
     })
 
@@ -117,7 +119,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
         text    = icon,
         size    = 46,
         flags   = {.pass_self},
-        draw    = draw_pyramid_button_icon,
+        draw    = draw_screen_pyramid_button_icon,
     }, { point=.bottom, offset={0,-12} })
 
     ui.add_frame(button, {

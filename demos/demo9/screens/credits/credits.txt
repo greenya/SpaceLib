@@ -6,8 +6,6 @@ The demo uses:
 
 This whole text is measured via spacelib:terse package. Here are some supported features of a terse text. "Terse" is an object which contains words of the given text, ready to be drawn. Hold CTRL to enabled debug drawing.
 
-<alpha=.7>/* Check "demo5", in case you want example of using only "terse" package (without "ui"). */<alpha=1>
-
 <left>This text is aligned to the left.
 <center>This text is centered.
 <right>This text is aligned to the right.
@@ -40,6 +38,7 @@ We can use icons inline, for example: <icon=stabbed-note> Stabbed Note Icon and 
 - <icon=world:1.5> World Icon x1.5
 - <icon=world:0.5> World Icon x0.5
 - <icon=world:2:1> World Icon x2 by width only
+- <color=accent,icon=world> Word Icon</> colored
 
 We can select groups, e.g. ask to mark specific sequences of words for their rectangles for some further processing, for example to have some hover effect on a group of words in a text, and/or have click-able link. This is not used by UI, at the moment, maybe it will. For now "terse" has calculation of such regions (groups) and they are drawn in debug mode (use CTRL to see). Following text has 3 groups in the 1st paragraph.
 

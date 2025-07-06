@@ -25,6 +25,7 @@ add :: proc (parent: ^ui.Frame) {
     ui.click(screen, "header_bar/tabs/inventory")
 }
 
+@private
 add_map_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "map", "MAP")
 
@@ -34,6 +35,7 @@ add_map_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_inventory_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "inventory", "INVENTORY")
 
@@ -43,6 +45,7 @@ add_inventory_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_crafting_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "crafting", "CRAFTING")
 
@@ -52,6 +55,7 @@ add_crafting_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_research_page :: proc (screen: ^ui.Frame) {
     tab, page := partials.add_screen_tab_and_page(screen, "research", "RESEARCH")
 
@@ -64,6 +68,7 @@ add_research_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_skills_page :: proc (screen: ^ui.Frame) {
     tab, page := partials.add_screen_tab_and_page(screen, "skills", "SKILLS")
 
@@ -76,6 +81,7 @@ add_skills_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_journey_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "journey", "JOURNEY")
 
@@ -85,6 +91,7 @@ add_journey_page :: proc (screen: ^ui.Frame) {
     )
 }
 
+@private
 add_customization_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "customization", "CUSTOMIZATION")
 

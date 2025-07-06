@@ -29,7 +29,13 @@ listen :: proc (event_name: string, listener: Event_Listener) {
     append(&get(event_name).listeners, listener)
 }
 
+send_open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
+    send("open_screen", screen_name, tab_name, anim)
+}
+
+@private
 send :: proc (event_name: string, args: ..any) {
+    fmt.println(#procedure, event_name, args)
     if event_name in events {
         event := events[event_name]
         assert(len(event.listeners) > 0)

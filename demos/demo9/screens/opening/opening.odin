@@ -6,8 +6,12 @@ import "../../data"
 import "../../events"
 import "../../partials"
 
+@private screen: ^ui.Frame
+
 add :: proc (parent: ^ui.Frame) {
-    screen := ui.add_frame(parent,
+    assert(screen == nil)
+
+    screen = ui.add_frame(parent,
         { name="opening" },
         { point=.top_left },
         { point=.bottom_right },
@@ -17,7 +21,7 @@ add :: proc (parent: ^ui.Frame) {
     partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="cog")
     partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="stabbed-note",
         click=proc (f: ^ui.Frame) {
-            events.send("open_screen", "credits")
+            events.send_open_screen("credits")
         },
     )
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
@@ -25,15 +29,16 @@ add :: proc (parent: ^ui.Frame) {
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
     partials.add_screen_footer_key_button(screen, "account", "Account", key="A")
 
-    add_social_links(screen)
-    add_account_info(screen)
+    add_social_links()
+    add_account_info()
 
-    add_home_page(screen)
+    add_home_page()
 
     ui.click(screen, "header_bar/tabs/home")
 }
 
-add_social_links :: proc (screen: ^ui.Frame) {
+@private
+add_social_links :: proc () {
     header_bar := ui.get(screen, "header_bar")
 
     social_links := ui.add_frame(header_bar,
@@ -41,8 +46,8 @@ add_social_links :: proc (screen: ^ui.Frame) {
         { point=.right, rel_point=.bottom_right, offset={-partials.screen_pad,0} },
     )
 
-    ui.add_frame(social_links, { text="world", draw=partials.draw_diamond_button })
-    ui.add_frame(social_links, { text="envelope", draw=partials.draw_diamond_button })
+    ui.add_frame(social_links, { text="world", draw=partials.draw_button_diamond })
+    ui.add_frame(social_links, { text="envelope", draw=partials.draw_button_diamond })
 
     ui.add_frame(header_bar,
         { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4",
@@ -52,7 +57,8 @@ add_social_links :: proc (screen: ^ui.Frame) {
     )
 }
 
-add_account_info :: proc (screen: ^ui.Frame) {
+@private
+add_account_info :: proc () {
     account_info := ui.add_frame(ui.get(screen, "header_bar"),
         { name="account_info", text_format="<left,font=text_4l,color=primary_a6>%s\n%s", flags={.terse,.terse_height} },
         { point=.left, offset={partials.screen_pad,0} },
@@ -60,7 +66,8 @@ add_account_info :: proc (screen: ^ui.Frame) {
     ui.set_text(account_info, data.player.account_name, data.player.character_name)
 }
 
-add_home_page :: proc (screen: ^ui.Frame) {
+@private
+add_home_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "home", "HOME")
 
     add_home_page_welcome_area(page)
@@ -68,6 +75,7 @@ add_home_page :: proc (screen: ^ui.Frame) {
     add_home_page_game_title(page)
 }
 
+@private
 add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     welcome_area := ui.add_frame(page,
         { name="welcome_area", size={520,0}, text="#0005", draw=partials.draw_gradient_fade_up_and_down_rect },
@@ -112,12 +120,17 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     )
 
     ui.add_frame(buttons_bar, { name="continue", text="<font=text_6l,pad=0:4>CONTINUE", flags={.terse},
-        draw=partials.draw_featured_button })
+        draw=partials.draw_button_featured,
+        click=proc (f: ^ui.Frame) {
+            events.send_open_screen("player")
+        },
+    })
 
     ui.add_frame(buttons_bar, { name="servers", text="<font=text_6l,pad=0:4>SERVERS", flags={.terse},
-        draw=partials.draw_featured_button })
+        draw=partials.draw_button_featured })
 }
 
+@private
 add_home_page_notification_area :: proc (page: ^ui.Frame) {
     notifications_area := ui.add_frame(page,
         { name="notifications_area", size={400,0}, flags={.hidden}, text="#0005", draw=partials.draw_gradient_fade_down_rect },
@@ -163,6 +176,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
     }
 }
 
+@private
 add_home_page_game_title :: proc (page: ^ui.Frame) {
     ui.add_frame(page,
         { name="game_title", flags={.pass}, size={280,80}, draw=partials.draw_game_title },

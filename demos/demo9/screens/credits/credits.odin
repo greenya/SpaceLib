@@ -8,8 +8,11 @@ import "../../partials"
 is_autoscroll := true
 
 add :: proc (parent: ^ui.Frame) {
-    screen := ui.add_frame(parent,
-        { name="credits" },
+    screen := ui.add_frame(parent, { name="credits",
+            show=proc (f: ^ui.Frame) {
+                ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
+            },
+        },
         { point=.top_left },
         { point=.bottom_right },
     )
@@ -18,7 +21,7 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
         click=proc (f: ^ui.Frame) {
-            events.send("open_screen", "opening")
+            events.send_open_screen("opening")
         },
     )
 
@@ -43,6 +46,7 @@ add :: proc (parent: ^ui.Frame) {
     ui.click(screen, "header_bar/tabs/credits")
 }
 
+@private
 add_credits_page :: proc (screen: ^ui.Frame) {
     _, page := partials.add_screen_tab_and_page(screen, "credits", "CREDITS")
 
@@ -67,7 +71,7 @@ add_credits_page :: proc (screen: ^ui.Frame) {
     )
 
     thumb := ui.add_frame(track,
-        { name="thumb", size={20,60}, draw=partials.draw_scrollbar_thumb },
+        { name="thumb", size={19,60}, draw=partials.draw_scrollbar_thumb },
         { point=.top },
     )
 
