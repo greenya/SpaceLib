@@ -282,6 +282,13 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = n
     if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
 
+set_scroll_offset :: proc (f: ^Frame, value: f32) {
+    assert(layout_has_scroll(f))
+    scroll := &f.layout.scroll
+    scroll.offset = clamp(value, scroll.offset_min, scroll.offset_max)
+    if f.actor != nil do wheel_actor(f, 0)
+}
+
 first_visible_child :: proc (f: ^Frame) -> ^Frame {
     for child in f.children do if .hidden not_in child.flags do return child
     return nil
