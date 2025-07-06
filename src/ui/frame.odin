@@ -30,6 +30,8 @@ Frame :: struct {
     actor           : Actor,
 
     tick            : Frame_Proc,
+    show            : Frame_Proc,
+    hide            : Frame_Proc,
     draw            : Frame_Proc,
     draw_after      : Frame_Proc,
     enter           : Frame_Proc,
@@ -297,7 +299,12 @@ visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Fram
 }
 
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
-    if hide_siblings && f.parent != nil do for child in f.parent.children do child.flags += { .hidden }
+    if hide_siblings && f.parent != nil {
+        for child in f.parent.children {
+            if child != f do hide_by_frame(child)
+        }
+    }
+
     f.flags -= { .hidden }
 
     if f.parent != nil && f.parent.layout.dir != .none {
@@ -305,6 +312,8 @@ show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     } else {
         refresh_rect(f)
     }
+
+    if f.show != nil do f.show(f)
 }
 
 show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false) {
@@ -318,11 +327,15 @@ show :: proc {
 }
 
 hide_by_frame :: proc (f: ^Frame) {
+    if .hidden in f.flags do return
+
     f.flags += { .hidden }
 
     if f.parent != nil && f.parent.layout.dir != .none {
         refresh_rect(f.parent)
     }
+
+    if f.hide != nil do f.hide(f)
 }
 
 hide_by_path :: proc (parent: ^Frame, path: string) {
