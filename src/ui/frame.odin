@@ -167,12 +167,6 @@ add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Fram
     return f
 }
 
-updated :: proc (f: ^Frame) {
-    if .hidden in f.flags do return
-    update_rect(f)
-    for child in f.children do updated(child)
-}
-
 add_anchor :: proc (f: ^Frame, init: Anchor) {
     init := init
     assert(init.point != .mouse)
@@ -183,6 +177,20 @@ add_anchor :: proc (f: ^Frame, init: Anchor) {
 
 clear_anchors :: proc (f: ^Frame) {
     resize(&f.anchors, 0)
+}
+
+updated :: proc (f: ^Frame) {
+    if .hidden in f.flags do return
+    update_rect(f)
+    for child in f.children do updated(child)
+}
+
+refresh_rect :: proc (f: ^Frame, repeat := 1) {
+    for _ in 0..<repeat {
+        f.rect_dirty = true
+        for child in f.children do child.rect_dirty = true
+        updated(f)
+    }
 }
 
 set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
@@ -289,18 +297,15 @@ visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Fram
     return list[:]
 }
 
-refresh_rect :: proc (f: ^Frame, repeat := 1) {
-    for _ in 0..<repeat {
-        f.rect_dirty = true
-        for child in f.children do child.rect_dirty = true
-        updated(f)
-    }
-}
-
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil do for child in f.parent.children do child.flags += { .hidden }
     f.flags -= { .hidden }
-    updated(f)
+
+    if f.parent != nil && f.parent.layout.dir != .none {
+        refresh_rect(f.parent)
+    } else {
+        refresh_rect(f)
+    }
 }
 
 show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false) {
@@ -315,6 +320,10 @@ show :: proc {
 
 hide_by_frame :: proc (f: ^Frame) {
     f.flags += { .hidden }
+
+    if f.parent != nil && f.parent.layout.dir != .none {
+        refresh_rect(f.parent)
+    }
 }
 
 hide_by_path :: proc (parent: ^Frame, path: string) {
