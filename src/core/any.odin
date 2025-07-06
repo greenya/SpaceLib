@@ -19,3 +19,8 @@ any_as_string :: #force_inline proc (value: any) -> string {
     switch a in value { case string: return a }
     panic("Not a string")
 }
+
+any_args_ordered_ssb :: proc (args: [] any) -> (string, string, bool) {
+    assert(len(args) == 3)
+    return any_as_string(args[0]), any_as_string(args[1]), any_as_bool(args[2])
+}
