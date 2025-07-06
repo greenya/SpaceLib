@@ -3,10 +3,15 @@ package demo9_screens_player
 import "spacelib:ui"
 
 import "../../data"
+import "../../events"
 import "../../partials"
 
+@private screen: ^ui.Frame
+
 add :: proc (parent: ^ui.Frame) {
-    screen := ui.add_frame(parent,
+    assert(screen == nil)
+
+    screen = ui.add_frame(parent,
         { name="player" },
         { point=.top_left },
         { point=.bottom_right },
@@ -14,19 +19,25 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
 
-    add_map_page(screen)
-    add_inventory_page(screen)
-    add_crafting_page(screen)
-    add_research_page(screen)
-    add_skills_page(screen)
-    add_journey_page(screen)
-    add_customization_page(screen)
+    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
+        click=proc (f: ^ui.Frame) {
+            events.send_open_screen("opening")
+        },
+    )
+
+    add_map_page()
+    add_inventory_page()
+    add_crafting_page()
+    add_research_page()
+    add_skills_page()
+    add_journey_page()
+    add_customization_page()
 
     ui.click(screen, "header_bar/tabs/inventory")
 }
 
 @private
-add_map_page :: proc (screen: ^ui.Frame) {
+add_map_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "map", "MAP")
 
     ui.add_frame(page,
@@ -36,7 +47,7 @@ add_map_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_inventory_page :: proc (screen: ^ui.Frame) {
+add_inventory_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "inventory", "INVENTORY")
 
     ui.add_frame(page,
@@ -46,7 +57,7 @@ add_inventory_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_crafting_page :: proc (screen: ^ui.Frame) {
+add_crafting_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "crafting", "CRAFTING")
 
     ui.add_frame(page,
@@ -56,7 +67,7 @@ add_crafting_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_research_page :: proc (screen: ^ui.Frame) {
+add_research_page :: proc () {
     tab, page := partials.add_screen_tab_and_page(screen, "research", "RESEARCH")
 
     tab_points := ui.get(tab, "points")
@@ -69,7 +80,7 @@ add_research_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_skills_page :: proc (screen: ^ui.Frame) {
+add_skills_page :: proc () {
     tab, page := partials.add_screen_tab_and_page(screen, "skills", "SKILLS")
 
     tab_points := ui.get(tab, "points")
@@ -82,7 +93,7 @@ add_skills_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_journey_page :: proc (screen: ^ui.Frame) {
+add_journey_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "journey", "JOURNEY")
 
     ui.add_frame(page,
@@ -92,7 +103,7 @@ add_journey_page :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_customization_page :: proc (screen: ^ui.Frame) {
+add_customization_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "customization", "CUSTOMIZATION")
 
     ui.add_frame(page,

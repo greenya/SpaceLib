@@ -1,4 +1,4 @@
-This is content of screens/credits/credits.txt
+<font=text_6l>/* This is content of screens/credits/credits.txt */</>
 
 The demo uses:
 - https://fonts.google.com/specimen/Kanit
@@ -27,8 +27,8 @@ Epsilon<tab=200>5,000<tab=400>N/A
 Following text in quotes always displayed on a same line, if it wraps, it goes to next line as a whole: <nobreak>"This text uses nobreak command"</> and this text can break to the next line as before.
 
 We can manipulate gap between lines:
-<gap=-.7,font=text_8l>This text has gap -0.7</>
-<gap=-.7>And this one too.
+<gap=-.4,font=text_6l>This text has gap -0.4</>
+<gap=-.4>And this one too.
 
 <color=#f00>                We </,color=#0f0> can </,color=#00f> change </,color=#ff0> colors</>.
 <alpha=.5,color=#f00>       We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> alpha</,alpha=1>.
@@ -38,7 +38,7 @@ We can use icons inline, for example: <icon=stabbed-note> Stabbed Note Icon and 
 - <icon=world:1.5> World Icon x1.5
 - <icon=world:0.5> World Icon x0.5
 - <icon=world:2:1> World Icon x2 by width only
-- <color=accent,icon=world> Word Icon</> colored
+- <color=primary_d4,icon=world> Word Icon</> colored with the text
 
 We can select groups, e.g. ask to mark specific sequences of words for their rectangles for some further processing, for example to have some hover effect on a group of words in a text, and/or have click-able link. This is not used by UI, at the moment, maybe it will. For now "terse" has calculation of such regions (groups) and they are drawn in debug mode (use CTRL to see). Following text has 3 groups in the 1st paragraph.
 
@@ -94,5 +94,4 @@ Ut tristique commodo cursus. Interdum et malesuada fames ac ante ipsum primis in
 
 Etiam ultricies libero ac laoreet efficitur. Donec sed est accumsan, volutpat diam a, blandit tortor. Proin sed pharetra lectus. Donec vel pharetra ipsum. Donec commodo, urna fermentum varius vestibulum, ante nibh volutpat ante, et luctus augue erat vitae diam. Nam cursus rhoncus interdum. Nam ultricies nibh vel leo sagittis, ornare fermentum ante rutrum. Maecenas sollicitudin euismod lectus, sit amet mattis nunc suscipit sit amet. Proin at dolor nisl. Sed at tellus pretium, pretium odio feugiat, tristique eros. Quisque faucibus consectetur mauris, eget vestibulum turpis mollis non. Fusce erat mi, cursus sit amet ornare ac, porttitor vel lectus. Nunc tristique turpis eget purus consequat ullamcorper. Morbi mollis consectetur mattis. Sed at sagittis enim. Nam imperdiet gravida ante, et efficitur libero dictum ut.
 
-________
-End of file.
+<font=text_6l>/* End of file */</>

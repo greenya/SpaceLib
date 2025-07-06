@@ -38,6 +38,11 @@ draw_screen_tab_points :: proc (f: ^ui.Frame) {
 draw_screen_pyramid_button :: proc (f: ^ui.Frame) {
     sp_color := core.brightness(f.entered ? colors.accent : colors.primary, -.5)
     draw_sprite("shape_pilar_gradient", f.rect, core.alpha(sp_color, f.opacity))
+
+    if f.captured {
+        sp_color = core.brightness(sp_color, .1)
+        draw_sprite("shape_pilar_gradient", f.rect, core.alpha(sp_color, f.opacity))
+    }
 }
 
 draw_screen_pyramid_button_icon :: proc (f: ^ui.Frame) {

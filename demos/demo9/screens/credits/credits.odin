@@ -5,10 +5,11 @@ import "spacelib:ui"
 import "../../events"
 import "../../partials"
 
-is_autoscroll := true
+@private screen: ^ui.Frame
+@private is_autoscroll := true
 
 add :: proc (parent: ^ui.Frame) {
-    screen := ui.add_frame(parent, { name="credits",
+    screen = ui.add_frame(parent, { name="credits",
             show=proc (f: ^ui.Frame) {
                 ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
             },
@@ -41,13 +42,13 @@ add :: proc (parent: ^ui.Frame) {
         },
     )
 
-    add_credits_page(screen)
+    add_credits_page()
 
     ui.click(screen, "header_bar/tabs/credits")
 }
 
 @private
-add_credits_page :: proc (screen: ^ui.Frame) {
+add_credits_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "credits", "CREDITS")
 
     content := ui.add_frame(page,
@@ -56,6 +57,8 @@ add_credits_page :: proc (screen: ^ui.Frame) {
         { point=.top_left, offset={260,0} },
         { point=.bottom_right, offset={-260,0} },
     )
+
+    ui.add_frame(content, { name="blank_space" })
 
     ui.add_frame(content, {
         name="text",
