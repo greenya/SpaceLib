@@ -126,7 +126,7 @@ Layout_Auto_Size :: enum {
 }
 
 Animation :: struct {
-    tick    : Frame_Animation_Tick_Proc,
+    tick    : Frame_Proc,
     start   : f32,
     end     : f32,
     ratio   : f32,
@@ -146,7 +146,6 @@ Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
 Frame_Proc                  :: proc (f: ^Frame)
 Frame_Wheel_Proc            :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
-Frame_Animation_Tick_Proc   :: proc (f: ^Frame)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
@@ -228,17 +227,17 @@ set_opacity :: proc (f: ^Frame, new_opacity: f32) {
     for child in f.children do set_opacity(child, new_opacity)
 }
 
-animate :: proc (f: ^Frame, tick: Frame_Animation_Tick_Proc, dt: f32) {
+animate :: proc (f: ^Frame, tick: Frame_Proc, dur: f32) {
     assert(f != nil)
     assert(tick != nil)
-    assert(dt > 0)
+    assert(dur > 0)
 
     end_animation(f)
 
     f.anim = {
         tick    = tick,
         start   = f.ui.clock.time,
-        end     = f.ui.clock.time + dt,
+        end     = f.ui.clock.time + dur,
         ratio   = 0,
     }
 
