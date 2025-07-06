@@ -226,7 +226,7 @@ app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
     if f.anim.ratio == 0 {
         ui.show(f)
-        ui.refresh_rect(f, repeat=3)
+        ui.refresh_rect(f)
         app_tooltip_update_anchor(f)
         ui.refresh_rect(f)
     }
