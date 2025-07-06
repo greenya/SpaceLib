@@ -56,6 +56,7 @@ Flag :: enum {
     pass,
     pass_self,
     no_capture,
+    continue_enter,
     block_wheel,
     scissor,
     check,

@@ -159,7 +159,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 if .no_capture in f.flags do lmb_released = true
             }
 
-            break
+            if .continue_enter not_in f.flags do break
         }
 
         if ui.captured.frame != nil {
