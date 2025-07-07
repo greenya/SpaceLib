@@ -67,8 +67,9 @@ app_startup :: proc () {
 
     ui.print_frame_tree(app.ui.root /*, depth_max=2*/)
 
-    events.send_open_screen("opening", anim=false)
+    // events.send_open_screen("opening", anim=false)
     // events.send_open_screen("credits", anim=false)
+    events.send_open_screen("settings", anim=false)
     // events.send_open_screen("player", "journey", anim=false)
 }
 

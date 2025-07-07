@@ -11,6 +11,7 @@ import "../partials"
 import "credits"
 import "opening"
 import "player"
+import "settings"
 
 @private screens: ^ui.Frame
 
@@ -38,6 +39,7 @@ add :: proc (parent: ^ui.Frame) {
     credits.add(screens)
     opening.add(screens)
     player.add(screens)
+    settings.add(screens)
 
     events.listen("open_screen", open_screen_listener)
 }

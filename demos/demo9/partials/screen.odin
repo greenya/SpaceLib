@@ -8,8 +8,8 @@ screen_pad :: 50
 add_screen_base :: proc (screen: ^ui.Frame) {
     ui.hide(screen)
 
-    add_header_bar(screen)
-    add_footer_bar(screen)
+    add_screen_header_bar(screen)
+    add_screen_footer_bar(screen)
 
     ui.add_frame(screen,
         { name="pages" },
@@ -19,7 +19,7 @@ add_screen_base :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_header_bar :: proc (screen: ^ui.Frame) {
+add_screen_header_bar :: proc (screen: ^ui.Frame) {
     header_bar := ui.add_frame(screen,
         { name="header_bar", text="bg0", size={0,80}, order=1, draw=draw_color_rect },
         { point=.top_left },
@@ -50,7 +50,7 @@ add_header_bar :: proc (screen: ^ui.Frame) {
 }
 
 @private
-add_footer_bar :: proc (screen: ^ui.Frame) {
+add_screen_footer_bar :: proc (screen: ^ui.Frame) {
     footer_bar := ui.add_frame(screen,
         { name="footer_bar", text="bg0", size={0,80}, order=1, draw=draw_color_rect },
         { point=.bottom_left },
@@ -124,7 +124,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
 
     ui.add_frame(button, {
         name    = "title",
-        text    = fmt.tprintf("<pad=6:0,font=text_4r,color=primary> %s", text),
+        text    = fmt.tprintf("<pad=20:0,font=text_4r,color=primary> %s", text),
         flags   = {.pass_self,.terse,.terse_width,.terse_height},
         draw    = draw_hexagon_rect_with_half_transparent_bg,
     }, { point=.center, rel_point=.bottom, offset={0,-80} })

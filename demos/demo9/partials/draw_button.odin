@@ -59,3 +59,17 @@ draw_button_featured :: proc (f: ^ui.Frame) {
     tx_color := core.brightness(colors.primary, hv_ratio/2)
     draw_terse(f.terse, tx_color, drop_shadow=true)
 }
+
+draw_button_radio :: proc (f: ^ui.Frame) {
+    bg_color := f.selected\
+        ? core.brightness(colors.primary, -.3)\
+        : colors.bg1
+    draw.rect(f.rect, bg_color)
+
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
+    br_color := core.alpha(colors.primary, hv_ratio)
+    draw.rect_lines(f.rect, 1, br_color)
+
+    tx_color := f.selected ? colors.bg1 : colors.primary
+    draw_text_center(f.text, f.rect, "text_4r", tx_color)
+}

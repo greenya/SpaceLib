@@ -18,12 +18,19 @@ add :: proc (parent: ^ui.Frame) {
     )
 
     partials.add_screen_base(screen)
-    partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="cog")
+
+    partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="cog",
+        click=proc (f: ^ui.Frame) {
+            events.send_open_screen("settings")
+        },
+    )
+
     partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="stabbed-note",
         click=proc (f: ^ui.Frame) {
             events.send_open_screen("credits")
         },
     )
+
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
@@ -85,7 +92,7 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
 
     header := ui.add_frame(welcome_area,
         { name="header", flags={.terse,.terse_height}, text_format="<font=text_6l,color=primary_l2,pad=0:4>%s",
-            draw=partials.draw_hexagon_rect_wide },
+            draw=partials.draw_hexagon_rect_wide_hangout },
         { point=.top_left, offset={0,180} },
         { point=.top_right, offset={0,180} },
     )
@@ -139,7 +146,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
     )
 
     header := ui.add_frame(notifications_area,
-        { name="header", text="<left,font=text_4l,color=primary_l2,pad=0:2,tab=20>NOTIFICATIONS", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect_wide },
+        { name="header", text="<left,font=text_4l,color=primary_l2,pad=0:2,tab=20>NOTIFICATIONS", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect_wide_hangout },
         { point=.top_left },
         { point=.top_right },
     )
@@ -154,7 +161,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
     )
 
     title := ui.add_frame(notifications_area,
-        { name="title", text_format="<left,pad=6:0,font=text_4l,color=primary_d2>%s", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect },
+        { name="title", text_format="<left,pad=6:0,font=text_4l,color=primary_d2>%s", flags={.terse,.terse_height}, draw=partials.draw_hexagon_rect_hangout },
         { point=.top_left, rel_point=.bottom_left, rel_frame=header, offset={0,10} },
         { point=.top_right, rel_point=.bottom_right, rel_frame=header, offset={0,10} },
     )

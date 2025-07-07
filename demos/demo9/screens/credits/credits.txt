@@ -1,10 +1,12 @@
-<font=text_6l>/* This is content of screens/credits/credits.txt */</>
+<font=text_6l>/* Content of screens/credits/credits.txt */</>
 
 The demo uses:
 - https://fonts.google.com/specimen/Kanit
 - https://game-icons.net/
 
-This whole text is measured via spacelib:terse package. Here are some supported features of a terse text. "Terse" is an object which contains words of the given text, ready to be drawn. Hold CTRL to enabled debug drawing.
+This whole text is measured via spacelib:terse package. Here are some supported features. Hold CTRL to enabled debug drawing.
+
+<font=text_6l>Line alignment</>
 
 <left>This text is aligned to the left.
 <center>This text is centered.
@@ -12,7 +14,9 @@ This whole text is measured via spacelib:terse package. Here are some supported 
 
 <left>There is no way at the moment to display text aligned to different sides on the same line.
 
-We can show tabulated text (very simple, no wrapping, and we cannot align column names or values to the center below); we can change font, the line height will be the highest font and other words will be mid-aligned vertically (at the moment there is no way to specify different alignment):
+<font=text_6l>Tab and Font</>
+
+We can align text with simple tabulation; we can change font, the line height will be the highest font and other words will be mid-aligned vertically (at the moment there is no way to specify different alignment):
 
 <font=text_4m>Item<tab=200>Value<tab=400>Enabled?</>
 Alpha<tab=200>1,000<tab=400>Yes
@@ -24,21 +28,31 @@ Epsilon<tab=200>5,000<tab=400>N/A
 <left>                      All leading spaces are trimmed.
 <tab=200>                   Use tab=X to move cursor to X. This line uses "tab=200".
 
-Following text in quotes always displayed on a same line, if it wraps, it goes to next line as a whole: <nobreak>"This text uses nobreak command"</> and this text can break to the next line as before.
-
-We can manipulate gap between lines:
-<gap=-.4,font=text_6l>This text has gap -0.4</>
-<gap=-.4>And this one too.
+<font=text_6l>Color, Alpha, Brightness</>
 
 <color=#f00>                We </,color=#0f0> can </,color=#00f> change </,color=#ff0> colors</>.
 <alpha=.5,color=#f00>       We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> alpha</,alpha=1>.
 <brightness=.5,color=#f00>  We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> brightness</,brightness=0>.
 
-We can use icons inline, for example: <icon=stabbed-note> Stabbed Note Icon and <font=text_6l,icon=cog> Cog Icon</>. Terse package doesn't draw anything, it only calculates rect for the icon, the drawing is done by user code after terse object is created. Default icon size is taken from the current font height. We also can provide additional icon size multipliers, for example:
+<font=text_6l>Icons</>
+
+We can use icons inline, for example: <icon=stabbed-note> Stabbed Note Icon and <icon=cog> Cog Icon. Terse package doesn't draw anything, it only calculates rect for the icon, the drawing is done by user code after terse object is created. Default icon size is taken from the current font height and <font=text_6l><icon=world> World Icon</> is automatically larger. We also can provide additional icon size multipliers, for example:
 - <icon=world:1.5> World Icon x1.5
 - <icon=world:0.5> World Icon x0.5
 - <icon=world:2:1> World Icon x2 by width only
 - <color=primary_d4,icon=world> Word Icon</> colored with the text
+
+<font=text_6l>Line Gap</>
+
+We can manipulate gap between lines:
+<gap=-.4,alpha=.2,font=text_6l>This text has gap -0.4 and alpha 0.2</,alpha=1>
+<gap=-.4>And this one too.
+
+<font=text_6l>Unbreakable sequences</>
+
+Following text in quotes always displayed on a same line, if it wraps, it goes to next line as a whole: <color=primary_l5><nobreak>"This text uses nobreak command"</nobreak,/color> and this text can break to the next line as before.
+
+<font=text_6l>Groups</>
 
 We can select groups, e.g. ask to mark specific sequences of words for their rectangles for some further processing, for example to have some hover effect on a group of words in a text, and/or have click-able link. This is not used by UI, at the moment, maybe it will. For now "terse" has calculation of such regions (groups) and they are drawn in debug mode (use CTRL to see). Following text has 3 groups in the 1st paragraph.
 

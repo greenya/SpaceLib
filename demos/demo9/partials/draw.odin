@@ -67,14 +67,27 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum { box
     draw_text_center(text, rect, "text_4m", tx_color)
 }
 
-draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, bg_opacity := f32(1)) {
-    x1 := rect.x
-    y1 := rect.y
-    x2 := rect.x+rect.w
-    y2 := rect.y+rect.h
-    yc := (y1+y2)/2
-    xl := x1-(yc-y1)
-    xr := x2+(yc-y1)
+draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, hangout := false, bg_opacity := f32(1)) {
+    x1, y1, x2, y2, yc, xl, xr: f32
+
+    if hangout {
+        x1 = rect.x
+        y1 = rect.y
+        x2 = rect.x+rect.w
+        y2 = rect.y+rect.h
+        yc = (y1+y2)/2
+        xl = x1-(yc-y1)
+        xr = x2+(yc-y1)
+    } else {
+        y1 = rect.y
+        y2 = rect.y+rect.h
+        yc = (y1+y2)/2
+        x1 = rect.x+(yc-y1)
+        x2 = rect.x+rect.w-(yc-y1)
+        xl = rect.x
+        xr = rect.x+rect.w
+    }
+
     th := f32(1)
     c := core.alpha(colors.primary, t.opacity)
 
@@ -119,9 +132,19 @@ draw_hexagon_rect :: proc (f: ^ui.Frame) {
     draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w)
 }
 
+draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, hangout=true)
+}
+
 draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
     draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w)
+}
+
+draw_hexagon_rect_wide_hangout :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, hangout=true)
 }
 
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
@@ -140,6 +163,11 @@ draw_gradient_fade_up_and_down_rect :: proc (f: ^ui.Frame) {
     draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, {})
 }
 
+draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {
+    color := core.alpha(colors.get(f.text), f.opacity)
+    draw.rect_gradient_horizontal(f.rect, color, {})
+}
+
 draw_game_title :: proc (f: ^ui.Frame) {
     color := core.alpha(colors.primary, f.opacity * .3)
     draw_text_center("D    U    N    E", core.rect_half_top(f.rect), "text_8l", color)
@@ -152,7 +180,7 @@ draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
     hv_ratio := f.captured\
         ? 1\
         : ui.hover_ratio(f, .Cubic_Out, .123, .Cubic_In, .123)
-    color := core.alpha(colors.primary, f.opacity)
-    rect := core.rect_inflated(f.rect, { -8 + 4*hv_ratio, 0 })
+    color := core.alpha(core.brightness(colors.primary, -.3), f.opacity)
+    rect := core.rect_inflated(f.rect, { -8 + 2*hv_ratio, 0 })
     draw.rect(rect, color)
 }
