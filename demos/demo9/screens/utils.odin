@@ -1,7 +1,8 @@
-package spacelib_core
+package demo9_screens
 
 import "core:reflect"
 
+@private
 any_args_ordered_ssb :: proc (args: [] any) -> (string, string, bool) {
     assert(len(args) == 3)
     s0, s0_ok := reflect.as_string(args[0])

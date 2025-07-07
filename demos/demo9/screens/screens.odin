@@ -3,7 +3,6 @@ package demo9_screens
 import "core:fmt"
 import "core:math/rand"
 
-import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
@@ -46,7 +45,7 @@ add :: proc (parent: ^ui.Frame) {
 
 @private
 open_screen_listener :: proc (args: ..any) {
-    screen_name, tab_name, anim := core.any_args_ordered_ssb(args)
+    screen_name, tab_name, anim := any_args_ordered_ssb(args)
 
     prev_screen := ui.first_visible_child(screens)
     next_screen := ui.get(screens, screen_name)
