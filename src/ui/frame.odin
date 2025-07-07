@@ -312,7 +312,7 @@ visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Fram
     return list[:]
 }
 
-show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
+show_by_frame :: proc (f: ^Frame, hide_siblings := false, repeat_refresh_rect := 1) {
     if hide_siblings && f.parent != nil {
         for child in f.parent.children {
             if child != f do hide_by_frame(child)
@@ -322,17 +322,17 @@ show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     f.flags -= { .hidden }
 
     if f.parent != nil && f.parent.layout.dir != .none {
-        refresh_rect(f.parent)
+        refresh_rect(f.parent, repeat_refresh_rect)
     } else {
-        refresh_rect(f)
+        refresh_rect(f, repeat_refresh_rect)
     }
 
     if f.show != nil do f.show(f)
 }
 
-show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false) {
+show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false, repeat_refresh_rect := 1) {
     target := get(parent, path)
-    show_by_frame(target, hide_siblings)
+    show_by_frame(target, hide_siblings, repeat_refresh_rect)
 }
 
 show :: proc {
