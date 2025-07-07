@@ -55,11 +55,15 @@ add :: proc (parent: ^ui.Frame) {
 add_credits_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "credits", "CREDITS")
 
+    content_pad :: 320
+    track_pad_x :: 80
+    track_pad_y :: 40
+
     content := ui.add_frame(page,
         { name="content", layout={dir=.down,scroll={step=10}}, flags={.scissor},
             tick=proc (f: ^ui.Frame) { if is_autoscroll do ui.wheel(f, -.033) } },
-        { point=.top_left, offset={280,0} },
-        { point=.bottom_right, offset={-280,0} },
+        { point=.top_left, offset={content_pad,0} },
+        { point=.bottom_right, offset={-content_pad,0} },
     )
 
     text, track, _ := partials.add_text_and_scrollbar(content)
@@ -67,8 +71,8 @@ add_credits_page :: proc () {
     text.text_format = "<pad=0:20,wrap,left,font=text_4l,color=primary>%s"
     ui.set_text(text, #load("credits.txt"))
 
-    track.anchors[0].offset = {40,40}
-    track.anchors[1].offset = {40,-40}
+    track.anchors[0].offset = {track_pad_x,track_pad_y}
+    track.anchors[1].offset = {track_pad_x,-track_pad_y}
 
     // redirect page wheel events to the content, so its possible to scroll even if mouse doesn't hit content
     page.wheel = proc (f: ^ui.Frame, dy: f32) -> bool {

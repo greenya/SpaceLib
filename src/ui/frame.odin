@@ -142,7 +142,7 @@ Actor :: union {
     Actor_Scrollbar_Thumb,
 }
 
-Actor_Scrollbar_Content :: struct { thumb: ^Frame }
+Actor_Scrollbar_Content :: struct { thumb, next, prev: ^Frame }
 Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
 Actor_Scrollbar_Next    :: struct { content: ^Frame }
 Actor_Scrollbar_Prev    :: struct { content: ^Frame }
@@ -273,12 +273,18 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dt: f
     }
 }
 
-setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame, next: ^Frame = nil, prev: ^Frame = nil) {
-    assert(len(thumb.anchors) == 1)
-    assert(layout_has_scroll(content))
+setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame = nil, next: ^Frame = nil, prev: ^Frame = nil) {
+    ensure(layout_has_scroll(content), "Content frame must have layout with scroll")
+    ensure(thumb != nil || next != nil || prev != nil, "At least one actor must be used")
 
-    content.actor = Actor_Scrollbar_Content { thumb=thumb }
-    thumb.actor = Actor_Scrollbar_Thumb { content=content }
+    if thumb != nil {
+        ensure(thumb.parent != nil, "Thumb must have parent (track)")
+        ensure(thumb.parent.layout.dir == .none, "Thumb parent must not have layout, as thumb.anchors[0].offset will reflect thumb position")
+        ensure(len(thumb.anchors) == 1, "Thumb must have exactly 1 anchor, its offset will reflect thumb position")
+    }
+
+    content.actor = Actor_Scrollbar_Content { thumb=thumb, next=next, prev=prev }
+    if thumb != nil do thumb.actor = Actor_Scrollbar_Thumb { content=content }
     if next != nil do next.actor = Actor_Scrollbar_Next { content=content }
     if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
@@ -287,7 +293,7 @@ set_scroll_offset :: proc (f: ^Frame, value: f32) {
     assert(layout_has_scroll(f))
     scroll := &f.layout.scroll
     scroll.offset = clamp(value, scroll.offset_min, scroll.offset_max)
-    if f.actor != nil do wheel_actor(f, 0)
+    if f.actor != nil do wheel_actor(f)
 }
 
 first_visible_child :: proc (f: ^Frame) -> ^Frame {
@@ -521,34 +527,48 @@ layout_apply_scroll :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
 }
 
 @private
-wheel_actor :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+wheel_actor :: proc (f: ^Frame, dy := f32(0)) -> (consumed: bool) {
     #partial switch _ in f.actor {
-    case Actor_Scrollbar_Content: return wheel_actor_scrollbar_content(f, dy)
+    case Actor_Scrollbar_Content: return wheel_actor_scrollbar_content(f)
     case                        : return false
     }
 }
 
 @private
-wheel_actor_scrollbar_content :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
+wheel_actor_scrollbar_content :: proc (f: ^Frame) -> (consumed: bool) {
     actor := &f.actor.(Actor_Scrollbar_Content)
     thumb := actor.thumb
+    next := actor.next
+    prev := actor.prev
     scroll := &f.layout.scroll
-    scroll_ratio := core.clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-    if is_layout_dir_vertical(f) {
-        thumb_space := thumb.parent.rect.h - thumb.rect.h
-        thumb_offset := thumb_space * scroll_ratio
-        if thumb.anchors[0].offset.y != thumb_offset {
-            thumb.anchors[0].offset.y = thumb_offset
-            consumed = true
+    if thumb != nil {
+        scroll_ratio := core.clamp_ratio(scroll.offset, scroll.offset_min, scroll.offset_max)
+        if is_layout_dir_vertical(f) {
+            thumb_space := thumb.parent.rect.h - thumb.rect.h
+            thumb_offset := thumb_space * scroll_ratio
+            if thumb.anchors[0].offset.y != thumb_offset {
+                thumb.anchors[0].offset.y = thumb_offset
+                consumed = true
+            }
+        } else {
+            thumb_space := thumb.parent.rect.w - thumb.rect.w
+            thumb_offset := thumb_space * scroll_ratio
+            if thumb.anchors[0].offset.x != thumb_offset {
+                thumb.anchors[0].offset.x = thumb_offset
+                consumed = true
+            }
         }
+    }
+
+    if scroll.offset_min == scroll.offset_max {
+        if thumb != nil do thumb.flags += { .disabled }
+        if next != nil do next.flags += { .disabled }
+        if prev != nil do prev.flags += { .disabled }
     } else {
-        thumb_space := thumb.parent.rect.w - thumb.rect.w
-        thumb_offset := thumb_space * scroll_ratio
-        if thumb.anchors[0].offset.x != thumb_offset {
-            thumb.anchors[0].offset.x = thumb_offset
-            consumed = true
-        }
+        if thumb != nil do thumb.flags -= { .disabled }
+        if next != nil do next.flags -= { .disabled }
+        if prev != nil do prev.flags -= { .disabled }
     }
 
     return
@@ -676,9 +696,13 @@ draw_frame_tree :: proc (f: ^Frame) {
 update_rect :: proc (f: ^Frame) {
     if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
     if f.layout.dir != .none do update_rect_for_children_with_layout(f)
+
     if .terse in f.flags do update_terse(f)
+
     if f.size.x > 0 && f.size_min.x > 0 do f.size.x = max(f.size.x, f.size_min.x)
     if f.size.y > 0 && f.size_min.y > 0 do f.size.y = max(f.size.y, f.size_min.y)
+
+    if f.actor != nil do wheel_actor(f)
 }
 
 @private
@@ -686,7 +710,7 @@ update_terse :: proc (f: ^Frame) {
     should_rebuild := f.terse == nil || (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect))
     if !should_rebuild do return
 
-    terse.destroy(f.terse)
+    if f.terse != nil do terse.destroy(f.terse)
 
     assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
     assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")

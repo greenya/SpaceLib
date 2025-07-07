@@ -175,6 +175,8 @@ draw_game_title :: proc (f: ^ui.Frame) {
 }
 
 draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
+    if .disabled in f.flags do return
+
     // if mouse captured we use hover ratio 1 to make sure it stays visibly selected;
     // not ideal, as it will drop to 0 instantly when mouse released away from the frame
     hv_ratio := f.captured\

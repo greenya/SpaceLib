@@ -106,8 +106,12 @@ draw_ui_link :: proc (f: ^ui.Frame) {
 }
 
 draw_ui_button_sprite :: proc (f: ^ui.Frame, sprite_id: Sprite_ID) {
-    if f.entered do draw_sprite(.panel_15, f.rect, colors[.c3].val)
-    draw_sprite(sprite_id, f.rect, f.entered ? colors[.c6].val : colors[.c5].val)
+    if .disabled in f.flags {
+        draw_sprite(sprite_id, f.rect, colors[.c4].val)
+    } else {
+        if f.entered do draw_sprite(.panel_15, f.rect, colors[.c3].val)
+        draw_sprite(sprite_id, f.rect, f.entered ? colors[.c6].val : colors[.c5].val)
+    }
 }
 
 draw_ui_button_sprite_icon_up :: proc (f: ^ui.Frame) { draw_ui_button_sprite(f, .icon_up) }
