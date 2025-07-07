@@ -1,7 +1,6 @@
 package demo9_screens_settings
 
 import "core:fmt"
-import "core:strings"
 import "spacelib:ui"
 
 import "../../data"
@@ -28,51 +27,38 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_key_button(screen, "reset_to_default", "Reset to Default", key="X")
 
-    add_gameplay_page()
+    add_pages()
 
     ui.click(screen, "header_bar/tabs/gameplay")
 }
 
 @private
-add_gameplay_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "gameplay", "GAMEPLAY")
+add_pages :: proc () {
+    for p in data.get_settings_pages(context.temp_allocator) {
+        _, page := partials.add_screen_tab_and_page(screen, p.page_name, p.page_title)
 
-    list := add_list_column(page)
-    add_details_column(page, list)
+        list := add_list_column(page)
+        add_details_column(page, list)
 
-    for name in ([] string {
-        "sprint_lock",
-        "equip_lock",
-        "suspensor_lock",
-        "invert_mouse_y_axis",
-        "mouse_camera_sensitivity",
-        "mouse_aiming_sensitivity",
-        "camera_shakes",
-        "show_helmet",
-        "--< BUILDING >--",
-        "building:placeable_rotation_building_mode",
-        "--< VEHICLES >--",
-        "vehicles:disable_camera_auto_center",
-        "--< AIR VEHICLES >--",
-        "air_vehicles:invert_mouse_y_axis",
-        "air_vehicles:planar_lock",
-        "--< RADIAL WHEEL >--",
-        "radial_wheel:input_lock_mode_mouse",
-        "radial_wheel:close_behaviour",
-    }) {
-        is_header := strings.has_prefix(name, "--< ") && strings.has_suffix(name, " >--")
-        if is_header {
-            add_setting_header(list, name[4:-4+len(name)]) // "4" for len of suffix and prefix
-        } else {
-            add_setting_card(list, name)
+        for i in data.get_settings_page_items(p.page_name) {
+            add_list_column_item(list, i)
         }
     }
 }
 
 @private
-add_setting_header :: proc (list: ^ui.Frame, text: string) {
+add_list_column_item :: proc (list: ^ui.Frame, item: data.Settings_Item) {
+    if item.group_name != "" {
+        add_setting_header(list, item.group_name, item.group_title)
+    } else {
+        add_setting_card(list, item.name)
+    }
+}
+
+@private
+add_setting_header :: proc (list: ^ui.Frame, name, text: string) {
     ui.add_frame(list, {
-        name    = "header",
+        name    = name,
         flags   = {.terse,.terse_height},
         draw    = partials.draw_hexagon_rect,
         text    = fmt.tprintf("<left,pad=20:0,font=text_4l,color=primary_d2>%s", text),
@@ -80,29 +66,20 @@ add_setting_header :: proc (list: ^ui.Frame, text: string) {
 }
 
 @private
-add_setting_card :: proc (list: ^ui.Frame, setting_name: string) {
-    assert(setting_name in data.info.settings)
-    setting_info := data.info.settings[setting_name]
+add_setting_card :: proc (list: ^ui.Frame, name: string) {
+    assert(name != "")
+
+    item := data.get_settings_item(name)
+    card_title := item.title != "" ? item.title : name
 
     card := ui.add_frame(list, {
-        name = setting_name,
+        name = name,
         draw = partials.draw_setting_card,
-        enter = proc (f: ^ui.Frame) {
-            details := ui.get(f, "../../details")
-            assert(f.name != "")
-            i := data.info.settings[f.name]
-            if i != {} {
-                ui.set_text(ui.get(details, "title"), i.title)
-                ui.set_text(ui.get(details, "content/text"), i.desc)
-                ui.show(details)
-            } else {
-                ui.hide(details)
-            }
-        },
+        enter = set_details_column_content_from_card,
     })
 
     title := ui.add_frame(card,
-        { name="title", size={250,0}, flags={.pass_self,.terse}, text=setting_info.title,
+        { name="title", size={250,0}, flags={.pass_self,.terse}, text=card_title,
             text_format="<wrap,left,font=text_4l,color=primary>%s" },
         { point=.top_left, offset={20,0} },
         { point=.bottom_left, offset={20,0} },
@@ -161,14 +138,14 @@ add_details_column :: proc (page, list: ^ui.Frame) -> ^ui.Frame {
 
     line := ui.add_frame(details,
         { name="line", size={0,2}, text="primary_d4", draw=partials.draw_gradient_fade_right_rect },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=title, offset={0,10} },
-        { point=.top_right, rel_point=.bottom_right, rel_frame=title, offset={0,10} },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=title, offset={0,20} },
+        { point=.top_right, rel_point=.bottom_right, rel_frame=title, offset={0,20} },
     )
 
     content := ui.add_frame(details,
         { name="content", layout={dir=.down,scroll={step=10}}, flags={.scissor} },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=line, offset={0,10} },
-        { point=.top_right, rel_point=.bottom_right, rel_frame=line, offset={0,10} },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=line, offset={0,20} },
+        { point=.top_right, rel_point=.bottom_right, rel_frame=line, offset={0,20} },
         { point=.bottom, rel_point=.bottom },
     )
 
@@ -178,4 +155,25 @@ add_details_column :: proc (page, list: ^ui.Frame) -> ^ui.Frame {
     track.anchors[1].offset = {track_offset,0}
 
     return details
+}
+
+@private
+set_details_column_content_from_card :: proc (card: ^ui.Frame) {
+    name := card.name
+    assert(name != "")
+
+    details := ui.get(card, "../../details")
+    if details.text == name do return
+    ui.set_text(details, name)
+
+    item := data.get_settings_item(name)
+    item_desc := data.get_settings_item_desc(name, context.temp_allocator)
+    if item_desc != "" {
+        ui.set_text(ui.get(details, "title"), item.title)
+        ui.set_text(ui.get(details, "content/text"), item_desc)
+        ui.set_scroll_offset(ui.get(details, "content"), 0)
+        ui.show(details, repeat_refresh_rect=2)
+    } else {
+        ui.hide(details)
+    }
 }

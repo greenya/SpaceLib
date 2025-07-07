@@ -1,0 +1,147 @@
+[
+    {
+        "page_name": "gameplay",
+        "page_title": "GAMEPLAY"
+    },
+    {
+        "name": "sprint_lock",
+        "title": "SPRINT LOCK",
+        "desc": [
+            "Set the Sprint input mode.",
+            "",
+            "<font=text_4m>Toggle:</> Press the Sprint button to toggle between running and walking.",
+            "<font=text_4m>Hold:</> Keep the Sprint button pressed to run.",
+            "<font=text_4m>Lock:</> Always Sprint until movement is interrupted or stopped."
+        ]
+    },
+    {
+        "name": "equip_lock",
+        "title": "EQUIP LOCK",
+        "desc": [
+            "Toggle the equip lock off or on.",
+            "",
+            "<font=text_4m>ON:</> Holster the equipped weapon by pressing the dedicated holstering input.",
+            "<font=text_4m>OFF:</> Holster the equipped weapon by pressing the same shortcut and/or radial."
+        ]
+    },
+    {
+        "name": "suspensor_lock",
+        "title": "SUSPENSOR LOCK",
+        "desc": [
+            "Toggle the suspensor lock off or on.",
+            "",
+            "<font=text_4m>ON:</> Press and press again to use the suspensors, without input hold.",
+            "<font=text_4m>OFF:</> Press and hold to use the suspensors."
+        ]
+    },
+    {
+        "name": "invert_mouse_y_axis",
+        "title": "INVERT MOUSE Y-AXIS",
+        "desc": "Invert the camera controls along the vertical axis."
+    },
+    {
+        "name": "mouse_camera_sensitivity",
+        "title": "MOUSE CAMERA SENSITIVITY",
+        "desc": "Adjust the sensitivity of how quickly the Character Camera moves."
+    },
+    {
+        "name": "mouse_aiming_sensitivity",
+        "title": "MOUSE AIMING SENSITIVITY",
+        "desc": "Adjust the sensitivity of how quickly the Character Camera moves while aiming down sight."
+    },
+    {
+        "name": "camera_shakes",
+        "title": "CAMERA SHAKES",
+        "desc": "Turns the brief camera movements on or off in fights, when receiving fall damage, and other impactful effects."
+    },
+    {
+        "name": "show_helmet",
+        "title": "SHOW HELMET",
+        "desc": "Display the equipped helmet on your character."
+    },
+    {
+        "group_name": "building",
+        "group_title": "BUILDING"
+    },
+    {
+        "name": "placeable_rotation_building_mode",
+        "title": "PLACEABLE ROTATION BUILDING MODE",
+        "desc": "Set the placeable rotation method when using building mode."
+    },
+    {
+        "group_name": "vehicles",
+        "group_title": "VEHICLES"
+    },
+    {
+        "name": "disable_camera_auto_center",
+        "title": "DISABLE CAMERA AUTO-CENTER",
+        "desc": "Enable or disable the camera centering automatically after moving with vehicles."
+    },
+    {
+        "group_name": "air_vehicles",
+        "group_title": "AIR VEHICLES"
+    },
+    {
+        "name": "invert_mouse_y_axis",
+        "title": "INVERT MOUSE Y-AXIS",
+        "desc": "Invert the air vehicle controls along the vertical axis."
+    },
+    {
+        "name": "planar_lock",
+        "title": "PLANAR LOCK",
+        "desc": [
+            "Set the planar lock on or off.",
+            "",
+            "<font=text_4m>ON:</> The ornithopter will change altitude only with the ascend and descend inputs.",
+            "<font=text_4m>OFF:</> The ornithopter will change altitude also based on the direction faced when pitching."
+        ]
+    },
+    {
+        "group_name": "radial_wheel",
+        "group_title": "RADIAL WHEEL"
+    },
+    {
+        "name": "input_lock_mode_mouse",
+        "title": "INPUT LOCK MODE MOUSE",
+        "desc": [
+            "Controls the behaviour of the radial wheel slot highlighting based on the mouse cursor position.",
+            "",
+            "<font=text_4m>Flick & Remember:</>",
+            "No slot is highlighted by default. Moving the mouse cursor to the centre of the wheel will not unhighlight the currently highlighted slot.",
+            "",
+            "<font=text_4m>Flick & Forget:</>",
+            "No slot is highlighted by default. Moving the mouse cursor to the centre of the wheel will unhighlight the currently highlighted slot."
+        ]
+    },
+    {
+        "name": "close_behaviour",
+        "title": "CLOSE BEHAVIOUR",
+        "desc": [
+            "Controls the behaviour of the controller left thumbstick input to the character movement after the radial wheel has been closed.",
+            "",
+            "<font=text_4m>Require Axis Input Reset:</>",
+            "The character will not move in the direction of the left thumbstick until either it has been returned to the centre or the delay time has been reached after closing the radial wheel. Affected by the controller axis reset deadzone and controller axis reset delay (s) settings.",
+            "",
+            "<font=text_4m>Maintain Axis Input:</>",
+            "The character will move in the direction of the left thumbstick after closing the radial wheel."
+        ]
+    },
+    {
+        "page_name": "account",
+        "page_title": "ACCOUNT"
+    },
+    {
+        "name": "data_collection",
+        "title": "DATA COLLECTION",
+        "desc": [
+            "I agree to share with Funcom select information about my device. This information is only used for determining effectiveness of advertising campaigns, that will in turn help us bring more players to Dune: Awakening and create a thriving community.",
+            "",
+            "For more information about how this data is processed, please see the Dune: Awakening privacy policy."
+        ]
+    },
+    {
+        "name": "streamer_mode",
+        "title": "STREAMER MODE",
+        "desc": "Streamer friendly mode mutes licensed audio, disables invite notifications, hides your character and current server names."
+    }
+]

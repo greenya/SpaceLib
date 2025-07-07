@@ -1,4 +1,4 @@
-<font=text_6l>/* Content of screens/credits/credits.txt */</>
+<font=text_6l>Content of screens/credits/credits.txt</>
 
 The demo uses:
 - https://fonts.google.com/specimen/Kanit
@@ -8,9 +8,9 @@ This whole text is measured via spacelib:terse package. Here are some supported 
 
 <font=text_6l>Line alignment</>
 
-<left>This text is aligned to the left.
-<center>This text is centered.
-<right>This text is aligned to the right.
+<left>Left-aligned text.
+<center>Centered text.
+<right>Right-aligned text.
 
 <left>There is no way at the moment to display text aligned to different sides on the same line.
 

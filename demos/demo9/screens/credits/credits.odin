@@ -68,7 +68,7 @@ add_credits_page :: proc () {
 
     text, track, _ := partials.add_text_and_scrollbar(content)
 
-    text.text_format = "<pad=0:20,wrap,left,font=text_4l,color=primary>%s"
+    text.text_format = "<pad=0:40,wrap,left,font=text_4l,color=primary>%s"
     ui.set_text(text, #load("credits.txt"))
 
     track.anchors[0].offset = {track_pad_x,track_pad_y}
