@@ -37,11 +37,14 @@ add_pages :: proc () {
     for p in data.get_settings_pages(context.temp_allocator) {
         _, page := partials.add_screen_tab_and_page(screen, p.page_name, p.page_title)
 
-        list := add_list_column(page)
-        add_details_column(page, list)
-
-        for i in data.get_settings_page_items(p.page_name) {
-            add_list_column_item(list, i)
+        items := data.get_settings_page_items(p.page_name)
+        if len(items) > 0 {
+            list := add_list_column(page)
+            add_details_column(page, list)
+            for i in items do add_list_column_item(list, i)
+        } else {
+            text := fmt.tprintf("%s section is empty in data/settings.json", p.page_title)
+            partials.add_placeholder_note(page, text)
         }
     }
 }

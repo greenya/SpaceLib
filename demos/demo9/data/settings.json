@@ -126,6 +126,248 @@
             "The character will move in the direction of the left thumbstick after closing the radial wheel."
         ]
     },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "display",
+        "page_title": "DISPLAY"
+    },
+    {
+        "name": "gamma",
+        "title": "GAMMA",
+        "desc": "Set the game screen's lightning and gamma based on your preferences."
+    },
+    {
+        "name": "field_of_view",
+        "title": "FIELD OF VIEW"
+    },
+    {
+        "name": "motion_blur",
+        "title": "MOTION BLUR"
+    },
+    {
+        "name": "vsync",
+        "title": "VSYNC"
+    },
+    {
+        "name": "language",
+        "title": "LANGUAGE"
+    },
+    {
+        "name": "frame_rate_cap",
+        "title": "FRAME RATE CAP"
+    },
+    {
+        "group_name": "ui",
+        "group_title": "UI"
+    },
+    {
+        "name": "dynamic_hud",
+        "title": "DYNAMIC HUD"
+    },
+    {
+        "name": "ultrawide_support",
+        "title": "ULTRAWIDE SUPPORT"
+    },
+    {
+        "name": "use_hardware_cursor",
+        "title": "USE HARDWARE CURSOR"
+    },
+    {
+        "name": "show_hotbar",
+        "title": "SHOW HOTBAR"
+    },
+    {
+        "name": "hide_mini_radial_wheel",
+        "title": "HIDE MINI RADIAL WHEEL"
+    },
+    {
+        "name": "invert_mouse_wheel",
+        "title": "INVERT MOUSE WHEEL"
+    },
+    {
+        "name": "show_chat_bubbles",
+        "title": "SHOW CHAT BUBBLES"
+    },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "graphics",
+        "page_title": "GRAPHICS"
+    },
+    {
+        "name": "quality_presets",
+        "title": "QUALITY PRESETS"
+    },
+    {
+        "name": "window_mode",
+        "title": "WINDOW MODE"
+    },
+    {
+        "name": "resolution",
+        "title": "RESOLUTION"
+    },
+    {
+        "name": "upscaling_quality",
+        "title": "UPSCALING QUALITY"
+    },
+    {
+        "name": "upscaling_method",
+        "title": "UPSCALING METHOD"
+    },
+    {
+        "name": "frame_generation_method",
+        "title": "FRAME GENERATION METHOD"
+    },
+    {
+        "group_name": "lighting",
+        "group_title": "LIGHTING"
+    },
+    {
+        "name": "shadows",
+        "title": "SHADOWS"
+    },
+    {
+        "name": "virtual_shadow_maps",
+        "title": "VIRTUAL SHADOW MAPS (EXPERIMENTAL)"
+    },
+    {
+        "name": "gi_quality",
+        "title": "GI QUALITY"
+    },
+    {
+        "name": "reflections_quality",
+        "title": "REFLECTIONS QUALITY"
+    },
+    {
+        "group_name": "quality_details",
+        "group_title": "QUALITY DETAILS"
+    },
+    {
+        "name": "low_end_laptop_mode",
+        "title": "LOW END LAPTOP MODE (EXPERIMENTAL)"
+    },
+    {
+        "name": "limit_process_cpu_usage",
+        "title": "LIMIT PROCESS CPU USAGE (EXPERIMENTAL)"
+    },
+    {
+        "name": "view_distance",
+        "title": "VIEW DISTANCE"
+    },
+    {
+        "name": "post_processing",
+        "title": "POST PROCESSING"
+    },
+    {
+        "name": "effects_quality",
+        "title": "EFFECTS QUALITY"
+    },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "audio",
+        "page_title": "AUDIO"
+    },
+    {
+        "group_name": "subtitles",
+        "group_title": "SUBTITLES"
+    },
+    {
+        "name": "subtitles",
+        "title": "SUBTITLES",
+        "desc": "Turn subtitles on or off."
+    },
+    {
+        "name": "show_prev_subtitle",
+        "title": "SHOW PREVIOUS SUBTITLE"
+    },
+    {
+        "name": "font_size",
+        "title": "FONT SIZE"
+    },
+    {
+        "group_name": "audio_channels",
+        "group_title": "AUDIO CHANNELS"
+    },
+    {
+        "name": "mastering_mode",
+        "title": "MASTERING MODE"
+    },
+    {
+        "name": "master_volume",
+        "title": "MASTER VOLUME"
+    },
+    {
+        "name": "music_volume_in_game",
+        "title": "MUSIC VOLUME IN GAME"
+    },
+    {
+        "name": "radio_volume",
+        "title": "RADIO VOLUME"
+    },
+    {
+        "group_name": "voice_chat",
+        "group_title": "VOICE CHAT"
+    },
+    {
+        "name": "enable_voice_chat",
+        "title": "ENABLE VOICE CHAT"
+    },
+    {
+        "name": "voice_chat_volume",
+        "title": "VOICE CHAT VOLUME"
+    },
+    {
+        "name": "voice_activation_mode",
+        "title": "VOICE ACTIVATION MODE"
+    },
+    {
+        "group_name": "hardware",
+        "group_title": "HARDWARE"
+    },
+    {
+        "name": "audio_output_device",
+        "title": "AUDIO OUTPUT DEVICE"
+    },
+    {
+        "name": "audio_input_device",
+        "title": "AUDIO INPUT DEVICE"
+    },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "controls",
+        "page_title": "CONTROLS"
+    },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "keybinds",
+        "page_title": "KEYBINDS"
+    },
+
+// ============================================================================
+// ============================================================================
+
+    {
+        "page_name": "accessibility",
+        "page_title": "ACCESSIBILITY"
+    },
+
+// ============================================================================
+// ============================================================================
+
     {
         "page_name": "account",
         "page_title": "ACCOUNT"
