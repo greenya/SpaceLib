@@ -1,4 +1,4 @@
-package demo9_screens_opening
+package demo9_screens_home
 
 import "spacelib:ui"
 
@@ -12,7 +12,7 @@ add :: proc (parent: ^ui.Frame) {
     assert(screen == nil)
 
     screen = ui.add_frame(parent,
-        { name="opening" },
+        { name="home" },
         { point=.top_left },
         { point=.bottom_right },
     )

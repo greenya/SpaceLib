@@ -8,7 +8,7 @@ import "spacelib:ui"
 import "../events"
 import "../partials"
 import "credits"
-import "opening"
+import "home"
 import "player"
 import "settings"
 
@@ -36,7 +36,7 @@ add :: proc (parent: ^ui.Frame) {
     )
 
     credits.add(screens)
-    opening.add(screens)
+    home.add(screens)
     player.add(screens)
     settings.add(screens)
 

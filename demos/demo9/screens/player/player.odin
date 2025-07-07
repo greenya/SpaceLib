@@ -21,7 +21,7 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("opening")
+            events.send_open_screen("home")
         },
     )
 
