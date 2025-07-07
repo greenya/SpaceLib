@@ -21,18 +21,10 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
 
     if f.order != 0             do fmt.sbprintf(&sb, " order=%i", f.order)
 
-    if .hidden in f.flags       do fmt.sbprintf(&sb, " hidden")
-    if .disabled in f.flags     do fmt.sbprintf(&sb, " disabled")
-    if .pass in f.flags         do fmt.sbprintf(&sb, " pass")
-    if .pass_self in f.flags    do fmt.sbprintf(&sb, " pass_self")
-    if .block_wheel in f.flags  do fmt.sbprint (&sb, " block_wheel")
-    if .scissor in f.flags      do fmt.sbprint (&sb, " scissor")
-    if .check in f.flags        do fmt.sbprint (&sb, " check")
-    if .radio in f.flags        do fmt.sbprint (&sb, " radio")
-    if .auto_hide in f.flags    do fmt.sbprint (&sb, " auto_hide")
-    if .terse in f.flags        do fmt.sbprint (&sb, " terse")
-
     if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout")
+
+    skip_flags :: bit_set [Flag] { .terse_height, .terse_width, .terse_hit_rect }
+    for v in Flag do if v in f.flags && v not_in skip_flags do fmt.sbprintf(&sb, " %v", v)
 
     if sb.buf[len(sb.buf)-1] != '{' do strings.write_rune(&sb, ' ')
     strings.write_rune(&sb, '}')
