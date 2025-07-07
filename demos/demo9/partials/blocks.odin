@@ -19,7 +19,7 @@ add_scrollbar :: proc (target: ^ui.Frame) -> (track, thumb: ^ui.Frame) {
     assert(.scissor in target.flags)
 
     track = ui.add_frame(target.parent,
-        { name="track", size={1,0}, text="primary_a2", draw=draw_color_rect },
+        { name="track", size={1,0}, draw=draw_scrollbar_track },
         { point=.top_left, rel_point=.top_right, rel_frame=target, offset={10,0} },
         { point=.bottom_left, rel_point=.bottom_right, rel_frame=target, offset={10,0} },
     )

@@ -174,6 +174,14 @@ draw_game_title :: proc (f: ^ui.Frame) {
     draw_text_center("A  W  A  K  E  N  I  N  G", core.rect_half_bottom(f.rect), "text_6l", color)
 }
 
+draw_scrollbar_track :: proc (f: ^ui.Frame) {
+    // don't draw track if thumb is disabled
+    if .disabled in f.children[0].flags do return
+
+    color := core.alpha(colors.primary, f.opacity * .5)
+    draw.rect(f.rect, color)
+}
+
 draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
     if .disabled in f.flags do return
 
