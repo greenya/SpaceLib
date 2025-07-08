@@ -445,6 +445,21 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := true) {
     }
 }
 
+set_continue_enter :: proc (parent: ^Frame, check_blocking_flags := false) {
+    // when requested to check_blocking_flags, we require every child to have a flag from unblocking_flags
+    // note: we don't add .hidden and .disabled, as they are expected to be manipulated at runtime
+    unblocking_flags :: bit_set [Flag] { .no_capture, .pass, .pass_self }
+
+    for child in parent.children {
+        if check_blocking_flags && child.flags & unblocking_flags == {} {
+            fmt.panicf("Child \"%s\" is required to have one unblocking flag (%v), current flags: %v",
+                child.name, unblocking_flags, child.flags)
+        }
+        child.flags += { .continue_enter }
+        set_continue_enter(child, check_blocking_flags)
+    }
+}
+
 hidden :: proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .hidden in i.flags do return true
     return false
