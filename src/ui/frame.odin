@@ -402,7 +402,7 @@ click :: proc {
     click_by_path,
 }
 
-select_next_child :: proc (parent: ^Frame, allow_rotation := true) {
+select_next_child :: proc (parent: ^Frame, allow_rotation := false) {
     should_select_next := false
 
     for child in parent.children {
@@ -423,7 +423,7 @@ select_next_child :: proc (parent: ^Frame, allow_rotation := true) {
     }
 }
 
-select_prev_child :: proc (parent: ^Frame, allow_rotation := true) {
+select_prev_child :: proc (parent: ^Frame, allow_rotation := false) {
     // note: the code is identical to select_next_child(), only #reverse directives were added
     should_select_next := false
 
