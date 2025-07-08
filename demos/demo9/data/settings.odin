@@ -19,8 +19,6 @@ Settings_Item :: struct {
     title   : string,
     desc    : union { string, [] string },
     control : Settings_Item_Control,
-    // ? type: union { bool, ... }
-    // ? view: union { checkbox, button_group, dropdown, slider }
 }
 
 Settings_Item_Control :: struct {
@@ -29,6 +27,15 @@ Settings_Item_Control :: struct {
     default_idx : int,
     // min     : int,
     // max     : int,
+    appearance  : Settings_Item_Control_Appearance,
+}
+
+Settings_Item_Control_Appearance :: enum {
+    auto,
+    button_group,
+    pins,
+    // dropdown,
+    // slider,
 }
 
 @private settings: [] Settings_Item
