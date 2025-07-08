@@ -506,7 +506,7 @@ find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
 
 @private
 selectable :: #force_inline proc (f: ^Frame) -> bool {
-    return f.flags & {.hidden,.disabled} == {}
+    return (.radio in f.flags) && (f.flags & {.hidden,.disabled} == {})
 }
 
 @private
