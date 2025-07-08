@@ -83,7 +83,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
         ui.add_frame(play_panel, {
             size={150,50},
-            flags={.terse},
+            flags={.capture,.terse},
             text="New Game",
             draw=draw_ui_button,
             click=proc (f: ^ui.Frame) { fmt.println("new game!") },
@@ -98,10 +98,10 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             draw_after=draw_ui_border_17,
         }, { point=.top_left }, { point=.bottom_right })
 
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Play Music", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Play SFX", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Do something else", draw=draw_ui_checkbox })
-        ui.add_frame(options_panel, { flags={.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> And do this too please", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.capture,.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Play Music", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.capture,.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Play SFX", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.capture,.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> Do something else", draw=draw_ui_checkbox })
+        ui.add_frame(options_panel, { flags={.capture,.check,.terse,.terse_height,.terse_hit_rect}, text="<left><group=tick><icon=border_15></group> And do this too please", draw=draw_ui_checkbox })
 
         // todo: add slider demo (and implement the support)
     }
@@ -134,7 +134,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="<top,left,color=c7>Test scrolling child frame" })
             sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
-                ui.add_frame(sc, { flags={.terse,.radio}, text=text, draw=draw_ui_button })
+                ui.add_frame(sc, { flags={.capture,.radio,.terse}, text=text, draw=draw_ui_button })
             }
         }
 
@@ -151,16 +151,19 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         )
 
         scrollbar_thumb := ui.add_frame(scrollbar_track, {
+            flags={.capture},
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_stop,
         }, { point=.top })
 
         scrollbar_up := ui.add_frame(scrollbar_track, {
+            flags={.capture},
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_up,
         }, { point=.bottom, rel_point=.top })
 
         scrollbar_down := ui.add_frame(scrollbar_track, {
+            flags={.capture},
             size={scrollbar_w,scrollbar_btn_h},
             draw=draw_ui_button_sprite_icon_down,
         }, { point=.top, rel_point=.bottom })
@@ -187,10 +190,10 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         //     "using {group=od_link,color=c8}Odin{/color,/group} "+
         //     "and {group=rl_link,color=c8}Raylib{/color,/group}.\n" })
 
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Jam page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Game page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Odin page", draw=draw_ui_link })
-        ui.add_frame(about_panel, { flags={.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Raylib page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.capture,.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Jam page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.capture,.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Game page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.capture,.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Odin page", draw=draw_ui_link })
+        ui.add_frame(about_panel, { flags={.capture,.terse,.terse_height,.terse_hit_rect}, text="<icon=nav>Open Raylib page", draw=draw_ui_link })
 
         ui.add_frame(about_panel, { flags={.terse,.terse_height}, text=
             "\n<bottom,center,color=c7>Thank you for playing <3" })
@@ -214,7 +217,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         draw := draw_ui_button
 
         button := ui.add_frame(tab_bar,
-            { name=name, flags={.terse}, text=text, draw=draw, click=proc (f: ^ui.Frame) {
+            { name=name, flags={.capture,.terse}, text=text, draw=draw, click=proc (f: ^ui.Frame) {
                 menu := app.main_menu
                 switch f.name {
                 case "play"         : ui.show(menu.menu_panel, "~play_panel", hide_siblings=true)
@@ -259,11 +262,11 @@ main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
 
     button_row := ui.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
 
-    ui.add_frame(button_row, { flags={.terse}, text="Yes", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
+    ui.add_frame(button_row, { flags={.capture,.terse}, text="Yes", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
         app.exit_requested = true
     } })
 
-    ui.add_frame(button_row, { flags={.terse}, text="No", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
+    ui.add_frame(button_row, { flags={.capture,.terse}, text="No", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
         ui.hide(app.main_menu.exit_dialog)
     } })
 

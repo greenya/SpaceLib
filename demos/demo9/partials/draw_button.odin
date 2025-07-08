@@ -26,7 +26,7 @@ draw_button_diamond :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Linear, .111, .Linear, .111)
     rect := core.rect_inflated(f.rect, hv_ratio*5)
 
-    draw.diamond(rect, colors.bg1)
+    draw.diamond(rect, f.captured ? core.brightness(colors.accent, -.8) : colors.bg1)
 
     ln_color := core.brightness(f.entered ? colors.accent : colors.primary, -.4)
     draw.diamond_lines(rect, 3, core.alpha(ln_color, f.opacity))

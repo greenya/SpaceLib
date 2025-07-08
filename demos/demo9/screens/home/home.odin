@@ -53,8 +53,8 @@ add_social_links :: proc () {
         { point=.right, rel_point=.bottom_right, offset={-partials.screen_pad,0} },
     )
 
-    ui.add_frame(social_links, { text="world", draw=partials.draw_button_diamond })
-    ui.add_frame(social_links, { text="envelope", draw=partials.draw_button_diamond })
+    ui.add_frame(social_links, { flags={.capture}, text="world", draw=partials.draw_button_diamond })
+    ui.add_frame(social_links, { flags={.capture}, text="envelope", draw=partials.draw_button_diamond })
 
     ui.add_frame(header_bar,
         { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4",
@@ -124,14 +124,14 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
         { point=.bottom_right, rel_point=.top_right, rel_frame=header, offset={0,-40} },
     )
 
-    ui.add_frame(buttons_bar, { name="continue", text="<font=text_6l,pad=0:4>CONTINUE", flags={.terse},
+    ui.add_frame(buttons_bar, { name="continue", flags={.capture,.terse}, text="<font=text_6l,pad=0:4>CONTINUE",
         draw=partials.draw_button_featured,
         click=proc (f: ^ui.Frame) {
             events.send_open_screen("player")
         },
     })
 
-    ui.add_frame(buttons_bar, { name="servers", text="<font=text_6l,pad=0:4>SERVERS", flags={.terse},
+    ui.add_frame(buttons_bar, { name="servers", flags={.capture,.terse}, text="<font=text_6l,pad=0:4>SERVERS",
         draw=partials.draw_button_featured })
 }
 

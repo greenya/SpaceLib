@@ -25,7 +25,7 @@ add_scrollbar :: proc (target: ^ui.Frame) -> (track, thumb: ^ui.Frame) {
     )
 
     thumb = ui.add_frame(track,
-        { name="thumb", size={19,60}, draw=draw_scrollbar_thumb },
+        { name="thumb", flags={.capture}, size={19,60}, draw=draw_scrollbar_thumb },
         { point=.top },
     )
 
@@ -45,7 +45,7 @@ add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] str
         ui.add_frame(parent, {
             name    = name,
             text    = titles[i],
-            flags   = {.radio,.continue_enter,.no_capture},
+            flags   = {.radio,.continue_enter},
             draw    = draw_button_radio_with_text,
         })
     }
@@ -68,7 +68,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     pin_h :: 12
 
     pins := ui.add_frame(parent,
-        { name="pins", flags={.pass_self}, layout={dir=.left_and_right,gap=4,pad=pin_pad} },
+        { name="pins", layout={dir=.left_and_right,gap=4,pad=pin_pad} },
         { point=.top_left, rel_point=.left },
         { point=.bottom_right },
     )
@@ -78,7 +78,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
             name    = name,
             text    = titles[i],
             size    = {40,pin_h},
-            flags   = {.radio,.no_capture},
+            flags   = {.radio},
             draw    = draw_button_radio_pin,
             click   = proc (f: ^ui.Frame) {
                 title := ui.get(f, "../../title")
@@ -92,7 +92,6 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     ui.add_frame(parent, {
         name    = "nav_next",
         text    = "arrow_forward",
-        flags   = {.no_capture},
         size    = 24,
         draw    = draw_button_radio_pin_nav,
         click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "pins")) },
@@ -101,7 +100,6 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     ui.add_frame(parent, {
         name    = "nav_prev",
         text    = "arrow_back",
-        flags   = {.no_capture},
         size    = 24,
         draw    = draw_button_radio_pin_nav,
         click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "pins")) },

@@ -55,9 +55,9 @@ Flag :: enum {
     disabled,
     pass,
     pass_self,
-    no_capture,
     continue_enter,
     block_wheel,
+    capture,
     scissor,
     check,
     radio,
@@ -445,18 +445,13 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := true) {
     }
 }
 
-set_continue_enter :: proc (parent: ^Frame, check_blocking_flags := false) {
-    // when requested to check_blocking_flags, we require every child to have a flag from unblocking_flags
-    // note: we don't add .hidden and .disabled, as they are expected to be manipulated at runtime
-    unblocking_flags :: bit_set [Flag] { .no_capture, .pass, .pass_self }
-
+set_continue_enter :: proc (parent: ^Frame, ensure_reachable := false) {
     for child in parent.children {
-        if check_blocking_flags && child.flags & unblocking_flags == {} {
-            fmt.panicf("Child \"%s\" is required to have one unblocking flag (%v), current flags: %v",
-                child.name, unblocking_flags, child.flags)
+        if ensure_reachable && .capture in child.flags {
+            fmt.panicf("Child \"%s\" has .capture, this will not allow parent to receive \"enter\"", child.name)
         }
         child.flags += { .continue_enter }
-        set_continue_enter(child, check_blocking_flags)
+        set_continue_enter(child, ensure_reachable)
     }
 }
 

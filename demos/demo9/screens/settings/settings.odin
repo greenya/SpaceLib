@@ -103,7 +103,7 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
     case        : panic("Unexpected item.type format")
     }
 
-    ui.set_continue_enter(value, check_blocking_flags=true)
+    ui.set_continue_enter(value, ensure_reachable=true)
 }
 
 @private

@@ -141,11 +141,11 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     update_frame_tree(ui.root)
 
     if !ui.captured.outside {
-        capture_allowed := true
+        keep_capture := ui.captured.frame != nil
 
         #reverse for f in ui.mouse_frames {
             if passed(f) do continue
-            if capture_allowed && ui.captured.frame != nil && ui.captured.frame != f do continue
+            if keep_capture && ui.captured.frame != nil && ui.captured.frame != f do continue
 
             mouse_input_consumed = true
 
@@ -158,7 +158,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
             if lmb_pressed && ui.captured.frame == nil {
                 ui.captured = { frame=f, pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
-                if .no_capture in f.flags do capture_allowed = false
+                if .capture in f.flags do keep_capture = true
             }
 
             if .continue_enter not_in f.flags do break
@@ -170,7 +170,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             ui.captured.frame.captured = true
             drag(ui.captured.frame, ui.mouse.pos, ui.captured.pos)
 
-            if lmb_released || !capture_allowed {
+            if lmb_released || !keep_capture {
                 if ui.captured.frame.entered do click(ui.captured.frame)
                 ui.captured = {}
             }

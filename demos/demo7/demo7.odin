@@ -37,24 +37,24 @@ main :: proc () {
     )
 
     ui.add_frame(time_scale_control, { text="Time Scale", draw=draw_label })
-    ui.add_frame(time_scale_control, { text="x0.25", draw=draw_button,
+    ui.add_frame(time_scale_control, { text="x0.25", flags={.capture}, draw=draw_button,
         click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=.25 },
     })
-    ui.add_frame(time_scale_control, { text="x0.5", draw=draw_button,
+    ui.add_frame(time_scale_control, { text="x0.5", flags={.capture}, draw=draw_button,
         click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=.5 },
     })
-    ui.add_frame(time_scale_control, { text="x1", draw=draw_button,
+    ui.add_frame(time_scale_control, { text="x1", flags={.capture}, draw=draw_button,
         click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=1 },
     })
-    ui.add_frame(time_scale_control, { text="x2", draw=draw_button,
+    ui.add_frame(time_scale_control, { text="x2", flags={.capture}, draw=draw_button,
         click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=2 },
     })
-    ui.add_frame(time_scale_control, { text="x4", draw=draw_button,
+    ui.add_frame(time_scale_control, { text="x4", flags={.capture}, draw=draw_button,
         click=proc (f: ^ui.Frame) { app.ui.clock.time_scale=4 },
     })
 
     ui.add_frame(app.ui.root,
-        { size={270,70}, text="Toggle Popup", draw=draw_button, click=click_toggle_popup },
+        { size={270,70}, text="Toggle Popup", flags={.capture}, draw=draw_button, click=click_toggle_popup },
         { point=.top, offset={0,20} },
     )
 
@@ -70,7 +70,7 @@ main :: proc () {
     )
 
     popup_button := ui.add_frame(popup,
-        { size={170,70}, text="Close", draw=draw_button,
+        { size={170,70}, text="Close", flags={.capture}, draw=draw_button,
             click=proc (f: ^ui.Frame) { ui.animate(f.parent, anim_hide_slide_down, .2) } },
         { point=.bottom, offset={0,-40} },
     )

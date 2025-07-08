@@ -35,7 +35,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
     ui.add_frame(header_bar, {
         name    = "nav_next_screen_tab",
         text    = "<pad=6,font=text_4l,icon=key/E>",
-        flags   = {.hidden,.terse,.terse_width,.terse_height},
+        flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs")) },
     }, { point=.left, rel_point=.right, rel_frame=tabs, offset={12,12} })
@@ -43,7 +43,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
     ui.add_frame(header_bar, {
         name    = "nav_prev_screen_tab",
         text    = "<pad=6,font=text_4l,icon=key/Q>",
-        flags   = {.hidden,.terse,.terse_width,.terse_height},
+        flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "tabs")) },
     }, { point=.right, rel_point=.left, rel_frame=tabs, offset={-12,12} })
@@ -73,7 +73,7 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
         name        = name,
         text        = text,
         text_format = "<bottom,font=text_4l,pad=20:10>%s",
-        flags       = {.no_capture,.radio,.terse,.terse_width},
+        flags       = {.radio,.terse,.terse_width},
         draw        = draw_screen_tab,
         click       = on_screen_tab_click,
     })
@@ -109,6 +109,7 @@ on_screen_tab_click :: proc (f: ^ui.Frame) {
 add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string, click: ui.Frame_Proc = nil) -> ^ui.Frame {
     button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
         name    = name,
+        flags   = {.capture},
         size    = {250,125},
         draw    = draw_screen_pyramid_button,
         click   = click,
@@ -139,7 +140,7 @@ add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text, key: string
     return ui.add_frame(ui.get(screen, "footer_bar/key_buttons"), {
         name    = name,
         text    = fmt.tprintf("<pad=12:6,font=text_4l,color=primary,icon=key/%s:%s:1> %s", key, key_width_ratio, text),
-        flags   = flags | {.terse,.terse_width,.terse_height},
+        flags   = flags | {.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
         click   = click,
     })
