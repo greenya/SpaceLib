@@ -12,7 +12,11 @@
             "<font=text_4m>Toggle:</> Press the Sprint button to toggle between running and walking.",
             "<font=text_4m>Hold:</> Keep the Sprint button pressed to run.",
             "<font=text_4m>Lock:</> Always Sprint until movement is interrupted or stopped."
-        ]
+        ],
+        "control": {
+            "names": [ "toggle", "hold", "lock" ],
+            "titles": [ "Toggle", "Hold", "Lock" ]
+        }
     },
     {
         "name": "equip_lock",
@@ -22,7 +26,11 @@
             "",
             "<font=text_4m>ON:</> Holster the equipped weapon by pressing the dedicated holstering input.",
             "<font=text_4m>OFF:</> Holster the equipped weapon by pressing the same shortcut and/or radial."
-        ]
+        ],
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "suspensor_lock",
@@ -32,12 +40,20 @@
             "",
             "<font=text_4m>ON:</> Press and press again to use the suspensors, without input hold.",
             "<font=text_4m>OFF:</> Press and hold to use the suspensors."
-        ]
+        ],
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "invert_mouse_y_axis",
         "title": "INVERT MOUSE Y-AXIS",
-        "desc": "Invert the camera controls along the vertical axis."
+        "desc": "Invert the camera controls along the vertical axis.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "mouse_camera_sensitivity",
@@ -50,14 +66,13 @@
         "desc": "Adjust the sensitivity of how quickly the Character Camera moves while aiming down sight."
     },
     {
-        "name": "camera_shakes",
-        "title": "CAMERA SHAKES",
-        "desc": "Turns the brief camera movements on or off in fights, when receiving fall damage, and other impactful effects."
-    },
-    {
         "name": "show_helmet",
         "title": "SHOW HELMET",
-        "desc": "Display the equipped helmet on your character."
+        "desc": "Display the equipped helmet on your character.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "group_name": "building",
@@ -94,7 +109,11 @@
             "",
             "<font=text_4m>ON:</> The ornithopter will change altitude only with the ascend and descend inputs.",
             "<font=text_4m>OFF:</> The ornithopter will change altitude also based on the direction faced when pitching."
-        ]
+        ],
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "group_name": "radial_wheel",
@@ -145,11 +164,19 @@
     },
     {
         "name": "motion_blur",
-        "title": "MOTION BLUR"
+        "title": "MOTION BLUR",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "vsync",
-        "title": "VSYNC"
+        "title": "VSYNC",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "language",
@@ -165,31 +192,59 @@
     },
     {
         "name": "dynamic_hud",
-        "title": "DYNAMIC HUD"
+        "title": "DYNAMIC HUD",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "ultrawide_support",
-        "title": "ULTRAWIDE SUPPORT"
+        "title": "ULTRAWIDE SUPPORT",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "use_hardware_cursor",
-        "title": "USE HARDWARE CURSOR"
+        "title": "USE HARDWARE CURSOR",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "show_hotbar",
-        "title": "SHOW HOTBAR"
+        "title": "SHOW HOTBAR",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "hide_mini_radial_wheel",
-        "title": "HIDE MINI RADIAL WHEEL"
+        "title": "HIDE MINI RADIAL WHEEL",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "invert_mouse_wheel",
-        "title": "INVERT MOUSE WHEEL"
+        "title": "INVERT MOUSE WHEEL",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "show_chat_bubbles",
-        "title": "SHOW CHAT BUBBLES"
+        "title": "SHOW CHAT BUBBLES",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
 
 // ============================================================================
@@ -213,7 +268,11 @@
     },
     {
         "name": "upscaling_quality",
-        "title": "UPSCALING QUALITY"
+        "title": "UPSCALING QUALITY",
+        "control": {
+            "names": [ "low", "med", "high", "ultra" ],
+            "titles": [ "Low", "Med", "High", "Ultra" ]
+        }
     },
     {
         "name": "upscaling_method",
@@ -274,23 +333,6 @@
     {
         "page_name": "audio",
         "page_title": "AUDIO"
-    },
-    {
-        "group_name": "subtitles",
-        "group_title": "SUBTITLES"
-    },
-    {
-        "name": "subtitles",
-        "title": "SUBTITLES",
-        "desc": "Turn subtitles on or off."
-    },
-    {
-        "name": "show_prev_subtitle",
-        "title": "SHOW PREVIOUS SUBTITLE"
-    },
-    {
-        "name": "font_size",
-        "title": "FONT SIZE"
     },
     {
         "group_name": "audio_channels",
@@ -364,6 +406,57 @@
         "page_name": "accessibility",
         "page_title": "ACCESSIBILITY"
     },
+    {
+        "group_name": "gameplay",
+        "group_title": "GAMEPLAY"
+    },
+    {
+        "name": "camera_shakes",
+        "title": "CAMERA SHAKES",
+        "desc": "Turns the brief camera movements on or off in fights, when receiving fall damage, and other impactful effects.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
+    },
+    {
+        "name": "controller_rumble",
+        "title": "CONTROLLER RUMBLE",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
+    },
+    {
+        "group_name": "subtitles",
+        "group_title": "SUBTITLES"
+    },
+    {
+        "name": "subtitles",
+        "title": "SUBTITLES",
+        "desc": "Turn subtitles on or off.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
+    },
+    {
+        "name": "show_prev_subtitle",
+        "title": "SHOW PREVIOUS SUBTITLE",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
+    },
+    {
+        "name": "font_size",
+        "title": "FONT SIZE",
+        "control": {
+            "names": [ "small", "default", "large", "extra_large" ],
+            "titles": [ "Small", "Default", "Large", "Extra Large" ],
+            "default_idx": 1
+        }
+    },
 
 // ============================================================================
 // ============================================================================
@@ -379,11 +472,19 @@
             "I agree to share with Funcom select information about my device. This information is only used for determining effectiveness of advertising campaigns, that will in turn help us bring more players to Dune: Awakening and create a thriving community.",
             "",
             "For more information about how this data is processed, please see the Dune: Awakening privacy policy."
-        ]
+        ],
+        "control": {
+            "names": [ "no", "yes" ],
+            "titles": [ "NO", "YES" ]
+        }
     },
     {
         "name": "streamer_mode",
         "title": "STREAMER MODE",
-        "desc": "Streamer friendly mode mutes licensed audio, disables invite notifications, hides your character and current server names."
+        "desc": "Streamer friendly mode mutes licensed audio, disables invite notifications, hides your character and current server names.",
+        "control": {
+            "names": [ "disabled", "enabled" ],
+            "titles": [ "DISABLED", "ENABLED" ]
+        }
     }
 ]

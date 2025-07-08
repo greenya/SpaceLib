@@ -18,8 +18,17 @@ Settings_Item :: struct {
     name    : string,
     title   : string,
     desc    : union { string, [] string },
+    control : Settings_Item_Control,
     // ? type: union { bool, ... }
     // ? view: union { checkbox, button_group, dropdown, slider }
+}
+
+Settings_Item_Control :: struct {
+    names       : [] string,
+    titles      : [] string,
+    default_idx : int,
+    // min     : int,
+    // max     : int,
 }
 
 @private settings: [] Settings_Item
@@ -28,7 +37,8 @@ Settings_Item :: struct {
 create_settings :: proc () {
     assert(settings == nil)
     err := json.unmarshal_any(#load("settings.json"), &settings)
-    ensure(err == nil)
+    fmt.ensuref(err == nil, "Failed to load settings.json: %v", err)
+    // fmt.printfln("%#v", settings)
 }
 
 @private
@@ -44,6 +54,8 @@ destroy_settings :: proc () {
             case string     : delete(v)
             case [] string  : for s in v do delete(s); delete(v)
         }
+        for s in s.control.names do delete(s); delete(s.control.names)
+        for s in s.control.titles do delete(s); delete(s.control.titles)
     }
     delete(settings)
     settings = nil
@@ -74,7 +86,6 @@ get_settings_page_items :: proc (page_name: string) -> [] Settings_Item {
 
     return settings[start_i:]
 }
-
 
 get_settings_item :: proc (name: string) -> Settings_Item {
     for s in settings {

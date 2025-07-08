@@ -79,7 +79,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
         xl = x1-(yc-y1)
         xr = x2+(yc-y1)
     } else {
-        y1 = rect.y+1
+        y1 = rect.y
         y2 = rect.y+rect.h
         yc = (y1+y2)/2
         x1 = rect.x+(yc-y1)

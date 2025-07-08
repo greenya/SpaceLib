@@ -2,6 +2,7 @@
 
 The demo uses:
 - https://fonts.google.com/specimen/Kanit
+- https://fonts.google.com/icons
 - https://game-icons.net/
 
 This whole text is measured via spacelib:terse package. Here are some supported features. Hold CTRL to enabled debug drawing.

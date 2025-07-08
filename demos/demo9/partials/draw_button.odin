@@ -60,7 +60,7 @@ draw_button_featured :: proc (f: ^ui.Frame) {
     draw_terse(f.terse, tx_color, drop_shadow=true)
 }
 
-draw_button_radio :: proc (f: ^ui.Frame) {
+draw_button_radio_rect :: proc (f: ^ui.Frame) {
     bg_color := f.selected\
         ? core.brightness(colors.primary, -.3)\
         : colors.bg1
@@ -69,7 +69,23 @@ draw_button_radio :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
     br_color := core.alpha(colors.primary, hv_ratio)
     draw.rect_lines(f.rect, 1, br_color)
+}
+
+draw_button_radio_with_text :: proc (f: ^ui.Frame) {
+    draw_button_radio_rect(f)
 
     tx_color := f.selected ? colors.bg1 : colors.primary
     draw_text_center(f.text, f.rect, "text_4r", tx_color)
+}
+
+draw_button_radio_pin :: proc (f: ^ui.Frame) {
+    draw_button_radio_rect(f)
+
+    br_color := core.alpha(colors.primary, f.opacity * .5)
+    draw.rect_lines(f.rect, 1, br_color)
+}
+
+draw_button_radio_pin_nav :: proc (f: ^ui.Frame) {
+    tx_color := core.brightness(colors.primary, f.entered ? .3 : -.3)
+    draw_sprite(f.text, f.rect, tx_color)
 }

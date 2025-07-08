@@ -94,17 +94,16 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
         { point=.bottom_right },
     )
 
-    // for each data type should be a control, that is a lot of work :)
-    // for now will use bool (on/off) only -- the easiest to do
-    add_setting_card_control_bool(value)
-}
+    c := item.control
 
-@private
-add_setting_card_control_bool :: proc (value: ^ui.Frame) {
-    value.layout = { dir=.left_and_right, pad=20, size={120,0} }
-    ui.add_frame(value, { name="off", text="OFF", flags={.radio,.continue_enter,.no_capture}, draw=partials.draw_button_radio })
-    ui.add_frame(value, { name="on", text="ON", flags={.radio,.continue_enter,.no_capture}, draw=partials.draw_button_radio })
-    value.children[0].selected = true
+    switch len(c.names) {
+    case 0      : // nothing
+    case 2      : partials.add_control_radio_button_group(value, c.names, c.titles, c.default_idx)
+    case 3, 4   : partials.add_control_radio_pins(value, c.names, c.titles, c.default_idx)
+    case        : panic("Unexpected item.type format")
+    }
+
+    ui.set_continue_enter(value, check_blocking_flags=true)
 }
 
 @private
@@ -112,7 +111,7 @@ add_list_column :: proc (page: ^ui.Frame) -> ^ui.Frame {
     pad :: partials.screen_pad
 
     list := ui.add_frame(page,
-        { name="list", size={560,0}, layout={dir=.down,size={0,80},gap=15,scroll={step=20}}, flags={.scissor} },
+        { name="list", size={560,0}, layout={dir=.down,size={0,80},pad=1,gap=15,scroll={step=20}}, flags={.scissor} },
         { point=.top_left, offset={1.5*pad,2*pad} },
         { point=.bottom_left, offset={1.5*pad,-2*pad} },
     )
