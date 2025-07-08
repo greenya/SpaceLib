@@ -65,6 +65,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     )
 
     pin_pad :: 8
+    pin_w :: 36
     pin_h :: 12
 
     pins := ui.add_frame(parent,
@@ -77,7 +78,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
         ui.add_frame(pins, {
             name    = name,
             text    = titles[i],
-            size    = {40,pin_h},
+            size    = {pin_w,pin_h},
             flags   = {.radio},
             draw    = draw_button_radio_pin,
             click   = proc (f: ^ui.Frame) {

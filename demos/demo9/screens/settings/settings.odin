@@ -99,7 +99,7 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
     switch len(c.names) {
     case 0      : // nothing
     case 2      : partials.add_control_radio_button_group(value, c.names, c.titles, c.default_idx)
-    case 3, 4   : partials.add_control_radio_pins(value, c.names, c.titles, c.default_idx)
+    case 3,4,5  : partials.add_control_radio_pins(value, c.names, c.titles, c.default_idx)
     case        : panic("Unexpected item.type format")
     }
 

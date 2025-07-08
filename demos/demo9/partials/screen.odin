@@ -37,7 +37,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
         text    = "<pad=6,font=text_4l,icon=key/E>",
         flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
-        click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs")) },
+        click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
     }, { point=.left, rel_point=.right, rel_frame=tabs, offset={12,12} })
 
     ui.add_frame(header_bar, {
@@ -45,7 +45,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
         text    = "<pad=6,font=text_4l,icon=key/Q>",
         flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
-        click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "tabs")) },
+        click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
     }, { point=.right, rel_point=.left, rel_frame=tabs, offset={-12,12} })
 }
 

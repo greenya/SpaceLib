@@ -81,7 +81,11 @@
     {
         "name": "placeable_rotation_building_mode",
         "title": "PLACEABLE ROTATION BUILDING MODE",
-        "desc": "Set the placeable rotation method when using building mode."
+        "desc": "Set the placeable rotation method when using building mode.",
+        "control": {
+            "names": [ "independent_rotation", "relative_to_player_facing" ],
+            "titles": [ "Independent Rotation", "Relative To Player Facing" ]
+        }
     },
     {
         "group_name": "vehicles",
@@ -90,7 +94,11 @@
     {
         "name": "disable_camera_auto_center",
         "title": "DISABLE CAMERA AUTO-CENTER",
-        "desc": "Enable or disable the camera centering automatically after moving with vehicles."
+        "desc": "Enable or disable the camera centering automatically after moving with vehicles.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "group_name": "air_vehicles",
@@ -99,7 +107,11 @@
     {
         "name": "invert_mouse_y_axis",
         "title": "INVERT MOUSE Y-AXIS",
-        "desc": "Invert the air vehicle controls along the vertical axis."
+        "desc": "Invert the air vehicle controls along the vertical axis.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "planar_lock",
@@ -130,7 +142,11 @@
             "",
             "<font=text_4m>Flick & Forget:</>",
             "No slot is highlighted by default. Moving the mouse cursor to the centre of the wheel will unhighlight the currently highlighted slot."
-        ]
+        ],
+        "control": {
+            "names": [ "flick_and_remember", "flick_and_forget" ],
+            "titles": [ "Flick & Remember", "Flick & Forget" ]
+        }
     },
     {
         "name": "close_behaviour",
@@ -143,7 +159,11 @@
             "",
             "<font=text_4m>Maintain Axis Input:</>",
             "The character will move in the direction of the left thumbstick after closing the radial wheel."
-        ]
+        ],
+        "control": {
+            "names": [ "require_axis_input_reset", "maintain_axis_input" ],
+            "titles": [ "Require Axis Input Reset", "Maintain Axis Input" ]
+        }
     },
 
 // ============================================================================
@@ -160,11 +180,17 @@
     },
     {
         "name": "field_of_view",
-        "title": "FIELD OF VIEW"
+        "title": "FIELD OF VIEW",
+        "desc": "Set the game's Field of View camera size. Higher settings will have a minor impact on the CPU and GPU."
     },
     {
         "name": "motion_blur",
         "title": "MOTION BLUR",
+        "desc": [
+            "Turn the Motion Blur on or off.",
+            "",
+            "Minor Impact on the performance of the game."
+        ],
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -173,6 +199,7 @@
     {
         "name": "vsync",
         "title": "VSYNC",
+        "desc": "Vertical Synchronization will align the game's frame rate to your monitor's refresh rate to negate screen tearing, at the cost of a minor impact on the input response time",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -180,11 +207,21 @@
     },
     {
         "name": "language",
-        "title": "LANGUAGE"
+        "title": "LANGUAGE",
+        "desc": "Set the game's user interface text language."
     },
     {
         "name": "frame_rate_cap",
-        "title": "FRAME RATE CAP"
+        "title": "FRAME RATE CAP",
+        "desc": [
+            "Set a frame rate cap for the game during gameplay.",
+            "",
+            "Higher frame rates will have a major impact on the CPU and GPU."
+        ],
+        "control": {
+            "names": [ "30", "45", "60", "120", "unlimited" ],
+            "titles": [ "30", "45", "60", "120", "Unlimited" ]
+        }
     },
     {
         "group_name": "ui",
@@ -193,6 +230,7 @@
     {
         "name": "dynamic_hud",
         "title": "DYNAMIC HUD",
+        "desc": "Enable or disable the fade out of inactive HUD elements.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -201,6 +239,7 @@
     {
         "name": "ultrawide_support",
         "title": "ULTRAWIDE SUPPORT",
+        "desc": "Extend the HUD to support Ultra-Wide Monitors.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -256,31 +295,77 @@
     },
     {
         "name": "quality_presets",
-        "title": "QUALITY PRESETS"
+        "title": "QUALITY PRESETS",
+        "desc": [
+            "Change the overall graphics quality preset of the game.",
+            "",
+            "<font=text_4m>Auto</> will detect optimal settings based on a quick benchmark of the hardware.",
+            "",
+            "Higher settings will have a major impact on performance."
+        ]
     },
     {
         "name": "window_mode",
-        "title": "WINDOW MODE"
+        "title": "WINDOW MODE",
+        "desc": [
+            "Set the Window Mode for the game.",
+            "",
+            "<font=text_4m>Windowed:</>",
+            "The game will be rendered in a window with borders.",
+            "",
+            "<font=text_4m>Windowed Fullscreen:</>",
+            "Windowed but locked to the monitor's resolution.",
+            "",
+            "<font=text_4m>Fullscreen:</>",
+            "The game will be rendered in the full size of the monitor currently used for the game."
+        ]
     },
     {
         "name": "resolution",
-        "title": "RESOLUTION"
+        "title": "RESOLUTION",
+        "desc": [
+            "Set the Resolution size of the game.",
+            "",
+            "Higher settings will have a major impact on the CPU and GPU performance."
+        ]
     },
     {
         "name": "upscaling_quality",
         "title": "UPSCALING QUALITY",
+        "desc": [
+            "Set the Upscaling quality for the game.",
+            "",
+            "Upscaling is used to achieve detailed images using fewer pixels to maximise performance. This setting influences upscaling parameters and resolution scale based on target quality and current resolution.",
+            "High impact on GPU performance."
+        ],
         "control": {
-            "names": [ "low", "med", "high", "ultra" ],
-            "titles": [ "Low", "Med", "High", "Ultra" ]
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ]
         }
     },
     {
         "name": "upscaling_method",
-        "title": "UPSCALING METHOD"
+        "title": "UPSCALING METHOD",
+        "desc": [
+            "Set the Upscaling quality for the game.",
+            "",
+            "Upscaling is used to achieve detailed images using fewer pixels to maximise performance.",
+            "",
+            "This setting influences upscaling parameters and resolution scale based on target quality and current resolution.",
+            "",
+            "High impact on GPU performance."
+        ]
     },
     {
         "name": "frame_generation_method",
-        "title": "FRAME GENERATION METHOD"
+        "title": "FRAME GENERATION METHOD",
+        "desc": [
+            "Set the Frame Generation method. Generates additional frames to increase framerate.",
+            "",
+            "Frame Generation is supported only by specific graphics cards. DLSSG can only be used with DLSS Upscaling method.",
+            "",
+            "High impact on global framerate."
+        ]
     },
     {
         "group_name": "lighting",
@@ -288,19 +373,66 @@
     },
     {
         "name": "shadows",
-        "title": "SHADOWS"
+        "title": "SHADOWS",
+        "desc": [
+            "Set the shadow quality for the game. This includes shadow distance and resolution of dynamic shadows.",
+            "",
+            "High impact on GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
     {
         "name": "virtual_shadow_maps",
-        "title": "VIRTUAL SHADOW MAPS (EXPERIMENTAL)"
+        "title": "VIRTUAL SHADOW MAPS (EXPERIMENTAL)",
+        "desc": [
+            "Enhances shadow quality.",
+            "",
+            "This feature is still in experimental phase, which could lead to stability and performance issues.",
+            "",
+            "Recommended for GPUs with more than 10GB of VRAM for best results.",
+            "",
+            "High impact on VRAM and GPU performance."
+        ],
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "gi_quality",
-        "title": "GI QUALITY"
+        "title": "GI QUALITY",
+        "desc": [
+            "Set the Global Illumination quality of the ambient lighting.",
+            "",
+            "This determines the resolution and accuracy of the ambient lighting.",
+            "",
+            "High impact on VRAM and GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
     {
         "name": "reflections_quality",
-        "title": "REFLECTIONS QUALITY"
+        "title": "REFLECTIONS QUALITY",
+        "desc": [
+            "Set the reflections quality of the ambient lighting.",
+            "",
+            "This determines the resolution and accuracy of reflections.",
+            "",
+            "Moderate impact on GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
     {
         "group_name": "quality_details",
@@ -308,23 +440,91 @@
     },
     {
         "name": "low_end_laptop_mode",
-        "title": "LOW END LAPTOP MODE (EXPERIMENTAL)"
+        "title": "LOW END LAPTOP MODE (EXPERIMENTAL)",
+        "desc": "Experimental scalability mode intended for very low-end machines to achieve acceptable performance. Visual quality is drastically reduced.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "limit_process_cpu_usage",
-        "title": "LIMIT PROCESS CPU USAGE (EXPERIMENTAL)"
+        "title": "LIMIT PROCESS CPU USAGE (EXPERIMENTAL)",
+        "desc": "Reserves 1 CPU core for background tasks (process affinity). Will reduce game performance.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "name": "view_distance",
-        "title": "VIEW DISTANCE"
+        "title": "VIEW DISTANCE",
+        "desc": [
+            "Changes the maximum distance that objects are rendered. This includes foliage and scattered objects.",
+            "",
+            "Low impact on CPU and GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
     {
         "name": "post_processing",
-        "title": "POST PROCESSING"
+        "title": "POST PROCESSING",
+        "desc": [
+            "Set the screen-based effects quality for the game. This includes motion blur and bloom.",
+            "",
+            "Low impact on GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
     {
         "name": "effects_quality",
-        "title": "EFFECTS QUALITY"
+        "title": "EFFECTS QUALITY",
+        "desc": [
+            "Set the visual effects quality for the game. This includes particle effects and shader quality.",
+            "",
+            "Low impact on GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
+    },
+    {
+        "name": "texture_quality",
+        "title": "TEXTURE QUALITY",
+        "desc": [
+            "Set the texture resolution quality for the game. This includes all in-game textures and can increase texture detail.",
+            "",
+            "High impact on VRAM."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
+    },
+    {
+        "name": "foliage_quality",
+        "title": "FOLIAGE QUALITY",
+        "desc": [
+            "Set the foliage quality for the game. This includes density of foliage such as grass.",
+            "",
+            "Moderate impact on GPU performance."
+        ],
+        "control": {
+            "names": [ "low", "medium", "high", "ultra" ],
+            "titles": [ "Low", "Medium", "High", "Ultra" ],
+            "default_idx": 1
+        }
     },
 
 // ============================================================================
@@ -340,19 +540,46 @@
     },
     {
         "name": "mastering_mode",
-        "title": "MASTERING MODE"
+        "title": "MASTERING MODE",
+        "desc": "Select Mastering Mode to optimize the game's Audio output.",
+        "control": {
+            "names": [ "headphones", "home_cinema", "night_mode", "soundbar", "tv" ],
+            "titles": [ "Headphones", "Home Cinema", "Night Mode", "Soundbar", "TV" ]
+        }
     },
     {
         "name": "master_volume",
-        "title": "MASTER VOLUME"
+        "title": "MASTER VOLUME",
+        "desc": [
+            "Set the maximum volume of the game's audio.",
+            "",
+            "This setting determines the maximum volume of all other audio volume settings."
+        ]
     },
     {
         "name": "music_volume_in_game",
-        "title": "MUSIC VOLUME IN GAME"
+        "title": "MUSIC VOLUME IN GAME",
+        "desc": "Set the maximum volume of the game's soundtrack."
+    },
+    {
+        "name": "sound_effects_volume",
+        "title": "SOUND EFFECTS VOLUME",
+        "desc": "Set the maximum volume of the game's sound effects."
+    },
+    {
+        "name": "cutscenes_volume",
+        "title": "CUTSCENES VOLUME",
+        "desc": "Set the maximum volume of the game's cutscenes."
+    },
+    {
+        "name": "dialog_volume",
+        "title": "DIALOG VOLUME",
+        "desc": "Set the maximum volume of the NPC dialogues."
     },
     {
         "name": "radio_volume",
-        "title": "RADIO VOLUME"
+        "title": "RADIO VOLUME",
+        "desc": "Set the volume for the Radio."
     },
     {
         "group_name": "voice_chat",
@@ -360,7 +587,8 @@
     },
     {
         "name": "enable_voice_chat",
-        "title": "ENABLE VOICE CHAT"
+        "title": "ENABLE VOICE CHAT",
+        "desc": "Enable or disable the incoming voice chat."
     },
     {
         "name": "voice_chat_volume",
@@ -368,7 +596,18 @@
     },
     {
         "name": "voice_activation_mode",
-        "title": "VOICE ACTIVATION MODE"
+        "title": "VOICE ACTIVATION MODE",
+        "desc": [
+            "Set the how to activate outgoing Voice Chat:",
+            "",
+            "<font=text_4m>Push-To-Talk:</> Keep the key pressed to talk.",
+            "<font=text_4m>Toggle:</> Press the key once to turn voice chat on or off."
+        ],
+        "control": {
+            "names": [ "none", "push_to_talk", "toggle" ],
+            "titles": [ "None", "Push-To-Talk", "Toggle" ],
+            "default_idx": 1
+        }
     },
     {
         "group_name": "hardware",
@@ -376,11 +615,13 @@
     },
     {
         "name": "audio_output_device",
-        "title": "AUDIO OUTPUT DEVICE"
+        "title": "AUDIO OUTPUT DEVICE",
+        "desc": "Select the target output audio device."
     },
     {
         "name": "audio_input_device",
-        "title": "AUDIO INPUT DEVICE"
+        "title": "AUDIO INPUT DEVICE",
+        "desc": "Select the target input audio device."
     },
 
 // ============================================================================
@@ -443,6 +684,7 @@
     {
         "name": "show_prev_subtitle",
         "title": "SHOW PREVIOUS SUBTITLE",
+        "desc": "Set if the previous subtitle line should be displayed to allow for reading of longer sentences for slower readers.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -451,6 +693,7 @@
     {
         "name": "font_size",
         "title": "FONT SIZE",
+        "desc": "Set the font size of the Subtitles.",
         "control": {
             "names": [ "small", "default", "large", "extra_large" ],
             "titles": [ "Small", "Default", "Large", "Extra Large" ],
