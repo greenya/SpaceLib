@@ -15,12 +15,8 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
     strings.write_rune(&sb, '{')
 
     if f.parent == nil          do fmt.sbprintf(&sb, " root")
-
-    if f.name != ""             do fmt.sbprintf(&sb, " name=\"%s\"", f.name)
-    else if f.text != ""        do fmt.sbprintf(&sb, " text=\"%s\"", f.text)
-
+    if f.name != ""             do fmt.sbprintf(&sb, " #%s", f.name)
     if f.order != 0             do fmt.sbprintf(&sb, " order=%i", f.order)
-
     if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout")
 
     skip_flags :: bit_set [Flag] { .terse_height, .terse_width, .terse_hit_rect }
