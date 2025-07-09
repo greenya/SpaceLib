@@ -82,7 +82,7 @@ rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
-rect_equal_approx :: #force_inline proc (a: Rect, b: Rect, e := f32(.5)) -> bool {
+rect_equal_approx :: #force_inline proc (a: Rect, b: Rect, e: f32) -> bool {
     return abs(a.x-b.x)<e && abs(a.y-b.y)<e && abs(a.w-b.w)<e && abs(a.h-b.h)<e
 }
 
