@@ -9,15 +9,18 @@ Vec2 :: [2] f32
 Vec3 :: [3] f32
 Rect :: struct { x, y, w, h: f32 }
 
+rect_xywh :: #force_inline proc (r: Rect) -> (x, y, w, h: f32) { return r.x, r.y, r.w, r.h }
+rect_ltrb :: #force_inline proc (r: Rect) -> (left, top, right, bottom: f32) { return r.x, r.y, r.x+r.w, r.y+r.h }
+
 rect_top_left       :: #force_inline proc (r: Rect) -> Vec2 { return { r.x, r.y } }
-rect_top            :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w/2, r.y } }
-rect_top_right      :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w, r.y } }
-rect_left           :: #force_inline proc (r: Rect) -> Vec2 { return { r.x, r.y + r.h/2 } }
-rect_center         :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w/2, r.y + r.h/2 } }
-rect_right          :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w, r.y + r.h/2 } }
+rect_top            :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w/2, r.y } }
+rect_top_right      :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w, r.y } }
+rect_left           :: #force_inline proc (r: Rect) -> Vec2 { return { r.x, r.y+r.h/2 } }
+rect_center         :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w/2, r.y+r.h/2 } }
+rect_right          :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w, r.y+r.h/2 } }
 rect_bottom_left    :: #force_inline proc (r: Rect) -> Vec2 { return { r.x, r.y + r.h } }
-rect_bottom         :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w/2, r.y + r.h } }
-rect_bottom_right   :: #force_inline proc (r: Rect) -> Vec2 { return { r.x + r.w, r.y + r.h } }
+rect_bottom         :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w/2, r.y + r.h } }
+rect_bottom_right   :: #force_inline proc (r: Rect) -> Vec2 { return { r.x+r.w, r.y+r.h } }
 
 rect_half_left      :: #force_inline proc (r: Rect) -> Rect { return { r.x, r.y, r.w/2, r.h } }
 rect_half_right     :: #force_inline proc (r: Rect) -> Rect { return { r.x+r.w/2, r.y, r.w/2, r.h } }
