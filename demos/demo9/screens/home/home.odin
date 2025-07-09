@@ -19,13 +19,13 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
 
-    partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="cog",
+    partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings",
         click=proc (f: ^ui.Frame) {
             events.send_open_screen("settings")
         },
     )
 
-    partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="stabbed-note",
+    partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="contract",
         click=proc (f: ^ui.Frame) {
             events.send_open_screen("credits")
         },
@@ -53,8 +53,8 @@ add_social_links :: proc () {
         { point=.right, rel_point=.bottom_right, offset={-partials.screen_pad,0} },
     )
 
-    ui.add_frame(social_links, { flags={.capture}, text="world", draw=partials.draw_button_diamond })
-    ui.add_frame(social_links, { flags={.capture}, text="envelope", draw=partials.draw_button_diamond })
+    ui.add_frame(social_links, { flags={.capture}, text="language", draw=partials.draw_button_diamond })
+    ui.add_frame(social_links, { flags={.capture}, text="mail", draw=partials.draw_button_diamond })
 
     ui.add_frame(header_bar,
         { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4",
@@ -184,7 +184,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
 @private
 add_home_page_game_title :: proc (page: ^ui.Frame) {
     ui.add_frame(page,
-        { name="game_title", flags={.pass}, size={280,80}, draw=partials.draw_game_title },
+        { name="game_title", size={280,80}, draw=partials.draw_game_title },
         { point=.bottom_right, offset={-partials.screen_pad,-50} },
     )
 }
