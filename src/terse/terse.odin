@@ -370,6 +370,18 @@ destroy :: proc (terse: ^Terse) {
     free(terse)
 }
 
+apply_offset :: proc (terse: ^Terse, offset: Vec2) {
+    assert(terse != nil)
+    mv :: core.rect_moved
+
+    terse.rect_input = mv(terse.rect_input, offset)
+    terse.rect = mv(terse.rect, offset)
+
+    for &word in terse.words do word.rect = mv(word.rect, offset)
+    for &line in terse.lines do line.rect = mv(line.rect, offset)
+    for &group in terse.groups do for &r in group.rects do r = mv(r, offset)
+}
+
 @private
 append_line :: proc (terse: ^Terse, font: ^Font, nobreak_first_word_idx := -1) -> ^Line {
     line_rect_y := terse.rect.y
