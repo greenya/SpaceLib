@@ -14,6 +14,12 @@
 
 TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
 
+TODO: terse: add support for <overflow> command
+
+    allow to have text fit to any size without need for scrollbar; very needed for dropdown boxes and similar limited space controls; at least to be able to use it for one liners (not wrapping text); ideally support two modes:
+    - overflow=ellipsis: [default] should truncate whole word (or chars) and add "..." to the end
+    - overflow=scrolling: should repeat smooth scrolling to the end (revealing whole text for reading) and faster to the start for repetition
+
 TODO: terse: add ability to have a line with differently aligned parts -- ability to have a single line with text at left and at right, like in WOW's tooltips ("| Head <---> Leather |", "| Main Hand <---> Mace |")
 
 TODO: terse: add ability to have "<" and ">" in the text as part of the content, probably should support something like "<<test>>" which should give "<test>" as a text for displayed (not interpreted as code sequence)
