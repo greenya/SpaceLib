@@ -147,8 +147,8 @@ Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
 Actor_Scrollbar_Next    :: struct { content: ^Frame }
 Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
-Frame_Proc                  :: proc (f: ^Frame)
-Frame_Wheel_Proc            :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
+Frame_Proc          :: proc (f: ^Frame)
+Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
@@ -717,7 +717,11 @@ update_rect :: proc (f: ^Frame) {
 
 @private
 update_terse :: proc (f: ^Frame) {
-    should_rebuild := f.terse == nil || (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect))
+    should_rebuild :=
+        f.terse == nil ||
+        (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect, e=.5)) ||
+        (f.terse != nil && !core.rect_equal_approx(f.terse.scissor, f.ui.scissor_rect, e=.5))
+
     if !should_rebuild do return
 
     if f.terse != nil do terse.destroy(f.terse)
