@@ -33,7 +33,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
     )
 
     ui.add_frame(header_bar, {
-        name    = "nav_next_screen_tab",
+        name    = "nav_next_tab",
         text    = "<pad=6,font=text_4l,icon=key/E>",
         flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
@@ -41,7 +41,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
     }, { point=.left, rel_point=.right, rel_frame=tabs, offset={12,12} })
 
     ui.add_frame(header_bar, {
-        name    = "nav_prev_screen_tab",
+        name    = "nav_prev_tab",
         text    = "<pad=6,font=text_4l,icon=key/Q>",
         flags   = {.hidden,.capture,.terse,.terse_width,.terse_height},
         draw    = draw_button,
@@ -69,11 +69,12 @@ add_screen_footer_bar :: proc (screen: ^ui.Frame) {
 }
 
 add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab, page: ^ui.Frame) {
-    tab = ui.add_frame(ui.get(screen, "~tabs"), {
+    tab = ui.add_frame(ui.get(screen, "header_bar/tabs"), {
         name        = name,
         text        = text,
         text_format = "<bottom,font=text_4l,pad=20:10>%s",
         flags       = {.radio,.terse,.terse_width},
+        size_min    = {120,0},
         draw        = draw_screen_tab,
         click       = on_screen_tab_click,
     })
@@ -93,8 +94,8 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
     )
 
     if len(tab.parent.children) > 1 {
-        ui.show(ui.get(screen, "~nav_next_screen_tab"))
-        ui.show(ui.get(screen, "~nav_prev_screen_tab"))
+        ui.show(ui.get(screen, "header_bar/nav_next_tab"))
+        ui.show(ui.get(screen, "header_bar/nav_prev_tab"))
     }
 
     return

@@ -205,7 +205,8 @@
         "desc": "Vertical Synchronization will align the game's frame rate to your monitor's refresh rate to negate screen tearing, at the cost of a minor impact on the input response time",
         "control": {
             "names": [ "off", "on" ],
-            "titles": [ "OFF", "ON" ]
+            "titles": [ "OFF", "ON" ],
+            "default_idx": 1
         }
     },
     {
@@ -223,7 +224,8 @@
         ],
         "control": {
             "names": [ "30", "45", "60", "120", "unlimited" ],
-            "titles": [ "30", "45", "60", "120", "Unlimited" ]
+            "titles": [ "30", "45", "60", "120", "Unlimited" ],
+            "default_idx": 2
         }
     },
     {
