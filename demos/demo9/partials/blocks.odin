@@ -108,3 +108,11 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
 
     ui.click(pins.children[default_idx])
 }
+
+add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string, default_idx := 0) {
+    assert(len(names) > 0 )
+    assert(len(names) > default_idx)
+    assert(len(names) == len(titles))
+
+    // ...
+}

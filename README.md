@@ -2,7 +2,7 @@
 
 * /clock                - clock with time scale support
 * /core                 - core types and utility procs
-* /events               - [planned] event bus
+* /events               - [planned] [maybe] event bus
 * /raylib               - helpers when using Raylib
 * /sdl3                 - [planned] set of helpers when using SDL3
 * /terse                - text layout calculation

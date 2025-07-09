@@ -106,13 +106,15 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Settings_Item) {
     case 0      : // skip (expected)
     case 2      : ia = .button_group
     case 3,4,5  : ia = .pins
-    case        : panic("Unexpected item.type format")
+    case 6..=10 : ia = .dropdown
+    case        : fmt.panicf("Failed to autodetect setting control appearance for \"%s\"", item.name)
     }
 
     switch ia {
     case .auto          : // skip (no control)
     case .button_group  : partials.add_control_radio_button_group(parent, ic.names, ic.titles, ic.default_idx)
     case .pins          : partials.add_control_radio_pins(parent, ic.names, ic.titles, ic.default_idx)
+    case .dropdown      : partials.add_control_radio_dropdown(parent, ic.names, ic.titles, ic.default_idx)
     }
 
     ui.set_continue_enter(parent, ensure_reachable=true)

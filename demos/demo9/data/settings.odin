@@ -18,25 +18,38 @@ Settings_Item :: struct {
     name    : string,
     title   : string,
     desc    : union { string, [] string },
-    control : Settings_Item_Control,
+    control : struct {
+        names       : [] string,
+        titles      : [] string,
+        default_idx : int,
+        // min     : int,
+        // max     : int,
+        appearance  : enum {
+            auto,
+            button_group,
+            pins,
+            dropdown,
+            // slider,
+        },
+    },
 }
 
-Settings_Item_Control :: struct {
-    names       : [] string,
-    titles      : [] string,
-    default_idx : int,
-    // min     : int,
-    // max     : int,
-    appearance  : Settings_Item_Control_Appearance,
-}
+// Settings_Item_Control :: struct {
+//     names       : [] string,
+//     titles      : [] string,
+//     default_idx : int,
+//     // min     : int,
+//     // max     : int,
+//     appearance  : Settings_Item_Control_Appearance,
+// }
 
-Settings_Item_Control_Appearance :: enum {
-    auto,
-    button_group,
-    pins,
-    // dropdown,
-    // slider,
-}
+// Settings_Item_Control_Appearance :: enum {
+//     auto,
+//     button_group,
+//     pins,
+//     // dropdown,
+//     // slider,
+// }
 
 @private settings: [] Settings_Item
 

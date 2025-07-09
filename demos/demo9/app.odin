@@ -69,7 +69,7 @@ app_startup :: proc () {
 
     // events.send_open_screen("home", anim=false)
     // events.send_open_screen("credits", anim=false)
-    events.send_open_screen("settings", anim=false)
+    events.send_open_screen("settings", "graphics", anim=false)
     // events.send_open_screen("player", "journey", anim=false)
 }
 
