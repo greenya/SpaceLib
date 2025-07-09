@@ -724,19 +724,33 @@ update_terse :: proc (f: ^Frame) {
 
     if !should_rebuild do return
 
-    if f.terse != nil do terse.destroy(f.terse)
-
     assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
     assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
 
-    f.terse = terse.create(
-        f.text,
-        f.rect,
-        f.ui.terse_query_font_proc,
-        f.ui.terse_query_color_proc,
-        f.ui.scissor_rect,
-        f.opacity,
-    )
+    scroll_offset_delta: Vec2
+
+    if f.terse != nil {
+        rect_size_changed :=
+            abs(f.rect.w-f.terse.rect_input.w) > .1 ||
+            abs(f.rect.h-f.terse.rect_input.h) > .1
+        if !rect_size_changed {
+            scroll_offset_delta = { f.rect.x-f.terse.rect_input.x, f.rect.y-f.terse.rect_input.y }
+        }
+    }
+
+    if scroll_offset_delta != {} {
+        terse.apply_offset(f.terse, scroll_offset_delta)
+    } else {
+        terse.destroy(f.terse)
+        f.terse = terse.create(
+            f.text,
+            f.rect,
+            f.ui.terse_query_font_proc,
+            f.ui.terse_query_color_proc,
+            f.ui.scissor_rect,
+            f.opacity,
+        )
+    }
 
     if .terse_width in f.flags do f.size.x = f.terse.rect.w
     if .terse_height in f.flags do f.size.y = f.terse.rect.h
