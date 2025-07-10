@@ -129,7 +129,7 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
     )
 
     dropdown := ui.add_frame(button,
-        { name="dropdown", flags={.dropdown}, layout={dir=.down,auto_size=.dir}, draw=draw_button_dropdown_rect },
+        { name="dropdown", layout={dir=.down,auto_size=.dir}, draw=draw_button_dropdown_rect },
         { point=.top_left, rel_point=.bottom_left },
         { point=.top_right, rel_point=.bottom_right },
     )

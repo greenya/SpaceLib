@@ -61,7 +61,6 @@ Flag :: enum {
     scissor,
     check,
     radio,
-    dropdown,
     auto_hide,
     terse,
     terse_height,
@@ -448,18 +447,12 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := false) {
 
 set_continue_enter :: proc (parent: ^Frame, ensure_reachable := false) {
     for child in parent.children {
-        if .dropdown in child.flags do continue
         if ensure_reachable && .capture in child.flags {
             fmt.panicf("Child \"%s\" has .capture, this will not allow parent to receive \"enter\"", child.name)
         }
         child.flags += { .continue_enter }
         set_continue_enter(child, ensure_reachable)
     }
-}
-
-dropdown :: proc (f: ^Frame) -> bool {
-    for i:=f; i!=nil; i=i.parent do if .dropdown in i.flags do return true
-    return false
 }
 
 hidden :: proc (f: ^Frame) -> bool {
@@ -665,41 +658,29 @@ prepare_frame_tree :: proc (f: ^Frame) {
 }
 
 @private
-update_frame_tree :: proc (f: ^Frame, inside_dropdown := false) {
+update_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
 
     update_rect(f)
 
-    inside_dropdown := inside_dropdown
-    inside_dropdown |= .dropdown in f.flags
-
     m_pos := f.ui.mouse.pos
     hit_rect := .terse_hit_rect in f.flags && f.terse != nil ? f.terse.rect : f.rect
-    if core.vec_in_rect(m_pos, hit_rect) {
-        if inside_dropdown {
-            append(&f.ui.dropped_down_mouse_frames, f)
-        } else if core.vec_in_rect(m_pos, f.ui.scissor_rect) {
-            append(&f.ui.mouse_frames, f)
-        }
-    }
-
-    if .dropdown in f.flags {
-        append(&f.ui.dropped_down_frames, f)
+    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) {
+        append(&f.ui.mouse_frames, f)
     }
 
     if .auto_hide in f.flags do append(&f.ui.auto_hide_frames, f)
 
     if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
-    for child in f.children do update_frame_tree(child, inside_dropdown=inside_dropdown)
+    for child in f.children do update_frame_tree(child)
     if .scissor in f.flags do pop_scissor_rect(f.ui)
 
     if f.tick != nil do f.tick(f)
 }
 
 @private
-draw_frame_tree :: proc (f: ^Frame, skip_dropdown := false) {
+draw_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
-    if .dropdown in f.flags && skip_dropdown do return
 
     if f.terse != nil do f.terse.opacity = f.opacity
 
@@ -714,7 +695,7 @@ draw_frame_tree :: proc (f: ^Frame, skip_dropdown := false) {
 
     if f.ui.overdraw_proc != nil do f.ui.overdraw_proc(f)
     if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
-    for child in f.children do draw_frame_tree(child, skip_dropdown=skip_dropdown)
+    for child in f.children do draw_frame_tree(child)
     if .scissor in f.flags do pop_scissor_rect(f.ui)
     if f.draw_after != nil do f.draw_after(f)
 
@@ -766,7 +747,7 @@ update_terse :: proc (f: ^Frame) {
             f.rect,
             f.ui.terse_query_font_proc,
             f.ui.terse_query_color_proc,
-            dropdown(f) ? f.ui.root.rect : f.ui.scissor_rect,
+            f.ui.scissor_rect,
             f.opacity,
         )
     }
