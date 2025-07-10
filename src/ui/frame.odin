@@ -150,12 +150,14 @@ Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
+    assert(init.parent == nil, "Pass parent as argument, not in init value")
+
     f := new(Frame)
     f^ = init
     f.opacity = 1
 
-    assert(f.parent == nil)
     set_parent(f, parent)
+    set_anchors(f, ..anchors)
 
     if f.text != "" {
         text := f.text
@@ -163,17 +165,18 @@ add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Fram
         set_text(f, text)
     }
 
-    for a in anchors do add_anchor(f, a)
-
     return f
 }
 
-add_anchor :: proc (f: ^Frame, init: Anchor) {
-    init := init
-    assert(init.point != .mouse)
-    if init.point == .none do init.point = .top_left
-    if init.rel_point == .none do init.rel_point = init.point
-    append(&f.anchors, init)
+set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
+    clear_anchors(f)
+    for a in anchors {
+        init := a
+        assert(init.point != .mouse, "Mouse anchor can only be used as rel_point.")
+        if init.point == .none      do init.point = .top_left
+        if init.rel_point == .none  do init.rel_point = init.point
+        append(&f.anchors, init)
+    }
 }
 
 clear_anchors :: proc (f: ^Frame) {
