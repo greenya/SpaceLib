@@ -157,7 +157,7 @@ debug_res_texture :: proc (rs: ^res.Res, name: string, pos: Vec2, scale := f32(1
     label := fmt.tprintf("%s: %ix%i // mipmaps: %i", name, tex.width, tex.height, tex.mipmaps)
 
     rect_lines(rct, 1, br_color)
-    rect(core.rect_moved(core.rect_line_top(rct, 14), {0,-14}), br_color)
+    rect(core.rect_moved(core.rect_bar_top(rct, 14), {0,-14}), br_color)
     text(label, pos+{4,-11}, rl.GetFontDefault(), 10, 1, label_color)
 }
 

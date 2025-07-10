@@ -34,23 +34,6 @@ Settings_Item :: struct {
     },
 }
 
-// Settings_Item_Control :: struct {
-//     names       : [] string,
-//     titles      : [] string,
-//     default_idx : int,
-//     // min     : int,
-//     // max     : int,
-//     appearance  : Settings_Item_Control_Appearance,
-// }
-
-// Settings_Item_Control_Appearance :: enum {
-//     auto,
-//     button_group,
-//     pins,
-//     // dropdown,
-//     // slider,
-// }
-
 @private settings: [] Settings_Item
 
 @private

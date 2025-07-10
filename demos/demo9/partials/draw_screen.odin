@@ -12,11 +12,11 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient_vertical(f.rect, {}, bg_color)
 
         br_color := core.alpha(colors.accent, f.opacity)
-        br_rect := core.rect_line_bottom(f.rect, 4)
+        br_rect := core.rect_bar_bottom(f.rect, 4)
         draw.rect(br_rect, br_color)
 
-        draw.rect_gradient_vertical(core.rect_line_left(f.rect, 1), {}, br_color)
-        draw.rect_gradient_vertical(core.rect_line_right(f.rect, 1), {}, br_color)
+        draw.rect_gradient_vertical(core.rect_bar_left(f.rect, 1), {}, br_color)
+        draw.rect_gradient_vertical(core.rect_bar_right(f.rect, 1), {}, br_color)
     } else {
         hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
         bg_color := core.alpha(colors.accent, f.opacity * .4 * hv_ratio)
