@@ -12,12 +12,13 @@ import "colors"
 import "data"
 import "events"
 import "fonts"
-import "partials"
-import "screens"
+import "interface"
+import "interface/partials"
 import "sprites"
 
 App :: struct {
-    ui: ^ui.UI,
+    ui              : ^ui.UI,
+    exit_requested  : bool,
 }
 
 app: ^App
@@ -30,11 +31,11 @@ app_startup :: proc () {
     rl.InitWindow(1280, 720, "spacelib demo 9")
     // rl.MaximizeWindow()
 
-    data.create()
     colors.create()
+    data.create()
+    events.create()
     fonts.create()
     sprites.create()
-    events.create()
 
     app = new(App)
     app.ui = ui.create(
@@ -63,7 +64,8 @@ app_startup :: proc () {
         },
     )
 
-    screens.add(app.ui.root)
+    interface.add(app.ui.root)
+    events.listen("exit_app", proc (args: ..any) { app.exit_requested=true })
 
     ui.print_frame_tree(app.ui.root /*, depth_max=2*/)
 
@@ -77,11 +79,12 @@ app_shutdown :: proc () {
     fmt.println(#procedure)
 
     ui.destroy(app.ui)
-    events.destroy()
-    sprites.destroy()
-    fonts.destroy()
+
     colors.destroy()
     data.destroy()
+    events.destroy()
+    fonts.destroy()
+    sprites.destroy()
 
     free(app)
     app = nil
@@ -90,7 +93,7 @@ app_shutdown :: proc () {
 }
 
 app_running :: proc () -> bool {
-    return !rl.WindowShouldClose()
+    return !rl.WindowShouldClose() && !app.exit_requested
 }
 
 app_tick :: proc () {

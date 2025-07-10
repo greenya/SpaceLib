@@ -2,8 +2,8 @@ package demo9_screens_home
 
 import "spacelib:ui"
 
-import "../../data"
-import "../../events"
+import "../../../data"
+import "../../../events"
 import "../../partials"
 
 @private screen: ^ui.Frame
@@ -31,7 +31,11 @@ add :: proc (parent: ^ui.Frame) {
         },
     )
 
-    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
+    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
+        click=proc (f: ^ui.Frame) {
+            events.send_exit_app()
+        },
+    )
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
     partials.add_screen_footer_key_button(screen, "account", "Account", key="A")

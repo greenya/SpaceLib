@@ -3,8 +3,8 @@ package demo9_screens_settings
 import "core:fmt"
 import "spacelib:ui"
 
-import "../../data"
-import "../../events"
+import "../../../data"
+import "../../../events"
 import "../../partials"
 
 @private screen: ^ui.Frame

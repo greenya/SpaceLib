@@ -17,12 +17,12 @@ text_6l: ^Font
 text_8l: ^Font
 
 create :: proc () {
+    default = create_font_default(scale=2)
     text_4l = create_font_from_data(#load("Kanit-Light.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
     text_4r = create_font_from_data(#load("Kanit-Regular.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
     text_4m = create_font_from_data(#load("Kanit-Medium.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
     text_6l = create_font_from_data(#load("Kanit-Light.ttf"), height=46, line_spacing_ratio=-.25, filter=.BILINEAR)
     text_8l = create_font_from_data(#load("Kanit-Light.ttf"), height=82, line_spacing_ratio=-.25, filter=.BILINEAR)
-    default = create_font_default(scale=2)
 }
 
 destroy :: proc () {

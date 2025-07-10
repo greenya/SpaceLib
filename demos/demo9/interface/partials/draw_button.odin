@@ -4,7 +4,7 @@ import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 
-import "../colors"
+import "../../colors"
 
 draw_button :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}

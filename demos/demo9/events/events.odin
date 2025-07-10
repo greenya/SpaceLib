@@ -29,6 +29,10 @@ listen :: proc (event_name: string, listener: Event_Listener) {
     append(&get(event_name).listeners, listener)
 }
 
+send_exit_app :: proc () {
+    send("exit_app")
+}
+
 send_open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
     send("open_screen", screen_name, tab_name, anim)
 }

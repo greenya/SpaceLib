@@ -2,7 +2,7 @@ package demo9_screens_credits
 
 import "spacelib:ui"
 
-import "../../events"
+import "../../../events"
 import "../../partials"
 
 @private screen: ^ui.Frame

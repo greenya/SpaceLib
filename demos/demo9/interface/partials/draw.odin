@@ -9,9 +9,9 @@ import "spacelib:raylib/draw"
 import "spacelib:ui"
 import "spacelib:terse"
 
-import "../colors"
-import "../fonts"
-import "../sprites"
+import "../../colors"
+import "../../fonts"
+import "../../sprites"
 
 _ :: fmt
 

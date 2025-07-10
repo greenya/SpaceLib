@@ -4,7 +4,7 @@ import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 
-import "../colors"
+import "../../colors"
 
 draw_setting_card :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
