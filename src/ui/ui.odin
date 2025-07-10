@@ -16,9 +16,11 @@ UI :: struct {
     phase               : Processing_Phase,
     captured            : Captured_Info,
 
-    mouse_frames        : [dynamic] ^Frame,
-    entered_frames      : [dynamic] ^Frame,
-    auto_hide_frames    : [dynamic] ^Frame,
+    mouse_frames                : [dynamic] ^Frame,
+    entered_frames              : [dynamic] ^Frame,
+    dropped_down_frames         : [dynamic] ^Frame,
+    dropped_down_mouse_frames   : [dynamic] ^Frame,
+    auto_hide_frames            : [dynamic] ^Frame,
 
     scissor_rect        : Rect,
     scissor_rects       : [dynamic] Rect,
@@ -55,9 +57,9 @@ Processing_Phase :: enum {
 }
 
 Captured_Info :: struct {
-    outside : bool,
     frame   : ^Frame,
     pos     : Vec2,
+    outside : bool,
 }
 
 Stats :: struct {
@@ -111,6 +113,8 @@ destroy :: proc (ui: ^UI) {
     destroy_frame_tree(ui.root)
     delete(ui.mouse_frames)
     delete(ui.entered_frames)
+    delete(ui.dropped_down_frames)
+    delete(ui.dropped_down_mouse_frames)
     delete(ui.auto_hide_frames)
     delete(ui.scissor_rects)
     free(ui)
@@ -135,10 +139,14 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     lmb_released := ui.mouse_prev.lmb_down && !ui.mouse.lmb_down
 
     clear(&ui.mouse_frames)
+    clear(&ui.dropped_down_frames)
+    clear(&ui.dropped_down_mouse_frames)
     clear(&ui.auto_hide_frames)
 
     prepare_frame_tree(ui.root)
     update_frame_tree(ui.root)
+
+    for f in ui.dropped_down_mouse_frames do append(&ui.mouse_frames, f)
 
     if !ui.captured.outside {
         keep_capture := ui.captured.frame != nil
@@ -217,7 +225,8 @@ draw :: proc (ui: ^UI) {
     assert(len(ui.scissor_rects) == 0)
     ui.scissor_rect = ui.root.rect
 
-    draw_frame_tree(ui.root)
+    draw_frame_tree(ui.root, skip_dropdown=true)
+    for f in ui.dropped_down_frames do draw_frame_tree(f)
 }
 
 @private

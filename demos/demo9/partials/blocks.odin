@@ -114,5 +114,36 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
     assert(len(names) > default_idx)
     assert(len(names) == len(titles))
 
-    // ...
+    arrow_w :: 20
+
+    button := ui.add_frame(parent,
+        { name="button", flags={.check}, draw=draw_button_dropdown_button },
+        { point=.top_left, offset=20 },
+        { point=.bottom_right, offset=-20 },
+    )
+
+    title := ui.add_frame(button,
+        { name="title", flags={.pass,.terse,.terse_height}, text_format="<wrap,left,font=text_4l,color=primary_d2>%s" },
+        { point=.left, offset={15,0} },
+        { point=.right, offset={-20-arrow_w,0} },
+    )
+
+    dropdown := ui.add_frame(button,
+        { name="dropdown", flags={.dropdown}, layout={dir=.down,auto_size=.dir}, draw=draw_button_dropdown_rect },
+        { point=.top_left, rel_point=.bottom_left },
+        { point=.top_right, rel_point=.bottom_right },
+    )
+
+    for name, i in names {
+        ui.add_frame(dropdown, {
+            name        = name,
+            text        = titles[i],
+            text_format = "<pad=15:0,left,font=text_4l,color=primary_d2>%s",
+            flags       = {.terse,.terse_height},
+            draw        = draw_button_dropdown_item,
+            // click=...
+        })
+    }
+
+    ui.set_text(title, titles[default_idx])
 }

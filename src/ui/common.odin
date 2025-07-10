@@ -15,7 +15,7 @@ print_frame_tree :: proc (f: ^Frame, depth_max := 20, _depth := 0) {
     strings.write_rune(&sb, '{')
 
     if f.parent == nil          do fmt.sbprintf(&sb, " root")
-    if f.name != ""             do fmt.sbprintf(&sb, " #%s", f.name)
+    if f.name != ""             do fmt.sbprintf(&sb, " <%s>", f.name)
     if f.order != 0             do fmt.sbprintf(&sb, " order=%i", f.order)
     if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout")
 

@@ -328,13 +328,13 @@
             "",
             "<font=text_4m>Fullscreen:</>",
             "The game will be rendered in the full size of the monitor currently used for the game."
-        ],
-        "control": {
-            "names": [ "windowed", "windowed_fullscreen", "fullscreen" ],
-            "titles": [ "Windowed", "Windowed Fullscreen", "Fullscreen" ],
-            "default_idx": 1,
-            "appearance": "dropdown"
-        }
+        ]//,
+        // "control": {
+        //     "names": [ "windowed", "windowed_fullscreen", "fullscreen" ],
+        //     "titles": [ "Windowed", "Windowed Fullscreen", "Fullscreen" ],
+        //     "default_idx": 1,
+        //     "appearance": "dropdown"
+        // }
     },
     {
         "name": "resolution",
@@ -343,13 +343,13 @@
             "Set the Resolution size of the game.",
             "",
             "Higher settings will have a major impact on the CPU and GPU performance."
-        ],
-        "control": {
-            "names": [ "1280x720", "1280x800", "1920x1080", "1920x1200" ],
-            "titles": [ "1280x720", "1280x800", "1920x1080", "1920x1200" ],
-            "default_idx": 2,
-            "appearance": "dropdown"
-        }
+        ]//,
+        // "control": {
+        //     "names": [ "1280x720", "1280x800", "1920x1080", "1920x1200" ],
+        //     "titles": [ "1280x720", "1280x800", "1920x1080", "1920x1200" ],
+        //     "default_idx": 2,
+        //     "appearance": "dropdown"
+        // }
     },
     {
         "name": "upscaling_quality",

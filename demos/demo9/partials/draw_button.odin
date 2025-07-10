@@ -89,3 +89,40 @@ draw_button_radio_pin_nav :: proc (f: ^ui.Frame) {
     tx_color := core.brightness(colors.primary, f.entered ? .3 : -.3)
     draw_sprite(f.text, f.rect, tx_color)
 }
+
+draw_button_dropdown_button :: proc (f: ^ui.Frame) {
+    if f.selected {
+        bg_color := core.brightness(colors.accent, -.7)
+        draw.rect(f.rect, bg_color)
+    }
+
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
+    br_color := core.alpha(colors.primary, f.opacity*.5 + hv_ratio*.5)
+    draw.rect_lines(f.rect, 1, br_color)
+
+    sp_rect := Rect { f.rect.x+f.rect.w-f.rect.h, f.rect.y, f.rect.h, f.rect.h }
+    draw_sprite("arrow_drop_down", sp_rect, br_color)
+}
+
+draw_button_dropdown_rect :: proc (f: ^ui.Frame) {
+    bg_color := core.alpha(core.brightness(colors.primary, -.4), f.opacity)
+    draw.rect(f.rect, bg_color)
+}
+
+draw_button_dropdown_item :: proc (f: ^ui.Frame) {
+    hv_ratio := ui.hover_ratio(f, .Exponential_Out, .222, .Exponential_In, .333)
+    rect := f.rect
+    rect.w *= hv_ratio
+    draw.rect(rect, colors.primary)
+
+    draw_terse(f.terse, offset={hv_ratio*10,0}, color=colors.bg0)
+
+    hv_ratio = ui.hover_ratio(f, .Bounce_Out, .888, .Cubic_In, .333)
+    q_w :: 20
+    q_s_rect := core.rect_bar_right(f.rect, 20)
+    q_e_rect := core.rect_bar_right(f.terse.rect, 20)
+    q_e_rect.x += q_w/2
+    q_rect := core.ease_rect(q_s_rect, q_e_rect, hv_ratio)
+    q_color := core.ease_color({}, colors.bg0, hv_ratio)
+    draw_text_center("?", q_rect, "text_4l", q_color)
+}
