@@ -45,7 +45,7 @@ add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] str
         ui.add_frame(parent, {
             name    = name,
             text    = titles[i],
-            flags   = {.radio,.continue_enter},
+            flags   = {.radio},
             draw    = draw_button_radio_with_text,
         })
     }
@@ -59,7 +59,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     assert(len(names) == len(titles))
 
     ui.add_frame(parent,
-        { name="title", flags={.pass_self,.terse,.terse_height}, text_format="<wrap,bottom,font=text_4l,color=primary_d2>%s" },
+        { name="title", flags={.terse,.terse_height}, text_format="<wrap,bottom,font=text_4l,color=primary_d2>%s" },
         { point=.top_left },
         { point=.bottom_right, rel_point=.right },
     )
@@ -123,7 +123,7 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
     )
 
     title := ui.add_frame(button,
-        { name="title", flags={.pass,.terse,.terse_height}, text_format="<wrap,left,font=text_4l,color=primary_d2>%s" },
+        { name="title", flags={.pass_self,.terse,.terse_height}, text_format="<wrap,left,font=text_4l,color=primary_d2>%s" },
         { point=.left, offset={15,0} },
         { point=.right, offset={-20-arrow_w,0} },
     )

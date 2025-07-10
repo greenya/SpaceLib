@@ -76,20 +76,20 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
     card_title := item.title != "" ? item.title : name
 
     card := ui.add_frame(list, {
-        name = name,
-        draw = partials.draw_setting_card,
-        enter = set_details_column_content_from_card,
+        name    = name,
+        draw    = partials.draw_setting_card,
+        enter   = set_details_column_content_from_card,
     })
 
     title := ui.add_frame(card,
-        { name="title", size={250,0}, flags={.pass_self,.terse}, text=card_title,
+        { name="title", size={250,0}, flags={.terse}, text=card_title,
             text_format="<wrap,left,font=text_4l,color=primary>%s" },
         { point=.top_left, offset={20,0} },
         { point=.bottom_left, offset={20,0} },
     )
 
     control := ui.add_frame(card,
-        { name="control", flags={.pass_self} },
+        { name="control" },
         { point=.top_left, rel_point=.top_right, rel_frame=title },
         { point=.bottom_right },
     )
@@ -100,7 +100,7 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
 @private
 add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Settings_Item) {
     ic := item.control
-    ia := ic.appearance
+    ia := item.control.appearance
 
     if ia == .auto do switch len(ic.names) {
     case 0      : // skip (expected)
@@ -116,8 +116,6 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Settings_Item) {
     case .pins          : partials.add_control_radio_pins(parent, ic.names, ic.titles, ic.default_idx)
     case .dropdown      : partials.add_control_radio_dropdown(parent, ic.names, ic.titles, ic.default_idx)
     }
-
-    ui.set_continue_enter(parent, ensure_reachable=true)
 }
 
 @private

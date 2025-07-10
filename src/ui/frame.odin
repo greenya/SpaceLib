@@ -55,7 +55,6 @@ Flag :: enum {
     disabled,
     pass,
     pass_self,
-    continue_enter,
     block_wheel,
     capture,
     scissor,
@@ -442,16 +441,6 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := false) {
                 return
             }
         }
-    }
-}
-
-set_continue_enter :: proc (parent: ^Frame, ensure_reachable := false) {
-    for child in parent.children {
-        if ensure_reachable && .capture in child.flags {
-            fmt.panicf("Child \"%s\" has .capture, this will not allow parent to receive \"enter\"", child.name)
-        }
-        child.flags += { .continue_enter }
-        set_continue_enter(child, ensure_reachable)
     }
 }
 

@@ -1,5 +1,6 @@
 package spacelib_ui
 
+// import "core:fmt"
 import "core:slice"
 import "core:time"
 import "../clock"
@@ -149,11 +150,14 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
             mouse_input_consumed = true
 
-            f.entered = true
-            if !f.entered_prev {
-                f.entered_time = ui.clock.time
-                append(&ui.entered_frames, f)
-                if f.enter != nil do f.enter(f)
+            for i:=f; i!=nil; i=i.parent {
+                i.entered = true
+                if !i.entered_prev {
+                    i.entered_time = ui.clock.time
+                    append(&ui.entered_frames, i)
+                    if i.enter != nil do i.enter(i)
+                    // fmt.println("->", i.name)
+                }
             }
 
             if lmb_pressed && ui.captured.frame == nil {
@@ -161,7 +165,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 if .capture in f.flags do keep_capture = true
             }
 
-            if .continue_enter not_in f.flags do break
+            break
         }
 
         if ui.captured.frame != nil {
@@ -189,6 +193,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             f.left_time = ui.clock.time
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
+            // fmt.println("<-", f.name)
         }
     }
 

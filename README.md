@@ -27,11 +27,6 @@ TODO:
 
     .dropdown frame should auto hide itself when clicked outside of it or any its children
 
-TODO: try rework .continue_enter:
-
-    - remove: .continue_enter
-    - remove: set_continue_enter()
-    - add .deep_enter -- when any frame receive enter, send enter to any parent with .deep_enter (this will also allow to receive enter of a child that is not over the parent rect)
 
 TODO: terse: add support for <overflow> command
 
