@@ -54,8 +54,8 @@ destroy_settings :: proc () {
         delete(s.name)
         delete(s.title)
         switch v in s.desc {
-            case string     : delete(v)
-            case [] string  : for s in v do delete(s); delete(v)
+        case string     : delete(v)
+        case [] string  : for s in v do delete(s); delete(v)
         }
         for s in s.control.names do delete(s); delete(s.control.names)
         for s in s.control.titles do delete(s); delete(s.control.titles)

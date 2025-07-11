@@ -47,8 +47,8 @@ open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
     send(#procedure, { s1={screen_name,tab_name}, b1={anim} })
 }
 
-set_dropdown_data :: proc (target: ^ui.Frame, names: [] string, titles: [] string) {
-    send(#procedure, { frame1={target}, s1=names, s2=titles })
+set_dropdown_data :: proc (target, selected: ^ui.Frame, names, titles: [] string) {
+    send(#procedure, { frame1={target,selected}, s1=names, s2=titles })
 }
 
 open_dropdown :: proc (target: ^ui.Frame) {

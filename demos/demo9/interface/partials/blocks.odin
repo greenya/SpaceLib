@@ -127,13 +127,13 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
         },
     }, { point=.top_left, offset=20 }, { point=.bottom_right, offset=-20 })
 
-    title := ui.add_frame(button, {
-        name        = "title",
+    selected := ui.add_frame(button, {
         flags       = {.pass_self,.terse,.terse_height},
         text_format = "<wrap,left,font=text_4l,color=primary_d2>%s",
     }, { point=.left, offset={15,0} }, { point=.right, offset={-20-arrow_w,0} })
 
-    ui.set_text(title, titles[default_idx])
+    ui.set_name(selected, names[default_idx])
+    ui.set_text(selected, titles[default_idx])
 
-    events.set_dropdown_data(button, names, titles)
+    events.set_dropdown_data(button, selected, names, titles)
 }

@@ -19,7 +19,7 @@ import "screens/settings"
 @private ui_: ^ui.UI
 
 get_ui :: #force_inline proc () -> ^ui.UI {
-    assert(ui_!=nil)
+    assert(ui_ != nil)
     return ui_
 }
 
@@ -53,8 +53,9 @@ create :: proc () {
     )
 
     add_screens_layer()
-    add_dropdown_layer()
-    // add_tooltip_layer()
+    add_dropdowns_layer()
+    // add_tooltips_layer()
+    // add_notifications_layer()
 
     credits.add(screens_layer)
     home.add(screens_layer)
@@ -65,7 +66,7 @@ create :: proc () {
 }
 
 destroy :: proc () {
-    delete(dropdown_data)
+    delete(dropdowns_data)
 
     ui.destroy(ui_)
     ui_ = nil

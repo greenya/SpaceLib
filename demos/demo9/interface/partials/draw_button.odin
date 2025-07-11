@@ -117,6 +117,11 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     rect.w *= hv_ratio
     draw.rect(rect, core.alpha(colors.primary, f.opacity))
 
+    if f.selected {
+        sl_color := core.alpha(colors.accent, f.opacity)
+        draw.rect_gradient_horizontal(f.rect, sl_color, {255,255,255,0})
+    }
+
     aox :: draw_button_dropdown_item_anim_offset_x
 
     draw_terse(f.terse, offset={aox*.5*hv_ratio,0}, color=colors.bg0)

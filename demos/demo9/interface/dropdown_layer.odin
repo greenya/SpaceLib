@@ -8,15 +8,15 @@ import "spacelib:ui"
 import "../events"
 import "partials"
 
-@private dropdown_layer : ^ui.Frame
-@private dropdown_data  : map [^ui.Frame] struct { names, titles: [] string }
+@private dropdowns_layer: ^ui.Frame
+@private dropdowns_data : map [^ui.Frame] struct { selected: ^ui.Frame, names, titles: [] string }
 
 @private
-add_dropdown_layer :: proc () {
-    assert(dropdown_layer == nil)
+add_dropdowns_layer :: proc () {
+    assert(dropdowns_layer == nil)
 
-    dropdown_layer = ui.add_frame(ui_.root, {
-        name    = "dropdown_layer",
+    dropdowns_layer = ui.add_frame(ui_.root, {
+        name    = "dropdowns_layer",
         flags   = {.hidden,.block_wheel},
         order   = 4,
         click   = proc (f: ^ui.Frame) {
@@ -27,7 +27,7 @@ add_dropdown_layer :: proc () {
         },
     }, { point=.top_left }, { point=.bottom_right })
 
-    ui.add_frame(dropdown_layer, {
+    ui.add_frame(dropdowns_layer, {
         name    = "dropdown",
         layout  = {dir=.down,auto_size=.dir},
         draw    = partials.draw_button_dropdown_rect,
@@ -40,39 +40,41 @@ add_dropdown_layer :: proc () {
 
 @private
 set_dropdown_data_listener :: proc (args: events.Args) {
-    target, names, titles := args.frame1[0], args.s1, args.s2
-    // fmt.printfln("set dropdown data: target=%s, names=%v, titles=%v", target.name, names, titles)
-
+    target, selected, names, titles := args.frame1[0], args.frame1[1], args.s1, args.s2
+    assert(target != nil)
+    assert(selected != nil)
     assert(len(names) > 0)
     assert(len(titles) > 0)
     assert(len(names) == len(titles))
-    assert(ui.find(target, "title") != nil, "Target must have \"title\" frame")
-
-    dropdown_data[target] = { names=names, titles=titles }
+    // fmt.printfln("set dropdown data: target=%s, selected=%s, names=%v, titles=%v", target.name, selected.name, names, titles)
+    dropdowns_data[target] = { selected=selected, names=names, titles=titles }
 }
 
 @private
 open_dropdown_listener :: proc (args: events.Args) {
     target := args.frame1[0]
     assert(target != nil)
-    assert(target in dropdown_data)
+    assert(target in dropdowns_data)
 
-    names, titles := dropdown_data[target].names, dropdown_data[target].titles
-    // fmt.printfln("open dropdown: target=%s, names=%v, titles=%v", target.name, names, titles)
+    selected    := dropdowns_data[target].selected
+    names       := dropdowns_data[target].names
+    titles      := dropdowns_data[target].titles
+    // fmt.printfln("open dropdown: target=%s, selected=%s, names=%v, titles=%v", target.name, selected.name, names, titles)
 
-    dropdown := ui.get(dropdown_layer, "dropdown")
+    dropdown := ui.get(dropdowns_layer, "dropdown")
 
     // add items if needed
     for i:=len(dropdown.children); i<len(names); i+=1 {
         ui.add_frame(dropdown, {
             text_format = "<pad=15:0,left,font=text_4l,color=primary_d2>%s",
-            flags       = {.terse,.terse_height},
+            flags       = {.radio,.terse,.terse_height},
             draw        = partials.draw_button_dropdown_item,
             click       = proc (f: ^ui.Frame) {
-                dropdown := ui.get(f, "..")
-                target := dropdown.anchors[0].rel_frame
-                title := ui.get(target, "title")
-                ui.set_text(title, dropdown_data[target].titles[ui.index(f)])
+                target  := ui.get(f, "..").anchors[0].rel_frame
+                data    := dropdowns_data[target]
+                f_idx   := ui.index(f)
+                ui.set_name(data.selected, data.names[f_idx])
+                ui.set_text(data.selected, data.titles[f_idx])
                 ui.click(target)
             },
         })
@@ -81,8 +83,9 @@ open_dropdown_listener :: proc (args: events.Args) {
     // setup items
     for child, i in dropdown.children {
         if i < len(names) {
-            child.name = names[i]
+            ui.set_name(child, names[i])
             ui.set_text(child, titles[i], shown=true)
+            child.selected = selected.name == names[i]
         } else {
             ui.hide(child)
         }
@@ -97,7 +100,7 @@ open_dropdown_listener :: proc (args: events.Args) {
         { point=.top_right, rel_point=.bottom_right, rel_frame=target },
     )
 
-    ui.update(dropdown_layer, repeat=2)
+    ui.update(dropdowns_layer, repeat=2)
     if debug do fmt.println("[1] rect", dropdown.rect)
 
     can_fit_down := target.rect.y+target.rect.h+dropdown.rect.h < ui_.root.rect.y+ui_.root.rect.h
@@ -107,7 +110,7 @@ open_dropdown_listener :: proc (args: events.Args) {
             { point=.bottom_left, rel_point=.top_left, rel_frame=target },
             { point=.bottom_right, rel_point=.top_right, rel_frame=target },
         )
-        ui.update(dropdown_layer)
+        ui.update(dropdowns_layer)
         if debug do fmt.println("[2] rect", dropdown.rect)
 
         // scroll bar experiments {{{
@@ -117,7 +120,7 @@ open_dropdown_listener :: proc (args: events.Args) {
         //     dropdown.layout.auto_size = .none
         //     dropdown.layout.scroll.step = 10
         //     dropdown.flags += { .scissor }
-        //     ui.update(dropdown_layer)
+        //     ui.update(dropdowns_layer)
         // }
         // }}}
 
@@ -128,7 +131,7 @@ open_dropdown_listener :: proc (args: events.Args) {
             if debug do fmt.println("offscreen_top_amount", offscreen_top_amount)
             dropdown.anchors[0].offset.y += offscreen_top_amount
             dropdown.anchors[1].offset.y += offscreen_top_amount
-            ui.update(dropdown_layer)
+            ui.update(dropdowns_layer)
             if debug do fmt.println("[3] rect", dropdown.rect)
         }
     }
@@ -147,7 +150,7 @@ open_dropdown_listener :: proc (args: events.Args) {
     if dropdown_w_extra > 0 {
         if debug do fmt.println("dropdown_w_extra", dropdown_w_extra)
         dropdown.anchors[1].offset.x = dropdown_w_extra
-        ui.update(dropdown_layer)
+        ui.update(dropdowns_layer)
         if debug do fmt.println("[4] rect", dropdown.rect)
     }
 
@@ -159,20 +162,20 @@ close_dropdown_listener :: proc (args: events.Args) {
     target := args.frame1[0]
     // fmt.printfln("close dropdown: target=%s", target != nil ? target.name : "<not set>")
 
-    current_target := ui.get(dropdown_layer, "dropdown").anchors[0].rel_frame
+    current_target := ui.get(dropdowns_layer, "dropdown").anchors[0].rel_frame
     assert(current_target != nil)
     if target != nil && current_target != target {
         fmt.panicf("Dropdown target mismatch: current target=%s, requested target=%s", current_target.name, target.name)
     }
 
-    dropdown := ui.get(dropdown_layer, "dropdown")
+    dropdown := ui.get(dropdowns_layer, "dropdown")
     ui.animate(dropdown, anim_dropdown_disappear, .222)
 }
 
 @private
 anim_dropdown_appear :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
-        ui.show(dropdown_layer)
+        ui.show(dropdowns_layer)
         f.flags += {.pass}
     }
 
@@ -200,6 +203,6 @@ anim_dropdown_disappear :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 1 {
         f.flags -= {.pass}
         f.offset = 0
-        ui.hide(dropdown_layer)
+        ui.hide(dropdowns_layer)
     }
 }
