@@ -2,6 +2,7 @@ package demo9_interface
 
 import "core:fmt"
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
@@ -19,7 +20,9 @@ add_dropdown_layer :: proc () {
         flags   = {.hidden,.block_wheel},
         order   = 4,
         click   = proc (f: ^ui.Frame) {
-            target := ui.get(f, "dropdown").anchors[0].rel_frame
+            dropdown := ui.get(f, "dropdown")
+            if ui.animating(dropdown) do return
+            target := dropdown.anchors[0].rel_frame
             ui.click(target)
         },
     }, { point=.top_left }, { point=.bottom_right })
@@ -93,8 +96,8 @@ open_dropdown_listener :: proc (args: events.Args) {
 
     ui.show(dropdown_layer, repeat_refresh_rect=2)
 
-    is_offscreen_bottom := dropdown.rect.y+dropdown.rect.h > ui_.root.rect.y+ui_.root.rect.h
-    if is_offscreen_bottom {
+    can_fit_down := target.rect.y+target.rect.h+dropdown.rect.h < ui_.root.rect.y+ui_.root.rect.h
+    if !can_fit_down {
         // reposition to the top
         ui.set_anchors(dropdown,
             { point=.bottom_left, rel_point=.top_left, rel_frame=target },
@@ -112,6 +115,8 @@ open_dropdown_listener :: proc (args: events.Args) {
         //     ui.refresh_rect(dropdown_layer)
         // }
     }
+
+    ui.animate(dropdown, anim_dropdown_appear, .222)
 }
 
 @private
@@ -125,5 +130,24 @@ close_dropdown_listener :: proc (args: events.Args) {
         fmt.panicf("Dropdown target mismatch: current_target=%s, target=%s (requested)", current_target.name, target.name)
     }
 
-    ui.hide(dropdown_layer)
+    dropdown := ui.get(dropdown_layer, "dropdown")
+    ui.animate(dropdown, anim_dropdown_disappear, .222)
+}
+
+@private
+anim_dropdown_appear :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, f.anim.ratio)
+    dir := f.anchors[0].point == .top_left ? f32(-1): f32(1)
+    f.offset = { 0, dir * 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    if f.anim.ratio == 0 { f.flags += {.pass} }
+    if f.anim.ratio == 1 { f.flags -= {.pass} }
+}
+
+@private
+anim_dropdown_disappear :: proc (f: ^ui.Frame) {
+    ui.set_opacity(f, 1-f.anim.ratio)
+    dir := f.anchors[0].point == .top_left ? f32(1): f32(-1)
+    f.offset = { 0, dir * 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    if f.anim.ratio == 0 { f.flags += {.pass} }
+    if f.anim.ratio == 1 { f.flags -= {.pass}; ui.hide(dropdown_layer) }
 }

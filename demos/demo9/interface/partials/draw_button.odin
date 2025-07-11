@@ -113,7 +113,7 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Exponential_Out, .222, .Exponential_In, .333)
     rect := f.rect
     rect.w *= hv_ratio
-    draw.rect(rect, colors.primary)
+    draw.rect(rect, core.alpha(colors.primary, f.opacity))
 
     draw_terse(f.terse, offset={hv_ratio*10,0}, color=colors.bg0)
 

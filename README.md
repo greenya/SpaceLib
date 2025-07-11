@@ -14,20 +14,6 @@
 
 TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
 
-TODO:
-
-    - add Frame.layer:int, add UI.layers[dynamic]int
-
-    - rename Flag.auto_hide -> Flag.dropdown
-    - only one dropdown frame can active at a time (similar to UI.captured)
-    - add UI.dropdown:^Frame, when != nil, it points to currently dropped down frame
-        - clicking outside of dropdown frame or any of its children should close it; the click itself should be routed to clicked frame correctly
-
-    - rename UI.auto_hide_frames -> UI.dropdown_frames
-
-    .dropdown frame should auto hide itself when clicked outside of it or any its children
-
-
 TODO: terse: add support for <overflow> command
 
     allow to have text fit to any size without need for scrollbar; very needed for dropdown boxes and similar limited space controls; at least to be able to use it for one liners (not wrapping text); ideally support two modes:
