@@ -1,4 +1,4 @@
-package demo9_screens_settings
+package demo9_interface_settings
 
 import "core:fmt"
 import "spacelib:ui"
@@ -21,7 +21,7 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("home")
+            events.open_screen("home")
         },
     )
 

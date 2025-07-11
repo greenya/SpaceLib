@@ -1,4 +1,4 @@
-package demo9_partials
+package demo9_interface_partials
 
 import "spacelib:ui"
 
@@ -11,8 +11,7 @@ add_placeholder_note :: proc (parent: ^ui.Frame, text: string) -> ^ui.Frame {
     })
 
     if parent.layout.dir == .none {
-        ui.add_anchor(frame, { point=.top_left })
-        ui.add_anchor(frame, { point=.bottom_right })
+        ui.set_anchors(frame, { point=.top_left }, { point=.bottom_right })
     }
 
     return frame
@@ -29,8 +28,7 @@ add_placeholder_image :: proc (parent: ^ui.Frame, aspect_ratio := Placeholder_Im
     switch aspect_ratio {
     case .default:
         assert(parent.layout.dir == .none)
-        ui.add_anchor(frame, { point=.top_left })
-        ui.add_anchor(frame, { point=.bottom_right })
+        ui.set_anchors(frame, { point=.top_left }, { point=.bottom_right })
     case ._16x9:
         frame.size_aspect = 16./9
     }

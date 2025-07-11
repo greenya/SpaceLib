@@ -1,4 +1,4 @@
-package demo9_screens_home
+package demo9_interface_home
 
 import "spacelib:ui"
 
@@ -21,19 +21,19 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings",
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("settings")
+            events.open_screen("settings")
         },
     )
 
     partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="contract",
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("credits")
+            events.open_screen("credits")
         },
     )
 
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
         click=proc (f: ^ui.Frame) {
-            events.send_exit_app()
+            events.exit_app()
         },
     )
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
@@ -131,7 +131,7 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     ui.add_frame(buttons_bar, { name="continue", flags={.capture,.terse}, text="<font=text_6l,pad=0:4>CONTINUE",
         draw=partials.draw_button_featured,
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("player")
+            events.open_screen("player")
         },
     })
 

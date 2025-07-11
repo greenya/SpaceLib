@@ -1,4 +1,4 @@
-package demo9_screens_player
+package demo9_interface_player
 
 import "spacelib:ui"
 
@@ -21,7 +21,7 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
         click=proc (f: ^ui.Frame) {
-            events.send_open_screen("home")
+            events.open_screen("home")
         },
     )
 
@@ -39,31 +39,19 @@ add :: proc (parent: ^ui.Frame) {
 @private
 add_map_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "map", "MAP")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>MAP PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "MAP PAGE GOES HERE...")
 }
 
 @private
 add_inventory_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "inventory", "INVENTORY")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>INVENTORY PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "INVENTORY PAGE GOES HERE...")
 }
 
 @private
 add_crafting_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "crafting", "CRAFTING")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>CRAFTING PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "CRAFTING PAGE GOES HERE...")
 }
 
 @private
@@ -73,10 +61,7 @@ add_research_page :: proc () {
     tab_points := ui.get(tab, "points")
     ui.set_text(tab_points, data.player.intel_points_avail, shown=true)
 
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>RESEARCH PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "RESEARCH PAGE GOES HERE...")
 }
 
 @private
@@ -86,28 +71,17 @@ add_skills_page :: proc () {
     tab_points := ui.get(tab, "points")
     ui.set_text(tab_points, data.player.skill_points_avail, shown=true)
 
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>SKILLS PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "SKILLS PAGE GOES HERE...")
 }
 
 @private
 add_journey_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "journey", "JOURNEY")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>JOURNEY PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "JOURNEY PAGE GOES HERE...")
 }
 
 @private
 add_customization_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "customization", "CUSTOMIZATION")
-
-    ui.add_frame(page,
-        { name="msg", text="<font=text_4l,color=primary>CUSTOMIZATION PAGE GOES HERE...", flags={.terse,.terse_height} },
-        { point=.center },
-    )
+    partials.add_placeholder_note(page, "CUSTOMIZATION PAGE GOES HERE...")
 }

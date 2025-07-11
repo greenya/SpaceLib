@@ -3,16 +3,26 @@ package demo9_events
 import "core:fmt"
 import "core:strings"
 
-Event_Listener :: proc (args: ..any)
+import "spacelib:ui"
+
+Event_Listener :: proc (args: Args)
 
 Event :: struct {
     listeners: [dynamic] Event_Listener,
 }
 
+Args :: struct {
+    s1, s2  : [] string,
+    i1      : [] int,
+    f1      : [] f32,
+    b1      : [] bool,
+    frame1  : [] ^ui.Frame,
+}
+
 @private events: map [string] ^Event
 
 create :: proc () {
-    assert(len(events) == 0)
+    assert(events == nil)
 }
 
 destroy :: proc () {
@@ -29,23 +39,35 @@ listen :: proc (event_name: string, listener: Event_Listener) {
     append(&get(event_name).listeners, listener)
 }
 
-send_exit_app :: proc () {
-    send("exit_app")
+exit_app :: proc () {
+    send(#procedure)
 }
 
-send_open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
-    send("open_screen", screen_name, tab_name, anim)
+open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
+    send(#procedure, { s1={screen_name,tab_name}, b1={anim} })
+}
+
+set_dropdown_data :: proc (target: ^ui.Frame, names: [] string, titles: [] string) {
+    send(#procedure, { frame1={target}, s1=names, s2=titles })
+}
+
+open_dropdown :: proc (target: ^ui.Frame) {
+    send(#procedure, { frame1={target} })
+}
+
+close_dropdown :: proc (target: ^ui.Frame = nil) {
+    send(#procedure, { frame1={target} })
 }
 
 @private
-send :: proc (event_name: string, args: ..any) {
-    fmt.println(#procedure, event_name, args)
+send :: proc (event_name: string, event_args: Args = {}) {
+    // fmt.println(#procedure, event_name, event_args)
     if event_name in events {
         event := events[event_name]
         assert(len(event.listeners) > 0)
-        for listener in event.listeners do listener(..args)
+        for listener in event.listeners do listener(event_args)
     } else {
-        fmt.panicf("Event \"%s\" is unknown", event_name)
+        fmt.panicf("Event \"%s\" has no listeners", event_name)
     }
 }
 
