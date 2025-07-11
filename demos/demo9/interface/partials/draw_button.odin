@@ -109,19 +109,23 @@ draw_button_dropdown_rect :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 }
 
+draw_button_dropdown_item_anim_offset_x :: 20
+
 draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Exponential_Out, .222, .Exponential_In, .333)
     rect := f.rect
     rect.w *= hv_ratio
     draw.rect(rect, core.alpha(colors.primary, f.opacity))
 
-    draw_terse(f.terse, offset={hv_ratio*10,0}, color=colors.bg0)
+    aox :: draw_button_dropdown_item_anim_offset_x
+
+    draw_terse(f.terse, offset={aox*.5*hv_ratio,0}, color=colors.bg0)
 
     hv_ratio = ui.hover_ratio(f, .Bounce_Out, .888, .Cubic_In, .333)
     q_w :: 20
-    q_s_rect := core.rect_bar_right(f.rect, 20)
-    q_e_rect := core.rect_bar_right(f.terse.rect, 20)
-    q_e_rect.x += q_w/2
+    q_s_rect := core.rect_bar_right(f.rect, q_w)
+    q_e_rect := core.rect_bar_right(f.terse.rect, q_w)
+    q_e_rect.x += aox/2
     q_rect := core.ease_rect(q_s_rect, q_e_rect, hv_ratio)
     q_color := core.ease_color({}, colors.bg0, hv_ratio)
     draw_text_center("?", q_rect, "text_4l", q_color)

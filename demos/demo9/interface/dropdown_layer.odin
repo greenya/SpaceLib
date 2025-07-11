@@ -116,6 +116,20 @@ open_dropdown_listener :: proc (args: events.Args) {
         // }
     }
 
+    // tweak dropdown width if necessary
+
+    dropdown_w_desired := f32(0)
+    for child in dropdown.children {
+        if .hidden in child.flags do continue
+        aox :: partials.draw_button_dropdown_item_anim_offset_x
+        dropdown_w_desired = max(dropdown_w_desired, child.terse.rect.w+aox)
+    }
+
+    dropdown_w_extra := dropdown_w_desired-dropdown.rect.w
+    if dropdown_w_extra > 0 {
+        dropdown.anchors[1].offset.x = dropdown_w_extra
+    }
+
     ui.animate(dropdown, anim_dropdown_appear, .222)
 }
 

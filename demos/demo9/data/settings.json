@@ -214,8 +214,8 @@
         "title": "LANGUAGE",
         "desc": "Set the game's user interface text language.",
         "control": {
-            "names": [ "en", "zh", "hi", "es", "fr", "pt", "id", "ja", "tr", "ko", "it" ],
-            "titles": [ "English", "Chinese", "Hindi", "Spanish", "French", "Portuguese", "Indonesian", "Japanese", "Turkish", "Korean", "Italian" ],
+            "names": [ "en", "fr", "de", "es", "it", "pl", "uk", "ru", "pt_br", "tr", "zh_hans", "zh_hant", "ko", "ja" ],
+            "titles": [ "English", "French", "German", "Spanish", "Italian", "Polish", "Ukrainian", "Russian", "Portuguese (Brazilian)", "Turkish", "Chinese (Simplified)", "Chinese (Traditional)", "Korean", "Japanese" ],
             "appearance": "dropdown"
         }
     },
@@ -258,6 +258,7 @@
     {
         "name": "use_hardware_cursor",
         "title": "USE HARDWARE CURSOR",
+        "desc": "Enable or disable hardware input for the cursor. Can improve mouse cursor response and smoothness during lag.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -266,6 +267,7 @@
     {
         "name": "show_hotbar",
         "title": "SHOW HOTBAR",
+        "desc": "Enable or disable the item hotbar. This automatically disables the mini radial wheel.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -274,6 +276,7 @@
     {
         "name": "hide_mini_radial_wheel",
         "title": "HIDE MINI RADIAL WHEEL",
+        "desc": "Enable or disable the Mini Radial Wheel. This is automatically disabled when the item hotbar is enabled.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -282,6 +285,7 @@
     {
         "name": "invert_mouse_wheel",
         "title": "INVERT MOUSE WHEEL",
+        "desc": "Inverts the direction of the mouse wheel input.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -290,6 +294,16 @@
     {
         "name": "show_chat_bubbles",
         "title": "SHOW CHAT BUBBLES",
+        "desc": "Enable or disable chat bubbles over other player's characters when close enough to them and they send proximity message.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
+    },
+    {
+        "name": "show_voice_chat_indicator",
+        "title": "SHOW VOICE CHAT INDICATOR",
+        "desc": "Enable or disable voice chat indicator over other player's characters. This will be shown if the players are close enough to each other and voice chat is used.",
         "control": {
             "names": [ "off", "on" ],
             "titles": [ "OFF", "ON" ]
@@ -381,7 +395,12 @@
             "This setting influences upscaling parameters and resolution scale based on target quality and current resolution.",
             "",
             "High impact on GPU performance."
-        ]
+        ],
+        "control": {
+            "names": [ "taa", "tsr", "fsr", "dlss", "xess" ],
+            "titles": [ "TAA", "TSR", "FSR", "DLSS", "XeSS" ],
+            "appearance": "dropdown"
+        }
     },
     {
         "name": "frame_generation_method",
@@ -392,7 +411,12 @@
             "Frame Generation is supported only by specific graphics cards. DLSSG can only be used with DLSS Upscaling method.",
             "",
             "High impact on global framerate."
-        ]
+        ],
+        "control": {
+            "names": [ "off", "fsr", "dlssg" ],
+            "titles": [ "OFF", "FSR", "DLSSG" ],
+            "appearance": "dropdown"
+        }
     },
     {
         "group_name": "lighting",
@@ -643,12 +667,22 @@
     {
         "name": "audio_output_device",
         "title": "AUDIO OUTPUT DEVICE",
-        "desc": "Select the target output audio device."
+        "desc": "Select the target output audio device.",
+        "control": {
+            "names": [ "default", "detected_1", "detected_2" ],
+            "titles": [ "Default", "Speakers (Realtek(R) Audio)", "DELL S2216H (AMD High Definition Audio Device)" ],
+            "appearance": "dropdown"
+        }
     },
     {
         "name": "audio_input_device",
         "title": "AUDIO INPUT DEVICE",
-        "desc": "Select the target input audio device."
+        "desc": "Select the target input audio device.",
+        "control": {
+            "names": [ "default", "detected_1" ],
+            "titles": [ "Default", "Microphone (Realtek(R) Audio)" ],
+            "appearance": "dropdown"
+        }
     },
 
 // ============================================================================
@@ -722,8 +756,8 @@
         "title": "FONT SIZE",
         "desc": "Set the font size of the Subtitles.",
         "control": {
-            "names": [ "small", "default", "large", "extra_large" ],
-            "titles": [ "Small", "Default", "Large", "Extra Large" ],
+            "names": [ "small", "default", "large" ],
+            "titles": [ "Small", "Default", "Large" ],
             "default_idx": 1
         }
     },
