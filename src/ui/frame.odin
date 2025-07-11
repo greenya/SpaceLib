@@ -159,6 +159,12 @@ add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Fram
     set_parent(f, parent)
     set_anchors(f, ..anchors)
 
+    if f.name != "" {
+        name := f.name
+        f.name = ""
+        set_name(f, name)
+    }
+
     if f.text != "" {
         text := f.text
         f.text = ""
@@ -223,6 +229,11 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
         })
         f.ui = f.parent.ui
     }
+}
+
+set_name :: proc (f: ^Frame, name: string) {
+    delete(f.name)
+    f.name = name != "" ? strings.clone(name) : ""
 }
 
 set_text :: proc (f: ^Frame, values: ..any, shown := false) {
@@ -638,6 +649,7 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 destroy_frame_tree :: proc (f: ^Frame) {
     for child in f.children do destroy_frame_tree(child)
     terse.destroy(f.terse)
+    delete(f.name)
     delete(f.text)
     delete(f.children)
     delete(f.anchors)
