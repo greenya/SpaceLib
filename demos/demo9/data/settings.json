@@ -214,8 +214,8 @@
         "title": "LANGUAGE",
         "desc": "Set the game's user interface text language.",
         "control": {
-            "names": [ "en", "fr", "de", "es", "it", "pl", "uk", "ru", "pt_br", "tr", "zh_hans", "zh_hant", "ko", "ja" ],
-            "titles": [ "English", "French", "German", "Spanish", "Italian", "Polish", "Ukrainian", "Russian", "Portuguese (Brazilian)", "Turkish", "Chinese (Simplified)", "Chinese (Traditional)", "Korean", "Japanese" ],
+            "names": [ "en", "fr", "de", "es", "it", "pl", "uk", "pt_br", "tr", "zh_hans", "zh_hant", "ko", "ja" ],
+            "titles": [ "English", "French", "German", "Spanish", "Italian", "Polish", "Ukrainian", "Portuguese (Brazilian)", "Turkish", "Chinese (Simplified)", "Chinese (Traditional)", "Korean", "Japanese" ],
             "appearance": "dropdown"
         }
     },

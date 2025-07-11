@@ -52,10 +52,11 @@ create :: proc () {
         },
     )
 
-    add_screens_layer()
-    add_dropdowns_layer()
-    // add_tooltips_layer()
-    // add_notifications_layer()
+    add_screens_layer(order=0, curtain_order=8)
+    add_dropdowns_layer(order=1)
+    // add_notifications_layer(order=2)
+    // add_tooltips_layer(order=3)
+    add_modals_layer(order=9)
 
     credits.add(screens_layer)
     home.add(screens_layer)

@@ -30,9 +30,9 @@ app_startup :: proc () {
 
     events.listen("exit_app", proc (args: events.Args) { app_exit_requested=true })
 
-    // events.open_screen("home", anim=false)
+    events.open_screen("home", anim=false)
     // events.open_screen("credits", anim=false)
-    events.open_screen("settings", "graphics", anim=false)
+    // events.open_screen("settings", "graphics", anim=false)
     // events.open_screen("player", "journey", anim=false)
 
     // ui.print_frame_tree(app_ui.root /*, depth_max=2*/)

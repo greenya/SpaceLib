@@ -194,3 +194,19 @@ draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
     rect := core.rect_inflated(f.rect, { -8 + 2*hv_ratio, 0 })
     draw.rect(rect, color)
 }
+
+draw_window_rect :: proc (f: ^ui.Frame) {
+    bg_top_color := core.alpha(colors.bg0, f.opacity)
+    bg_bottom_color := core.alpha(core.brightness(colors.bg2, -.5), f.opacity)
+    draw.rect_gradient_vertical(f.rect, bg_top_color, bg_bottom_color)
+
+    br_color := core.alpha(colors.primary, f.opacity * .3)
+    draw.rect_lines(f.rect, 2, br_color)
+
+    dim_rect := core.rect_from_center(core.rect_top(f.rect), 64)
+    draw.diamond(dim_rect, colors.bg0)
+    draw.diamond_lines(dim_rect, 2, br_color)
+
+    icon_rect := core.rect_scaled_from_center(dim_rect, .6)
+    draw_sprite("priority_high", icon_rect, colors.primary)
+}

@@ -14,18 +14,18 @@ import "partials"
 @private screens_transition: struct { prev, next: ^ui.Frame }
 
 @private
-add_screens_layer :: proc () {
+add_screens_layer :: proc (order, curtain_order: int) {
     assert(screens_layer == nil)
     assert(curtain_layer == nil)
 
     screens_layer = ui.add_frame(ui_.root,
-        { name="screens_layer" },
+        { name="screens_layer", order=order },
         { point=.top_left },
         { point=.bottom_right },
     )
 
     curtain_layer = ui.add_frame(ui_.root,
-        { name="curtain_layer", order=8, flags={.hidden,.block_wheel} },
+        { name="curtain_layer", order=curtain_order, flags={.hidden,.block_wheel} },
         { point=.top_left },
         { point=.bottom_right },
     )

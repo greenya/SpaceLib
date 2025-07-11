@@ -12,13 +12,13 @@ import "partials"
 @private dropdowns_data : map [^ui.Frame] struct { selected: ^ui.Frame, names, titles: [] string }
 
 @private
-add_dropdowns_layer :: proc () {
+add_dropdowns_layer :: proc (order: int) {
     assert(dropdowns_layer == nil)
 
     dropdowns_layer = ui.add_frame(ui_.root, {
         name    = "dropdowns_layer",
         flags   = {.hidden,.block_wheel},
-        order   = 4,
+        order   = order,
         click   = proc (f: ^ui.Frame) {
             dropdown := ui.get(f, "dropdown")
             if ui.animating(dropdown) do return
