@@ -701,12 +701,21 @@ draw_frame_tree :: proc (f: ^Frame) {
 
     if f.terse != nil do f.terse.opacity = f.opacity
 
-    if f.draw != nil {
-        if .terse not_in f.flags || f.terse != nil do f.draw(f)
-    } else {
-        if f.terse != nil {
-            assert(f.ui.terse_draw_proc != nil, "UI.terse_draw_proc must not be nil when using terse")
-            f.ui.terse_draw_proc(f.terse)
+    is_drawn: bool
+    in_scissor := core.rect_intersection(f.rect, f.ui.scissor_rect) != {}
+
+    if in_scissor {
+        if f.draw != nil {
+            if .terse not_in f.flags || f.terse != nil {
+                f.draw(f)
+                is_drawn = true
+            }
+        } else {
+            if f.terse != nil {
+                assert(f.ui.terse_draw_proc != nil, "UI.terse_draw_proc must not be nil when using terse")
+                f.ui.terse_draw_proc(f.terse)
+                is_drawn = true
+            }
         }
     }
 
@@ -714,9 +723,9 @@ draw_frame_tree :: proc (f: ^Frame) {
     if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
     for child in f.children do draw_frame_tree(child)
     if .scissor in f.flags do pop_scissor_rect(f.ui)
-    if f.draw_after != nil do f.draw_after(f)
+    if in_scissor && f.draw_after != nil do f.draw_after(f)
 
-    f.ui.stats.frames_drawn += 1
+    if is_drawn do f.ui.stats.frames_drawn += 1
 }
 
 @private
