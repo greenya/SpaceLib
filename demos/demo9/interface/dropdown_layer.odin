@@ -88,35 +88,53 @@ open_dropdown_listener :: proc (args: events.Args) {
         }
     }
 
+    debug :: false
+    if debug do fmt.println("---------------------------")
+
     // anchor dropdown to the bottom of the target
     ui.set_anchors(dropdown,
         { point=.top_left, rel_point=.bottom_left, rel_frame=target },
         { point=.top_right, rel_point=.bottom_right, rel_frame=target },
     )
 
-    ui.show(dropdown_layer, repeat_refresh_rect=2)
+    ui.update(dropdown_layer, repeat=2)
+    if debug do fmt.println("[1] rect", dropdown.rect)
 
     can_fit_down := target.rect.y+target.rect.h+dropdown.rect.h < ui_.root.rect.y+ui_.root.rect.h
     if !can_fit_down {
-        // reposition to the top
+        if debug do fmt.println("reposition to the top")
         ui.set_anchors(dropdown,
             { point=.bottom_left, rel_point=.top_left, rel_frame=target },
             { point=.bottom_right, rel_point=.top_right, rel_frame=target },
         )
-        ui.refresh_rect(dropdown_layer)
+        ui.update(dropdown_layer)
+        if debug do fmt.println("[2] rect", dropdown.rect)
 
-        // scroll bar experiments
+        // scroll bar experiments {{{
         // offscreen_top_amount := -dropdown.rect.y
         // if offscreen_top_amount > 0 {
         //     dropdown.size.y = dropdown.rect.h - offscreen_top_amount
         //     dropdown.layout.auto_size = .none
         //     dropdown.layout.scroll.step = 10
         //     dropdown.flags += { .scissor }
-        //     ui.refresh_rect(dropdown_layer)
+        //     ui.update(dropdown_layer)
         // }
+        // }}}
+
+        // for now just offset dropdown down, ugly and easy
+
+        offscreen_top_amount := -dropdown.rect.y
+        if offscreen_top_amount > 0 {
+            if debug do fmt.println("offscreen_top_amount", offscreen_top_amount)
+            dropdown.anchors[0].offset.y += offscreen_top_amount
+            dropdown.anchors[1].offset.y += offscreen_top_amount
+            ui.update(dropdown_layer)
+            if debug do fmt.println("[3] rect", dropdown.rect)
+        }
     }
 
     // tweak dropdown width if necessary
+    // note: Settings -> Audio -> last 2 settings are good for testing this logic
 
     dropdown_w_desired := f32(0)
     for child in dropdown.children {
@@ -127,7 +145,10 @@ open_dropdown_listener :: proc (args: events.Args) {
 
     dropdown_w_extra := dropdown_w_desired-dropdown.rect.w
     if dropdown_w_extra > 0 {
+        if debug do fmt.println("dropdown_w_extra", dropdown_w_extra)
         dropdown.anchors[1].offset.x = dropdown_w_extra
+        ui.update(dropdown_layer)
+        if debug do fmt.println("[4] rect", dropdown.rect)
     }
 
     ui.animate(dropdown, anim_dropdown_appear, .222)
@@ -141,7 +162,7 @@ close_dropdown_listener :: proc (args: events.Args) {
     current_target := ui.get(dropdown_layer, "dropdown").anchors[0].rel_frame
     assert(current_target != nil)
     if target != nil && current_target != target {
-        fmt.panicf("Dropdown target mismatch: current_target=%s, target=%s (requested)", current_target.name, target.name)
+        fmt.panicf("Dropdown target mismatch: current target=%s, requested target=%s", current_target.name, target.name)
     }
 
     dropdown := ui.get(dropdown_layer, "dropdown")
@@ -150,18 +171,35 @@ close_dropdown_listener :: proc (args: events.Args) {
 
 @private
 anim_dropdown_appear :: proc (f: ^ui.Frame) {
+    if f.anim.ratio == 0 {
+        ui.show(dropdown_layer)
+        f.flags += {.pass}
+    }
+
     ui.set_opacity(f, f.anim.ratio)
     dir := f.anchors[0].point == .top_left ? f32(-1): f32(1)
     f.offset = { 0, dir * 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
-    if f.anim.ratio == 0 { f.flags += {.pass} }
-    if f.anim.ratio == 1 { f.flags -= {.pass} }
+
+    if f.anim.ratio == 1 {
+        f.flags -= {.pass}
+        f.offset = 0
+        ui.set_opacity(f, 1)
+    }
 }
 
 @private
 anim_dropdown_disappear :: proc (f: ^ui.Frame) {
+    if f.anim.ratio == 0 {
+        f.flags += {.pass}
+    }
+
     ui.set_opacity(f, 1-f.anim.ratio)
     dir := f.anchors[0].point == .top_left ? f32(1): f32(-1)
     f.offset = { 0, dir * 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
-    if f.anim.ratio == 0 { f.flags += {.pass} }
-    if f.anim.ratio == 1 { f.flags -= {.pass}; ui.hide(dropdown_layer) }
+
+    if f.anim.ratio == 1 {
+        f.flags -= {.pass}
+        f.offset = 0
+        ui.hide(dropdown_layer)
+    }
 }

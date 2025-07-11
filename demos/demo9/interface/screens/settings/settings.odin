@@ -186,7 +186,7 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
         ui.set_text(ui.get(details, "title"), item.title)
         ui.set_text(ui.get(details, "content/text"), item_desc)
         ui.set_scroll_offset(ui.get(details, "content"), 0)
-        ui.show(details, repeat_refresh_rect=2)
+        ui.show(details)
     } else {
         ui.hide(details)
     }

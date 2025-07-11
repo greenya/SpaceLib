@@ -183,18 +183,23 @@ clear_anchors :: #force_inline proc (f: ^Frame) {
     resize(&f.anchors, 0)
 }
 
-updated :: proc (f: ^Frame) {
-    if .hidden in f.flags do return
-    update_rect(f)
-    for child in f.children do updated(child)
+update :: proc (f: ^Frame, repeat := 1) {
+    for _ in 0..<repeat {
+        set_rect_dirty_frame_tree(f)
+        update_rect_frame_tree(f)
+    }
 }
 
-refresh_rect :: proc (f: ^Frame, repeat := 1) {
-    for _ in 0..<repeat {
-        f.rect_dirty = true
-        for child in f.children do child.rect_dirty = true
-        updated(f)
-    }
+@private
+set_rect_dirty_frame_tree :: proc (f: ^Frame) {
+    f.rect_dirty = true
+    for child in f.children do set_rect_dirty_frame_tree(child)
+}
+
+@private
+update_rect_frame_tree :: proc (f: ^Frame) {
+    update_rect(f)
+    for child in f.children do update_rect_frame_tree(child)
 }
 
 index :: #force_inline proc (child: ^Frame) -> int {
@@ -229,7 +234,7 @@ set_text :: proc (f: ^Frame, values: ..any, shown := false) {
     f.text = fmt.aprintf(format, ..values)
 
     if shown do show(f)
-    updated(f)
+    update(f)
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
@@ -322,7 +327,7 @@ visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Fram
     return list[:]
 }
 
-show_by_frame :: proc (f: ^Frame, hide_siblings := false, repeat_refresh_rect := 1) {
+show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil {
         for child in f.parent.children {
             if child != f do hide_by_frame(child)
@@ -332,17 +337,17 @@ show_by_frame :: proc (f: ^Frame, hide_siblings := false, repeat_refresh_rect :=
     f.flags -= { .hidden }
 
     if f.parent != nil && f.parent.layout.dir != .none {
-        refresh_rect(f.parent, repeat_refresh_rect)
+        update(f.parent)
     } else {
-        refresh_rect(f, repeat_refresh_rect)
+        update(f)
     }
 
     if f.show != nil do f.show(f)
 }
 
-show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false, repeat_refresh_rect := 1) {
+show_by_path :: proc (parent: ^Frame, path: string, hide_siblings := false) {
     target := get(parent, path)
-    show_by_frame(target, hide_siblings, repeat_refresh_rect)
+    show_by_frame(target, hide_siblings)
 }
 
 show :: proc {
@@ -356,7 +361,7 @@ hide_by_frame :: proc (f: ^Frame) {
     f.flags += { .hidden }
 
     if f.parent != nil && f.parent.layout.dir != .none {
-        refresh_rect(f.parent)
+        update(f.parent)
     }
 
     if f.hide != nil do f.hide(f)
