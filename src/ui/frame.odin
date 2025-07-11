@@ -179,7 +179,7 @@ set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
     }
 }
 
-clear_anchors :: proc (f: ^Frame) {
+clear_anchors :: #force_inline proc (f: ^Frame) {
     resize(&f.anchors, 0)
 }
 
@@ -197,11 +197,16 @@ refresh_rect :: proc (f: ^Frame, repeat := 1) {
     }
 }
 
+index :: #force_inline proc (child: ^Frame) -> int {
+    assert(child.parent != nil)
+    i, _ := slice.linear_search(child.parent.children[:], child)
+    assert(i >= 0, "Bad child. The child has a parent, but that parent's list of children does not include the child. Please use set_parent() for correct re-parenting.")
+    return i
+}
+
 set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     if f.parent != nil {
-        idx, _ := slice.linear_search(f.parent.children[:], f)
-        assert(idx >= 0)
-        ordered_remove(&f.parent.children, idx)
+        ordered_remove(&f.parent.children, index(f))
         f.ui = nil
     }
 
@@ -298,12 +303,12 @@ set_scroll_offset :: proc (f: ^Frame, value: f32) {
     if f.actor != nil do wheel_actor(f)
 }
 
-first_visible_child :: proc (f: ^Frame) -> ^Frame {
+first_visible_child :: #force_inline proc (f: ^Frame) -> ^Frame {
     for child in f.children do if .hidden not_in child.flags do return child
     return nil
 }
 
-first_visible_sibling :: proc (f: ^Frame) -> ^Frame {
+first_visible_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
     if f.parent != nil do for child in f.parent.children do if .hidden not_in child.flags do return child
     return nil
 }
@@ -447,17 +452,17 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := false) {
     }
 }
 
-hidden :: proc (f: ^Frame) -> bool {
+hidden :: #force_inline proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .hidden in i.flags do return true
     return false
 }
 
-disabled :: proc (f: ^Frame) -> bool {
+disabled :: #force_inline proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .disabled in i.flags do return true
     return false
 }
 
-passed :: proc (f: ^Frame) -> bool {
+passed :: #force_inline proc (f: ^Frame) -> bool {
     if .pass_self in f.flags do return true
     for i:=f; i!=nil; i=i.parent do if .pass in i.flags do return true
     return false
