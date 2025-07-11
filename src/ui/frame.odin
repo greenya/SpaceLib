@@ -255,11 +255,14 @@ animate :: proc (f: ^Frame, tick: Frame_Proc, dur: f32) {
 }
 
 end_animation :: proc (f: ^Frame) {
-    assert(f != nil)
     if f.anim.tick != nil {
         f.anim.ratio = 1
         f.anim.tick(f)
     }
+}
+
+animating :: #force_inline proc (f: ^Frame) -> bool {
+    return f.anim.tick != nil
 }
 
 hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dt: f32, leave_ease: core.Ease, leave_dt: f32) -> f32 {
