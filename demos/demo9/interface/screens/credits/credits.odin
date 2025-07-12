@@ -24,27 +24,24 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
 
-    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
-        click=proc (f: ^ui.Frame) {
-            events.open_screen("home")
-        },
-    )
+    close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
+    close.click = proc (f: ^ui.Frame) {
+        events.open_screen("home")
+    }
 
-    partials.add_screen_footer_key_button(screen, "autoscroll_off", "Disable Auto-Scroll", key="D",
-        click=proc (f: ^ui.Frame) {
-            is_autoscroll = false
-            ui.show(f, "../autoscroll_on")
-            ui.hide(f)
-        },
-    )
+    as_off := partials.add_screen_footer_key_button(screen, "autoscroll_off", "Disable Auto-Scroll", key="D")
+    as_off.click = proc (f: ^ui.Frame) {
+        is_autoscroll = false
+        ui.show(f, "../autoscroll_on")
+        ui.hide(f)
+    }
 
-    partials.add_screen_footer_key_button(screen, "autoscroll_on", "Enable Auto-Scroll", key="E",
-        click=proc (f: ^ui.Frame) {
-            is_autoscroll = true
-            ui.show(f, "../autoscroll_off")
-            ui.hide(f)
-        },
-    )
+    as_on := partials.add_screen_footer_key_button(screen, "autoscroll_on", "Enable Auto-Scroll", key="E")
+    as_on.click = proc (f: ^ui.Frame) {
+        is_autoscroll = true
+        ui.show(f, "../autoscroll_off")
+        ui.hide(f)
+    }
 
     add_credits_page()
 

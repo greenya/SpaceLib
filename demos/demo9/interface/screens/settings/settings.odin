@@ -19,11 +19,10 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
 
-    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
-        click=proc (f: ^ui.Frame) {
-            events.open_screen("home")
-        },
-    )
+    close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
+    close.click = proc (f: ^ui.Frame) {
+        events.open_screen("home")
+    }
 
     partials.add_screen_footer_key_button(screen, "reset_to_default", "Reset to Default", key="X")
 

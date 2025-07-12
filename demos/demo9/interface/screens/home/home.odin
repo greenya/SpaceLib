@@ -19,23 +19,21 @@ add :: proc (parent: ^ui.Frame) {
 
     partials.add_screen_base(screen)
 
-    partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings",
-        click=proc (f: ^ui.Frame) {
-            events.open_screen("settings")
-        },
-    )
+    settings := partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings")
+    settings.click = proc (f: ^ui.Frame) {
+        events.open_screen("settings")
+    }
 
-    partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="contract",
-        click=proc (f: ^ui.Frame) {
-            events.open_screen("credits")
-        },
-    )
+    credits := partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="contract")
+    credits.click=proc (f: ^ui.Frame) {
+        events.open_screen("credits")
+    }
 
-    partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc",
-        click=proc (f: ^ui.Frame) {
-            events.exit_app()
-        },
-    )
+    close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
+    close.click = proc (f: ^ui.Frame) {
+        events.exit_app()
+    }
+
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
     partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
     partials.add_screen_footer_key_button(screen, "account", "Account", key="A")
@@ -153,7 +151,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
         { point=.top_right },
     )
     ui.add_frame(header,
-        { name="icon", text="<left,font=text_4l,color=primary,icon=key2/!:.9>", flags={.terse,.terse_height,.terse_width} },
+        { name="icon", text="<left,font=text_4l,color=primary,icon=key2/!:.9>", flags={.terse,.terse_size} },
         { point=.center, rel_point=.left, offset={1,0} },
     )
     ui.add_frame(notifications_area,

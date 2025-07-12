@@ -1,7 +1,21 @@
 package demo9_interface_partials
 
+import "core:fmt"
+
 import "spacelib:ui"
 import "../../events"
+
+add_button :: proc (parent: ^ui.Frame, name, text, key: string, flags: bit_set [ui.Flag] = {}) -> ^ui.Frame {
+    assert(len(key) == 1 || len(key) == 3 || len(key) == 6) // "H", "Esc", "L.Ctrl"
+    key_width_ratios := [] string { "?", "1", "?", "1.4", "?", "?", "2" }
+    key_width_ratio := key_width_ratios[len(key)]
+    return ui.add_frame(parent, {
+        name    = name,
+        text    = fmt.tprintf("<pad=12:6,font=text_4l,color=primary,icon=key/%s:%s:1> %s", key, key_width_ratio, text),
+        flags   = flags | {.capture,.terse,.terse_size},
+        draw    = draw_button,
+    })
+}
 
 add_text_and_scrollbar :: proc (target: ^ui.Frame) -> (text, track, thumb: ^ui.Frame) {
     text = ui.add_frame(target, {
