@@ -234,7 +234,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     }
 
     ui.add_frame(root,
-        { order=-1, flags={.terse,.terse_height}, text="<right,color=c3>by Spacemad" },
+        { order=-1, flags={.terse,.terse_size}, text="<right,color=c3>by Spacemad" },
         { point=.bottom_right, offset={-25,-15} },
     )
 

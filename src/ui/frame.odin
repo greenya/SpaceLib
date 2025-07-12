@@ -62,6 +62,7 @@ Flag :: enum {
     radio,
     auto_hide,
     terse,
+    terse_size,
     terse_height,
     terse_width,
     terse_hit_rect,
@@ -778,8 +779,8 @@ update_terse :: proc (f: ^Frame) {
         )
     }
 
-    if .terse_width in f.flags do f.size.x = f.terse.rect.w
-    if .terse_height in f.flags do f.size.y = f.terse.rect.h
+    if f.flags & {.terse_size,.terse_width} != {} do f.size.x = f.terse.rect.w
+    if f.flags & {.terse_size,.terse_height} != {} do f.size.y = f.terse.rect.h
 }
 
 @private

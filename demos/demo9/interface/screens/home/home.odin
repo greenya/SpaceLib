@@ -71,7 +71,7 @@ add_social_links :: proc () {
 @private
 add_account_info :: proc () {
     account_info := ui.add_frame(ui.get(screen, "header_bar"),
-        { name="account_info", text_format="<left,font=text_4l,color=primary_a6>%s\n%s", flags={.terse,.terse_height} },
+        { name="account_info", flags={.terse,.terse_size}, text_format="<left,font=text_4l,color=primary_a6>%s\n%s" },
         { point=.left, offset={partials.screen_pad,0} },
     )
     ui.set_text(account_info, data.player.account_name, data.player.character_name)
