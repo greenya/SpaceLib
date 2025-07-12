@@ -794,9 +794,23 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     for child in vis_children {
         if .hidden in child.flags do continue
 
-        rect := Rect {}
-        rect.w = child.size.x != 0 ? child.size.x : f.layout.size.x != 0 ? f.layout.size.x : f.rect.w-2*f.layout.pad.x
-        rect.h = child.size.y != 0 ? child.size.y : f.layout.size.y != 0 ? f.layout.size.y : f.rect.h-2*f.layout.pad.y
+        rect := Rect {
+            x = 0,
+            y = 0,
+            w = child.size.x != 0\
+                ? child.size.x\
+                : f.layout.size.x != 0\
+                    ? f.layout.size.x\
+                    : f.rect.w - 2*f.layout.pad.x,
+            h = child.size.y != 0\
+                ? child.size.y\
+                : f.layout.size.y != 0\
+                    ? f.layout.size.y\
+                    : f.rect.h - 2*f.layout.pad.y,
+        }
+
+        if rect.w < 0 do rect.w = 0
+        if rect.h < 0 do rect.h = 0
 
         if child.size_aspect != 0 {
             if is_dir_vertical  do rect.h = rect.w/child.size_aspect
