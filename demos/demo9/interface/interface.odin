@@ -56,7 +56,7 @@ create :: proc () {
 }
 
 destroy :: proc () {
-    delete(dropdowns_data)
+    delete(dropdowns.data)
 
     ui.destroy(ui_)
     ui_ = nil
