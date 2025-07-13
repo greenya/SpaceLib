@@ -1,4 +1,4 @@
-package demo9_interface
+package interface
 
 import "core:fmt"
 import "core:math/rand"
@@ -6,12 +6,16 @@ import "core:math/rand"
 import "spacelib:ui"
 
 import "../events"
-import "partials"
+import "../partials"
 
-@private screens_layer: ^ui.Frame
-@private curtain_layer: ^ui.Frame
+@private screens_layer      : ^ui.Frame
+@private curtain_layer      : ^ui.Frame
+@private screens_transition : struct { prev, next: ^ui.Frame }
 
-@private screens_transition: struct { prev, next: ^ui.Frame }
+get_screens_layer :: #force_inline proc () -> ^ui.Frame {
+    assert(screens_layer != nil)
+    return screens_layer
+}
 
 @private
 add_screens_layer :: proc (order, curtain_order: int) {
@@ -30,12 +34,13 @@ add_screens_layer :: proc (order, curtain_order: int) {
         { point=.bottom_right },
     )
 
-    events.listen("open_screen", open_screen_listener)
+    events.listen(.open_screen, open_screen_listener)
 }
 
 @private
 open_screen_listener :: proc (args: events.Args) {
-    screen_name, tab_name, anim := args.s1[0], args.s1[1], args.b1[0]
+    args := args.(events.Open_Screen)
+    screen_name, tab_name, skip_anim := args.screen_name, args.tab_name, args.skip_anim
     fmt.printfln("open screen: %s, tab=%s", screen_name, tab_name != "" ? tab_name : "<not set>")
 
     prev_screen := ui.first_visible_child(screens_layer)
@@ -48,7 +53,7 @@ open_screen_listener :: proc (args: events.Args) {
         ui.click(tab)
     }
 
-    if anim && prev_screen != nil {
+    if !skip_anim && prev_screen != nil {
         anim_start_screen_transition(prev_screen, next_screen)
     } else {
         ui.show(next_screen, hide_siblings=true)

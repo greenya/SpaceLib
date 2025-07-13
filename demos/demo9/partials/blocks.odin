@@ -1,9 +1,10 @@
-package demo9_interface_partials
+package partials
 
 import "core:fmt"
 
 import "spacelib:ui"
-import "../../events"
+
+import "../events"
 
 add_button :: proc (parent: ^ui.Frame, name, text, key: string, flags: bit_set [ui.Flag] = {}) -> ^ui.Frame {
     assert(len(key) == 1 || len(key) == 3 || len(key) == 6) // "H", "Esc", "L.Ctrl"
@@ -136,8 +137,8 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
         flags   = {.check},
         draw    = draw_button_dropdown_button,
         click   = proc (f: ^ui.Frame) {
-            if f.selected   do events.open_dropdown(f)
-            else            do events.close_dropdown(f)
+            if f.selected   do events.open_dropdown({ target=f })
+            else            do events.close_dropdown({ target=f })
         },
     }, { point=.top_left, offset=20 }, { point=.bottom_right, offset=-20 })
 
@@ -149,5 +150,5 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
     ui.set_name(selected, names[default_idx])
     ui.set_text(selected, titles[default_idx])
 
-    events.set_dropdown_data(button, selected, names, titles)
+    events.set_dropdown_data({ target=button, selected=selected, names=names, titles=titles })
 }

@@ -1,9 +1,9 @@
-package demo9_interface_credits
+package credits
 
 import "spacelib:ui"
 
-import "../../../data"
-import "../../../events"
+import "../../data"
+import "../../events"
 import "../../partials"
 
 @private screen: ^ui.Frame
@@ -27,7 +27,7 @@ add :: proc (parent: ^ui.Frame) {
 
     close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
     close.click = proc (f: ^ui.Frame) {
-        events.open_screen("home")
+        events.open_screen({ screen_name="home" })
     }
 
     as_off := partials.add_screen_footer_key_button(screen, "autoscroll_off", "Disable Auto-Scroll", key="D")

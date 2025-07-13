@@ -1,33 +1,61 @@
-package demo9_events
+package events
 
-import "core:fmt"
-import "core:strings"
-
+// import "core:fmt"
 import "spacelib:ui"
 
-Event_Listener :: proc (args: Args)
+ID :: enum {
+    exit_app,
+    open_screen,
+    set_dropdown_data,
+    open_dropdown,
+    close_dropdown,
+}
+
+Args :: union {
+    Open_Screen,
+    Set_Dropdown_Data,
+    Open_Dropdown,
+    Close_Dropdown,
+}
+
+exit_app :: proc () { send(.exit_app) }
+
+open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
+Open_Screen :: struct { screen_name, tab_name: string, skip_anim: bool }
+
+set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }
+Set_Dropdown_Data :: struct { target, selected: ^ui.Frame, names, titles: [] string }
+
+open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
+Open_Dropdown :: struct { target: ^ui.Frame }
+
+close_dropdown :: proc (args: Close_Dropdown) { send(.close_dropdown, args) }
+Close_Dropdown :: struct { target: ^ui.Frame }
 
 Event :: struct {
-    listeners: [dynamic] Event_Listener,
+    listeners: [dynamic] Listener,
 }
 
-Args :: struct {
-    s1, s2  : [] string,
-    i1      : [] int,
-    f1      : [] f32,
-    b1      : [] bool,
-    frame1  : [] ^ui.Frame,
+Listener :: proc (args: Args)
+
+@private events: map [ID] ^Event
+
+@private get :: #force_inline proc (id: ID) -> ^Event {
+    if id not_in events do events[id] = new(Event)
+    return events[id]
 }
 
-@private events: map [string] ^Event
+@private send :: #force_inline proc (id: ID, args: Args = nil) {
+    // fmt.printfln("[send] %v |%i| %#v", name, len(events[name].listeners), args)
+    for l in events[id].listeners do l(args)
+}
 
 create :: proc () {
     assert(events == nil)
 }
 
 destroy :: proc () {
-    for name, event in events {
-        delete(name)
+    for _, event in events {
         delete(event.listeners)
         free(event)
     }
@@ -35,48 +63,6 @@ destroy :: proc () {
     events = {}
 }
 
-listen :: proc (event_name: string, listener: Event_Listener) {
-    append(&get(event_name).listeners, listener)
-}
-
-exit_app :: proc () {
-    send(#procedure)
-}
-
-open_screen :: proc (screen_name: string, tab_name := "", anim := true) {
-    send(#procedure, { s1={screen_name,tab_name}, b1={anim} })
-}
-
-set_dropdown_data :: proc (target, selected: ^ui.Frame, names, titles: [] string) {
-    send(#procedure, { frame1={target,selected}, s1=names, s2=titles })
-}
-
-open_dropdown :: proc (target: ^ui.Frame) {
-    send(#procedure, { frame1={target} })
-}
-
-close_dropdown :: proc (target: ^ui.Frame = nil) {
-    send(#procedure, { frame1={target} })
-}
-
-@private
-send :: proc (event_name: string, event_args: Args = {}) {
-    // fmt.println(#procedure, event_name, event_args)
-    if event_name in events {
-        event := events[event_name]
-        assert(len(event.listeners) > 0)
-        for listener in event.listeners do listener(event_args)
-    } else {
-        fmt.panicf("Event \"%s\" has no listeners", event_name)
-    }
-}
-
-@private
-get :: #force_inline proc (name: string) -> ^Event {
-    name := name
-    if name not_in events {
-        name = strings.clone(name)
-        events[name] = new(Event)
-    }
-    return events[name]
+listen :: proc (id: ID, listener: Listener) {
+    append(&get(id).listeners, listener)
 }

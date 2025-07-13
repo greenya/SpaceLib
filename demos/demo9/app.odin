@@ -8,6 +8,10 @@ import "data"
 import "events"
 import "fonts"
 import "interface"
+import "screens/credits"
+import "screens/home"
+import "screens/player"
+import "screens/settings"
 import "sprites"
 
 app_exit_requested: bool
@@ -27,13 +31,17 @@ app_startup :: proc () {
     sprites.create()
 
     interface.create()
+    credits.add(interface.get_screens_layer())
+    home.add(interface.get_screens_layer())
+    player.add(interface.get_screens_layer())
+    settings.add(interface.get_screens_layer())
 
-    events.listen("exit_app", proc (args: events.Args) { app_exit_requested=true })
+    events.listen(.exit_app, proc (args: events.Args) { app_exit_requested=true })
 
-    events.open_screen("home", anim=false)
-    // events.open_screen("credits", anim=false)
-    // events.open_screen("settings", "graphics", anim=false)
-    // events.open_screen("player", "journey", anim=false)
+    events.open_screen({ screen_name="home" })
+    // events.open_screen({ screen_name="credits" })
+    // events.open_screen({ screen_name="settings", tab_name="graphics" })
+    // events.open_screen({ screen_name="player", tab_name="journey" })
 
     // ui.print_frame_tree(app_ui.root /*, depth_max=2*/)
 }

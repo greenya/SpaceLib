@@ -1,4 +1,4 @@
-package demo9_sprites
+package sprites
 
 import "base:runtime"
 import "core:fmt"

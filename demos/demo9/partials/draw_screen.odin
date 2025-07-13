@@ -1,10 +1,10 @@
-package demo9_interface_partials
+package partials
 
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 
-import "../../colors"
+import "../colors"
 
 draw_screen_tab :: proc (f: ^ui.Frame) {
     if f.selected {

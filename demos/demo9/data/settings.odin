@@ -1,4 +1,4 @@
-package demo9_data
+package data
 
 import "core:encoding/json"
 import "core:fmt"

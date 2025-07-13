@@ -1,5 +1,6 @@
-package demo9_interface
+package interface
 
+// import "core:fmt"
 import rl "vendor:raylib"
 
 import "spacelib:core"
@@ -9,12 +10,7 @@ import "spacelib:ui"
 
 import "../colors"
 import "../fonts"
-
-import "partials"
-import "screens/credits"
-import "screens/home"
-import "screens/player"
-import "screens/settings"
+import "../partials"
 
 @private ui_: ^ui.UI
 
@@ -57,13 +53,6 @@ create :: proc () {
     // add_notifications_layer(order=2)
     // add_tooltips_layer(order=3)
     add_modals_layer(order=9)
-
-    credits.add(screens_layer)
-    home.add(screens_layer)
-    player.add(screens_layer)
-    settings.add(screens_layer)
-
-    // ui.print_frame_tree(ui_.root /*, depth_max=2*/)
 }
 
 destroy :: proc () {

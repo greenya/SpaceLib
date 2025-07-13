@@ -1,4 +1,4 @@
-package demo9_data
+package data
 
 Player :: struct {
     account_name        : string,

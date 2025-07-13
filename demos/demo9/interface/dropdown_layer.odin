@@ -1,4 +1,4 @@
-package demo9_interface
+package interface
 
 import "core:fmt"
 
@@ -6,10 +6,10 @@ import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
-import "partials"
+import "../partials"
 
 @private dropdowns_layer: ^ui.Frame
-@private dropdowns_data : map [^ui.Frame] struct { selected: ^ui.Frame, names, titles: [] string }
+@private dropdowns_data : map [^ui.Frame] events.Set_Dropdown_Data
 
 @private
 add_dropdowns_layer :: proc (order: int) {
@@ -33,26 +33,26 @@ add_dropdowns_layer :: proc (order: int) {
         draw    = partials.draw_button_dropdown_rect,
     })
 
-    events.listen("set_dropdown_data", set_dropdown_data_listener)
-    events.listen("open_dropdown", open_dropdown_listener)
-    events.listen("close_dropdown", close_dropdown_listener)
+    events.listen(.set_dropdown_data, set_dropdown_data_listener)
+    events.listen(.open_dropdown, open_dropdown_listener)
+    events.listen(.close_dropdown, close_dropdown_listener)
 }
 
 @private
 set_dropdown_data_listener :: proc (args: events.Args) {
-    target, selected, names, titles := args.frame1[0], args.frame1[1], args.s1, args.s2
-    assert(target != nil)
-    assert(selected != nil)
-    assert(len(names) > 0)
-    assert(len(titles) > 0)
-    assert(len(names) == len(titles))
-    // fmt.printfln("set dropdown data: target=%s, selected=%s, names=%v, titles=%v", target.name, selected.name, names, titles)
-    dropdowns_data[target] = { selected=selected, names=names, titles=titles }
+    data := args.(events.Set_Dropdown_Data)
+    assert(data.target != nil)
+    assert(data.selected != nil)
+    assert(len(data.names) > 0)
+    assert(len(data.titles) > 0)
+    assert(len(data.names) == len(data.titles))
+    dropdowns_data[data.target] = data
 }
 
 @private
 open_dropdown_listener :: proc (args: events.Args) {
-    target := args.frame1[0]
+    args := args.(events.Open_Dropdown)
+    target := args.target
     assert(target != nil)
     assert(target in dropdowns_data)
 
@@ -159,7 +159,8 @@ open_dropdown_listener :: proc (args: events.Args) {
 
 @private
 close_dropdown_listener :: proc (args: events.Args) {
-    target := args.frame1[0]
+    args := args.(events.Close_Dropdown)
+    target := args.target
     // fmt.printfln("close dropdown: target=%s", target != nil ? target.name : "<not set>")
 
     current_target := ui.get(dropdowns_layer, "dropdown").anchors[0].rel_frame

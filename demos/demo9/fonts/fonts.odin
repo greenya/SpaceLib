@@ -1,4 +1,4 @@
-package demo9_fonts
+package fonts
 
 import rl "vendor:raylib"
 import "spacelib:terse"

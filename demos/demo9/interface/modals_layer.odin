@@ -1,10 +1,10 @@
-package demo9_interface
+package interface
 
 import "core:fmt"
 
 import "spacelib:ui"
 
-import "partials"
+import "../partials"
 
 @private modals_layer: ^ui.Frame
 

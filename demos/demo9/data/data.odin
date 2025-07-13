@@ -1,4 +1,4 @@
-package demo9_data
+package data
 
 Info :: struct {
     welcome         : struct { title, content: string },

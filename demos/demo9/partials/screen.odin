@@ -1,4 +1,4 @@
-package demo9_interface_partials
+package partials
 
 import "core:fmt"
 import "spacelib:ui"
