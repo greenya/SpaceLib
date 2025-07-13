@@ -19,6 +19,8 @@ info := Info {
     },
 }
 
+credits_text := #load("credits.txt")
+
 create :: proc () {
     create_settings()
 }

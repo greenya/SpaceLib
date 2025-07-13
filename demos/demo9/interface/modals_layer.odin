@@ -14,7 +14,7 @@ add_modals_layer :: proc (order: int) {
 
     modals_layer = ui.add_frame(ui_.root, {
         name    = "modals_layer",
-        flags   = {/*.hidden,*/.block_wheel},
+        flags   = {.hidden,.block_wheel},
         order   = order,
         text    = "#000b",
         draw    = partials.draw_color_rect,

@@ -2,6 +2,7 @@ package demo9_interface_credits
 
 import "spacelib:ui"
 
+import "../../../data"
 import "../../../events"
 import "../../partials"
 
@@ -66,7 +67,7 @@ add_credits_page :: proc () {
     text, track, _ := partials.add_text_and_scrollbar(content)
 
     text.text_format = "<pad=0:40,wrap,left,font=text_4l,color=primary>%s"
-    ui.set_text(text, #load("credits.txt"))
+    ui.set_text(text, data.credits_text)
 
     track.anchors[0].offset = {track_pad_x,track_pad_y}
     track.anchors[1].offset = {track_pad_x,-track_pad_y}
