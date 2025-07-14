@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:slice"
 import "core:strings"
 import "../core"
+import "../stack"
 
 @private Vec2 :: core.Vec2
 @private Rect :: core.Rect
@@ -62,14 +63,14 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
-@private default_code_start_rune    :: '<'
-@private default_code_end_rune      :: '>'
-@private default_fonts_stack_size   :: 8
-@private default_colors_stack_size  :: 8
-@private default_valign             :: Vertical_Alignment.middle
-@private default_align              :: Horizontal_Alignment.center
-         default_font_name          :: "default"
-         default_color_name         :: "default"
+default_code_start_rune     :: '<'
+default_code_end_rune       :: '>'
+default_fonts_stack_size    :: 16
+default_colors_stack_size   :: 16
+default_valign              :: Vertical_Alignment.middle
+default_align               :: Horizontal_Alignment.center
+default_font_name           :: "default"
+default_color_name          :: "default"
 
 create :: proc (
     text        : string,
@@ -98,16 +99,12 @@ create :: proc (
     alpha := f32(1)
     brightness := f32(0)
 
-    font := query_font(default_font_name)
-    ensure(font.measure_text != nil, "Font.measure_text must be set")
-    fonts_stack: [default_fonts_stack_size] ^Font
-    fonts_stack[0] = font
-    fonts_stack_idx := 0
+    fonts_stack: stack.Stack(^Font, default_colors_stack_size)
+    stack.push(&fonts_stack, query_font(default_font_name))
+    ensure(stack.top(fonts_stack).measure_text != nil, "Font.measure_text must be set")
 
-    color := query_color(default_color_name)
-    colors_stack: [default_colors_stack_size] Color
-    colors_stack[0] = color
-    colors_stack_idx := 0
+    colors_stack: stack.Stack(Color, default_colors_stack_size)
+    stack.push(&colors_stack, query_color(default_color_name))
 
     group: ^Group
 
@@ -123,7 +120,7 @@ create :: proc (
     word_tab_width  : f32
 
     for para in strings.split(text, "\n", context.temp_allocator) {
-        line := append_line(terse, font)
+        line := append_line(terse, stack.top(fonts_stack))
 
         cursor = { type=.text, start=0 }
         for i:=0; i<len(para); i+=1 {
@@ -161,14 +158,12 @@ create :: proc (
                     case "middle"   : terse.valign = .middle
                     case "bottom"   : terse.valign = .bottom
                     case "/font":
-                        fonts_stack_idx -= 1
-                        ensure(fonts_stack_idx >= 0, "Fonts stack underflow")
-                        font = fonts_stack[fonts_stack_idx]
+                        ensure(!stack.is_empty(fonts_stack), "Fonts stack underflow")
+                        stack.pop_discard(&fonts_stack)
                         last_opened_command = .none
                     case "/color":
-                        colors_stack_idx -= 1
-                        ensure(colors_stack_idx >= 0, "Colors stack underflow")
-                        color = colors_stack[colors_stack_idx]
+                        ensure(!stack.is_empty(colors_stack), "Colors stack underflow")
+                        stack.pop_discard(&colors_stack)
                         last_opened_command = .none
                     case "/group":
                         ensure(group != nil, "No group to close")
@@ -193,18 +188,16 @@ create :: proc (
                             case "brightness":
                                 brightness = parse_f32(command_value)
                             case "font":
-                                font = query_font(command_value)
+                                ensure(!stack.is_full(fonts_stack), "Fonts stack overflow")
+                                font := query_font(command_value)
                                 ensure(font.measure_text != nil, "Font.measure_text must be set")
-                                fonts_stack_idx += 1
-                                ensure(fonts_stack_idx < len(fonts_stack), "Fonts stack overflow")
-                                fonts_stack[fonts_stack_idx] = font
+                                stack.push(&fonts_stack, font)
                                 line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
                                 last_opened_command = .font
                             case "color":
-                                color = command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
-                                colors_stack_idx += 1
-                                ensure(colors_stack_idx < len(colors_stack), "Colors stack overflow")
-                                colors_stack[colors_stack_idx] = color
+                                ensure(!stack.is_full(colors_stack), "Colors stack overflow")
+                                color := command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
+                                stack.push(&colors_stack, color)
                                 last_opened_command = .color
                             case "group":
                                 ensure(group == nil, "Groups cannot be nested")
@@ -224,7 +217,7 @@ create :: proc (
                                 if word_tab_width != 0 do word_is_tab = true
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
-                                line.gap = gap_ratio * font.height
+                                line.gap = gap_ratio * stack.top(fonts_stack).height
                             case "pad":
                                 ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
                                 terse.pad = parse_vec_int(command_value)
@@ -243,6 +236,7 @@ create :: proc (
             }
 
             if word != "" || word_is_tab {
+                font := stack.top(fonts_stack)
                 size := word_is_icon\
                     ? word_icon_scale * Vec2 { font.height, font.height }\
                     : word_is_tab\
@@ -271,8 +265,10 @@ create :: proc (
                 }
 
                 if word != " " || word_is_tab || line_has_printable_words(terse, line) { // skip " " at the start of the line
-                    word_color := core.alpha(core.brightness(color, brightness), alpha)
-                    append_word(terse, word, size, font, word_color, word_is_icon, group)
+                    color := stack.top(colors_stack)
+                    color = core.brightness(color, brightness)
+                    color = core.alpha(color, alpha)
+                    append_word(terse, word, size, font, color, word_is_icon, group)
                 }
 
                 word = ""
