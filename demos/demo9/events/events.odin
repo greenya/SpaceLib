@@ -9,6 +9,7 @@ ID :: enum {
     set_dropdown_data,
     open_dropdown,
     close_dropdown,
+    open_modal,
 }
 
 Args :: union {
@@ -16,21 +17,51 @@ Args :: union {
     Set_Dropdown_Data,
     Open_Dropdown,
     Close_Dropdown,
+    Open_Modal,
 }
 
 exit_app :: proc () { send(.exit_app) }
 
 open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
-Open_Screen :: struct { screen_name, tab_name: string, skip_anim: bool }
+Open_Screen :: struct {
+    screen_name : string,
+    tab_name    : string,
+    skip_anim   : bool,
+}
 
 set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }
-Set_Dropdown_Data :: struct { target, selected: ^ui.Frame `fmt:"p"`, names, titles: [] string }
+Set_Dropdown_Data :: struct {
+    target  : ^ui.Frame `fmt:"p"`,
+    selected: ^ui.Frame `fmt:"p"`,
+    names   : [] string,
+    titles  : [] string,
+}
 
 open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
-Open_Dropdown :: struct { target: ^ui.Frame `fmt:"p"` }
+Open_Dropdown :: struct {
+    target: ^ui.Frame `fmt:"p"`,
+}
 
 close_dropdown :: proc (args: Close_Dropdown) { send(.close_dropdown, args) }
-Close_Dropdown :: struct { target: ^ui.Frame `fmt:"p"` }
+Close_Dropdown :: struct {
+    target: ^ui.Frame `fmt:"p"`,
+}
+
+open_modal :: proc (args: Open_Modal) { send(.open_modal, args) }
+Open_Modal :: struct {
+    title   : string,
+    message : string,
+    buttons : [] Open_Modal_Button,
+}
+Open_Modal_Button :: struct {
+    text    : string,
+    role    : Open_Modal_Button_Role,
+    click   : ui.Frame_Proc,
+}
+Open_Modal_Button_Role :: enum {
+    click,
+    cancel,
+}
 
 Event :: struct {
     listeners: [dynamic] Listener,

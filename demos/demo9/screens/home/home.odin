@@ -31,7 +31,15 @@ add :: proc (parent: ^ui.Frame) {
 
     close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
     close.click = proc (f: ^ui.Frame) {
-        events.exit_app()
+        // events.exit_app()
+        events.open_modal({
+            title   = "Quit Game",
+            message = "Are you sure you want to quit?",
+            buttons = {
+                { text="OK", click=proc (f: ^ui.Frame) { events.exit_app() } },
+                { text="Cancel", role=.cancel },
+            },
+        })
     }
 
     partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")

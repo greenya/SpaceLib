@@ -33,7 +33,6 @@ add_screens_layer :: proc (order, curtain_order: int) {
     events.listen(.open_screen, open_screen_listener)
 }
 
-@private
 open_screen_listener :: proc (args: events.Args) {
     args := args.(events.Open_Screen)
     screen_name, tab_name, skip_anim := args.screen_name, args.tab_name, args.skip_anim
@@ -56,7 +55,6 @@ open_screen_listener :: proc (args: events.Args) {
     }
 }
 
-@private
 anim_start_screen_transition :: proc (prev_screen, next_screen: ^ui.Frame) {
     assert(prev_screen != next_screen)
     assert(prev_screen != nil)
@@ -71,7 +69,6 @@ anim_start_screen_transition :: proc (prev_screen, next_screen: ^ui.Frame) {
     ui.animate(screens.curtain_layer, anim_tick_screen_curtain, 1.111)
 }
 
-@private
 anim_tick_screen_curtain :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
         ui.show(f)

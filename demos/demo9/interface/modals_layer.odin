@@ -9,6 +9,7 @@ import "../partials"
 
 modals: struct {
     layer: ^ui.Frame,
+    modal: ^ui.Frame,
 }
 
 add_modals_layer :: proc (order: int) {
