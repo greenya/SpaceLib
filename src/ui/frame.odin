@@ -720,7 +720,7 @@ draw_frame_tree :: proc (f: ^Frame) {
         }
     }
 
-    if f.ui.overdraw_proc != nil do f.ui.overdraw_proc(f)
+    if f.ui.frame_overdraw_proc != nil do f.ui.frame_overdraw_proc(f)
     if .scissor in f.flags do push_scissor_rect(f.ui, f.rect)
     for child in f.children do draw_frame_tree(child)
     if .scissor in f.flags do pop_scissor_rect(f.ui)

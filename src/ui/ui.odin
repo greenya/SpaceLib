@@ -30,7 +30,7 @@ UI :: struct {
     terse_query_color_proc  : terse.Query_Color_Proc,
     terse_draw_proc         : Terse_Draw_Proc,
 
-    overdraw_proc       : Frame_Proc,
+    frame_overdraw_proc : Frame_Proc,
     stats               : Stats,
 
     get                 : proc (ui: ^UI, path: string) -> ^Frame,
@@ -79,7 +79,7 @@ create :: proc (
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
     terse_query_color_proc  : terse.Query_Color_Proc = nil,
     terse_draw_proc         : Terse_Draw_Proc = nil,
-    overdraw_proc           : Frame_Proc = nil,
+    frame_overdraw_proc     : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)
 
@@ -91,7 +91,7 @@ create :: proc (
         terse_query_font_proc   = terse_query_font_proc,
         terse_query_color_proc  = terse_query_color_proc,
         terse_draw_proc         = terse_draw_proc,
-        overdraw_proc           = overdraw_proc,
+        frame_overdraw_proc     = frame_overdraw_proc,
 
         get                     = ui_get,
         find                    = ui_find,
