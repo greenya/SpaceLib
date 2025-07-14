@@ -19,6 +19,11 @@ get_ui :: #force_inline proc () -> ^ui.UI {
     return ui_
 }
 
+get_screens_layer :: #force_inline proc () -> ^ui.Frame {
+    assert(screens.layer != nil)
+    return screens.layer
+}
+
 create :: proc () {
     assert(ui_ == nil)
 

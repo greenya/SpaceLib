@@ -1,6 +1,6 @@
 package events
 
-// import "core:fmt"
+import "core:fmt"
 import "spacelib:ui"
 
 ID :: enum {
@@ -40,18 +40,21 @@ Listener :: proc (args: Args)
 
 @private events: map [ID] ^Event
 
-@private get :: #force_inline proc (id: ID) -> ^Event {
-    if id not_in events do events[id] = new(Event)
+@private
+get :: #force_inline proc (id: ID) -> ^Event {
+    assert(id in events)
     return events[id]
 }
 
-@private send :: #force_inline proc (id: ID, args: Args = nil) {
-    // fmt.printfln("[send] %v |%i| %#v", name, len(events[name].listeners), args)
+@private
+send :: #force_inline proc (id: ID, args: Args = nil) {
+    fmt.printfln("[send] %v |%i| %#v", id, len(events[id].listeners), args)
     for l in events[id].listeners do l(args)
 }
 
 create :: proc () {
     assert(events == nil)
+    for id in ID do events[id] = new(Event)
 }
 
 destroy :: proc () {

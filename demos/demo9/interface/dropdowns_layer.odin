@@ -1,3 +1,4 @@
+#+private
 package interface
 
 import "core:fmt"
@@ -8,14 +9,13 @@ import "spacelib:ui"
 import "../events"
 import "../partials"
 
-@private dropdowns: struct {
+dropdowns: struct {
     layer       : ^ui.Frame,
     dropdown    : ^ui.Frame,
     data        : map [^ui.Frame] events.Set_Dropdown_Data,
     target      : ^ui.Frame,
 }
 
-@private
 add_dropdowns_layer :: proc (order: int) {
     assert(dropdowns.layer == nil)
 
@@ -41,7 +41,6 @@ add_dropdowns_layer :: proc (order: int) {
     events.listen(.close_dropdown, close_dropdown_listener)
 }
 
-@private
 set_dropdown_data_listener :: proc (args: events.Args) {
     data := args.(events.Set_Dropdown_Data)
     assert(data.target != nil)
@@ -52,7 +51,6 @@ set_dropdown_data_listener :: proc (args: events.Args) {
     dropdowns.data[data.target] = data
 }
 
-@private
 open_dropdown_listener :: proc (args: events.Args) {
     args := args.(events.Open_Dropdown)
     target := args.target
@@ -158,7 +156,6 @@ open_dropdown_listener :: proc (args: events.Args) {
     ui.animate(dropdown, anim_dropdown_appear, .222)
 }
 
-@private
 close_dropdown_listener :: proc (args: events.Args) {
     args := args.(events.Close_Dropdown)
     target := args.target
@@ -173,7 +170,6 @@ close_dropdown_listener :: proc (args: events.Args) {
     ui.animate(dropdowns.dropdown, anim_dropdown_disappear, .222)
 }
 
-@private
 anim_dropdown_appear :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
         ui.show(dropdowns.layer)
@@ -191,7 +187,6 @@ anim_dropdown_appear :: proc (f: ^ui.Frame) {
     }
 }
 
-@private
 anim_dropdown_disappear :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
         f.flags += {.pass}

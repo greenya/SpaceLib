@@ -1,3 +1,4 @@
+#+private
 package interface
 
 import "core:fmt"
@@ -6,13 +7,14 @@ import "spacelib:ui"
 
 import "../partials"
 
-@private modals_layer: ^ui.Frame
+modals: struct {
+    layer: ^ui.Frame,
+}
 
-@private
 add_modals_layer :: proc (order: int) {
-    assert(modals_layer == nil)
+    assert(modals.layer == nil)
 
-    modals_layer = ui.add_frame(ui_.root, {
+    modals.layer = ui.add_frame(ui_.root, {
         name    = "modals_layer",
         flags   = {.hidden,.block_wheel},
         order   = order,
@@ -23,9 +25,8 @@ add_modals_layer :: proc (order: int) {
     add_modal()
 }
 
-@private
 add_modal :: proc () {
-    modal := ui.add_frame(modals_layer, {
+    modal := ui.add_frame(modals.layer, {
         name    = "modal",
         size    = {600,0},
         layout  = {dir=.down,auto_size=.dir,pad=30},
