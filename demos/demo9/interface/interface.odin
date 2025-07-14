@@ -4,7 +4,6 @@ package interface
 import rl "vendor:raylib"
 
 import "spacelib:core"
-import "spacelib:raylib/draw"
 import "spacelib:terse"
 import "spacelib:ui"
 
@@ -37,20 +36,9 @@ create :: proc () {
         terse_draw_proc = proc (terse: ^terse.Terse) {
             partials.draw_terse(terse)
         },
-        overdraw_proc = proc (f: ^ui.Frame) {
-            if !rl.IsKeyDown(.LEFT_CONTROL) do return
-            draw.debug_frame(f)
-            draw.debug_frame_layout(f)
-            draw.debug_frame_anchors(f)
-        },
-        scissor_set_proc = proc (r: core.Rect) {
-            if rl.IsKeyDown(.LEFT_CONTROL) do return
-            rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
-        },
-        scissor_clear_proc = proc () {
-            if rl.IsKeyDown(.LEFT_CONTROL) do return
-            rl.EndScissorMode()
-        },
+        frame_overdraw_proc = partials.frame_overdraw,
+        scissor_set_proc    = partials.scissor_set,
+        scissor_clear_proc  = partials.scissor_clear,
     )
 
     add_screens_layer(order=0, curtain_order=8)
