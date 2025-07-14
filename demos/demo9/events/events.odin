@@ -24,13 +24,13 @@ open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
 Open_Screen :: struct { screen_name, tab_name: string, skip_anim: bool }
 
 set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }
-Set_Dropdown_Data :: struct { target, selected: ^ui.Frame, names, titles: [] string }
+Set_Dropdown_Data :: struct { target, selected: ^ui.Frame `fmt:"p"`, names, titles: [] string }
 
 open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
-Open_Dropdown :: struct { target: ^ui.Frame }
+Open_Dropdown :: struct { target: ^ui.Frame `fmt:"p"` }
 
 close_dropdown :: proc (args: Close_Dropdown) { send(.close_dropdown, args) }
-Close_Dropdown :: struct { target: ^ui.Frame }
+Close_Dropdown :: struct { target: ^ui.Frame `fmt:"p"` }
 
 Event :: struct {
     listeners: [dynamic] Listener,
