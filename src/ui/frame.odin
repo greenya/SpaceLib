@@ -389,6 +389,10 @@ hide :: proc {
     hide_by_path,
 }
 
+hide_children :: proc (parent: ^Frame) {
+    for child in parent.children do hide(child)
+}
+
 wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return false
 
