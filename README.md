@@ -5,6 +5,7 @@
 * /events               - [planned] [maybe] event bus
 * /raylib               - helpers when using Raylib
 * /sdl3                 - [planned] set of helpers when using SDL3
+* /stack                - stack support
 * /terse                - text layout calculation
 * /tracking_allocator   - tracking allocator
 * /tweens               - [planned] [maybe] tweening support
@@ -12,7 +13,9 @@
 
 ## TODOs
 
-TODO: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
+TODO: core: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
+
+    - maybe consider changing Color to be [4]f32 instead of [4]u8, as we are doing a lot of alpha and brightness tweaking and every time we convert 4 values to f32 and back to u8
 
 TODO: terse: add support for <overflow> command
 
@@ -39,16 +42,11 @@ TODO: draw.texture() should take arg of enum { .fill (default), .contain/fit, .c
     - .cover -- aspect ratio aware cover dest rect
     p.s.: use center alignment always OR add additional enum arg { .center (default), .start, .end }
 
-TODO: res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
+TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
-TODO: res: sprite: add support for animations (Sprite.info variant)
-    would be nice to support animation names, so its possible to express something like:
-    draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
-    simple animation has single sequence named "default"
+TODO: ui: add support for "size_ratio"
 
-TODO: ui: [maybe] add support for "size_ratio"
-
-    just like "size", but allows to set size relative to parent.rect.w/h in ratio; if set, has priority over "size" field ("size" is ignored)
+    just like "size", but allows to set size relative to parent.rect.w/h in ratio; if set, has priority over "size" field ("size" and "size_min" is ignored)
 
 TODO: ui: key press handling
 
@@ -78,15 +76,13 @@ TODO: ui: add global opacity handling
             * we do not use opacity stack, as we expect to set opacity for every frame
             * we always restore opacity to 1.0; this should be fine, but if not, then we need to add f.ui.opacity_get_proc() and save the value to restore it after the drawing; lets keep blind 1.0 for now
 
-TODO: ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
+TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
 
-TODO: ui: add "wait=f32(0)" arg to ui.animate(),
+TODO: [?] ui: add "wait=f32(0)" arg to ui.animate(),
     add Frame.anim.state (enum: none, waiting, animating)
     it should do: waiting (if wait>0) -> animating (for dt) -> ratio=0 -> ... ratio=1 -> none
 
-TODO: ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
-
-TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
+TODO: [?] ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
 
 TODO: [?] ui: add support for automatic child frames generation for each text_terse.groups item
     // - Frame.name should be group name
@@ -102,7 +98,16 @@ TODO: [?] ui: add UI.drawing_frames and .updating phase should fill it to be lat
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 
-TODO: [?] res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; need thinking how to make it, but the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
+---- maybe remove raylib/res package ----
+
+TODO: raylib/res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
+
+TODO: raylib/res: sprite: add support for animations (Sprite.info variant)
+    would be nice to support animation names, so its possible to express something like:
+    draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
+    simple animation has single sequence named "default"
+
+TODO: [?] raylib/res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; need thinking how to make it, but the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
     // [?] maybe we need "spacelib:raylib/audio" package to have "play_random(list: [] rl.Sound)"
     // ...maybe not // -- needs thinking
     // [?] maybe just load "book_flip-1" as "book_flip", and extend Sound struct to have
