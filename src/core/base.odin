@@ -77,10 +77,10 @@ rect_add_rect :: #force_inline proc (r: ^Rect, o: Rect) {
 rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     x1 := max(a.x, b.x)
     x2 := min(a.x+a.w, b.x+b.w)
-    if x2 > x1 {
+    if x2 >= x1 {
         y1 := max(a.y, b.y)
         y2 := min(a.y+a.h, b.y+b.h)
-        if y2 > y1 {
+        if y2 >= y1 {
             return { x1, y1, x2-x1, y2-y1 }
         }
     }
