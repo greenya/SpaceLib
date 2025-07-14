@@ -11,8 +11,8 @@ draw_button :: proc (f: ^ui.Frame) {
     rect := core.rect_moved(f.rect, offset)
     hv_ratio := ui.hover_ratio(f, .Linear, .155, .Linear, .155)
 
-    bg_top_color := core.brightness(colors.primary, -.9*(1-hv_ratio*.3))
-    bg_bottom_color := core.brightness(colors.bg1, -.9)
+    bg_top_color := core.alpha(core.brightness(colors.primary, -.9*(1-hv_ratio*.3)), f.opacity)
+    bg_bottom_color := core.alpha(core.brightness(colors.bg1, -.9), f.opacity)
     if f.captured do bg_top_color, bg_bottom_color = bg_bottom_color, bg_top_color
     draw.rect_gradient_vertical(rect, bg_top_color, bg_bottom_color)
 

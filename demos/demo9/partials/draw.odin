@@ -204,9 +204,10 @@ draw_window_rect :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 2, br_color)
 
     dim_rect := core.rect_from_center(core.rect_top(f.rect), 64)
-    draw.diamond(dim_rect, colors.bg0)
+    draw.diamond(dim_rect, bg_top_color)
     draw.diamond_lines(dim_rect, 2, br_color)
 
     icon_rect := core.rect_scaled_from_center(dim_rect, .6)
-    draw_sprite("priority_high", icon_rect, colors.primary)
+    icon_color := core.alpha(colors.primary, f.opacity)
+    draw_sprite("priority_high", icon_rect, icon_color)
 }

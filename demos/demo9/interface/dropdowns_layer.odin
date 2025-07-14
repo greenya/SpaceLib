@@ -158,13 +158,8 @@ open_dropdown_listener :: proc (args: events.Args) {
 
 close_dropdown_listener :: proc (args: events.Args) {
     args := args.(events.Close_Dropdown)
-    target := args.target
-    // fmt.printfln("close dropdown: target=%s", target != nil ? target.name : "<not set>")
-
-    assert(dropdowns.target != nil)
-    if target != nil && dropdowns.target != target {
-        fmt.panicf("Dropdown target mismatch: current target=%s, requested target=%s", dropdowns.target.name, target.name)
-    }
+    assert(args.target != nil)
+    assert(args.target == dropdowns.target)
 
     dropdowns.target = nil
     ui.animate(dropdowns.dropdown, anim_dropdown_disappear, .222)

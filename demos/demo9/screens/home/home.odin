@@ -29,22 +29,22 @@ add :: proc (parent: ^ui.Frame) {
         events.open_screen({ screen_name="credits" })
     }
 
-    close := partials.add_screen_footer_key_button(screen, "close", "Close", key="Esc")
+    close := partials.add_screen_footer_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
-        // events.exit_app()
         events.open_modal({
+            target  = f,
             title   = "Quit Game",
             message = "Are you sure you want to quit?",
             buttons = {
-                { text="OK", click=proc (f: ^ui.Frame) { events.exit_app() } },
-                { text="Cancel", role=.cancel },
+                { text="<icon=key/_> Confirm", click=proc (f: ^ui.Frame) { events.exit_app() } },
+                { text="<icon=key/Esc:1.4:1> Cancel", role=.cancel },
             },
         })
     }
 
-    partials.add_screen_footer_key_button(screen, "request_help", "Request Help", key="H")
-    partials.add_screen_footer_key_button(screen, "report_bug", "Report Bug", key="B")
-    partials.add_screen_footer_key_button(screen, "account", "Account", key="A")
+    partials.add_screen_footer_key_button(screen, "request_help", "<icon=key/H> Request Help")
+    partials.add_screen_footer_key_button(screen, "report_bug", "<icon=key/B> Report Bug")
+    partials.add_screen_footer_key_button(screen, "account", "<icon=key/A> Account")
 
     add_social_links()
     add_account_info()

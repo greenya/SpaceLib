@@ -10,6 +10,7 @@ ID :: enum {
     open_dropdown,
     close_dropdown,
     open_modal,
+    close_modal,
 }
 
 Args :: union {
@@ -18,6 +19,7 @@ Args :: union {
     Open_Dropdown,
     Close_Dropdown,
     Open_Modal,
+    Close_Modal,
 }
 
 exit_app :: proc () { send(.exit_app) }
@@ -49,6 +51,7 @@ Close_Dropdown :: struct {
 
 open_modal :: proc (args: Open_Modal) { send(.open_modal, args) }
 Open_Modal :: struct {
+    target  : ^ui.Frame `fmt:"p"`,
     title   : string,
     message : string,
     buttons : [] Open_Modal_Button,
@@ -61,6 +64,11 @@ Open_Modal_Button :: struct {
 Open_Modal_Button_Role :: enum {
     click,
     cancel,
+}
+
+close_modal :: proc (args: Close_Modal) { send(.close_modal, args) }
+Close_Modal :: struct {
+    target: ^ui.Frame `fmt:"p"`,
 }
 
 Event :: struct {

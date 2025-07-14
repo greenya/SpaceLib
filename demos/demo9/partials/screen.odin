@@ -133,7 +133,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
     return button
 }
 
-add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text, key: string) -> ^ui.Frame {
+add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
     buttons := ui.get(screen, "footer_bar/key_buttons")
-    return add_button(buttons, name, text, key)
+    return add_button(buttons, name, text)
 }
