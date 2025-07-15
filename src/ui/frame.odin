@@ -878,24 +878,24 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
             dy                  := frame_center_y - children_center_y
             for child in vis_children do child.rect.y += dy
         }
+    }
 
-        full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f, vis_children)
+    full_content_size, dir_content_size, dir_rect_size := get_layout_content_size(f, vis_children)
 
-        if f.layout.auto_size == .full {
-            f.size = full_content_size
-        } else if f.layout.auto_size == .dir {
-            if is_dir_vertical  do f.size.y = dir_content_size[1]
-            else                do f.size.x = dir_content_size[1]
-        } else if layout_has_scroll(f) {
-            scroll := &f.layout.scroll
+    if f.layout.auto_size == .full {
+        f.size = full_content_size
+    } else if f.layout.auto_size == .dir {
+        if is_dir_vertical  do f.size.y = dir_content_size[1]
+        else                do f.size.x = dir_content_size[1]
+    } else if layout_has_scroll(f) {
+        scroll := &f.layout.scroll
 
-            scroll.offset_min = min(0, dir_content_size[0])
-            scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
-            scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
+        scroll.offset_min = min(0, dir_content_size[0])
+        scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
+        scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
-            if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
-            else                do for child in vis_children do child.rect.x -= scroll.offset
-        }
+        if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
+        else                do for child in vis_children do child.rect.x -= scroll.offset
     }
 }
 
