@@ -39,19 +39,23 @@ open_screen_listener :: proc (args: events.Args) {
     // fmt.printfln("open screen: %s, tab=%s", screen_name, tab_name != "" ? tab_name : "<not set>")
 
     prev_screen := ui.first_visible_child(screens.layer)
-    fmt.println("prev_screen", prev_screen)
     next_screen := ui.get(screens.layer, screen_name)
     fmt.assertf(next_screen != nil, "Screen \"%s\" doesn't exist", screen_name)
 
     if tab_name != "" {
+        fmt.println("[screens] preselect tab:", tab_name)
         tab := ui.find(next_screen, fmt.tprintf("header_bar/tabs/%s", tab_name))
         fmt.assertf(tab != nil, "Screen \"%s\" doesn't have tab \"%s\"", screen_name, tab_name)
         ui.click(tab)
     }
 
     if !skip_anim && prev_screen != nil {
-        anim_start_screen_transition(prev_screen, next_screen)
+        if next_screen != prev_screen {
+            fmt.println("[screens] open (anim):", next_screen.name)
+            anim_start_screen_transition(prev_screen, next_screen)
+        }
     } else {
+        fmt.println("[screens] open (instant):", next_screen.name)
         ui.show(next_screen, hide_siblings=true)
     }
 }
@@ -67,20 +71,23 @@ anim_start_screen_transition :: proc (prev_screen, next_screen: ^ui.Frame) {
         partials.draw_screen_curtain_cross_bouncy,
     })
 
-    ui.animate(screens.curtain_layer, anim_tick_screen_curtain, 1.111)
+    ui.animate(screens.curtain_layer, anim_tick_screen_curtain, 1.234)
 }
 
 anim_tick_screen_curtain :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
+        fmt.println("[screens] anim start")
         ui.show(f)
     }
 
     sr :: partials.draw_screen_curtain_cross_switch_screen_ratio
     if f.anim.ratio > sr && .hidden not_in screens.transition.prev.flags {
+        fmt.println("[screens] switching now")
         ui.show(screens.transition.next, hide_siblings=true)
     }
 
     if f.anim.ratio == 1 {
+        fmt.println("[screens] anim end")
         ui.hide(f)
     }
 }

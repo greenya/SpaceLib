@@ -56,6 +56,8 @@ add :: proc (parent: ^ui.Frame) {
 
 @private
 open_dialog_listener :: proc (args: events.Args) {
+    events.open_screen({ screen_name="dialog" })
+
     args := args.(events.Open_Dialog)
     dialog_id, chat_id, chat_text_override := args.dialog_id, args.chat_id, args.chat_text_override
     assert(dialog_id != "")
@@ -98,6 +100,9 @@ click_dialog_reply :: proc (f: ^ui.Frame) {
 
     if reply.action != .none {
         fmt.println("[reply action]", reply.action)
+        if reply.action == .close {
+            events.open_screen({ screen_name="player" })
+        }
     } else {
         next_chat_id := reply.next != "" ? reply.next : chat.id
         next_talk = {

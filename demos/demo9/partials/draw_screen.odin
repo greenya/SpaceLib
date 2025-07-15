@@ -51,7 +51,7 @@ draw_screen_pyramid_button_icon :: proc (f: ^ui.Frame) {
     draw_sprite(f.text, f.rect, core.alpha(sp_color, f.opacity))
 }
 
-draw_screen_curtain_cross_switch_screen_ratio :: .75
+draw_screen_curtain_cross_switch_screen_ratio :: .7
 
 draw_screen_curtain_cross_smooth :: proc (f: ^ui.Frame) {
     draw_screen_curtain_cross(f, .Cubic_Out, .Cubic_In)
@@ -70,6 +70,9 @@ draw_screen_curtain_cross :: proc (f: ^ui.Frame, in_easing, out_easing: core.Eas
     sr :: draw_screen_curtain_cross_switch_screen_ratio
     move_in_ratio := core.ease_ratio(core.clamp_ratio(f.anim.ratio, 0, sr), in_easing)
     move_out_ratio := core.ease_ratio(core.clamp_ratio(f.anim.ratio, sr, 1), out_easing)
+
+    shade_ratio := .777 * (move_in_ratio<1 ? move_in_ratio : 1-move_out_ratio)
+    draw.rect(f.rect, core.alpha(core.black, shade_ratio))
 
     for i in ([] struct { rect: Rect, dir: Vec2, distance: f32 } {
         { rect={ x1, y1-2*h, 2*h, 2*h }     , dir={0,1} , distance=h },     // top
