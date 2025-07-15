@@ -75,8 +75,9 @@ Close_Modal :: struct {
 
 open_dialog :: proc (args: Open_Dialog) { send(.open_dialog, args) }
 Open_Dialog :: struct {
-    dialog_id   : string,
-    chat_id     : string,
+    dialog_id           : string,
+    chat_id             : string,
+    chat_text_override  : string,
 }
 
 Event :: struct {

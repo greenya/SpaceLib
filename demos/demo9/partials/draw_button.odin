@@ -137,7 +137,7 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
 }
 
 draw_dialog_reply :: proc (f: ^ui.Frame) {
-    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .111)
     offset := f.captured ? Vec2 {1,1} : {}
 
     bg_color := core.ease_color(colors.bg0, colors.accent, hv_ratio)

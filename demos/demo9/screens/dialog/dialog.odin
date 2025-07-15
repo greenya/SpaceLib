@@ -2,6 +2,7 @@ package dialog
 
 import "core:fmt"
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../../data"
@@ -9,11 +10,7 @@ import "../../events"
 import "../../partials"
 
 @private screen : ^ui.Frame
-
-@private current_talk: struct {
-    dialog_id   : string,
-    chat_id     : string,
-}
+@private current_talk, next_talk: events.Open_Dialog
 
 max_replies :: 8
 
@@ -52,22 +49,29 @@ add :: proc (parent: ^ui.Frame) {
         { point=.bottom_right, rel_point=.top_right, rel_frame=replies, offset={0,-30} },
     )
 
-    ui.print_frame_tree(screen)
+    // ui.print_frame_tree(screen)
 
     events.listen(.open_dialog, open_dialog_listener)
 }
 
+@private
 open_dialog_listener :: proc (args: events.Args) {
     args := args.(events.Open_Dialog)
-    dialog_id, chat_id := args.dialog_id, args.chat_id
+    dialog_id, chat_id, chat_text_override := args.dialog_id, args.chat_id, args.chat_text_override
     assert(dialog_id != "")
     assert(chat_id != "")
 
     dialog, chat := data.get_dialog_chat(dialog_id, chat_id)
-    fmt.println(dialog.npc_name, chat)
+    if current_talk == {} do fmt.println("[dialog start]", dialog.npc_name)
 
     talk := ui.get(screen, "talk")
-    ui.set_text(talk, dialog.npc_name, chat.text != "" ? chat.text : "...")
+    chat_text := chat_text_override != ""\
+        ? chat_text_override\
+        : chat.text != ""\
+            ? chat.text\
+            : "..."
+
+    ui.set_text(talk, dialog.npc_name, chat_text)
 
     replies := ui.get(screen, "replies")
     assert(len(replies.children) >= len(chat.replies))
@@ -81,20 +85,43 @@ open_dialog_listener :: proc (args: events.Args) {
         ui.set_text(reply, text, shown=true)
     }
 
-    current_talk = { dialog_id=dialog_id, chat_id=chat_id }
+    current_talk = args
 }
 
+@private
 click_dialog_reply :: proc (f: ^ui.Frame) {
-    // TODO: handle reply click
-    fmt.println("click!", ui.index(f), f.name)
+    reply_idx := ui.index(f)
+    fmt.println("[reply clicked]", reply_idx)
 
     _, chat := data.get_dialog_chat(current_talk.dialog_id, current_talk.chat_id)
-    reply := chat.replies[ui.index(f)]
+    reply := chat.replies[reply_idx]
 
-    if reply.next != "" {
-        // nav to next chat_id
+    if reply.action != .none {
+        fmt.println("[reply action]", reply.action)
     } else {
-        // process action
-        // switch reply.action { ... }
+        next_chat_id := reply.next != "" ? reply.next : chat.id
+        next_talk = {
+            dialog_id           = current_talk.dialog_id,
+            chat_id             = next_chat_id,
+            chat_text_override  = reply.next_text,
+        }
+        ui.animate(screen, anim_next_talk, .222)
+    }
+}
+
+@private
+anim_next_talk :: proc (f: ^ui.Frame) {
+    if f.anim.ratio == 0 {
+        screen.flags += {.pass}
+        ui.set_opacity(screen, 0)
+        events.open_dialog(next_talk)
+    }
+
+    ratio := core.ease_ratio(f.anim.ratio, .Cubic_In)
+    ui.set_opacity(screen, ratio)
+
+    if f.anim.ratio == 1 {
+        ui.set_opacity(screen, 1)
+        screen.flags -= {.pass}
     }
 }

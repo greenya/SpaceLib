@@ -53,9 +53,14 @@ add_credits_page :: proc () {
     track_pad_x :: 80
     track_pad_y :: 40
 
-    content := ui.add_frame(page,
-        { name="content", layout={dir=.down,scroll={step=10}}, flags={.scissor},
-            tick=proc (f: ^ui.Frame) { if is_autoscroll do ui.wheel(f, -.033) } },
+    content := ui.add_frame(page, {
+        name    = "content",
+        flags   = {.scissor},
+        layout  = {dir=.down,scroll={step=10}},
+        tick    = proc (f: ^ui.Frame) {
+            if is_autoscroll do ui.wheel(f, -.033)
+        },
+    },
         { point=.top_left, offset={content_pad,0} },
         { point=.bottom_right, offset={-content_pad,0} },
     )
