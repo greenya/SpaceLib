@@ -39,11 +39,12 @@ open_screen_listener :: proc (args: events.Args) {
     // fmt.printfln("open screen: %s, tab=%s", screen_name, tab_name != "" ? tab_name : "<not set>")
 
     prev_screen := ui.first_visible_child(screens.layer)
+    fmt.println("prev_screen", prev_screen)
     next_screen := ui.get(screens.layer, screen_name)
     fmt.assertf(next_screen != nil, "Screen \"%s\" doesn't exist", screen_name)
 
     if tab_name != "" {
-        tab := ui.get(next_screen, fmt.tprintf("header_bar/tabs/%s", tab_name))
+        tab := ui.find(next_screen, fmt.tprintf("header_bar/tabs/%s", tab_name))
         fmt.assertf(tab != nil, "Screen \"%s\" doesn't have tab \"%s\"", screen_name, tab_name)
         ui.click(tab)
     }

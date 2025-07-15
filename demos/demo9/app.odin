@@ -9,6 +9,7 @@ import "events"
 import "fonts"
 import "interface"
 import "screens/credits"
+import "screens/dialog"
 import "screens/home"
 import "screens/player"
 import "screens/settings"
@@ -31,15 +32,21 @@ app_startup :: proc () {
     sprites.create()
 
     interface.create()
-    credits.add(interface.get_screens_layer())
-    home.add(interface.get_screens_layer())
-    player.add(interface.get_screens_layer())
-    settings.add(interface.get_screens_layer())
+    {
+        l := interface.get_screens_layer()
+        credits.add(l)
+        dialog.add(l)
+        home.add(l)
+        player.add(l)
+        settings.add(l)
+    }
 
     events.listen(.exit_app, proc (args: events.Args) { app_exit_requested=true })
 
-    events.open_screen({ screen_name="home" })
+    // events.open_screen({ screen_name="home" })
     // events.open_screen({ screen_name="credits" })
+    events.open_screen({ screen_name="dialog" })
+    events.open_dialog({ dialog_id="pilot_1", chat_id="welcome" })
     // events.open_screen({ screen_name="settings", tab_name="graphics" })
     // events.open_screen({ screen_name="player", tab_name="journey" })
 
@@ -71,7 +78,19 @@ app_tick :: proc () {
 
 app_draw :: proc () {
     rl.BeginDrawing()
-    rl.ClearBackground({})
+    rl.ClearBackground({20,25,30,255})
+
+    { // drawing the game world
+        cx := f32(rl.GetScreenWidth()/2)
+        cy := f32(rl.GetScreenHeight()/2)
+        cr := min(cx,cy)
+        rl.DrawRing({cx,cy}, cr-40, cr, 0, 360, 64, {30,35,40,255})
+
+        fh := i32(cr/12.345)
+        tx := cstring("/* game world rendering goes here */")
+        tw := rl.MeasureText(tx, fh)
+        rl.DrawText(tx, i32(cx)-tw/2, i32(cy)-fh/2, fh, {40,45,50,255})
+    }
 
     interface.draw()
 

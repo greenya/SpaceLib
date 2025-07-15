@@ -23,8 +23,10 @@ credits_text := #load("credits.txt")
 
 create :: proc () {
     create_settings()
+    create_dialogs()
 }
 
 destroy :: proc () {
     destroy_settings()
+    destroy_dialogs()
 }

@@ -1,0 +1,82 @@
+[
+    {
+        "id": "pilot_1",
+        "npc_name": "ORNITHOPTER PILOT",
+        "chatter": [
+            {
+                "id": "welcome",
+                "text": "Can I fly you somewhere today?",
+                "replies": [
+                    { "text": "I want you to fly me somewhere.", "next": "fly_somewhere" },
+                    { "text": "Tell me about yourself." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "fly_somewhere",
+                "text": "Music to my ears. Where do you want to go?",
+                "replies": [
+                    { "text": "Hagga Basin.", "next": "fly_hagga_basin" },
+                    { "text": "Arrakeen." },
+                    { "text": "Harko Village." },
+                    { "text": "Nevermind.", "action": "close" }
+                ]
+            },
+            {
+                "id": "fly_hagga_basin",
+                "text": "The basin is a pretty big place... could you narrow it down a little?",
+                "replies": [
+                    { "text": "Griffin's Reach Tradepost." },
+                    { "text": "Pinnacle Station Tradepost." },
+                    { "text": "Crossroads Tradepost.", "next": "fly_crossroads" },
+                    { "text": "On second thought, I'm fine right here.", "action": "close" }
+                ]
+            },
+            {
+                "id": "fly_crossroads",
+                "text": "Ever seen a 'thopter get snatched by a worm? That's why we're gonna fly high on this route.",
+                "replies": [
+                    { "text": "Let's go.", "action": "fly_to_crossroads" },
+                    { "text": "Nah.", "action": "close" }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "zoe_1",
+        "npc_name": "ZOE",
+        "chatter": [
+            {
+                "id": "welcome",
+                "text": "Welcome back, what'll it be?",
+                "replies": [
+                    { "text": "I'm here to trade.", "action": "trade" },
+                    { "text": "Tell me about the outlaws around here.", "next": "about_outlaws" },
+                    { "text": "Who are you?", "next": "about_self" },
+                    { "text": "Anything interesting in the area?", "next": "about_area" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_outlaws",
+                "replies": [
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_self",
+                "text": "I'm Zoe and I like to trade.",
+                "replies": [
+                    { "text": "I see. Lets trade then.", "action": "trade" },
+                    { "text": "I'm here for the talking part. Bye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_area",
+                "replies": [
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            }
+        ]
+    }
+]

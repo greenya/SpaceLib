@@ -10,14 +10,7 @@ import "../../partials"
 
 add :: proc (parent: ^ui.Frame) {
     assert(screen == nil)
-
-    screen = ui.add_frame(parent,
-        { name="player" },
-        { point=.top_left },
-        { point=.bottom_right },
-    )
-
-    partials.add_screen_base(screen)
+    screen = partials.add_screen(parent, "player")
 
     close := partials.add_screen_footer_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {

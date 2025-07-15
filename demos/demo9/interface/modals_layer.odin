@@ -15,7 +15,7 @@ modals: struct {
     target  : ^ui.Frame,
 }
 
-max_buttons :: 3
+max_buttons :: 4
 
 add_modals_layer :: proc (order: int) {
     assert(modals.layer == nil)
@@ -37,7 +37,7 @@ add_modals_layer :: proc (order: int) {
 add_modal :: proc () {
     modals.modal = ui.add_frame(modals.layer, {
         name    = "modal",
-        size    = {600,0},
+        size    = {640,0},
         layout  = {dir=.down,auto_size=.dir,pad=30},
         draw    = partials.draw_window_rect,
     }, { point=.center })
@@ -62,9 +62,8 @@ add_modal :: proc () {
 
     for i in 1..=max_buttons {
         name := fmt.tprintf("button_%i", i)
-        title := fmt.tprintf("<icon=key/X> Button %i", i)
-        button := partials.add_button(buttons, name, title)
-        button.size_min = {150,0}
+        button := partials.add_button(buttons, name, "")
+        button.size_min = {140,0}
     }
 }
 

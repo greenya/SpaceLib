@@ -1,6 +1,6 @@
 package events
 
-import "core:fmt"
+// import "core:fmt"
 import "spacelib:ui"
 
 ID :: enum {
@@ -11,6 +11,7 @@ ID :: enum {
     close_dropdown,
     open_modal,
     close_modal,
+    open_dialog,
 }
 
 Args :: union {
@@ -20,6 +21,7 @@ Args :: union {
     Close_Dropdown,
     Open_Modal,
     Close_Modal,
+    Open_Dialog,
 }
 
 exit_app :: proc () { send(.exit_app) }
@@ -71,6 +73,12 @@ Close_Modal :: struct {
     target: ^ui.Frame `fmt:"p"`,
 }
 
+open_dialog :: proc (args: Open_Dialog) { send(.open_dialog, args) }
+Open_Dialog :: struct {
+    dialog_id   : string,
+    chat_id     : string,
+}
+
 Event :: struct {
     listeners: [dynamic] Listener,
 }
@@ -87,7 +95,7 @@ get :: #force_inline proc (id: ID) -> ^Event {
 
 @private
 send :: #force_inline proc (id: ID, args: Args = nil) {
-    fmt.printfln("[send] %v |%i| %#v", id, len(events[id].listeners), args)
+    // fmt.printfln("[send] %v |%i| %#v", id, len(events[id].listeners), args)
     for l in events[id].listeners do l(args)
 }
 

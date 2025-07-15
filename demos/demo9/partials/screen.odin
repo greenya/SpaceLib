@@ -5,17 +5,24 @@ import "spacelib:ui"
 
 screen_pad :: 50
 
-add_screen_base :: proc (screen: ^ui.Frame) {
-    ui.hide(screen)
-
-    add_screen_header_bar(screen)
-    add_screen_footer_bar(screen)
-
-    ui.add_frame(screen,
-        { name="pages" },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=ui.get(screen, "header_bar") },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=ui.get(screen, "footer_bar") },
+add_screen :: proc (parent: ^ui.Frame, name: string, is_empty := false) -> ^ui.Frame {
+    screen := ui.add_frame(parent,
+        { name=name, flags={.hidden} },
+        { point=.top_left },
+        { point=.bottom_right },
     )
+
+    if !is_empty {
+        add_screen_header_bar(screen)
+        add_screen_footer_bar(screen)
+        ui.add_frame(screen,
+            { name="pages" },
+            { point=.top_left, rel_point=.bottom_left, rel_frame=ui.get(screen, "header_bar") },
+            { point=.bottom_right, rel_point=.top_right, rel_frame=ui.get(screen, "footer_bar") },
+        )
+    }
+
+    return screen
 }
 
 @private

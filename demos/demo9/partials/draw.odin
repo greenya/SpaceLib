@@ -31,7 +31,7 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
 draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false) {
     assert(t != nil)
 
-    if drop_shadow do draw_terse(t, colors.bg0, offset={0,2})
+    if drop_shadow do draw_terse(t, colors.bg0, offset=offset+{0,2})
 
     for word in t.words {
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
@@ -135,6 +135,12 @@ draw_hexagon_rect :: proc (f: ^ui.Frame) {
 draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
     draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, hangout=true)
+}
+
+draw_hexagon_rect_hangout_short_lines :: proc (f: ^ui.Frame) {
+    rect := f.terse.rect
+    line_w := rect.h
+    draw_hexagon_header(f.terse, rect, rect.x-2*line_w, rect.w+4*line_w, hangout=true)
 }
 
 draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {

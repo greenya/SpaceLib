@@ -10,20 +10,16 @@ import "../../partials"
 @private is_autoscroll: bool
 
 add :: proc (parent: ^ui.Frame) {
-    screen = ui.add_frame(parent, { name="credits",
-            show=proc (f: ^ui.Frame) {
-                // reset state each time credits screen is opened
-                ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
-                ui.show(f, "footer_bar/key_buttons/autoscroll_on")
-                ui.hide(f, "footer_bar/key_buttons/autoscroll_off")
-                is_autoscroll = false
-            },
-        },
-        { point=.top_left },
-        { point=.bottom_right },
-    )
+    assert(screen == nil)
+    screen = partials.add_screen(parent, "credits")
 
-    partials.add_screen_base(screen)
+    screen.show = proc (f: ^ui.Frame) {
+        // reset state each time credits screen is opened
+        ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
+        ui.show(f, "footer_bar/key_buttons/autoscroll_on")
+        ui.hide(f, "footer_bar/key_buttons/autoscroll_off")
+        is_autoscroll = false
+    }
 
     close := partials.add_screen_footer_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {

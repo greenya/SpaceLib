@@ -135,3 +135,15 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     q_color := core.ease_color({}, colors.bg0, hv_ratio)
     draw_text_center("?", q_rect, "text_4l", q_color)
 }
+
+draw_dialog_reply :: proc (f: ^ui.Frame) {
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
+    offset := f.captured ? Vec2 {1,1} : {}
+
+    bg_color := core.ease_color(colors.bg0, colors.accent, hv_ratio)
+    bg_color = core.alpha(bg_color, f.opacity * .3)
+    bg_rect := core.rect_moved(f.rect, offset)
+    draw.rect(bg_rect, bg_color)
+
+    draw_terse(f.terse, offset=offset, drop_shadow=true)
+}

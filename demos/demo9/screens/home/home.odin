@@ -10,14 +10,7 @@ import "../../partials"
 
 add :: proc (parent: ^ui.Frame) {
     assert(screen == nil)
-
-    screen = ui.add_frame(parent,
-        { name="home" },
-        { point=.top_left },
-        { point=.bottom_right },
-    )
-
-    partials.add_screen_base(screen)
+    screen = partials.add_screen(parent, "home")
 
     settings := partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings")
     settings.click = proc (f: ^ui.Frame) {
