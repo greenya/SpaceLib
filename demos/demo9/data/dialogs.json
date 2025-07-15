@@ -1,80 +1,200 @@
 [
     {
-        "id": "pilot_1",
+        "id": "tyg_rolsum",
+        "npc_name": "TYG ROLSUM",
+        "chatter": [
+            {
+                "id": "welcome",
+                "text": "Still alive? That's too bad, we had a bet goin'.",
+                "replies": [
+                    { "text": "I'm here to trade.", "action": "trade" },
+                    { "text": "Are you always this charming?", "next": "are_you_always_this_charming" },
+                    { "text": "Can you tell me about this region?", "next": "about_region" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "are_you_always_this_charming",
+                "text": "Friendly banter ain't worth the spit it costs in the Gap. Get though or get dead. Sooner you learn that, the later you'll croak.",
+                "replies": [
+                    { "text": "I was hoping you would introduce yourself.", "next": "about_self" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_self",
+                "text": "And I was hoping to retire ten years ago. Name's Tyg. I run this hell hole. Any other burning questions?",
+                "replies": [
+                    { "text": "What is your story?", "next": "self_story" },
+                    { "text": "So this is your trade post?", "next": "so_this_is_your_trade_post" },
+                    { "text": "What is keeping you from retiring?", "next": "what_is_keeping_you_from_retiring" },
+                    { "text": "I would like to talk about something else.", "next": "welcome", "next_text": "Guess that's not illegal." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "self_story",
+                "text": "Used to run spice for the Harks. Got tired of them. Got tired of taking orders. Sandflies wanted me, but I can't stomach their mewling politics.",
+                "replies": [
+                    { "text": "Sandflies? What are they?", "next": "about_self", "next_text": "Who, not what. Lazy bastards, the lot of them. Holed up in the Shield Wall. Want a wage without doin' the work. Give the rest of us duners a bad name." },
+                    { "text": "I'm familiar with the Sandflies.", "next": "about_self", "next_text": "Then you know they're good for nothing. Most of 'em leastways. Wonder if Troski's still kickin' it though, she owes me a tooth. Don't ask." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "so_this_is_your_trade_post",
+                "text": "You think and old timer like me can't tap a keg? I do just fine.",
+                "replies": [
+                    { "text": "You just don't seem the entrepreneurial type.", "next_text": "Don't give a spit about accumulating solaris. Just want my own place. To be left alone. Yet you desert fleas keep occasioning me to scratch." },
+                    { "text": "Your clientele is certainly colorful.", "next": "your_colorful_clientele" },
+                    { "text": "I want to know more about this place.", "next_text": "Course you do. I call it the Anvil, 'cause of the Hammer. Only joke I ever made.If it's perishable, I don't stock it. That's all there is to tell." },
+                    { "text": "Alright. I get the picture.", "next": "about_self", "next_text": "Yet, you got more questions." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "your_colorful_clientele",
+                "text": "That's a might pretty way to say criminals. In here, they're meek as mice. I got the only spice beer in the Gap, so behooves them to behave.",
+                "replies": [
+                    { "text": "Or you kick them out?", "next": "so_this_is_your_trade_post", "next_text": "Huh. Sure. Some of them get to leave." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "what_is_keeping_you_from_retiring",
+                "text": "Was always nice and quiet 'round here, back when the Fremen were at Mirzabah. Nobody dared come near. Then the Sardaukar ruined everything.",
+                "replies": [
+                    { "text": "What happened?", "next": "what_happened_when_sardaukar_came" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "what_happened_when_sardaukar_came",
+                "text": "The pogrom. They gutted the Fremen like animals. After that, the bandits all came crawling out of their holes. Now look at this place. It's packed.",
+                "replies": [
+                    { "text": "What does that have to do with retiring?", "next": "why_not_retire_still" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "why_not_retire_still",
+                "text": "Can't well leave these cutthroats to starve can I? They're regulars. 'Sides, who'd be fool enough to take over this den of thieves from me?",
+                "replies": [
+                    { "text": "It almost sounds like you enjoy having people around.", "next": "about_self", "next_text": "Spread slander like that and you best make peace with your tongue." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_region",
+                "text": "The Vermillius Gap? I ain't no Mentat, but this desert and I are on intimate terms.",
+                "replies": [
+                    { "text": "The red sand--why is it like that?", "next_text": "That's 'cause the iron. Used to be the big industry here for it. You can still see some of the old rigs. Long, long ago, 'fore the spice craze." },
+                    { "text": "What dangers should I watch out for?", "next": "about_region_dangers" },
+                    { "text": "Any places worth visiting?", "next_text": "You take me for a tour guide? See that big rock, shaped like a hammer? That's Mirzabah. Great view. Start there. See what you can figure out." },
+                    { "text": "I would like to talk about something else.", "next": "welcome", "next_text": "Guess that's not illegal." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_region_dangers",
+                "text": "Used to be the Fremen owned this patch of sand. 'til the Emperor had 'em all killed. That's when the blasted Kirab slinked in.",
+                "replies": [
+                    { "text": "Do you think the Fremen really are dead?", "next_text": "Most of 'em, sure. They'd rather die young, knife in hand. Older I get, the more sense I see in that. All of 'em though? They're a tenacious lot." },
+                    { "text": "Who are the Kirab?", "next": "about_kirab" },
+                    { "text": "Anyone else I should know about?", "next_text": "There's them two staring daggers at each other younder. Spycraft recruiters for the Atreides and Harkonnen. Passive aggression makes my nethers itch." },
+                    { "text": "Thank you for the warning.", "next": "about_region", "next_text": "I 'ppreciate the sycophancy." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "about_kirab",
+                "text": "Scavengers turned bandits. Got to figuring slitting throats was the more reliable work. They rove in small, nomadic bands.",
+                "replies": [
+                    { "text": "They sound like a menace. Why not get rid of them?", "next": "why_not_get_rid_of_kirab" },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            },
+            {
+                "id": "why_not_get_rid_of_kirab",
+                "text": "They're rat bastards, but they're paying customers. We have a deal. They operate in the area, but cause no trouble here. Don't want to talk about it.",
+                "replies": [
+                    { "text": "Why make deal with people you loath so much?", "next": "about_region_dangers", "next_text": "Best quite that question, lest you like a sucking chest wound." },
+                    { "text": "Goodbye.", "action": "close" }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "ornithopter_pilot",
         "npc_name": "ORNITHOPTER PILOT",
         "chatter": [
             {
                 "id": "welcome",
                 "text": "Can I fly you somewhere today?",
                 "replies": [
-                    { "text": "I want you to fly me somewhere.", "next": "fly_somewhere" },
-                    { "text": "Tell me about yourself." },
+                    { "text": "I want you to fly me somewhere.", "next": "somewhere" },
+                    { "text": "Tell me about yourself.", "next_text": "I like to fly. Fast. Storms, worms or static - nothing stops me from getting where I need to go. But you know what I don't like much? Talking." },
                     { "text": "Goodbye.", "action": "close" }
                 ]
             },
             {
-                "id": "fly_somewhere",
+                "id": "somewhere",
                 "text": "Music to my ears. Where do you want to go?",
                 "replies": [
-                    { "text": "Hagga Basin.", "next": "fly_hagga_basin" },
-                    { "text": "Arrakeen." },
-                    { "text": "Harko Village." },
+                    { "text": "Hagga Basin.", "next": "hagga_basin" },
+                    { "text": "Arrakeen.", "next": "arrakeen" },
+                    { "text": "Harko Village.", "next": "harko_village" },
                     { "text": "Nevermind.", "action": "close" }
                 ]
             },
             {
-                "id": "fly_hagga_basin",
+                "id": "hagga_basin",
                 "text": "The basin is a pretty big place... could you narrow it down a little?",
                 "replies": [
-                    { "text": "Griffin's Reach Tradepost." },
-                    { "text": "Pinnacle Station Tradepost." },
-                    { "text": "Crossroads Tradepost.", "next": "fly_crossroads" },
-                    { "text": "On second thought, I'm fine right here.", "action": "close" }
+                    { "text": "Griffin's Reach Tradepost.", "next": "griffins_reach" },
+                    { "text": "Pinnacle Station Tradepost.", "next": "pinnacle_station" },
+                    { "text": "Crossroads Tradepost.", "next": "crossroads" },
+                    { "text": "On second thought, I'm fine right here.", "next": "welcome", "next_text": "Suit yourself." }
                 ]
             },
             {
-                "id": "fly_crossroads",
+                "id": "griffins_reach",
+                "text": "Myr's place? Yeah I know it. Scavengers territory.",
+                "replies": [
+                    { "text": "Let's go.", "action": "fly_to_griffins_reach" },
+                    { "text": "Nah.", "next": "welcome", "next_text": "Suit yourself." }
+                ]
+            },
+            {
+                "id": "pinnacle_station",
+                "text": "Hm, most folks try stay clear of Slaver gangs.",
+                "replies": [
+                    { "text": "Let's go.", "action": "fly_to_pinnacle_station" },
+                    { "text": "Nah.", "next": "welcome", "next_text": "Suit yourself." }
+                ]
+            },
+            {
+                "id": "crossroads",
                 "text": "Ever seen a 'thopter get snatched by a worm? That's why we're gonna fly high on this route.",
                 "replies": [
                     { "text": "Let's go.", "action": "fly_to_crossroads" },
-                    { "text": "Nah.", "action": "close" }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "zoe_1",
-        "npc_name": "ZOE",
-        "chatter": [
-            {
-                "id": "welcome",
-                "text": "Welcome back, what'll it be?",
-                "replies": [
-                    { "text": "I'm here to trade.", "action": "trade" },
-                    { "text": "Tell me about the outlaws around here.", "next": "about_outlaws" },
-                    { "text": "Who are you?", "next": "about_self" },
-                    { "text": "Anything interesting in the area?", "next": "about_area" },
-                    { "text": "Goodbye.", "action": "close" }
+                    { "text": "Nah.", "next": "welcome", "next_text": "Suit yourself." }
                 ]
             },
             {
-                "id": "about_outlaws",
+                "id": "arrakeen",
+                "text": "Atreides and their war levies - I can get you there, but I want a little extra for the trip.",
                 "replies": [
-                    { "text": "Goodbye.", "action": "close" }
+                    { "text": "Let's go.", "action": "fly_to_arrakeen" },
+                    { "text": "Nah.", "next": "welcome", "next_text": "Suit yourself." }
                 ]
             },
             {
-                "id": "about_self",
-                "text": "I'm Zoe and I like to trade.",
+                "id": "harko_village",
+                "text": "The Harkonnens love their docking fees - so that's going to cost a little extra.",
                 "replies": [
-                    { "text": "I see. Lets trade then.", "action": "trade" },
-                    { "text": "I'm here for the talking part. Bye.", "action": "close" }
-                ]
-            },
-            {
-                "id": "about_area",
-                "replies": [
-                    { "text": "Goodbye.", "action": "close" }
+                    { "text": "Let's go.", "action": "fly_to_harko_village" },
+                    { "text": "Nah.", "next": "welcome", "next_text": "Suit yourself." }
                 ]
             }
         ]

@@ -16,23 +16,32 @@ Dialog_Chat :: struct {
 }
 
 Dialog_Reply :: struct {
-    text    : string,
-    next    : string,
-    action  : Dialog_Reply_Action,
+    text        : string,
+    next        : string,
+    next_text   : string,
+    action      : Dialog_Reply_Action,
 }
 
 Dialog_Reply_Action :: enum {
     none,
     close,
     trade,
+    fly_to_arrakeen,
+    fly_to_harko_village,
+    fly_to_griffins_reach,
+    fly_to_pinnacle_station,
     fly_to_crossroads,
 }
 
 dialog_reply_action_icon := [Dialog_Reply_Action] string {
-    .none               = "",
-    .close              = "close",
-    .trade              = "shopping_cart",
-    .fly_to_crossroads  = "travel",
+    .none                       = "",
+    .close                      = "close",
+    .trade                      = "shopping_cart",
+    .fly_to_arrakeen            = "travel",
+    .fly_to_harko_village       = "travel",
+    .fly_to_griffins_reach      = "travel",
+    .fly_to_pinnacle_station    = "travel",
+    .fly_to_crossroads          = "travel",
 }
 
 @private dialogs: [] Dialogs_Item
@@ -57,6 +66,7 @@ destroy_dialogs :: proc () {
             for r in c.replies {
                 delete(r.text)
                 delete(r.next)
+                delete(r.next_text)
             }
             delete(c.replies)
         }
@@ -70,7 +80,6 @@ get_dialog_chat :: proc (dialog_id, chat_id: string) -> (Dialogs_Item, Dialog_Ch
     assert(dialog_id != "")
     assert(chat_id != "")
 
-    // FIXME: map would be better (for dialogs only, chatter is relatively small so array is fine)
     for dialog in dialogs {
         if dialog.id == dialog_id {
             for chat in dialog.chatter {

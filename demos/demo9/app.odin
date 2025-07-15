@@ -46,7 +46,7 @@ app_startup :: proc () {
     // events.open_screen({ screen_name="home" })
     // events.open_screen({ screen_name="credits" })
     events.open_screen({ screen_name="dialog" })
-    events.open_dialog({ dialog_id="pilot_1", chat_id="welcome" })
+    events.open_dialog({ dialog_id="tyg_rolsum", chat_id="welcome" })
     // events.open_screen({ screen_name="settings", tab_name="graphics" })
     // events.open_screen({ screen_name="player", tab_name="journey" })
 

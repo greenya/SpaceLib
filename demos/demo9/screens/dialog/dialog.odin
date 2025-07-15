@@ -45,7 +45,7 @@ add :: proc (parent: ^ui.Frame) {
     ui.add_frame(screen, {
         name        = "talk",
         flags       = {.terse,.terse_height},
-        text_format = "<wrap,pad=15:10,font=text_4m,color=primary>%s    <font=text_4l,color=primary_l8>%s",
+        text_format = "<wrap,pad=15:10,font=text_4r,color=primary>%s    <font=text_4l,color=primary_l8>%s",
         draw        = partials.draw_hexagon_rect_hangout_short_lines,
     },
         { point=.bottom_left, rel_point=.top_left, rel_frame=replies, offset={0,-30} },
