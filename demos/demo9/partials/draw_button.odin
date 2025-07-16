@@ -24,14 +24,21 @@ draw_button :: proc (f: ^ui.Frame) {
 
 draw_button_diamond :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Linear, .111, .Linear, .111)
-    rect := core.rect_inflated(f.rect, hv_ratio*5)
+    rect := core.rect_inflated(f.rect, f.selected ? 5 : hv_ratio*5)
 
-    draw.diamond(rect, f.captured ? core.brightness(colors.accent, -.8) : colors.bg1)
+    bg_color := f.selected\
+        ? core.brightness(colors.primary, -.7)\
+        : f.captured\
+            ? core.brightness(colors.accent, -.7)\
+            : colors.bg1
+
+    draw.diamond(rect, bg_color)
+    draw.diamond_lines(core.rect_inflated(rect, -rect.w/10), 4, colors.bg2)
 
     ln_color := core.brightness(f.entered ? colors.accent : colors.primary, -.4)
     draw.diamond_lines(rect, 3, core.alpha(ln_color, f.opacity))
 
-    sp_color := core.brightness(colors.primary, -.5 * (1-hv_ratio))
+    sp_color := core.brightness(colors.primary, f.selected ? 0 : -.5 * (1-hv_ratio))
     draw_sprite(f.text, core.rect_inflated(rect, -rect.w/4), sp_color)
 }
 

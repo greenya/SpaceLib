@@ -41,7 +41,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
 
     ui.add_frame(header_bar, {
         name    = "nav_next_tab",
-        text    = "<pad=6,font=text_4l,icon=key/E>",
+        text    = "<pad=8,font=text_4l,icon=key/E>",
         flags   = {.hidden,.capture,.terse,.terse_size},
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
@@ -49,7 +49,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
 
     ui.add_frame(header_bar, {
         name    = "nav_prev_tab",
-        text    = "<pad=6,font=text_4l,icon=key/Q>",
+        text    = "<pad=8,font=text_4l,icon=key/Q>",
         flags   = {.hidden,.capture,.terse,.terse_size},
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "tabs"), allow_rotation=true) },

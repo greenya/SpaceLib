@@ -67,12 +67,6 @@ add_skills_page :: proc () {
 }
 
 @private
-add_journey_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "journey", "JOURNEY")
-    partials.add_placeholder_note(page, "JOURNEY PAGE GOES HERE...")
-}
-
-@private
 add_customization_page :: proc () {
     _, page := partials.add_screen_tab_and_page(screen, "customization", "CUSTOMIZATION")
     partials.add_placeholder_note(page, "CUSTOMIZATION PAGE GOES HERE...")

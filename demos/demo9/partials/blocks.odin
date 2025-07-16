@@ -148,3 +148,72 @@ add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string,
 
     events.set_dropdown_data({ target=button, selected=selected, names=names, titles=titles })
 }
+
+Category_Tab_Details :: struct {
+    name    : string,
+    text    : string,
+    icon    : string,
+    click   : ui.Frame_Proc,
+}
+
+add_category_tabs :: proc (parent: ^ui.Frame, details: [] Category_Tab_Details) -> ^ui.Frame {
+    tabs := ui.add_frame(parent, {
+        name    = "category_tabs",
+        layout  = {dir=.right,gap=20,auto_size=.dir,align=.center},
+    })
+
+    for d, i in details do ui.add_frame(tabs, {
+        name        = d.name,
+        text        = d.icon,
+        flags       = {.radio,.capture},
+        selected    = i == 0,
+        size        = 64,
+        draw        = draw_button_diamond,
+    })
+
+    prev := ui.add_frame(tabs, {
+        name    = "prev",
+        flags   = {.hidden,.capture,.terse,.terse_size},
+        order   = -1,
+        text    = "<pad=8,font=text_4l,icon=key/Z>",
+        draw    = draw_button,
+        click   = proc (f: ^ui.Frame) { ui.select_prev_child(f.parent, allow_rotation=true) },
+    })
+
+    next := ui.add_frame(tabs, {
+        name    = "next",
+        flags   = {.hidden,.capture,.terse,.terse_size},
+        order   = 1,
+        text    = "<pad=8,font=text_4l,icon=key/C>",
+        draw    = draw_button,
+        click   = proc (f: ^ui.Frame) { ui.select_next_child(f.parent, allow_rotation=true) },
+    })
+
+    if len(details) > 0 {
+        ui.show(prev)
+        ui.show(next)
+    }
+
+    title := ui.add_frame(tabs, {
+        name        = "title",
+        flags       = {.terse,.terse_size},
+        order       = 5,
+        text_format = "<pad=12:0,font=text_4r>%s",
+        text        = "TITLE",
+        draw        = draw_label_box,
+    })
+
+    ui.add_frame(tabs, {
+        name="bg_line",
+        order=-9,
+        size={0,2},
+        flags={.pass},
+        text="primary_d4",
+        draw=draw_color_rect,
+    },
+        { point=.left, rel_point=.center, rel_frame=prev },
+        { point=.right, rel_point=.center, rel_frame=title },
+    )
+
+    return tabs
+}

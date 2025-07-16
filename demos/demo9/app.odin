@@ -43,12 +43,12 @@ app_startup :: proc () {
 
     events.listen(.exit_app, proc (args: events.Args) { app_exit_requested=true })
 
-    events.open_screen({ screen_name="home" })
+    // events.open_screen({ screen_name="home" })
     // events.open_screen({ screen_name="credits" })
     // events.open_dialog({ dialog_id="tyg_rolsum", chat_id="welcome" })
     // events.open_dialog({ dialog_id="ornithopter_pilot", chat_id="welcome" })
     // events.open_screen({ screen_name="settings", tab_name="graphics" })
-    // events.open_screen({ screen_name="player", tab_name="journey" })
+    events.open_screen({ screen_name="player", tab_name="journey" })
 }
 
 app_shutdown :: proc () {

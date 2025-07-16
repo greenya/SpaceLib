@@ -217,3 +217,20 @@ draw_window_rect :: proc (f: ^ui.Frame) {
     icon_color := core.alpha(colors.primary, f.opacity)
     draw_sprite("priority_high", icon_rect, icon_color)
 }
+
+draw_setting_card :: proc (f: ^ui.Frame) {
+    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
+
+    bg_color := core.ease_color(colors.bg2, colors.accent, hv_ratio)
+    bg_color = core.alpha(core.brightness(bg_color, -.8), f.opacity*.3 + hv_ratio*.2)
+    draw.rect(f.rect, bg_color)
+
+    ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio)
+    ln_color = core.alpha(ln_color, f.opacity * .5)
+    draw.rect_lines(f.rect, 1, ln_color)
+}
+
+draw_label_box :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, core.brightness(colors.primary, -.2))
+    draw_terse(f.terse, colors.bg0)
+}
