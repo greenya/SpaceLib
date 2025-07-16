@@ -333,12 +333,6 @@ first_visible_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
     return nil
 }
 
-visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
-    list := make([dynamic] ^Frame, allocator)
-    for child in f.children do if .hidden not_in child.flags do append(&list, child)
-    return list[:]
-}
-
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil {
         for child in f.parent.children {
@@ -792,7 +786,7 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
     prev_rect: Rect
     has_prev_rect: bool
 
-    vis_children := visible_children(f, context.temp_allocator)
+    vis_children := get_layout_visible_children(f, context.temp_allocator)
     is_dir_vertical := is_layout_dir_vertical(f)
 
     for child in vis_children {
@@ -897,6 +891,18 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
         if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
         else                do for child in vis_children do child.rect.x -= scroll.offset
     }
+}
+
+@private
+get_layout_visible_children :: proc (parent: ^Frame, allocator := context.allocator) -> [] ^Frame {
+    assert(parent.layout.dir != .none)
+    list := make([dynamic] ^Frame, allocator)
+    for child in parent.children {
+        if len(child.anchors) > 0 do continue
+        if .hidden in child.flags do continue
+        append(&list, child)
+    }
+    return list[:]
 }
 
 @private
