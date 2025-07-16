@@ -28,10 +28,12 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false) {
+draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false, _shadow_pass := false) {
     assert(t != nil)
 
-    if drop_shadow do draw_terse(t, colors.bg0, offset=offset+{0,2})
+    if drop_shadow {
+        draw_terse(t, colors.bg0, offset=offset+{0,2}, _shadow_pass=true)
+    }
 
     for word in t.words {
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
@@ -41,9 +43,13 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
         tint = core.alpha(tint, t.opacity)
 
         if word.is_icon {
-            if      strings.has_prefix(word.text, "key/")   do draw_icon_key(word.text[4:], rect, t.opacity, .box)
-            else if strings.has_prefix(word.text, "key2/")  do draw_icon_key(word.text[5:], rect, t.opacity, .diamond)
-            else                                            do draw_sprite(word.text, rect, tint)
+            prefix :: strings.has_prefix
+            switch {
+            case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, t.opacity, shadow_only=_shadow_pass)
+            case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), t.opacity, font="text_4r", shadow_only=_shadow_pass)
+            case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, t.opacity, shape=.diamond, shadow_only=_shadow_pass)
+            case                                    : draw_sprite(word.text, rect, tint)
+            }
         } else if word.text != "" && word.text != " " {
             draw.text(word.text, {rect.x,rect.y}, word.font, tint)
         }
@@ -52,19 +58,25 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
     if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(t)
 }
 
+draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,diamond} = .box, font := "text_4m", shadow_only := false) {
+    bg_color := core.alpha(shadow_only ? colors.bg0 : colors.primary, opacity * .75)
+    switch shape {
+    case .box       : draw.rect_rounded(rect, roundness_ratio=.3, segments=4, color=bg_color)
+    case .diamond   : draw.diamond(rect, bg_color)
+    }
+
+    if !shadow_only {
+        tx_color := core.alpha(colors.bg0, opacity)
+        switch text {
+        case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tx_color)
+        case        : draw_text_center(text, rect, font, tx_color)
+        }
+    }
+}
+
 draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
     font_tr := &fonts.get(font).font_tr
     draw.text_center(text, core.rect_center(rect), font_tr, color)
-}
-
-draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum { box, diamond }) {
-    bg_color := core.alpha(colors.primary, opacity * .75)
-    switch shape {
-    case .box       : draw.rect_rounded(rect, .3, 4, bg_color)
-    case .diamond   : draw.diamond(rect, bg_color)
-    }
-    tx_color := core.alpha(colors.bg0, opacity)
-    draw_text_center(text, rect, "text_4m", tx_color)
 }
 
 draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, hangout := false, bg_opacity := f32(1)) {
@@ -218,16 +230,27 @@ draw_window_rect :: proc (f: ^ui.Frame) {
     draw_sprite("priority_high", icon_rect, icon_color)
 }
 
-draw_setting_card :: proc (f: ^ui.Frame) {
-    hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
+draw_card_rect :: proc (f: ^ui.Frame) {
+    bg_color := core.brightness(colors.accent, -.75)
+    ln_color := colors.accent
 
-    bg_color := core.ease_color(colors.bg2, colors.accent, hv_ratio)
-    bg_color = core.alpha(core.brightness(bg_color, -.8), f.opacity*.3 + hv_ratio*.2)
+    if !f.selected {
+        hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
+
+        bg_color = core.ease_color(colors.bg2, colors.accent, hv_ratio)
+        bg_color = core.alpha(core.brightness(bg_color, -.8), f.opacity*.3 + hv_ratio*.2)
+
+        ln_color = core.ease_color(colors.primary, colors.accent, hv_ratio)
+        ln_color = core.alpha(ln_color, f.opacity * .5)
+    }
+
     draw.rect(f.rect, bg_color)
-
-    ln_color := core.ease_color(colors.primary, colors.accent, hv_ratio)
-    ln_color = core.alpha(ln_color, f.opacity * .5)
     draw.rect_lines(f.rect, 1, ln_color)
+}
+
+draw_tutorial_item :: proc (f: ^ui.Frame) {
+    draw_card_rect(f)
+    draw_terse(f.terse, drop_shadow=true)
 }
 
 draw_label_box :: proc (f: ^ui.Frame) {

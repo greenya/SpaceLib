@@ -66,8 +66,9 @@ add_screen_footer_bar :: proc (screen: ^ui.Frame) {
 
     ui.add_frame(footer_bar,
         { name="pyramid_buttons", layout={ dir=.right, align=.end, gap=20 } },
-        { point=.bottom_left, offset={screen_pad,0} },
     )
+
+    move_screen_pyramid_buttons(screen, .left)
 
     ui.add_frame(footer_bar,
         { name="key_buttons", layout={ dir=.left, align=.center, gap=6 } },
@@ -83,7 +84,10 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
         flags       = {.radio,.terse,.terse_width},
         size_min    = {120,0},
         draw        = draw_screen_tab,
-        click       = on_screen_tab_click,
+        click       = proc (f: ^ui.Frame) {
+            page := ui.get(f, fmt.tprintf("../../../pages/%s", f.name))
+            ui.show(page, hide_siblings=true)
+        },
     })
 
     ui.add_frame(tab, {
@@ -108,13 +112,19 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
     return
 }
 
-@private
-on_screen_tab_click :: proc (f: ^ui.Frame) {
-    page := ui.get(f, fmt.tprintf("../../../pages/%s", f.name))
-    ui.show(page, hide_siblings=true)
+move_screen_pyramid_buttons :: proc (screen: ^ui.Frame, side: enum { left, center }) {
+    list := ui.get(screen, "footer_bar/pyramid_buttons")
+    switch side {
+    case .left:
+        list.layout.dir = .right
+        ui.set_anchors(list, { point=.bottom_left, offset={screen_pad,0} })
+    case .center:
+        list.layout.dir = .left_and_right
+        ui.set_anchors(list, { point=.bottom })
+    }
 }
 
-add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string) -> ^ui.Frame {
+add_screen_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string) -> ^ui.Frame {
     button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
         name    = name,
         flags   = {.capture},
@@ -140,7 +150,7 @@ add_screen_footer_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: s
     return button
 }
 
-add_screen_footer_key_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
+add_screen_key_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
     buttons := ui.get(screen, "footer_bar/key_buttons")
     return add_button(buttons, name, text)
 }

@@ -13,12 +13,12 @@ add :: proc (parent: ^ui.Frame) {
     assert(screen == nil)
     screen = partials.add_screen(parent, "settings")
 
-    close := partials.add_screen_footer_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="home" })
     }
 
-    partials.add_screen_footer_key_button(screen, "reset_to_default", "<icon=key/X> Reset to Default")
+    partials.add_screen_key_button(screen, "reset_to_default", "<icon=key/X> Reset to Default")
 
     add_pages()
 
@@ -70,7 +70,7 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
 
     card := ui.add_frame(list, {
         name    = name,
-        draw    = partials.draw_setting_card,
+        draw    = partials.draw_card_rect,
         enter   = set_details_column_content_from_card,
     })
 

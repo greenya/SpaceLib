@@ -12,32 +12,32 @@ add :: proc (parent: ^ui.Frame) {
     assert(screen == nil)
     screen = partials.add_screen(parent, "home")
 
-    settings := partials.add_screen_footer_pyramid_button(screen, "settings", "SETTINGS", icon="settings")
+    settings := partials.add_screen_pyramid_button(screen, "settings", "SETTINGS", icon="settings")
     settings.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="settings" })
     }
 
-    credits := partials.add_screen_footer_pyramid_button(screen, "credits", "CREDITS", icon="contract")
+    credits := partials.add_screen_pyramid_button(screen, "credits", "CREDITS", icon="contract")
     credits.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="credits" })
     }
 
-    close := partials.add_screen_footer_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_modal({
             target  = f,
             title   = "Quit Game",
             message = "Are you sure you want to quit?",
             buttons = {
-                { text="<icon=key/_> Confirm", click=proc (f: ^ui.Frame) { events.exit_app() } },
+                { text="<icon=key/__:1.2:1> Confirm", click=proc (f: ^ui.Frame) { events.exit_app() } },
                 { text="<icon=key/Esc:1.4:1> Cancel", role=.cancel },
             },
         })
     }
 
-    partials.add_screen_footer_key_button(screen, "request_help", "<icon=key/H> Request Help")
-    partials.add_screen_footer_key_button(screen, "report_bug", "<icon=key/B> Report Bug")
-    partials.add_screen_footer_key_button(screen, "account", "<icon=key/A> Account")
+    partials.add_screen_key_button(screen, "request_help", "<icon=key/H> Request Help")
+    partials.add_screen_key_button(screen, "report_bug", "<icon=key/B> Report Bug")
+    partials.add_screen_key_button(screen, "account", "<icon=key/A> Account")
 
     add_social_links()
     add_account_info()
@@ -152,7 +152,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
         { point=.top_right },
     )
     ui.add_frame(header,
-        { name="icon", text="<left,font=text_4l,color=primary,icon=key2/!:.9>", flags={.terse,.terse_size} },
+        { name="icon", text="<left,font=text_4l,color=primary,icon=key_diamond/!:.9>", flags={.terse,.terse_size} },
         { point=.center, rel_point=.left, offset={1,0} },
     )
     ui.add_frame(notifications_area,

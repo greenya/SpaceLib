@@ -94,11 +94,17 @@ TODO: [?] ui: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_O
 
 TODO: [?] ui: maybe add support for logic resolution 1280x720
 
+    maybe we don't need it, as its possible to do following:
+        - always report needed resolution, regardless of actual, e.g. call ui.tick() with {0,0,1280,720}
+        - when drawing, user can scale frame's rect to actual resolution
+
 TODO: [?] ui: add UI.drawing_frames and .updating phase should fill it to be later used in .drawing phase
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 
+-----------------------------------------
 ---- maybe remove raylib/res package ----
+-----------------------------------------
 
 TODO: raylib/res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
 
