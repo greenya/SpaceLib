@@ -19,9 +19,12 @@ print_frame_tree :: proc (
     for i in 0..=_depth do strings.write_string(&sb, i == 0 ? "+" : "-")
     strings.write_rune(&sb, '{')
 
-    if f.parent == nil          do fmt.sbprintf(&sb, " root")
+    if f.parent == nil          do fmt.sbprint(&sb, " root")
+    if f.order != 0             do fmt.sbprintf(&sb, " %+i", f.order)
     if f.name != ""             do fmt.sbprintf(&sb, " <%s>", f.name)
-    if f.order != 0             do fmt.sbprintf(&sb, " order=%i", f.order)
+    if f.entered                do fmt.sbprint(&sb, " entered")
+    if f.captured               do fmt.sbprint(&sb, " captured")
+    if f.selected               do fmt.sbprint(&sb, " selected")
     if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout")
 
     for v in Flag do if v in f.flags && v not_in skip_flags do fmt.sbprintf(&sb, " %v", v)
