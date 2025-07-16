@@ -197,18 +197,6 @@ update :: proc (f: ^Frame, repeat := 1) {
     }
 }
 
-@private
-set_rect_dirty_frame_tree :: proc (f: ^Frame) {
-    f.rect_dirty = true
-    for child in f.children do set_rect_dirty_frame_tree(child)
-}
-
-@private
-update_rect_frame_tree :: proc (f: ^Frame) {
-    update_rect(f)
-    for child in f.children do update_rect_frame_tree(child)
-}
-
 index :: #force_inline proc (child: ^Frame) -> int {
     assert(child.parent != nil)
     i, _ := slice.linear_search(child.parent.children[:], child)
@@ -225,11 +213,14 @@ set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     f.parent = new_parent
     if f.parent != nil {
         append(&f.parent.children, f)
-        slice.sort_by(f.parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
-            return f1.order < f2.order
-        })
+        sort_children(f.parent)
         f.ui = f.parent.ui
     }
+}
+
+set_order :: proc (f: ^Frame, new_order: int) {
+    f.order = new_order
+    if f.parent != nil do sort_children(f.parent)
 }
 
 set_name :: proc (f: ^Frame, name: string) {
@@ -642,6 +633,25 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
         scroll := &actor.content.layout.scroll
         scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
     }
+}
+
+@private
+sort_children :: #force_inline proc (parent: ^Frame) {
+    slice.sort_by(parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
+        return f1.order < f2.order
+    })
+}
+
+@private
+set_rect_dirty_frame_tree :: proc (f: ^Frame) {
+    f.rect_dirty = true
+    for child in f.children do set_rect_dirty_frame_tree(child)
+}
+
+@private
+update_rect_frame_tree :: proc (f: ^Frame) {
+    update_rect(f)
+    for child in f.children do update_rect_frame_tree(child)
 }
 
 @private
