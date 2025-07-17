@@ -37,7 +37,7 @@ add_journey_page :: proc () {
         { point=.bottom_right, offset={-80,-40} },
     )
 
-    ui.print_frame_tree(page)
+    // ui.print_frame_tree(page)
 
     add_journey_page_tutorial(content)
 
@@ -82,7 +82,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
 
     details_column := ui.add_frame(details, {
         name    = "column",
-        size    = {440,0},
+        size    = {400,0},
         layout  = {dir=.up_and_down,auto_size=.dir,gap=1},
         text    = "primary_d8",
         draw    = partials.draw_color_rect,
@@ -105,6 +105,8 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         text        = "DESC",
         text_format = "<wrap,top,left,pad=12:10,font=text_4l,color=primary_d2>%s",
     })
+
+    ui.hide(details)
 }
 
 journey_page_show_tutorial_tip :: proc (id: string) {
@@ -112,7 +114,6 @@ journey_page_show_tutorial_tip :: proc (id: string) {
 
     details := ui.get(screen, "pages/journey/content/tutorial/details")
     column := ui.get(details, "column")
-    ui.print_frame_tree(column)
 
     // title
     ui.set_text(ui.get(column, "title"), tip.title, shown=true)
@@ -123,8 +124,12 @@ journey_page_show_tutorial_tip :: proc (id: string) {
     else                do ui.hide(image)
 
     // desc
+    desc := ui.get(column, "desc")
     tip_desc := data.get_tutorial_tip_desc(tip, context.temp_allocator)
-    ui.set_text(ui.get(column, "desc"), tip_desc, shown=true)
+    if tip_desc != ""   do ui.set_text(desc, tip_desc, shown=true)
+    else                do ui.hide(desc)
 
-    ui.update(details, repeat=2)
+    ui.set_scroll_offset(details, 0)
+    ui.show(details)
+    ui.update(details)
 }

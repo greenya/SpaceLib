@@ -17,7 +17,7 @@ create_tutorial_tips :: proc () {
     assert(tutorial_tips == nil)
     err := json.unmarshal_any(#load("tutorial_tips.json"), &tutorial_tips)
     fmt.ensuref(err == nil, "Failed to load tutorial_tips.json: %v", err)
-    fmt.printfln("%#v", tutorial_tips)
+    // fmt.printfln("%#v", tutorial_tips)
 }
 
 @private

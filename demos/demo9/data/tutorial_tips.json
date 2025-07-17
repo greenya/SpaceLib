@@ -38,7 +38,7 @@
             "",
             "You can partially replenish your hydration level by drinking <font=text_4m>Dew</> from <font=text_4m>Dew Flowers</>.",
             "",
-            "<color=primary_l5,icon=key/E> [Hold] Drink"
+            "<color=primary_l4,icon=key/E> [Hold] Drink"
         ]
     },
     {
@@ -55,5 +55,309 @@
         "id": "drinking_blood",
         "title": "DRINKING BLOOD",
         "desc": "Blood can be consumed to hydrate yourself."
+    },
+    {
+        "id": "sunstroke",
+        "title": "SUNSTROKE",
+        "image": "tip/sunstroke",
+        "desc": [
+            "Spending time in the sun will fill up the sunstroke bar. Once filled you will be affected by <font=text_4m>Sunstroke</> which increases dehydration rate.",
+            "",
+            "To avoid and remove <font=text_4m>Sunstroke</>, stick to the shadows."
+        ]
+    },
+    {
+        "id": "shelter",
+        "title": "SHELTER",
+        "image": "tip/shelter",
+        "desc": [
+            "<font=text_4m>Sheltered areas</> provide protection from <font=text_4m>Sandstorms</>. Seek them out to avoid one of the key dangers of Arrakis.",
+            "",
+            "Your shelter status is displayed above the <font=text_4m>Hydration Bar</>."
+        ]
+    },
+    {
+        "id": "cutteray",
+        "title": "CUTTERAY",
+        "image": "tip/cutteray",
+        "desc": [
+            "The <font=text_4m>Cutteray</> is used for mining resources.",
+            "",
+            "The <font=text_4m>Analysis Mode</> displays hidden <font=text_4m>structural weaknesses</> that can be traced with the Cutteray laser to yield greater resource amounts.",
+            "",
+            "<color=primary_l4,icon=key/RMB:1.7:1> Analysis Mode",
+            "<color=primary_l4,icon=key/LMB:1.7:1> Fire Cutteray<gap=.5>"
+        ]
+    },
+    {
+        "id": "cutteray_doors",
+        "title": "CUTTERAY DOORS",
+        "image": "tip/cutteray_doors",
+        "desc": [
+            "The <font=text_4m>Cutteray</> can scan and cut open certain doors.",
+            "",
+            "Use <font=text_4m>Analysis Mode</> to reveal hidden <font=text_4m>structural weaknesses</>, then trace them with the laser to breach the door.",
+            "",
+            "<color=primary_l4,icon=key/RMB:1.7:1> Analysis Mode",
+            "<color=primary_l4,icon=key/LMB:1.7:1> Fire Cutteray<gap=.5>"
+        ]
+    },
+    {
+        "id": "sub_fief_console",
+        "title": "SUB-FIEF CONSOLE",
+        "image": "tip/sub_fief_console",
+        "desc": [
+            "The Sub-Fief Console is the control center of a base and where you manage player <font=text_4m>permissions</>, <font=text_4m>storage</> and <font=text_4m>power distribution</>.",
+            "",
+            "<font=text_4m>Landclaim</> is an area around the sub-fief console. This area defines where you can build.",
+            "",
+            "Change the <font=text_4m>elevation</> and <font=text_4m>rotation</> of the Sub-Fief Console by following the commands at the right hand side of the screen."
+        ]
+    },
+    {
+        "id": "filling_projections",
+        "title": "FILLING PROJECTIONS",
+        "image": "tip/filling_projections",
+        "desc": [
+            "A projection acts as representation of what you want to build and is only visible while the construction tool is equipped.",
+            "",
+            "Any player in your team can see and fill projections.",
+            "",
+            "<color=primary_l4,icon=key/LMB:1.7:1> Place projection",
+            "<color=primary_l4,icon=key/LMB:1.7:1> Hold to place and fill projection<gap=.5>"
+        ]
+    },
+    {
+        "id": "construction_modes",
+        "title": "CONSTRUCTION MODES",
+        "desc": [
+            "The <font=text_4m>Construction Tool</> features several <font=text_4m>Modes</> that you can swap between.",
+            "",
+            "These modes are Build, Piece Picker, Repair. Move, and Demolish.",
+            "",
+            "<color=primary_l4,icon=key/RMB:1.7:1> Swap Tool Mode"
+        ]
+    },
+    {
+        "id": "base_management",
+        "title": "BASE MANAGEMENT",
+        "desc": [
+            "Permissions are managed via the <font=text_4m>Sub-Fief Console</>.",
+            "",
+            "Add players to the permission list, and assign their <font=text_4m>Permission level</>.",
+            "",
+            "Set <font=text_4m>Access Levels</> on interactables (doors machines, etc.). Players can only use an object if their permission meets or exceeds the required access level."
+        ]
+    },
+    {
+        "id": "construction_menu",
+        "title": "CONSTRUCTION MENU",
+        "desc": [
+            "The Construction Menu can be expanded to switch between Placeables, Decorations and Building Sets. The chosen set will determine which buildables can be selected.",
+            "",
+            "The Favorites tab is customizable and can contain up to 20 entries. It will always be visible regardless of what set is chosen.",
+            "",
+            "<color=primary_l4,icon=key/R> Change Set"
+        ]
+    },
+    {
+        "id": "abandoning_bases",
+        "title": "ABANDONING BASES",
+        "desc": "Sub-fief consoles can be <font=text_4m>destroyed remotely</> on the map. This can be done by hovering over the map marker and using the remote destruction input appearing in the tooltip."
+    },
+    {
+        "id": "scavenger_camps",
+        "title": "SCAVENGER CAMPS",
+        "image": "tip/scavenger_camps",
+        "desc": [
+            "Small camps can be found all over Arrakis, populated with a handful of people trying to survive.",
+            "",
+            "The camps can hold <font=text_4m>Salvaged Metal</>, <font=text_4m>Fuel Cells</> and other valuable items if you are willing to fight for them."
+        ]
+    },
+    {
+        "id": "map_markers",
+        "title": "MAP MARKERS",
+        "image": "tip/map_markers",
+        "desc": [
+            "Scavenger camps and other locations appear on the <font=text_4m>Map</> when discovered, while only larger locations are shown on the <font=text_4m>Compass</>. Gray markers indicate discovered locations which change color once visited.",
+            "",
+            "<color=primary_l4,icon=key/M> Open Map"
+        ]
+    },
+    {
+        "id": "moisture_sealed_cave",
+        "title": "MOISTURE-SEALED CAVE",
+        "image": "tip/moisture_sealed_cave",
+        "desc": [
+            "Moisture-Sealed <font=text_4m>Caves</> are found throughout Arrakis, their entrances are covered by waterseals that trap precious humidity inside.",
+            "",
+            "An <font=text_4m>orange</> map marker indicates that these locations are sources for components used for Hydration and Gathering equipment."
+        ]
+    },
+    {
+        "id": "shipwrecks",
+        "title": "SHIPWRECKS",
+        "image": "tip/shipwrecks",
+        "desc": [
+            "<font=text_4m>Shipwrecks</> are massive structures, often visible from afar due to their sheer size.",
+            "",
+            "A <font=text_4m>green</> map marker indicates that components needed to create weapons and armors can be found at these locations."
+        ]
+    },
+    {
+        "id": "imperial_testing_stations",
+        "title": "IMPERIAL TESTING STATIONS",
+        "image": "tip/imperial_testing_stations",
+        "desc": [
+            "<font=text_4m>Imperial Testing Stations</> are scattered across Arrakis.",
+            "",
+            "A <font=text_4m>blue</> location marker indicates that components needed to create vehicles and other technology can be found at these locations."
+        ]
+    },
+    {
+        "id": "the_inner_sight",
+        "title": "THE INNER SIGHT",
+        "image": "tip/the_inner_sight",
+        "desc": [
+            "Your inner sight has revealed the path, follow it to the first Trial of Aql. The Inner Sight marker will help you find your way to the next chapter of your story.",
+            "",
+            "<font=text_4m>Purple</> icons mark important locations in your journey."
+        ]
+    },
+    {
+        "id": "climbing",
+        "title": "CLIMBING",
+        "image": "tip/climbing",
+        "desc": [
+            "<font=text_4m>Climbing</> terrain and structures can help you to explore new areas or reach a vantage point.",
+            "",
+            "Climbing will drain your <font=text_4m>Stamina</>.",
+            "",
+            "<color=primary_l4,icon=key/__:1.2:1> [Hold] + forward to attach",
+            "<color=primary_l4,icon=key/L.Ctrl:1.8:1> Release<gap=.5>"
+        ]
+    },
+    {
+        "id": "stamina",
+        "title": "STAMINA",
+        "desc": [
+            "<font=text_4m>Stamina</> drains while climbing.",
+            "",
+            "Stamina recharges automatically unless you're <font=text_4m>Sprinting</>."
+        ]
+    },
+    {
+        "id": "looting",
+        "title": "LOOTING",
+        "image": "tip/looting",
+        "desc": [
+            "The bodies of downed enemies can hold vital tools, resources, and components.",
+            "",
+            "Loot the <font=text_4m>Cutteray</> and <font=text_4m>Power Pack</> from the body and equip it."
+        ]
+    },
+    {
+        "id": "light_attacks",
+        "title": "LIGHT ATTACKS",
+        "image": "tip/light_attacks",
+        "desc": [
+            "<font=text_4m>Light attacks</> are quick. Multiple light attacks in succession will <font=text_4m>Stagger</> the target.",
+            "",
+            "<color=primary_l4,icon=key/LMB:1.7:1> Light Attack"
+        ]
+    },
+    {
+        "id": "parrying",
+        "title": "PARRYING",
+        "image": "tip/parrying",
+        "desc": [
+            "Time your <font=text_4m>Block</> just as the enemy attacks to land a <font=text_4m>Parry</>.",
+            "",
+            "A successful parry will <font=text_4m>Stagger</> the attacker.",
+            "",
+            "<color=primary_l4,icon=key/RMB:1.7:1> Parry",
+            "<color=primary_l4,icon=key/RMB:1.7:1> [Hold] Block<gap=.5>"
+        ]
+    },
+    {
+        "id": "being_staggered",
+        "title": "BEING STAGGERED"
+    },
+    {
+        "id": "shielded_npcs",
+        "title": "SHIELDED NPCS"
+    },
+    {
+        "id": "abandoned_vehicle",
+        "title": "ABANDONED VEHICLE"
+    },
+    {
+        "id": "vehicle_modules",
+        "title": "VEHICLE MODULES"
+    },
+    {
+        "id": "debuffs",
+        "title": "DEBUFFS"
+    },
+    {
+        "id": "status_ui",
+        "title": "STATUS UI"
+    },
+    {
+        "id": "flour_sand",
+        "title": "FLOUR SAND"
+    },
+    {
+        "id": "sand_hazards",
+        "title": "SAND HAZARDS"
+    },
+    {
+        "id": "spice_experience",
+        "title": "SPICE EXPERIENCE"
+    },
+    {
+        "id": "spice_withdrawal",
+        "title": "SPICE WITHDRAWAL"
+    },
+    {
+        "id": "skills",
+        "title": "SKILLS"
+    },
+    {
+        "id": "research_menu",
+        "title": "RESEARCH MENU"
+    },
+    {
+        "id": "taxation",
+        "title": "TAXATION"
+    },
+    {
+        "id": "stillsuit",
+        "title": "STILLSUIT"
+    },
+    {
+        "id": "faction_alignment",
+        "title": "FACTION ALIGNMENT"
+    },
+    {
+        "id": "contract_menu",
+        "title": "CONTRACT MENU"
+    },
+    {
+        "id": "claiming_contract_rewards",
+        "title": "CLAIMING CONTRACT REWARDS"
+    },
+    {
+        "id": "the_deep_desert",
+        "title": "THE DEEP DESERT"
+    },
+    {
+        "id": "survey_probe",
+        "title": "SURVEY PROBE"
+    },
+    {
+        "id": "fade_inactive_hud",
+        "title": "FADE INACTIVE HUD"
     }
 ]
