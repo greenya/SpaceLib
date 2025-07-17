@@ -1,0 +1,59 @@
+[
+    {
+        "id": "sandworm_death",
+        "title": "SANDWORM DEATH",
+        "image": "tips/sandworm_death",
+        "desc": [
+            "You have been killed by a <font=text_4m>sandworm</>. All items in your inventory have been lost and are not recoverable.",
+            "",
+            "Stick to rocky ground to avoid the sandworm's attention or use a vehicle to travel quickly across the open sands."
+        ]
+    },
+    {
+        "id": "sandworm_threat",
+        "title": "SANDWORM THREAT",
+        "image": "tips/sandworm_threat",
+        "desc": [
+            "This bar in the center of the screen shows the <font=text_4m>vibrations</> you are making on open sand -- vibrations will attract the <font=text_4m>Sandworms</>. When the vibration bar <font=text_4m>turns red</>, seek safety immediately--the sandworm is nearby.",
+            "",
+            "The closer a worm is, the more sensitive it is to vibrations. Take the utmost care crossing the open desert!"
+        ]
+    },
+    {
+        "id": "death",
+        "title": "DEATH",
+        "image": "tips/death",
+        "desc": [
+            "Arrakis is an unforgiving world, and <font=text_4m>death</> here is costly. Items in your backpack can be recovered from your death location.",
+            "",
+            "You will lose everything if you are killed by a <font=text_4m>Sandworm</> or <font=text_4m>Coriolis Storm</>."
+        ]
+    },
+    {
+        "id": "finding_water",
+        "title": "FINDING WATER",
+        "image": "tip/finding_water",
+        "desc": [
+            "You need to <font=text_4m>hydrate</>.",
+            "",
+            "You can partially replenish your hydration level by drinking <font=text_4m>Dew</> from <font=text_4m>Dew Flowers</>.",
+            "",
+            "<color=primary_l5,icon=key/E> [Hold] Drink"
+        ]
+    },
+    {
+        "id": "water_discipline",
+        "title": "WATER DISCIPLINE",
+        "image": "tip/water_discipline",
+        "desc": [
+            "Having your <font=text_4m>Hydration Level</> above one-third will give you a bonus to your maximum stamina, which is further increased above two-thirds.",
+            "",
+            "When your hydration is below one-third, the bonus to your maximum stamina is removed -- when it is empty, you become <font=text_4m>Dehydrated</> and you will start to lose health until you hydrate again."
+        ]
+    },
+    {
+        "id": "drinking_blood",
+        "title": "DRINKING BLOOD",
+        "desc": "Blood can be consumed to hydrate yourself."
+    }
+]

@@ -28,9 +28,9 @@ add :: proc (parent: ^ui.Frame) {
 @private
 add_pages :: proc () {
     for p in data.get_settings_pages(context.temp_allocator) {
-        _, page := partials.add_screen_tab_and_page(screen, p.page_name, p.page_title)
+        _, page := partials.add_screen_tab_and_page(screen, p.page_id, p.page_title)
 
-        items := data.get_settings_page_items(p.page_name)
+        items := data.get_settings_page_items(p.page_id)
         if len(items) > 0 {
             list := add_list_column(page)
             add_details_column(page, list)
@@ -43,11 +43,11 @@ add_pages :: proc () {
 }
 
 @private
-add_list_column_item :: proc (list: ^ui.Frame, item: data.Settings_Item) {
-    if item.group_name != "" {
-        add_setting_header(list, item.group_name, item.group_title)
+add_list_column_item :: proc (list: ^ui.Frame, item: data.Setting) {
+    if item.group_id != "" {
+        add_setting_header(list, item.group_id, item.group_title)
     } else {
-        add_setting_card(list, item.name)
+        add_setting_card(list, item.id)
     }
 }
 
@@ -65,7 +65,7 @@ add_setting_header :: proc (list: ^ui.Frame, name, text: string) {
 add_setting_card :: proc (list: ^ui.Frame, name: string) {
     assert(name != "")
 
-    item := data.get_settings_item(name)
+    item := data.get_setting(name)
     card_title := item.title != "" ? item.title : name
 
     card := ui.add_frame(list, {
@@ -91,7 +91,7 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
 }
 
 @private
-add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Settings_Item) {
+add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Setting) {
     ic := item.control
     ia := item.control.appearance
 
@@ -100,7 +100,7 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Settings_Item) {
     case 2      : ia = .button_group
     case 3,4,5  : ia = .pins
     case 6..=10 : ia = .dropdown
-    case        : fmt.panicf("Failed to autodetect setting control appearance for \"%s\"", item.name)
+    case        : fmt.panicf("Failed to autodetect setting control appearance for \"%s\"", item.id)
     }
 
     switch ia {
@@ -173,8 +173,8 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
     if details.text == name do return
     ui.set_text(details, name)
 
-    item := data.get_settings_item(name)
-    item_desc := data.get_settings_item_desc(name, context.temp_allocator)
+    item := data.get_setting(name)
+    item_desc := data.get_setting_desc(item, context.temp_allocator)
     if item_desc != "" {
         ui.set_text(ui.get(details, "title"), item.title)
         ui.set_text(ui.get(details, "content/text"), item_desc)

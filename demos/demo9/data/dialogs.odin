@@ -3,7 +3,7 @@ package data
 import "core:encoding/json"
 import "core:fmt"
 
-Dialogs_Item :: struct {
+Dialog :: struct {
     id          : string,
     npc_name    : string,
     chatter     : [] Dialog_Chat,
@@ -44,7 +44,7 @@ dialog_reply_action_icon := [Dialog_Reply_Action] string {
     .fly_to_crossroads          = "travel",
 }
 
-@private dialogs: [] Dialogs_Item
+@private dialogs: [] Dialog
 
 @private
 create_dialogs :: proc () {
@@ -76,7 +76,7 @@ destroy_dialogs :: proc () {
     dialogs = nil
 }
 
-get_dialog_chat :: proc (dialog_id, chat_id: string) -> (Dialogs_Item, Dialog_Chat) {
+get_dialog_chat :: proc (dialog_id, chat_id: string) -> (Dialog, Dialog_Chat) {
     assert(dialog_id != "")
     assert(chat_id != "")
 

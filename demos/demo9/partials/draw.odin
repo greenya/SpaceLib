@@ -79,7 +79,7 @@ draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) 
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
-draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, hangout := false, bg_opacity := f32(1)) {
+draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, hangout := false, bg_color := colors.bg1, bg_opacity := f32(1)) {
     x1, y1, x2, y2, yc, xl, xr: f32
 
     if hangout {
@@ -104,7 +104,8 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     c := core.alpha(colors.primary, t.opacity)
 
     // background
-    bg_color := core.alpha(colors.bg1, t.opacity * bg_opacity)
+    bg_color := bg_color
+    bg_color = core.alpha(bg_color, t.opacity * bg_opacity)
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
 
     // top and bottom lines
@@ -136,7 +137,7 @@ draw_image_placeholder :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 
     tx_color := core.alpha({60,60,60,255}, f.opacity)
-    draw_text_center("IMAGE PLACEHOLDER", f.rect, "text_4l", tx_color)
+    draw_text_center(f.text, f.rect, "text_4l", tx_color)
 }
 
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
@@ -163,6 +164,12 @@ draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {
 draw_hexagon_rect_wide_hangout :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
     draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, hangout=true)
+}
+
+draw_hexagon_rect_wide_hangout_accent :: proc (f: ^ui.Frame) {
+    parent_rect := f.parent.rect
+    bg_color := core.brightness(colors.accent, -.8)
+    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, hangout=true, bg_color=bg_color)
 }
 
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
@@ -257,3 +264,7 @@ draw_label_box :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, core.brightness(colors.primary, -.2))
     draw_terse(f.terse, colors.bg0)
 }
+
+// draw_tooltip_bg :: proc (f: ^ui.Frame) {
+
+// }

@@ -3,6 +3,7 @@ package player
 
 import "spacelib:ui"
 
+import "../../data"
 import "../../partials"
 
 journey_page_tabs: [] struct { name, text, icon: string } = {
@@ -58,20 +59,72 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
 
     partials.add_scrollbar(list)
 
-    // TODO: add tutorial items to data package; read list from there
-    for _ in 0..<20 {
+    for tip in data.tutorial_tips {
         ui.add_frame(list, {
-            // name="...",
+            name        = tip.id,
             flags       = {.radio,.capture,.terse,.terse_height},
-            text        = "SANDWORM DEATH",
-            text_format = "<wrap,left,pad=20:16,font=text_4r,color=primary_d2>%s",
+            text        = tip.title,
+            text_format = "<wrap,left,pad=24:16,font=text_4r,color=primary_d2>%s",
             draw        = partials.draw_tutorial_item,
+            click       = proc (f: ^ui.Frame) { journey_page_show_tutorial_tip(f.name) },
         })
     }
 
-    /*details :=*/ ui.add_frame(tutorial,
-        { name="details", flags={.scissor}, layout={dir=.up_and_down,scroll={step=20}} },
-        { point=.top_right },
+    // FIXME: ui.Frame.layout.dir: .up and .up_and_down doesn't calc correctly (if used here)
+
+    details := ui.add_frame(tutorial,
+        { name="details", flags={.scissor}, layout={dir=.down,pad=1,scroll={step=20},align=.center} },
         { point=.bottom_left, rel_point=.bottom, offset={40,0} },
+        { point=.top_right },
     )
+
+    partials.add_scrollbar(details)
+
+    details_column := ui.add_frame(details, {
+        name    = "column",
+        size    = {440,0},
+        layout  = {dir=.up_and_down,auto_size=.dir,gap=1},
+        text    = "primary_d8",
+        draw    = partials.draw_color_rect,
+    })
+
+    ui.add_frame(details_column, {
+        name        = "title",
+        flags       = {.terse,.terse_height},
+        text        = "TITLE",
+        text_format = "<wrap,left,pad=12:6,font=text_4r,color=primary_d2>%s",
+        draw        = partials.draw_hexagon_rect_wide_hangout_accent,
+    })
+
+    image := partials.add_placeholder_image(details_column, ._11x5)
+    ui.set_name(image, "image")
+
+    ui.add_frame(details_column, {
+        name        = "desc",
+        flags       = {.terse,.terse_height},
+        text        = "DESC",
+        text_format = "<wrap,top,left,pad=12:10,font=text_4l,color=primary_d2>%s",
+    })
+}
+
+journey_page_show_tutorial_tip :: proc (id: string) {
+    tip := data.get_tutorial_tip(id)
+
+    details := ui.get(screen, "pages/journey/content/tutorial/details")
+    column := ui.get(details, "column")
+    ui.print_frame_tree(column)
+
+    // title
+    ui.set_text(ui.get(column, "title"), tip.title, shown=true)
+
+    // image
+    image := ui.get(column, "image")
+    if tip.image != ""  do ui.show(image)
+    else                do ui.hide(image)
+
+    // desc
+    tip_desc := data.get_tutorial_tip_desc(tip, context.temp_allocator)
+    ui.set_text(ui.get(column, "desc"), tip_desc, shown=true)
+
+    ui.update(details, repeat=2)
 }

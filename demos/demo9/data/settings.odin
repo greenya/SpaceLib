@@ -3,21 +3,20 @@ package data
 import "core:encoding/json"
 import "core:fmt"
 import "core:slice"
-import "core:strings"
 
-Settings_Item :: struct {
+Setting :: struct {
     // page
-    page_name   : string,
+    page_id     : string,
     page_title  : string,
 
     // group
-    group_name  : string,
+    group_id    : string,
     group_title : string,
 
     // actual setting
-    name    : string,
+    id      : string,
     title   : string,
-    desc    : union { string, [] string },
+    desc    : Text,
     control : struct {
         names       : [] string,
         titles      : [] string,
@@ -34,7 +33,7 @@ Settings_Item :: struct {
     },
 }
 
-@private settings: [] Settings_Item
+@private settings: [] Setting
 
 @private
 create_settings :: proc () {
@@ -47,16 +46,13 @@ create_settings :: proc () {
 @private
 destroy_settings :: proc () {
     for s in settings {
-        delete(s.page_name)
+        delete(s.page_id)
         delete(s.page_title)
-        delete(s.group_name)
+        delete(s.group_id)
         delete(s.group_title)
-        delete(s.name)
+        delete(s.id)
         delete(s.title)
-        switch v in s.desc {
-        case string     : delete(v)
-        case [] string  : for s in v do delete(s); delete(v)
-        }
+        delete_text(s.desc)
         for s in s.control.names do delete(s); delete(s.control.names)
         for s in s.control.titles do delete(s); delete(s.control.titles)
     }
@@ -64,20 +60,20 @@ destroy_settings :: proc () {
     settings = nil
 }
 
-get_settings_pages :: proc (allocator := context.allocator) -> [] Settings_Item {
-    return slice.filter(settings, proc (i: Settings_Item) -> bool {
-        return i.page_name != ""
+get_settings_pages :: proc (allocator := context.allocator) -> [] Setting {
+    return slice.filter(settings, proc (i: Setting) -> bool {
+        return i.page_id != ""
     }, allocator)
 }
 
-get_settings_page_items :: proc (page_name: string) -> [] Settings_Item {
-    assert(page_name != "")
+get_settings_page_items :: proc (page_id: string) -> [] Setting {
+    assert(page_id != "")
     start_i := -1
 
     for s, i in settings {
-        if s.page_name == "" do continue
+        if s.page_id == "" do continue
 
-        if s.page_name == page_name {
+        if s.page_id == page_id {
             assert(start_i == -1)
             start_i = i + 1
         } else if start_i >= 0 {
@@ -85,27 +81,21 @@ get_settings_page_items :: proc (page_name: string) -> [] Settings_Item {
         }
     }
 
-    fmt.assertf(start_i >= 0, "Page \"%s\" not found", page_name)
+    fmt.assertf(start_i >= 0, "Page \"%s\" not found", page_id)
 
     return settings[start_i:]
 }
 
-get_settings_item :: proc (name: string) -> Settings_Item {
+get_setting :: proc (id: string) -> Setting {
     for s in settings {
-        if s.name == name {
-            assert(s.page_name == "" && s.group_name == "")
+        if s.id == id {
+            assert(s.page_id == "" && s.group_id == "")
             return s
         }
     }
-    fmt.panicf("Item \"%s\" was not found", name)
+    fmt.panicf("Setting \"%s\" was not found", id)
 }
 
-get_settings_item_desc :: proc (name: string, allocator := context.allocator) -> string {
-    item := get_settings_item(name)
-    sb := strings.builder_make(context.temp_allocator)
-    switch v in item.desc {
-    case string     : strings.write_string(&sb, v)
-    case [] string  : for s in v do fmt.sbprintf(&sb, "%s%s", strings.builder_len(sb) > 0 ? "\n" : "", s)
-    }
-    return strings.to_string(sb)
+get_setting_desc :: proc (s: Setting, allocator := context.allocator) -> string {
+    return text_to_string(s.desc, allocator)
 }

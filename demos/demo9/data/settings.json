@@ -1,10 +1,10 @@
 [
     {
-        "page_name": "gameplay",
+        "page_id": "gameplay",
         "page_title": "GAMEPLAY"
     },
     {
-        "name": "sprint_lock",
+        "id": "sprint_lock",
         "title": "SPRINT LOCK",
         "desc": [
             "Set the Sprint input mode.",
@@ -19,7 +19,7 @@
         }
     },
     {
-        "name": "equip_lock",
+        "id": "equip_lock",
         "title": "EQUIP LOCK",
         "desc": [
             "Toggle the equip lock off or on.",
@@ -33,7 +33,7 @@
         }
     },
     {
-        "name": "suspensor_lock",
+        "id": "suspensor_lock",
         "title": "SUSPENSOR LOCK",
         "desc": [
             "Toggle the suspensor lock off or on.",
@@ -47,7 +47,7 @@
         }
     },
     {
-        "name": "invert_mouse_y_axis",
+        "id": "invert_mouse_y_axis",
         "title": "INVERT MOUSE Y-AXIS",
         "desc": "Invert the camera controls along the vertical axis.",
         "control": {
@@ -56,17 +56,17 @@
         }
     },
     {
-        "name": "mouse_camera_sensitivity",
+        "id": "mouse_camera_sensitivity",
         "title": "MOUSE CAMERA SENSITIVITY",
         "desc": "Adjust the sensitivity of how quickly the Character Camera moves."
     },
     {
-        "name": "mouse_aiming_sensitivity",
+        "id": "mouse_aiming_sensitivity",
         "title": "MOUSE AIMING SENSITIVITY",
         "desc": "Adjust the sensitivity of how quickly the Character Camera moves while aiming down sight."
     },
     {
-        "name": "show_helmet",
+        "id": "show_helmet",
         "title": "SHOW HELMET",
         "desc": "Display the equipped helmet on your character.",
         "control": {
@@ -75,11 +75,11 @@
         }
     },
     {
-        "group_name": "building",
+        "group_id": "building",
         "group_title": "BUILDING"
     },
     {
-        "name": "placeable_rotation_building_mode",
+        "id": "placeable_rotation_building_mode",
         "title": "PLACEABLE ROTATION BUILDING MODE",
         "desc": "Set the placeable rotation method when using building mode.",
         "control": {
@@ -89,11 +89,11 @@
         }
     },
     {
-        "group_name": "vehicles",
+        "group_id": "vehicles",
         "group_title": "VEHICLES"
     },
     {
-        "name": "disable_camera_auto_center",
+        "id": "disable_camera_auto_center",
         "title": "DISABLE CAMERA AUTO-CENTER",
         "desc": "Enable or disable the camera centering automatically after moving with vehicles.",
         "control": {
@@ -102,11 +102,11 @@
         }
     },
     {
-        "group_name": "air_vehicles",
+        "group_id": "air_vehicles",
         "group_title": "AIR VEHICLES"
     },
     {
-        "name": "invert_mouse_y_axis",
+        "id": "invert_mouse_y_axis",
         "title": "INVERT MOUSE Y-AXIS",
         "desc": "Invert the air vehicle controls along the vertical axis.",
         "control": {
@@ -115,7 +115,7 @@
         }
     },
     {
-        "name": "planar_lock",
+        "id": "planar_lock",
         "title": "PLANAR LOCK",
         "desc": [
             "Set the planar lock on or off.",
@@ -129,11 +129,11 @@
         }
     },
     {
-        "group_name": "radial_wheel",
+        "group_id": "radial_wheel",
         "group_title": "RADIAL WHEEL"
     },
     {
-        "name": "input_lock_mode_mouse",
+        "id": "input_lock_mode_mouse",
         "title": "INPUT LOCK MODE MOUSE",
         "desc": [
             "Controls the behaviour of the radial wheel slot highlighting based on the mouse cursor position.",
@@ -151,7 +151,7 @@
         }
     },
     {
-        "name": "close_behaviour",
+        "id": "close_behaviour",
         "title": "CLOSE BEHAVIOUR",
         "desc": [
             "Controls the behaviour of the controller left thumbstick input to the character movement after the radial wheel has been closed.",
@@ -173,21 +173,21 @@
 // ============================================================================
 
     {
-        "page_name": "display",
+        "page_id": "display",
         "page_title": "DISPLAY"
     },
     {
-        "name": "gamma",
+        "id": "gamma",
         "title": "GAMMA",
         "desc": "Set the game screen's lightning and gamma based on your preferences."
     },
     {
-        "name": "field_of_view",
+        "id": "field_of_view",
         "title": "FIELD OF VIEW",
         "desc": "Set the game's Field of View camera size. Higher settings will have a minor impact on the CPU and GPU."
     },
     {
-        "name": "motion_blur",
+        "id": "motion_blur",
         "title": "MOTION BLUR",
         "desc": [
             "Turn the Motion Blur on or off.",
@@ -200,7 +200,7 @@
         }
     },
     {
-        "name": "vsync",
+        "id": "vsync",
         "title": "VSYNC",
         "desc": "Vertical Synchronization will align the game's frame rate to your monitor's refresh rate to negate screen tearing, at the cost of a minor impact on the input response time",
         "control": {
@@ -210,7 +210,7 @@
         }
     },
     {
-        "name": "language",
+        "id": "language",
         "title": "LANGUAGE",
         "desc": "Set the game's user interface text language.",
         "control": {
@@ -220,7 +220,7 @@
         }
     },
     {
-        "name": "frame_rate_cap",
+        "id": "frame_rate_cap",
         "title": "FRAME RATE CAP",
         "desc": [
             "Set a frame rate cap for the game during gameplay.",
@@ -234,11 +234,11 @@
         }
     },
     {
-        "group_name": "ui",
+        "group_id": "ui",
         "group_title": "UI"
     },
     {
-        "name": "dynamic_hud",
+        "id": "dynamic_hud",
         "title": "DYNAMIC HUD",
         "desc": "Enable or disable the fade out of inactive HUD elements.",
         "control": {
@@ -247,7 +247,7 @@
         }
     },
     {
-        "name": "ultrawide_support",
+        "id": "ultrawide_support",
         "title": "ULTRAWIDE SUPPORT",
         "desc": "Extend the HUD to support Ultra-Wide Monitors.",
         "control": {
@@ -256,7 +256,7 @@
         }
     },
     {
-        "name": "use_hardware_cursor",
+        "id": "use_hardware_cursor",
         "title": "USE HARDWARE CURSOR",
         "desc": "Enable or disable hardware input for the cursor. Can improve mouse cursor response and smoothness during lag.",
         "control": {
@@ -265,7 +265,7 @@
         }
     },
     {
-        "name": "show_hotbar",
+        "id": "show_hotbar",
         "title": "SHOW HOTBAR",
         "desc": "Enable or disable the item hotbar. This automatically disables the mini radial wheel.",
         "control": {
@@ -274,7 +274,7 @@
         }
     },
     {
-        "name": "hide_mini_radial_wheel",
+        "id": "hide_mini_radial_wheel",
         "title": "HIDE MINI RADIAL WHEEL",
         "desc": "Enable or disable the Mini Radial Wheel. This is automatically disabled when the item hotbar is enabled.",
         "control": {
@@ -283,7 +283,7 @@
         }
     },
     {
-        "name": "invert_mouse_wheel",
+        "id": "invert_mouse_wheel",
         "title": "INVERT MOUSE WHEEL",
         "desc": "Inverts the direction of the mouse wheel input.",
         "control": {
@@ -292,7 +292,7 @@
         }
     },
     {
-        "name": "show_chat_bubbles",
+        "id": "show_chat_bubbles",
         "title": "SHOW CHAT BUBBLES",
         "desc": "Enable or disable chat bubbles over other player's characters when close enough to them and they send proximity message.",
         "control": {
@@ -301,7 +301,7 @@
         }
     },
     {
-        "name": "show_voice_chat_indicator",
+        "id": "show_voice_chat_indicator",
         "title": "SHOW VOICE CHAT INDICATOR",
         "desc": "Enable or disable voice chat indicator over other player's characters. This will be shown if the players are close enough to each other and voice chat is used.",
         "control": {
@@ -314,11 +314,11 @@
 // ============================================================================
 
     {
-        "page_name": "graphics",
+        "page_id": "graphics",
         "page_title": "GRAPHICS"
     },
     {
-        "name": "quality_presets",
+        "id": "quality_presets",
         "title": "QUALITY PRESETS",
         "desc": [
             "Change the overall graphics quality preset of the game.",
@@ -334,7 +334,7 @@
         }
     },
     {
-        "name": "window_mode",
+        "id": "window_mode",
         "title": "WINDOW MODE",
         "desc": [
             "Set the Window Mode for the game.",
@@ -356,7 +356,7 @@
         }
     },
     {
-        "name": "resolution",
+        "id": "resolution",
         "title": "RESOLUTION",
         "desc": [
             "Set the Resolution size of the game.",
@@ -371,7 +371,7 @@
         }
     },
     {
-        "name": "upscaling_quality",
+        "id": "upscaling_quality",
         "title": "UPSCALING QUALITY",
         "desc": [
             "Set the Upscaling quality for the game.",
@@ -385,7 +385,7 @@
         }
     },
     {
-        "name": "upscaling_method",
+        "id": "upscaling_method",
         "title": "UPSCALING METHOD",
         "desc": [
             "Set the Upscaling quality for the game.",
@@ -403,7 +403,7 @@
         }
     },
     {
-        "name": "frame_generation_method",
+        "id": "frame_generation_method",
         "title": "FRAME GENERATION METHOD",
         "desc": [
             "Set the Frame Generation method. Generates additional frames to increase framerate.",
@@ -419,11 +419,11 @@
         }
     },
     {
-        "group_name": "lighting",
+        "group_id": "lighting",
         "group_title": "LIGHTING"
     },
     {
-        "name": "shadows",
+        "id": "shadows",
         "title": "SHADOWS",
         "desc": [
             "Set the shadow quality for the game. This includes shadow distance and resolution of dynamic shadows.",
@@ -437,7 +437,7 @@
         }
     },
     {
-        "name": "virtual_shadow_maps",
+        "id": "virtual_shadow_maps",
         "title": "VIRTUAL SHADOW MAPS (EXPERIMENTAL)",
         "desc": [
             "Enhances shadow quality.",
@@ -454,7 +454,7 @@
         }
     },
     {
-        "name": "gi_quality",
+        "id": "gi_quality",
         "title": "GI QUALITY",
         "desc": [
             "Set the Global Illumination quality of the ambient lighting.",
@@ -470,7 +470,7 @@
         }
     },
     {
-        "name": "reflections_quality",
+        "id": "reflections_quality",
         "title": "REFLECTIONS QUALITY",
         "desc": [
             "Set the reflections quality of the ambient lighting.",
@@ -486,11 +486,11 @@
         }
     },
     {
-        "group_name": "quality_details",
+        "group_id": "quality_details",
         "group_title": "QUALITY DETAILS"
     },
     {
-        "name": "low_end_laptop_mode",
+        "id": "low_end_laptop_mode",
         "title": "LOW END LAPTOP MODE (EXPERIMENTAL)",
         "desc": "Experimental scalability mode intended for very low-end machines to achieve acceptable performance. Visual quality is drastically reduced.",
         "control": {
@@ -499,7 +499,7 @@
         }
     },
     {
-        "name": "limit_process_cpu_usage",
+        "id": "limit_process_cpu_usage",
         "title": "LIMIT PROCESS CPU USAGE (EXPERIMENTAL)",
         "desc": "Reserves 1 CPU core for background tasks (process affinity). Will reduce game performance.",
         "control": {
@@ -508,7 +508,7 @@
         }
     },
     {
-        "name": "view_distance",
+        "id": "view_distance",
         "title": "VIEW DISTANCE",
         "desc": [
             "Changes the maximum distance that objects are rendered. This includes foliage and scattered objects.",
@@ -522,7 +522,7 @@
         }
     },
     {
-        "name": "post_processing",
+        "id": "post_processing",
         "title": "POST PROCESSING",
         "desc": [
             "Set the screen-based effects quality for the game. This includes motion blur and bloom.",
@@ -536,7 +536,7 @@
         }
     },
     {
-        "name": "effects_quality",
+        "id": "effects_quality",
         "title": "EFFECTS QUALITY",
         "desc": [
             "Set the visual effects quality for the game. This includes particle effects and shader quality.",
@@ -550,7 +550,7 @@
         }
     },
     {
-        "name": "texture_quality",
+        "id": "texture_quality",
         "title": "TEXTURE QUALITY",
         "desc": [
             "Set the texture resolution quality for the game. This includes all in-game textures and can increase texture detail.",
@@ -564,7 +564,7 @@
         }
     },
     {
-        "name": "foliage_quality",
+        "id": "foliage_quality",
         "title": "FOLIAGE QUALITY",
         "desc": [
             "Set the foliage quality for the game. This includes density of foliage such as grass.",
@@ -582,15 +582,15 @@
 // ============================================================================
 
     {
-        "page_name": "audio",
+        "page_id": "audio",
         "page_title": "AUDIO"
     },
     {
-        "group_name": "audio_channels",
+        "group_id": "audio_channels",
         "group_title": "AUDIO CHANNELS"
     },
     {
-        "name": "mastering_mode",
+        "id": "mastering_mode",
         "title": "MASTERING MODE",
         "desc": "Select Mastering Mode to optimize the game's Audio output.",
         "control": {
@@ -599,7 +599,7 @@
         }
     },
     {
-        "name": "master_volume",
+        "id": "master_volume",
         "title": "MASTER VOLUME",
         "desc": [
             "Set the maximum volume of the game's audio.",
@@ -608,45 +608,45 @@
         ]
     },
     {
-        "name": "music_volume_in_game",
+        "id": "music_volume_in_game",
         "title": "MUSIC VOLUME IN GAME",
         "desc": "Set the maximum volume of the game's soundtrack."
     },
     {
-        "name": "sound_effects_volume",
+        "id": "sound_effects_volume",
         "title": "SOUND EFFECTS VOLUME",
         "desc": "Set the maximum volume of the game's sound effects."
     },
     {
-        "name": "cutscenes_volume",
+        "id": "cutscenes_volume",
         "title": "CUTSCENES VOLUME",
         "desc": "Set the maximum volume of the game's cutscenes."
     },
     {
-        "name": "dialog_volume",
+        "id": "dialog_volume",
         "title": "DIALOG VOLUME",
         "desc": "Set the maximum volume of the NPC dialogues."
     },
     {
-        "name": "radio_volume",
+        "id": "radio_volume",
         "title": "RADIO VOLUME",
         "desc": "Set the volume for the Radio."
     },
     {
-        "group_name": "voice_chat",
+        "group_id": "voice_chat",
         "group_title": "VOICE CHAT"
     },
     {
-        "name": "enable_voice_chat",
+        "id": "enable_voice_chat",
         "title": "ENABLE VOICE CHAT",
         "desc": "Enable or disable the incoming voice chat."
     },
     {
-        "name": "voice_chat_volume",
+        "id": "voice_chat_volume",
         "title": "VOICE CHAT VOLUME"
     },
     {
-        "name": "voice_activation_mode",
+        "id": "voice_activation_mode",
         "title": "VOICE ACTIVATION MODE",
         "desc": [
             "Set the how to activate outgoing Voice Chat:",
@@ -661,11 +661,11 @@
         }
     },
     {
-        "group_name": "hardware",
+        "group_id": "hardware",
         "group_title": "HARDWARE"
     },
     {
-        "name": "audio_output_device",
+        "id": "audio_output_device",
         "title": "AUDIO OUTPUT DEVICE",
         "desc": "Select the target output audio device.",
         "control": {
@@ -675,7 +675,7 @@
         }
     },
     {
-        "name": "audio_input_device",
+        "id": "audio_input_device",
         "title": "AUDIO INPUT DEVICE",
         "desc": "Select the target input audio device.",
         "control": {
@@ -689,7 +689,7 @@
 // ============================================================================
 
     {
-        "page_name": "controls",
+        "page_id": "controls",
         "page_title": "CONTROLS"
     },
 
@@ -697,7 +697,7 @@
 // ============================================================================
 
     {
-        "page_name": "keybinds",
+        "page_id": "keybinds",
         "page_title": "KEYBINDS"
     },
 
@@ -705,15 +705,15 @@
 // ============================================================================
 
     {
-        "page_name": "accessibility",
+        "page_id": "accessibility",
         "page_title": "ACCESSIBILITY"
     },
     {
-        "group_name": "gameplay",
+        "group_id": "gameplay",
         "group_title": "GAMEPLAY"
     },
     {
-        "name": "camera_shakes",
+        "id": "camera_shakes",
         "title": "CAMERA SHAKES",
         "desc": "Turns the brief camera movements on or off in fights, when receiving fall damage, and other impactful effects.",
         "control": {
@@ -722,7 +722,7 @@
         }
     },
     {
-        "name": "controller_rumble",
+        "id": "controller_rumble",
         "title": "CONTROLLER RUMBLE",
         "control": {
             "names": [ "off", "on" ],
@@ -730,11 +730,11 @@
         }
     },
     {
-        "group_name": "subtitles",
+        "group_id": "subtitles",
         "group_title": "SUBTITLES"
     },
     {
-        "name": "subtitles",
+        "id": "subtitles",
         "title": "SUBTITLES",
         "desc": "Turn subtitles on or off.",
         "control": {
@@ -743,7 +743,7 @@
         }
     },
     {
-        "name": "show_prev_subtitle",
+        "id": "show_prev_subtitle",
         "title": "SHOW PREVIOUS SUBTITLE",
         "desc": "Set if the previous subtitle line should be displayed to allow for reading of longer sentences for slower readers.",
         "control": {
@@ -752,7 +752,7 @@
         }
     },
     {
-        "name": "font_size",
+        "id": "font_size",
         "title": "FONT SIZE",
         "desc": "Set the font size of the Subtitles.",
         "control": {
@@ -766,11 +766,11 @@
 // ============================================================================
 
     {
-        "page_name": "account",
+        "page_id": "account",
         "page_title": "ACCOUNT"
     },
     {
-        "name": "data_collection",
+        "id": "data_collection",
         "title": "DATA COLLECTION",
         "desc": [
             "I agree to share with Funcom select information about my device. This information is only used for determining effectiveness of advertising campaigns, that will in turn help us bring more players to Dune: Awakening and create a thriving community.",
@@ -783,7 +783,7 @@
         }
     },
     {
-        "name": "streamer_mode",
+        "id": "streamer_mode",
         "title": "STREAMER MODE",
         "desc": "Streamer friendly mode mutes licensed audio, disables invite notifications, hides your character and current server names.",
         "control": {

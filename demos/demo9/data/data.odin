@@ -22,11 +22,13 @@ info := Info {
 credits_text := #load("credits.txt")
 
 create :: proc () {
-    create_settings()
     create_dialogs()
+    create_settings()
+    create_tutorial_tips()
 }
 
 destroy :: proc () {
-    destroy_settings()
     destroy_dialogs()
+    destroy_settings()
+    destroy_tutorial_tips()
 }
