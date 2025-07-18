@@ -14,6 +14,16 @@ green   :: Color {0,255,0,255}
 blue    :: Color {0,0,255,255}
 black   :: Color {0,0,0,255}
 
+gray1 :: Color {25,25,25,255}
+gray2 :: Color {50,50,50,255}
+gray3 :: Color {75,75,75,255}
+gray4 :: Color {100,100,100,255}
+gray5 :: Color {125,125,125,255}
+gray6 :: Color {150,150,150,255}
+gray7 :: Color {175,175,175,255}
+gray8 :: Color {200,200,200,255}
+gray9 :: Color {225,225,225,255}
+
 vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
     return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
 }
