@@ -1,7 +1,11 @@
 package spacelib_core
 
+import "base:intrinsics"
+import "core:reflect"
 import "core:slice"
 import "core:strings"
+
+_ :: reflect
 _ :: slice
 
 is_consumed :: #force_inline proc (flag: ^bool) -> bool {
@@ -30,6 +34,12 @@ map_keys_sorted :: proc (m: $M/map[$K]$V, allocator := context.allocator) -> [] 
     keys, _ := slice.map_keys(m, context.temp_allocator)
     slice.sort(keys)
     return keys
+}
+
+map_enum_names_to_values :: proc ($T: typeid, allocator := context.allocator) -> map [string] T where intrinsics.type_is_enum(T) {
+    result := make(map [string] T, allocator)
+    for f in reflect.enum_fields_zipped(T) do result[f.name] = T(f.value)
+    return result
 }
 
 extract_hrs_mins_secs_from_total_seconds :: proc (time_total_sec: f32) -> (hrs: int, mins: int, secs: int) {
