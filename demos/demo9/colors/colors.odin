@@ -25,8 +25,8 @@ Tag :: enum {
 @private colors: [ID] Color
 @private color_vars: map [string] Color
 @private color_tags: [ID] bit_set [Tag] = #partial {
-    .primary    = {.vars_alpha,.vars_brightness},
-    .accent     = {.vars_alpha,.vars_brightness},
+    .primary    = { .vars_alpha, .vars_brightness },
+    .accent     = { .vars_alpha, .vars_brightness },
 }
 
 create :: proc () {
@@ -50,17 +50,25 @@ destroy :: proc () {
     color_vars = nil
 }
 
-get :: #force_inline proc (id: ID) -> Color {
-    return colors[id]
+get :: proc (id: ID, brightness := f32(0), alpha := f32(1)) -> Color {
+    color := colors[id]
+    if brightness != 0  do color = core.brightness(color, brightness)
+    if alpha != 1       do color = core.alpha(color, alpha)
+    return color
 }
 
-get_by_name :: #force_inline proc (name: string) -> Color {
+get_by_name :: #force_inline proc (name: string, alpha := f32(1)) -> Color {
+    color: Color
+
     if len(name) > 0 && name[0] == '#' {
-        return core.color_from_hex(name)
+        color = core.color_from_hex(name)
     } else {
         fmt.assertf(name in color_vars, "Unknown color \"%s\"", name)
-        return color_vars[name]
+        color = color_vars[name]
     }
+
+    if alpha != 1 do color = core.alpha(color, alpha)
+    return color
 }
 
 set :: proc (id: ID, color: Color) {

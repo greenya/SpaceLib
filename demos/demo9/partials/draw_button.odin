@@ -11,12 +11,12 @@ draw_button :: proc (f: ^ui.Frame) {
     rect := core.rect_moved(f.rect, offset)
     hv_ratio := ui.hover_ratio(f, .Linear, .155, .Linear, .155)
 
-    bg_top_color := core.alpha(core.brightness(colors.get(.primary), -.9*(1-hv_ratio*.3)), f.opacity)
-    bg_bottom_color := core.alpha(core.brightness(colors.get(.bg1), -.9), f.opacity)
+    bg_top_color := colors.get(.primary, brightness=-.9*(1-hv_ratio*.3), alpha=f.opacity)
+    bg_bottom_color := colors.get(.bg1, brightness=-.9, alpha=f.opacity)
     if f.captured do bg_top_color, bg_bottom_color = bg_bottom_color, bg_top_color
     draw.rect_gradient_vertical(rect, bg_top_color, bg_bottom_color)
 
-    ln_color := core.alpha(colors.get(.primary), f.opacity*.3 + hv_ratio*.7)
+    ln_color := colors.get(.primary, alpha=f.opacity*.3 + hv_ratio*.7)
     draw.rect_lines(rect, 1, ln_color)
 
     draw_terse(f.terse, offset=offset)
@@ -27,18 +27,18 @@ draw_button_diamond :: proc (f: ^ui.Frame) {
     rect := core.rect_inflated(f.rect, f.selected ? 5 : hv_ratio*5)
 
     bg_color := f.selected\
-        ? core.brightness(colors.get(.primary), -.7)\
+        ? colors.get(.primary, brightness=-.7)\
         : f.captured\
-            ? core.brightness(colors.get(.accent), -.7)\
+            ? colors.get(.accent, brightness=-.7)\
             : colors.get(.bg1)
 
     draw.diamond(rect, bg_color)
     draw.diamond_lines(core.rect_inflated(rect, -rect.w/10), 4, colors.get(.bg2))
 
-    ln_color := core.brightness(colors.get(f.entered ? .accent : .primary), -.4)
-    draw.diamond_lines(rect, 3, core.alpha(ln_color, f.opacity))
+    ln_color := colors.get(f.entered ? .accent : .primary, brightness=-.4, alpha=f.opacity)
+    draw.diamond_lines(rect, 3, ln_color)
 
-    sp_color := core.brightness(colors.get(.primary), f.selected ? 0 : -.5 * (1-hv_ratio))
+    sp_color := colors.get(.primary, brightness=f.selected ? 0 : -.5 * (1-hv_ratio))
     draw_sprite(f.text, core.rect_inflated(rect, -rect.w/4), sp_color)
 }
 
@@ -49,32 +49,32 @@ draw_button_featured :: proc (f: ^ui.Frame) {
     if hv_ratio > 0 {
         cr_center := core.clamp_vec_to_rect(f.ui.mouse.pos, rect)
         cr_radius := f.rect.h * 1.777
-        cr_inner_color := core.alpha(colors.get(.accent), hv_ratio * .3)
+        cr_inner_color := colors.get(.accent, alpha=hv_ratio*.3)
         draw.circle_gradient(cr_center, cr_radius, cr_inner_color, {})
     }
 
-    bg_color := core.brightness(core.alpha(colors.get(.accent), .5), -.8 + hv_ratio/3)
+    bg_color := colors.get(.accent, brightness=-.8 + hv_ratio/3, alpha=.5)
     draw.rect(rect, bg_color)
 
-    br_color := core.alpha(colors.get(.primary), f.opacity*.3 + hv_ratio*.7)
+    br_color := colors.get(.primary, alpha=f.opacity*.3 + hv_ratio*.7)
     draw.rect_lines(rect, 1 + hv_ratio*2, br_color)
 
     ln_rect := core.rect_inflated(rect, 2 + (1-hv_ratio)*10)
     ln_color := core.alpha(br_color, hv_ratio)
     draw.rect_lines(ln_rect, 1, ln_color)
 
-    tx_color := core.brightness(colors.get(.primary), hv_ratio/2)
+    tx_color := colors.get(.primary, brightness=hv_ratio/2)
     draw_terse(f.terse, tx_color, drop_shadow=true)
 }
 
 draw_button_radio_rect :: proc (f: ^ui.Frame) {
     bg_color := f.selected\
-        ? core.brightness(colors.get(.primary), -.3)\
+        ? colors.get(.primary, brightness=-.3)\
         : colors.get(.bg1)
     draw.rect(f.rect, bg_color)
 
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
-    br_color := core.alpha(colors.get(.primary), hv_ratio)
+    br_color := colors.get(.primary, alpha=hv_ratio)
     draw.rect_lines(f.rect, 1, br_color)
 }
 
@@ -88,23 +88,23 @@ draw_button_radio_with_text :: proc (f: ^ui.Frame) {
 draw_button_radio_pin :: proc (f: ^ui.Frame) {
     draw_button_radio_rect(f)
 
-    br_color := core.alpha(colors.get(.primary), f.opacity * .5)
+    br_color := colors.get(.primary, alpha=f.opacity*.5)
     draw.rect_lines(f.rect, 1, br_color)
 }
 
 draw_button_radio_pin_nav :: proc (f: ^ui.Frame) {
-    tx_color := core.brightness(colors.get(.primary), f.entered ? .3 : -.3)
+    tx_color := colors.get(.primary, brightness=f.entered ? .3 : -.3)
     draw_sprite(f.text, f.rect, tx_color)
 }
 
 draw_button_dropdown_button :: proc (f: ^ui.Frame) {
     if f.selected {
-        bg_color := core.brightness(colors.get(.accent), -.7)
+        bg_color := colors.get(.accent, brightness=-.7)
         draw.rect(f.rect, bg_color)
     }
 
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
-    br_color := core.alpha(colors.get(.primary), f.opacity*.5 + hv_ratio*.5)
+    br_color := colors.get(.primary, alpha=f.opacity*.5 + hv_ratio*.5)
     draw.rect_lines(f.rect, 1, br_color)
 
     sp_rect := Rect { f.rect.x+f.rect.w-f.rect.h, f.rect.y, f.rect.h, f.rect.h }
@@ -112,7 +112,7 @@ draw_button_dropdown_button :: proc (f: ^ui.Frame) {
 }
 
 draw_button_dropdown_rect :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(core.brightness(colors.get(.primary), -.4), f.opacity)
+    bg_color := colors.get(.primary, brightness=-.4, alpha=f.opacity)
     draw.rect(f.rect, bg_color)
 }
 
@@ -122,10 +122,10 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Exponential_Out, .222, .Exponential_In, .333)
     rect := f.rect
     rect.w *= hv_ratio
-    draw.rect(rect, core.alpha(colors.get(.primary), f.opacity))
+    draw.rect(rect, colors.get(.primary, alpha=f.opacity))
 
     if f.selected {
-        sl_color := core.alpha(colors.get(.accent), f.opacity)
+        sl_color := colors.get(.accent, alpha=f.opacity)
         draw.rect_gradient_horizontal(f.rect, sl_color, {255,255,255,0})
     }
 

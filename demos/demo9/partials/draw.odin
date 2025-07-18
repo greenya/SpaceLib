@@ -59,14 +59,14 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,diamond} = .box, font := "text_4m", shadow_only := false) {
-    bg_color := core.alpha(colors.get(shadow_only ? .bg0 : .primary), opacity * .75)
+    bg_color := colors.get(shadow_only ? .bg0 : .primary, alpha=opacity*.75)
     switch shape {
     case .box       : draw.rect_rounded(rect, roundness_ratio=.3, segments=4, color=bg_color)
     case .diamond   : draw.diamond(rect, bg_color)
     }
 
     if !shadow_only {
-        tx_color := core.alpha(colors.get(.bg0), opacity)
+        tx_color := colors.get(.bg0, alpha=opacity)
         switch text {
         case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tx_color)
         case        : draw_text_center(text, rect, font, tx_color)
@@ -101,7 +101,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     }
 
     th := f32(1)
-    c := core.alpha(colors.get(.primary), t.opacity)
+    c := colors.get(.primary, alpha=t.opacity)
 
     // background
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
@@ -126,15 +126,15 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {
-    color := core.alpha(colors.get_by_name(f.text), f.opacity)
+    color := colors.get_by_name(f.text, alpha=f.opacity)
     draw.rect(f.rect, color)
 }
 
 draw_image_placeholder :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha({20,20,20,255}, f.opacity)
+    bg_color := core.alpha(core.gray1, f.opacity)
     draw.rect(f.rect, bg_color)
 
-    tx_color := core.alpha({60,60,60,255}, f.opacity)
+    tx_color := core.alpha(core.gray3, f.opacity)
     draw_text_center(f.text, f.rect, "text_4l", tx_color)
 }
 
@@ -166,34 +166,34 @@ draw_hexagon_rect_wide_hangout :: proc (f: ^ui.Frame) {
 
 draw_hexagon_rect_wide_hangout_accent :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
-    bg_color := core.brightness(colors.get(.accent), -.8)
+    bg_color := colors.get(.accent, brightness=-.8)
     draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, bg_color, hangout=true)
 }
 
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
     parent_rect := f.parent.rect
-    bg_color := core.alpha(colors.get(.bg1), .5)
+    bg_color := colors.get(.bg1, alpha=.5)
     draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, bg_color)
 }
 
 draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {
-    color := core.alpha(colors.get_by_name(f.text), f.opacity)
+    color := colors.get_by_name(f.text, alpha=f.opacity)
     draw.rect_gradient_vertical(f.rect, color, {})
 }
 
 draw_gradient_fade_up_and_down_rect :: proc (f: ^ui.Frame) {
-    color := core.alpha(colors.get_by_name(f.text), f.opacity)
+    color := colors.get_by_name(f.text, alpha=f.opacity)
     draw.rect_gradient_vertical(core.rect_half_top(f.rect), {}, color)
     draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, {})
 }
 
 draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {
-    color := core.alpha(colors.get_by_name(f.text), f.opacity)
+    color := colors.get_by_name(f.text, alpha=f.opacity)
     draw.rect_gradient_horizontal(f.rect, color, {})
 }
 
 draw_game_title :: proc (f: ^ui.Frame) {
-    color := core.alpha(colors.get(.primary), f.opacity * .3)
+    color := colors.get(.primary, alpha=f.opacity*.3)
     draw_text_center("D    U    N    E", core.rect_half_top(f.rect), "text_8l", color)
     draw_text_center("A  W  A  K  E  N  I  N  G", core.rect_half_bottom(f.rect), "text_6l", color)
 }
@@ -202,7 +202,7 @@ draw_scrollbar_track :: proc (f: ^ui.Frame) {
     // don't draw track if thumb is disabled
     if .disabled in f.children[0].flags do return
 
-    color := core.alpha(colors.get(.primary), f.opacity * .5)
+    color := colors.get(.primary, alpha=f.opacity*.5)
     draw.rect(f.rect, color)
 }
 
@@ -214,17 +214,17 @@ draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
     hv_ratio := f.captured\
         ? 1\
         : ui.hover_ratio(f, .Cubic_Out, .123, .Cubic_In, .123)
-    color := core.alpha(core.brightness(colors.get(.primary), -.3), f.opacity)
+    color := colors.get(.primary, brightness=-.3, alpha=f.opacity)
     rect := core.rect_inflated(f.rect, { -8 + 2*hv_ratio, 0 })
     draw.rect(rect, color)
 }
 
 draw_window_rect :: proc (f: ^ui.Frame) {
-    bg_top_color := core.alpha(colors.get(.bg0), f.opacity)
-    bg_bottom_color := core.alpha(core.brightness(colors.get(.bg2), -.5), f.opacity)
+    bg_top_color := colors.get(.bg0, alpha=f.opacity)
+    bg_bottom_color := colors.get(.bg2, brightness=-.5, alpha=f.opacity)
     draw.rect_gradient_vertical(f.rect, bg_top_color, bg_bottom_color)
 
-    br_color := core.alpha(colors.get(.primary), f.opacity * .3)
+    br_color := colors.get(.primary, alpha=f.opacity*.3)
     draw.rect_lines(f.rect, 2, br_color)
 
     dim_rect := core.rect_from_center(core.rect_top(f.rect), 64)
@@ -232,13 +232,13 @@ draw_window_rect :: proc (f: ^ui.Frame) {
     draw.diamond_lines(dim_rect, 2, br_color)
 
     icon_rect := core.rect_scaled_from_center(dim_rect, .6)
-    icon_color := core.alpha(colors.get(.primary), f.opacity)
+    icon_color := colors.get(.primary, alpha=f.opacity)
     draw_sprite("priority_high", icon_rect, icon_color)
 }
 
 draw_card_rect :: proc (f: ^ui.Frame) {
     ln_color := colors.get(.accent)
-    bg_color := core.brightness(ln_color, -.75)
+    bg_color := colors.get(.accent, brightness=-.75)
 
     if !f.selected {
         hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
@@ -260,6 +260,6 @@ draw_tutorial_item :: proc (f: ^ui.Frame) {
 }
 
 draw_label_box :: proc (f: ^ui.Frame) {
-    draw.rect(f.rect, core.brightness(colors.get(.primary), -.2))
+    draw.rect(f.rect, colors.get(.primary, brightness=-.2))
     draw_terse(f.terse, colors.get(.bg0))
 }
