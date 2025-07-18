@@ -92,7 +92,7 @@ app_draw :: proc () {
 
     interface.draw()
 
-    // app_draw_frame_stats()
+    app_draw_frame_stats()
     rl.EndDrawing()
 }
 

@@ -28,10 +28,10 @@ create :: proc () {
 
     ui_ = ui.create(
         terse_query_font_proc = proc (name: string) -> ^terse.Font {
-            return &fonts.get(name).font_tr
+            return &fonts.get_by_name(name).font_tr
         },
         terse_query_color_proc = proc (name: string) -> core.Color {
-            return colors.get(name)
+            return colors.get_by_name(name)
         },
         terse_draw_proc = proc (terse: ^terse.Terse) {
             partials.draw_terse(terse)

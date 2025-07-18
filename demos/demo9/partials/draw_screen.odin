@@ -8,10 +8,10 @@ import "../colors"
 
 draw_screen_tab :: proc (f: ^ui.Frame) {
     if f.selected {
-        bg_color := core.alpha(colors.accent, f.opacity * .5)
+        bg_color := core.alpha(colors.get(.accent), f.opacity * .5)
         draw.rect_gradient_vertical(f.rect, {}, bg_color)
 
-        br_color := core.alpha(colors.accent, f.opacity)
+        br_color := core.alpha(colors.get(.accent), f.opacity)
         br_rect := core.rect_bar_bottom(f.rect, 4)
         draw.rect(br_rect, br_color)
 
@@ -19,16 +19,16 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
         draw.rect_gradient_vertical(core.rect_bar_right(f.rect, 1), {}, br_color)
     } else {
         hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .333)
-        bg_color := core.alpha(colors.accent, f.opacity * .4 * hv_ratio)
+        bg_color := core.alpha(colors.get(.accent), f.opacity * .4 * hv_ratio)
         draw.rect_gradient_vertical(f.rect, {}, bg_color)
     }
 
-    tx_color := f.selected ? colors.accent : colors.primary
+    tx_color := colors.get(f.selected ? .accent : .primary)
     draw_terse(f.terse, tx_color, drop_shadow=true)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {
-    bg_color := core.alpha(colors.primary, f.opacity)
+    bg_color := core.alpha(colors.get(.primary), f.opacity)
     draw.rect(f.rect, bg_color)
     br_color := core.brightness(bg_color, -.555)
     draw.rect_lines(f.rect, 2, br_color)
@@ -36,7 +36,7 @@ draw_screen_tab_points :: proc (f: ^ui.Frame) {
 }
 
 draw_screen_pyramid_button :: proc (f: ^ui.Frame) {
-    sp_color := core.brightness(f.entered ? colors.accent : colors.primary, -.5)
+    sp_color := core.brightness(colors.get(f.entered ? .accent : .primary), -.5)
     draw_sprite("shape_pilar_gradient", f.rect, core.alpha(sp_color, f.opacity))
 
     if f.captured {
@@ -47,7 +47,7 @@ draw_screen_pyramid_button :: proc (f: ^ui.Frame) {
 
 draw_screen_pyramid_button_icon :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f.parent, .Cubic_Out, .333, .Linear, .222)
-    sp_color := core.brightness(colors.primary, -.5 * (1-hv_ratio))
+    sp_color := core.brightness(colors.get(.primary), -.5 * (1-hv_ratio))
     draw_sprite(f.text, f.rect, core.alpha(sp_color, f.opacity))
 }
 
@@ -86,7 +86,7 @@ draw_screen_curtain_cross :: proc (f: ^ui.Frame, in_easing, out_easing: core.Eas
             rect = core.rect_moved(rect, -1 * i.dir * i.distance * move_out_ratio)
         }
 
-        draw.diamond(rect, colors.bg2)
-        draw.diamond_lines(rect, 4, core.alpha(colors.primary, f.anim.ratio))
+        draw.diamond(rect, colors.get(.bg2))
+        draw.diamond_lines(rect, 4, core.alpha(colors.get(.primary), f.anim.ratio))
     }
 }

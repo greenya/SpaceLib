@@ -1,79 +1,101 @@
 package demo9_colors
 
 import "core:fmt"
+import "core:reflect"
 import "core:strings"
+
 import "spacelib:core"
+
+ID :: enum {
+    default,
+    bg0,
+    bg1,
+    bg2,
+    primary,
+    accent,
+}
+
+Tag :: enum {
+    vars_alpha,
+    vars_brightness,
+}
 
 @private Color :: core.Color
 
-@private colors: map [string] Color
-
-default : Color
-bg0     : Color
-bg1     : Color
-bg2     : Color
-primary : Color
-accent  : Color
+@private colors: [ID] Color
+@private color_vars: map [string] Color
+@private color_tags: [ID] bit_set [Tag] = #partial {
+    .primary    = {.vars_alpha,.vars_brightness},
+    .accent     = {.vars_alpha,.vars_brightness},
+}
 
 create :: proc () {
-    assert(len(colors) == 0)
+    assert(color_vars == nil)
 
-    default = add_color("default" , core.red)
-    bg0     = add_color("bg0"     , core.black)
-    bg1     = add_color("bg1"     , core.color_from_hex("#151515"))
-    bg2     = add_color("bg2"     , core.color_from_hex("#223"))
-    primary = add_color("primary" , core.color_from_hex("#fd9"), with_variations=true)
-    accent  = add_color("accent"  , core.color_from_hex("#f9f"), with_variations=true)
-}
-
-destroy :: proc () {
-    for name in colors do delete(name)
-    delete(colors)
-    colors = {}
-}
-
-get :: #force_inline proc (name: string) -> Color {
-    if len(name) > 0 && name[0] == '#' {
-        return core.color_from_hex(name)
-    } else {
-        fmt.assertf(name in colors, "Unknown color: \"%s\"", name)
-        return colors[name]
+    for id in ID do switch id {
+    case .default   : set(id, core.red)
+    case .bg0       : set(id, core.black)
+    case .bg1       : set(id, core.color_from_hex("#151515"))
+    case .bg2       : set(id, core.color_from_hex("#223"))
+    case .primary   : set(id, core.color_from_hex("#fd9"))
+    case .accent    : set(id, core.color_from_hex("#f9f"))
     }
 }
 
-@private
-set :: #force_inline proc (name: string, color: Color) {
-    name := name
-    if name not_in colors do name = strings.clone(name)
-    colors[name] = color
+destroy :: proc () {
+    colors = {}
+
+    for name in color_vars do delete(name)
+    delete(color_vars)
+    color_vars = nil
 }
 
-@private
-add_color :: proc (name: string, color: Color, with_variations := false) -> Color {
+get :: #force_inline proc (id: ID) -> Color {
+    return colors[id]
+}
+
+get_by_name :: #force_inline proc (name: string) -> Color {
+    if len(name) > 0 && name[0] == '#' {
+        return core.color_from_hex(name)
+    } else {
+        fmt.assertf(name in color_vars, "Unknown color \"%s\"", name)
+        return color_vars[name]
+    }
+}
+
+set :: proc (id: ID, color: Color) {
+    name := reflect.enum_string(id)
     assert(name != "")
-    assert(name not_in colors)
 
-    set(name, color)
+    colors[id] = color
+    set_color_var(name, color)
 
-    if with_variations {
-        // alpha:
-        // - generate colors from "color_a1" to "color_a9"
+    if .vars_alpha in color_tags[id] {
+        // alpha variations:
+        // - gen colors from "color_a1" to "color_a9"
         // - we don't gen "color_a0" (always fully transparent), and "color_a10" (the same as just "color")
         for i in 1..=9 {
             n := fmt.tprintf("%s_a%i", name, i)
-            set(n, core.alpha(colors[name], f32(i)/10))
+            set_color_var(n, core.alpha(colors[id], f32(i)/10))
         }
+    }
 
-        // brightness:
-        // - generate colors from "color_d9" (-9) to "color_l9" (+9)
+    if .vars_brightness in color_tags[id] {
+        // brightness variations:
+        // - gen colors from "color_d9" (-9) to "color_l9" (+9)
         // - we don't gen "color_d0" or "color_l0", that is same as just "color"
         // - we also don't gen "color_d10" (always black), and "color_l10" (always white)
         for i in -9..=9 {
             if i == 0 do continue
             n := fmt.tprintf("%s_%c%i", name, i<0?'d':'l', abs(i))
-            set(n, core.brightness(colors[name], f32(i)/10))
+            set_color_var(n, core.brightness(colors[id], f32(i)/10))
         }
     }
+}
 
-    return color
+@private
+set_color_var :: #force_inline proc (name: string, color: Color) {
+    name := name
+    if name not_in color_vars do name = strings.clone(name)
+    color_vars[name] = color
 }
