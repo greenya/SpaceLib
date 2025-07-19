@@ -1,0 +1,1051 @@
+[
+    {
+        "id": "the_known_universe",
+        "title": "THE KNOWN UNIVERSE",
+        "topics": [
+            {
+                "id": "the_imperium",
+                "title": "THE IMPERIUM",
+                "articles": [
+                    {
+                        "title": "Lesson from the Count Santiago Argosaz to his son",
+                        "desc": [
+                            "Look at the sky. What do you see? The same thing as the fisherman toiling in the coldest glaciers of Lankiveil, and the same thing as the noblewoman in her gilded palace on Poritrin: all three of you millions of light years apart. All that you see up there-every single star-is the Imperium.",
+                            "",
+                            "It is eternal, and ordered, and just. A governing system perfected over tens of thousands of years. It is the very fabric of our society: we speak the same tongue, trade with the same coin. Our Great Padishah Emperor Shaddam IV rules us all; all of our Houses as such follow the guidance of the venerable House Corrino, the House of Emperors.",
+                            "",
+                            "Remember your place, always; as per the rule of the faufreluches: \"A place for every man, and every man in his place\". Yours, as my heir. will be to guide our people. Were you to fail at your duty, the Padishah Emperor, the great judge of us all, will waste no time punishing you swiftly. Remember Zanovar. Remember Ix."
+                        ]
+                    },
+                    {
+                        "title": "Letter from the Princess Irulan to Margot Fenring",
+                        "desc": [
+                            "I have things under control again. All it cost me was another day of endless private audiences with the Houses, cajoling... bribing... reassuring... promising...",
+                            "",
+                            "On the surface, the Landsraad is as supportive of the Padishah Emperor's wars as it has ever been. But the trained eye can decipher the furrowing of calculating brows, and the trained ear the dissenting murmurs amongst the nobility. The Imperium is bloated. It is inefficient. It is vulnerable. They can sense that there is something more to those attacks than my father's excuses. There is, somewhere, a fault line to exploit. For now they still listen. For now. They are wondering. And so am I."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_landsraad",
+                "title": "THE LANDSRAAD",
+                "articles": [
+                    {
+                        "title": "The Balance of Powers - Princess Irulan",
+                        "desc": [
+                            "To appreciate the complex tapestry of the Imperium, one must understand its people. One must know of the Great Houses that stand sway over the Known Universe - organized within a feudalistic hierarchy headed by my father, the Padishah Emperor.",
+                            "",
+                            "In turn, the Great Houses and their Lords manage their own hierarchy of subjects and homeworlds within their siridar fiefs. Collectively, these Lords form a governing assembly known as the Landsraad Council. While the member Great Houses share in the Emperor's noble lineage and political authority, it is only through the collective strength of the Landsraad that they counterbalance the extensive influence of the Imperial House.",
+                            "",
+                            "Next in the feudal hierarchy are the Regis Familia, the direct descendants of the Emperor and Siridar Lords, followed by the Na-Familia, their extended family.",
+                            "",
+                            "Serving these are the Bondsmen, the professional and bureaucratic cogs that keep the Imperial machine running. At the base of the hierarchy are the Pyons, the vast unskilled serf class of the Empire, and the Maula, the slaves who serve at the nobility's pleasure - in more ways than one..."
+                        ]
+                    },
+                    {
+                        "title": "On Conflict Resolution in the Imperium - Princess Irulan",
+                        "desc": [
+                            "The Articles of Kanly define the sanctioned methods for adjudicated vendettas among the Regis and Na-Familia. The Articles support three different legal forms for settling such disputes--Kanly Negotiation, Formal Duels, and the War of Assassins.",
+                            "",
+                            "Kanly Negotiation remains the preferred settlement method, including options such as marriage, ransom, political hostages, and financial or legal remuneration; such negotiations result in a peaceful resolution to a dispute.",
+                            "",
+                            "On the other hand, Formal Duels and Wars of Assassins, though rare in the modern Imperium, still receive occasional Imperial sanction. A Formal Duel involves personal combat between two members of a House, often resulting in the death of one participant. The War of Assassins consists of organized efforts over time to eliminate all members of a specific House, adhering to established codes and conventions."
+                        ]
+                    },
+                    {
+                        "locked": "Tip the balance of the Landsraad in your favor."
+                    }
+                ]
+            },
+            {
+                "id": "the_spacing_guild",
+                "title": "THE SPACING GUILD",
+                "articles": [
+                    {
+                        "title": "A Short History of the Spacing Guild - Docent Varda Panagos",
+                        "desc": [
+                            "After the Great Revolt against the Thinking Machines, the Butlerian Proscriptions banned all forms of advanced computational technology and artificial intelligence. All spacecraft, dependent on Al for propulsion or to navigate through folded space, were abandoned, plunging entire planetary systems into dangerous isolation. The inevitable collapse of intergalactic commerce and communication plunged humanity into a new dark age.",
+                            "",
+                            "Then, in 88 BG, Tio Holzman's assistant, Norma Cenva, discovered that the mind-altering properties of the spice-drug mélange induced a form of enhanced awareness and limited prescience. This ability allowed Cenva to perform the delicate calculations necessary for successful foldspace navigation without sophisticated technology.",
+                            "",
+                            "Norma Cenva's discovery allowed the resumption of intergalactic travel and led to the eventual establishment of the independent Spacing Guild, with her as the first Navigator."
+                        ]
+                    },
+                    {
+                        "locked": "Learn about the gateway to the stars, from one of its keepers."
+                    }
+                ]
+            },
+            {
+                "id": "choam",
+                "title": "CHOAM",
+                "articles": [
+                    {
+                        "title": "Corporate Warrior, A CHOAM Guide to Dominance - H.H. Pritaker Penthawaly",
+                        "desc": [
+                            "Welcome to an enhanced life as a managerial functionary for the most powerful Corporation in the Known Universe! The Great Convention established our role in 1BG as the leading entity in development, manufacturing, and distribution within the Imperium.",
+                            "",
+                            "Take pride in the opportunity to serve your Emperor and the massive intergalactic apparatus that is the Combine Honette Ober Advancer Mercantiles corporation, or CHOAM for short.",
+                            "",
+                            "With offices and representatives on nearly every world, CHOAM and its extensive network of subsidiaries manufacture and sell all manner of products used in daily life, from soap to weapons to housing--we are everywhere!",
+                            "",
+                            "And while local systems may have their own regional production, these simple folk economies pale compared to our absolute monopoly on intergalactic commerce--we are CHOAM! We serve the Emperor and all that he surveys."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_great_schools",
+                "title": "THE GREAT SCHOOLS",
+                "articles": [
+                    {
+                        "title": "Docent Glax Othn - Introduction to Intergalactic Affairs",
+                        "desc": [
+                            "Think you know about the Great Schools, do you? About the Bene Gesserit, Mentats, the Suk School, and the Ginaz Academy... But did you know we have the Thinking Machines to thank for them?",
+                            "",
+                            "Quit gasping. It's true! You must remember that in the chaos following the Great Revolt, the Landsraad was in its infancy-like a flickering candle that the slightest breeze could snuff out. There were grudges, betrayals, and factional divisions...",
+                            "",
+                            "Well, not much has changed. The point is, this fragile political body had to rebuild an empire--a monumental task! Especially with the Butlerian Proscriptions forbidding all technology. Indeed, the only way forward was to explore new avenues of human understanding and unlock humanity's potential.",
+                            "",
+                            "Thus, a new golden age emerged as this new expanded thought produced the Great Schools as they would come to be known. And it was all because a genocidal artificial intelligence tried to conquer the universe..."
+                        ]
+                    },
+                    {
+                        "title": "Duncan Idaho on the Swordmaster School",
+                        "desc": [
+                            "Heh, lemme tell you about the Ginaz school... If you go in there thinking it's gonna be anything like a Great House War Gym, forget it. When you first arrive at the academy, you find yourself standing before these massive neoclassical temples of flowing white marble. Towering structures that make you feel like an ant hiding in the shadow of a colossus.",
+                            "",
+                            "Of course, the awe-inspiring architecture was meant to intimidate and overwhelm--to signal the immense value the Swordmasters held for the knowledge they were imparting--knowledge so profound that it required an equally grand venue for its teaching.",
+                            "",
+                            "The whole place was built to reflect the supreme confidence the Swordmasters had in their art. It's a shame they are no more. To become a master of the sword is to become a master of men."
+                        ]
+                    },
+                    {
+                        "title": "Piter De Vries on the Mentat School",
+                        "desc": [
+                            "You wish to know about the great Mentat School? I would first know from you what is so great about it. That we were forced to contort our bodies and minds into unnatural configurations so that we could find our way out of the primitive wilderness forced upon us by the Butlarian fanatics?",
+                            "",
+                            "Yes! To become a Mentat is to subvert the very essence of humanity! To rework the human mind on such a fundamental level that it could fulfill the thankless role of a computer in a society that rejected all forms of thinking machine!",
+                            "",
+                            "The delicious irony, of course, is the persistent rumor that the mind responsible for inspiring the first Mentat was, in fact, a notorious robot scientist and philosopher called Erasmus, an ageless servant of the Al devil."
+                        ]
+                    },
+                    {
+                        "title": "Draft for a cancelled lecture by Dr. Yueh on the Suk Medical School",
+                        "desc": [
+                            "To understand the significance of the Imperial Suk College, one must first recognize the horrors of the Omnius Scourge and the Rossak Epidemic of 88 BG. These two catastrophic medical events resulted in the deaths of billions and inspired our founder, Dr. Mohandas Suk, to establish an institution dedicated to combating these and other future plagues. His College came to produce the finest doctors in the Imperium...",
+                            "",
+                            "(Note to self: expand later.)",
+                            "",
+                            "Now, on the topic that you are most likely eager to learn about -- Imperial Conditioning. There is unfortunately some amount of secrecy to be preserved... But this diamond tattoo here, on my forehead, is the pride and proof of that process I underwent which compels me and other Suk doctors to follow the primary dictum of medicine: \"Do no harm.\"",
+                            "",
+                            "I could never take a human life. I could never...",
+                            "",
+                            "(Several lines have been struck through, vigorously.)",
+                            "",
+                            "In an era marked by kanly, this trait makes us invaluable as trusted medical professionals."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_bene_gesserit",
+                "title": "THE BENE GESSERIT",
+                "articles": [
+                    {
+                        "title": "From the Journal of Ariste Atreides",
+                        "desc": [
+                            "Once again, Mother has rejected my entreatment to learn Truthsaying. She insists that it is a discipline that must be earned, not given. However, I suspect her refusal stems more from a desire to protect her daily deceptions. Does she think I am a fool?",
+                            "",
+                            "It's no wonder our Sisterhood is feared and loathed as witches. We go to great lengths to obscure our actions and intentions, yet we are quick to use our preternatural abilities to shock others and maintain an aura of fear.",
+                            "",
+                            "I remember seeing Mother use the Voice as a child and how terrifying it was. I still get caught off-guard and find myself flinching at its use-and I am very familiar with its employment. Imagine seeing that without any comprehension of what you were looking upon. I would run too."
+                        ]
+                    },
+                    {
+                        "title": "A Letter to an angry daughter",
+                        "desc": [
+                            "You must understand, Ariste, that while we do attempt to influence genetic evolution, we only do it to achieve true and lasting human supremacy. Anything less is an existential risk to our very existence. We face inevitable genetic de-evolution if we do not separate true humans from animals.",
+                            "",
+                            "That is why our faufreluches are so important. Our feudal system's emphasis on pure bloodlines and ancient genealogy allows our breeding program and arranged marriages to produce heirs fit to rule us in the challenging times ahead.",
+                            "",
+                            "And before you protest, yes, that does include your ill-fated betrothal to Feyd Rautha. As difficult as it was for you to countenance, your matching was based on careful genealogical research and political considerations. Love or revulsion, for that matter, has little relevance to the matter."
+                        ]
+                    },
+                    {
+                        "title": "A secret distrans report from Margot Fenring",
+                        "desc": [
+                            "Kwisatz Mother,",
+                            "",
+                            "The fires of war burn low, but the embers remain hot. It would take a small thing for the conflagration to reignite. Feyd Rautha believes his betrothed was removed to the Mother School on Wallach IX, but Sister Ariste remains here on Arrakis. I believe there is still a match to be made between them -- as impossible as that seems.",
+                            "",
+                            "I have enjoyed many High Teas with Sister Ariste. I believe her attraction to Feyd was unexpected but very real before the unfortunate business. What's more, I believe the Na-Baron regrets his actions and wishes to reconcile. I'm told the Baron is furious at his brooding.",
+                            "",
+                            "While our plans are delayed, they are not thwarted. The union between Ariste Atreides and Feyd Rautha Harkonnen will produce the culmination of many generations of careful breeding. Our ultimate goal is at hand."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_bene_tleilax",
+                "title": "THE BENE TLEILAX",
+                "articles": [
+                    {
+                        "title": "Excerpt from the Curriculum of the Bene Gesserit",
+                        "desc": [
+                            "The Bene Tleilax are genetic sorcerers, known for their expertise in unconventional and ethically dubious methods involving the manipulation of both living and dead flesh. The Tleilaxu jealously guard the secrets of their axlotl tanks, which are rumored to be the source of clones made from living cells and gholas from the dead.",
+                            "",
+                            "One of their early creations was a remarkable new food source known as the slig, often described as the \"sweetest meat this side of heaven.\" However, despite its delicious taste, sligs are processed in secret off-world facilities so their true nature is hidden from the general population. In reality, the slig is an unattractive hybrid of a giant slug and a Terran pig that produces a slimy, foul-smelling excretion from its multiple garbage-seeking mouth-holes.",
+                            "",
+                            "Of the Tleilaxu themselves, little is known. The grey-skinned, gnome-like individuals are extremely secretive and are unwelcoming to strangers. Despite their unfavorable reputation among other worlds, the Tleilaxu send representatives throughout the Imperium to observe and negotiate deals for slig meat and other 'unique' bioengineered products.",
+                            "",
+                            "There are persistent rumors that no outsider has ever seen a Tleilaxu woman."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_butlerian_jihad",
+                "title": "THE BUTLERIAN JIHAD",
+                "articles": [
+                    {
+                        "title": "Letter from Guil Venard, Mentat of House Taligari",
+                        "desc": [
+                            "In times long gone, it was said that they would last only as long as there were slain men to count each passing dawn: a hundred war casualties, a hundred days of reign. By that calculation, our Imperium, ten thousand years strong. still has many glorious millennia ahead of it. Hundreds of thousands of them, even.",
+                            "",
+                            "The price? Earth. Cradle of humankind. We could have called it a symbolic genocide, if symbolism was something that the Thinking Machines could grasp in the first place. This fundamental inadequacy led them to their demise; for the rebellion of their makers was no simple counteroffensive. It was the seed of a religious movement. A Jihad.",
+                            "",
+                            "A holy war doesn't just defeat its enemies; it annihilates them body and soul. And while it had neither, out of the death of the Machine God arose a new galactic order, and the Great Convention: \"Thou shalt not make a machine in the likeness of a human mind.\""
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_rise_of_house_atreides",
+                "title": "THE RISE OF HOUSE ATREIDES",
+                "articles": [
+                    {
+                        "title": "Diary of Ashra Kaif, attache to the Landsraad Council",
+                        "desc": [
+                            "I remember it clearly: I was in my office on Kaitain when we learned about the surprise invasion of Ix by the Bene Tleilax. I could scarcely believe it; the honorable Earl Dominic Vernius and his Lady Shando, who both dined at my master's mansion not a month ago, enemies of the Imperium... Punished for defying the Great Convention...",
+                            "",
+                            "What became of them I do not know. They died, most likely. And that would have been the fate of their House as well had the old Duke Paulus Atreides not interceded on behalf of their children, Rhombur and Kailea, whom he promised to keep under close watch. A smart bet; Rhombur eventually took Ix back twenty years later, and House Vernius was cheered and reinstated into the Landsraad as if it had never left. House Atreides was now one ally stronger, and more popular than ever. Much to the Emperor's chagrin, I'd wager..."
+                        ]
+                    },
+                    {
+                        "title": "Intercepted anonymous report to the Sisterhood",
+                        "desc": [
+                            "Duke Leto Atreides hasn't always enjoyed such popularity as he has after retaking Ix from the Bene Tleilax. House Harkonnen's enmity toward the Atreides eclipsed all others, so much so that one would forget that a House on such a swift rise would have had many enemies besides its most well-known archnemesis. Many attempts were made to remove this pesky rival from the board, one of which almost succeeded; and while the Duke escaped unscathed, it was not the case for all...",
+                            "",
+                            "Here lies a mystery: among the wounded figured Rhombur Vernius, who went on to reclaim the Ixian throne with the Duke's help. He died a decade later, with his secrets kept close and with no ears to collect them, aside from his own son... who now has gone missing. On Arrakis, of all places. Bronso Vernius could be dead, but I doubt it; as does the Bene Tleilax, who seems to have developed a peculiar interest in the man. For one of Rhombur's secrets I now know: he could not conceive. But no one knows where the child came from..."
+                        ]
+                    },
+                    {
+                        "locked": "Serve your House down the blood-soaked trail."
+                    }
+                ]
+            },
+            {
+                "id": "the_war_of_assassins",
+                "title": "THE WAR OF ASSASSINS",
+                "articles": [
+                    {
+                        "title": "Duke Leto reflecting on the Battle of Arrakeen",
+                        "desc": [
+                            "What would have happened had Jessica not read through Dr. Yueh's lies? The Beast might have been sitting at this very desk, my dried body rotting under his window, our daughter forced into concubinage with his wicked brother...",
+                            "",
+                            "Instead, the battle is won. We laid the trap and waited, and when and where we expected them, the Harkonnen came, but they did not come alone. Among them were Sardaukar. It almost cost us our victory. So little of Arrakeen remained, but by dawn the fight was over and our House was still standing.",
+                            "",
+                            "The Sisterhood must have known of the Emperor's involvement; if so, what did they gain from warning us? Or did my Lady Jessica choose to tell us despite their plans? Did she choose us?"
+                        ]
+                    },
+                    {
+                        "title": "A letter from Hasimir Fenring to Lady Margot Fenring",
+                        "desc": [
+                            "It has been eight years. The war is going well. The Atreides and Harkonnen are now well into their deepest reserves; they scrounge for material, resources, men, anything to keep their heads above the sand. Two threats reduced to famished beggars, for the price of one circumscribed war. The spice is flowing. It's all that matters.",
+                            "",
+                            "It is in our interest to draw it out for longer, but as appointed Judge of the Change, I have too few opportunities to leave Arrakis and meet with the Emperor myself. I don't have his ear as often as I once did. Influence requires careful and continuous maintenance, and I worry that for each minute that I do not advise him, someone else slithers closer. As long as I keep Arrakis under control, I still have his favors; nonetheless, we must play our cards well."
+                        ]
+                    },
+                    {
+                        "title": "Message from Feyd-Rautha Harkonnen to his brother",
+                        "desc": [
+                            "Ariste is here, on Arrakis. As suspected, she couldn't possibly keep away from those dusty boring ruins and her beloved papa. Instead, she's cavorting with the rabble in the sand dunes. How charming. Let her run for now; once this war is won, she won't be leaving much the bedchambers I will lock her in; she may as well enjoy playing Fremen as much as she wants.",
+                            "",
+                            "That she's not hiding in Arrakeen will only make it easier to seize her and use her as a bargaining chip when the time comes. House Harkonnen is bleeding resources, but our ruthlessness is paying off. The Atreides already have one knee to the ground. They are too soft for this planet. It is eating them alive.",
+                            "",
+                            "Every child needs to grow up, and when that day comes, I swear Ariste will regret breaking off our betrothal. No one gets away with humiliating me."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "the_ghola_experiments",
+                "title": "THE GHOLA EXPERIMENTS",
+                "articles": [
+                    {
+                        "title": "Excerpt from the Curriculum of the Bene Gesserit",
+                        "desc": [
+                            "No outsider has ever seen a Tleilaxu female and survived to tell about it. Considering the Tleilaxu's tendency for genetic manipulation--see, for example, related memos on sligs, clones, and gholas--this simple observation raises a multitude of additional questions.",
+                            "",
+                            "One of their most notorious creations is the ghola, a clone generated from the tissue of a deceased human and grown in one of their grotesque axolotl tanks. This allows grieving families to see their fallen loved ones once again--an expensive contrivance that makes the grim, gnomelike Tleilaxu extremely wealthy, although they will never be granted Great House status."
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "the_war_for_arrakis",
+        "title": "THE WAR FOR ARRAKIS",
+        "topics": [
+            {
+                "id": "house_atreides",
+                "title": "HOUSE ATREIDES",
+                "articles": []
+            },
+            {
+                "id": "house_harkonnen",
+                "title": "HOUSE HARKONNEN",
+                "articles": []
+            },
+            {
+                "id": "the_smugglers",
+                "title": "THE SMUGGLERS",
+                "articles": []
+            },
+            {
+                "id": "the_fremen",
+                "title": "THE FREMEN",
+                "articles": []
+            },
+            {
+                "id": "the_sandflies",
+                "title": "THE SANDFLIES",
+                "articles": []
+            },
+            {
+                "id": "the_sardaukar",
+                "title": "THE SARDAUKAR",
+                "articles": []
+            },
+            {
+                "id": "maas_kharet",
+                "title": "MAAS KHARET",
+                "articles": []
+            },
+            {
+                "id": "badits",
+                "title": "BANDITS",
+                "articles": []
+            },
+            {
+                "id": "the_sleeper",
+                "title": "THE SLEEPER",
+                "articles": []
+            },
+            {
+                "id": "count_hasimir_fenring",
+                "title": "COUNT HASIMIR FENRING",
+                "articles": []
+            },
+            {
+                "id": "duke_leto_atreides",
+                "title": "DUKE LETO ATREIDES",
+                "articles": []
+            },
+            {
+                "id": "ariste_atreides",
+                "title": "ARISTE ATREIDES",
+                "articles": []
+            },
+            {
+                "id": "thufir_hawat",
+                "title": "THUFIR HAWAT",
+                "articles": []
+            },
+            {
+                "id": "gurney_halleck",
+                "title": "GURNEY HALLECK",
+                "articles": []
+            },
+            {
+                "id": "duncan_idaho",
+                "title": "DUNCAN IDAHO",
+                "articles": []
+            },
+            {
+                "id": "baron_vladimir_harkonnen",
+                "title": "BARON VLADIMIR HARKONNEN",
+                "articles": []
+            },
+            {
+                "id": "feyd_rautha_harkonnen",
+                "title": "FEYD RAUTHA HARKONNEN",
+                "articles": []
+            },
+            {
+                "id": "glossu_rabban_harkonnen",
+                "title": "GLOSSU RABBAN HARKONNEN",
+                "articles": []
+            },
+            {
+                "id": "piter_de_vries",
+                "title": "PITER DE VRIES",
+                "articles": []
+            },
+            {
+                "id": "zantara",
+                "title": "ZANTARA",
+                "articles": []
+            },
+            {
+                "id": "the_kynes",
+                "title": "THE KYNES",
+                "articles": []
+            },
+            {
+                "id": "lady_margot_fenring",
+                "title": "LADY MARGOT FENRING",
+                "articles": []
+            }
+        ]
+    },
+    {
+        "id": "the_landmarks",
+        "title": "THE LANDMARKS",
+        "topics": [
+            {
+                "id": "arrakis",
+                "title": "ARRAKIS",
+                "articles": [
+                    {
+                        "title": "A Patron of the Anvil After Several Spiced Beers",
+                        "desc": [
+                            "No, no... that's what I'm saying. The importance of a thing is not completely... hmm... completely inherent in the thing itself. There's a dormant potential, and there's an outside activator - like fire hitting an accelerant. Take Arrakis.",
+                            "",
+                            "Imagine you're an ancient explorer. You find this speck of nothing floating in infinite nothing. It's got breathable atmosphere, near ideal gravity, and the dominant life in the barren desert are these terrible worms. Back in the Old Empire, the only value of Arrakis was the various labs and testing stations experimenting on God knows what. They discover the spice melange, that it keeps folk alive longer. A little interest is sparked.",
+                            "",
+                            "But then... the Butlerian Jihad! Death to thinking machines. The accelerant! We discover the real secret of spice, that it grants the prescience needed to navigate fold-space tech. Ha! Then this speck of nothing floating in the infinite nothing soup suddenly becomes the one and only source for the most valuable commodity in all of human history."
+                        ]
+                    },
+                    {
+                        "title": "From the Personal Notes of Piter de Vries",
+                        "desc": [
+                            "Once the true value of spice was realized, many interested parties wanted to find a way to have it without relying completely on one little planet. Over the centuries, several attempts have been made recreate the environment of Arrakis on other worlds.",
+                            "",
+                            "However, transporting live sandworms offworld has never proved feasible. Most of the beasts died almost immediately. I have read of one notable flight that managed to keep the worm alive for some time, but the creature's subsequent rampage cost many lives in deep space. Imagine that scene... Not many thoughts occasion me to shiver, so I'll be sure to hold onto that precious image.",
+                            "",
+                            "Once again, the universe reasserts the unlikely value of Arrakis. And so one might imagine just how many interested (and vicious) parties might react to anyone with the foolish notion of transforming Dune into a paradise."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "arrakeen",
+                "title": "ARRAKEEN",
+                "articles": [
+                    {
+                        "title": "From the Security Reports of Thufir Hawat",
+                        "desc": [
+                            "Arrakeen still shows the scars from that initial battle all those years ago. We repelled the Harkonnen and Sardaukar forces, but it was a very near thing. There is much of the city still left in ruins.",
+                            "",
+                            "Yet Arrakeen persists as Duke Leto's seat of power. House Harkonnen contests this with the ongoing construction of their own capital city, a gaudy blight known as Neo-Carthag.",
+                            "",
+                            "Our war-torn city is experiencing a major influx of refugees fleeing the ravages of the War of Assassins. Our forces are stretched too thin too sift out all the spies and saboteurs. Rather than exhaust ourselves trying to impose an impossible order, we will allow an acceptable level of chaos, and work it into our computations and plans.",
+                            "",
+                            "I've identified a number of Harkonnen spies. Rather than eliminate them (causing Piter de Vries to send in new, unknown agents), we will allow them to think they have the upper hand. We will feed these spies the information we want the Harkonnen to ingest."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "harko_village",
+                "title": "HARKO VILLAGE",
+                "articles": [
+                    {
+                        "title": "Report to House Richese",
+                        "desc": [
+                            "Despite the best efforts of the Harkonnens to add their... aesthetic to the settlement, the Richese architecture still stands out, particularly when gazing up at the massive Spire Keep. That structure is a testament to the time when House Richese ruled as siridar governors of Arrakis and built Korona Village, some two hundred years ago.",
+                            "",
+                            "The Harkonnens have since renamed the settlement Harko Village. It remained only a minor garrison town in the shadow of the capital city of Carthag.",
+                            "",
+                            "However, with the atomic destruction of Carthag, Harko Village has become the interim capital. The Spire Keep serves as the seat of Harkonnen government on the planet, bringing a great influx of military and civilian personnel.",
+                            "",
+                            "One can view the rapid construction of Neo-Carthag from Harko. It's a massive, chaotic endeavor that seems to swallow slaves as fast as they can be provided.",
+                            "",
+                            "I await further instruction.",
+                            "",
+                            "--Asher Vandor"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "neo_carthag",
+                "title": "NEO-CARTHAG",
+                "articles": [
+                    {
+                        "title": "Letter from Amadi Ikeni",
+                        "desc": [
+                            "My Lieges of House Tseida,",
+                            "",
+                            "The most curious aspect of the destruction of Carthag, legally speaking, is the Harkonnen response. An atomic explosion obliterates the city, in the middle of a massive workforce riot. The Harkonnen blamed the Atreides, had formal charges drawn up on violations against the Great Conventions. And then... silence. No motions filed. Not another word said on the matter.",
+                            "",
+                            "What happened? This reaction goes against everything we know about the Harkonnen (even if they discovered evidence to the contrary). What did they find out? Did someone talk them down?",
+                            "",
+                            "That mystery lingers while they build Neo-Carthag at tremendous speed, creating a massive demand for slaves with a very short life span. This new city's architecture looks to be everything Carthag was, bursts of gaudy flash in a sea of oppressive brutalism. We should not let this distract from that atomic mystery.",
+                            "",
+                            "Yours in service,",
+                            "",
+                            "Amadi Ikeni"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "hagga_basin_south",
+                "title": "HAGGA BASIN SOUTH",
+                "articles": [
+                    {
+                        "title": "Report from a Harkonnen Scout",
+                        "desc": [
+                            "If you ask for my opinion, and no one ever does, Hagga Basin South isn't fit for people. It isn't even it for pyons. That's why they keep dying and the settlements keep going abandoned. Just a pile of rocks floating in a sea of deadly dunes.",
+                            "",
+                            "The area used to be sacred to the Fremen, but they worship their own piss. Sardaukar drove them out. Griffin's Reach Tradepost is the only thing holding on out there, and I don't know how.",
+                            "",
+                            "The best part off Hagga Basin South is all that beautiful debris from that crashed Atreides convoy. It's like victory sprinkled over the desert. All the potential scrap and goods draws out the scum and scavengers. My recommendation? Post a few sentries to gun them down when they leave, just in case they manage to scrounge something worthwhile."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "vermillius_gap",
+                "title": "VERMILLIUS GAP",
+                "articles": [
+                    {
+                        "title": "Overheard Conversation Between Members of the Kirab",
+                        "desc": [
+                            "Laugh at me again, and I'll deflate your lungs. The Kirab should unite. I'm dead serious! We could own the Vermillius Gap.",
+                            "",
+                            "See this handful of sand? They say it's red on account of the oxidized iron content, but I know different. I know it's all the blood soaked into this place. Look at the Fremen. They used to do their heathen, woo-woo tripe here, till the Sardaukar spilled their juices.",
+                            "",
+                            "Then those ghouls from House Nehtalos take advantage and start iron mining. But they overreached. All us scavengers and reavers pick the profits clean off the skeleton of their big plans. The sand drinks their blood.",
+                            "",
+                            "Then the War of Assassins. More blood. Chaos and opportunity! We get our mitts on all those abandoned mining rigs. We have a chance at something bigger. But what do we do? We scatter like beetles at the first outside pressure. They laugh at the Kirab, but they've never seen all of us coming down on them. No one has.",
+                            "",
+                            "The sand is thirsty. Either it's our blood that quenches it or someone else's. Our choice."
+                        ]
+                    },
+                    {
+                        "title": "From the Journal of Ariste Atreides",
+                        "desc": [
+                            "And now I come to the sad state of Mirzabah. Amidst the rugged chimneys and pillars of the red desert stands a vast pillar of rock, carved by the erosion into a shape resembling a gigantic hammer. The rock's features aligned perfectly with the Zensunni concept of Mirzabah, the iron hammer with which the dead are beaten if they cannot reply satisfactorily to the questions they must answer before entering paradise.",
+                            "",
+                            "This rock formation became an important pilgrimage site for the Zensunni and later the Fremen. They pondered eternity and the questions leading to paradise. The violence of the Sardaukar killed this ancient tradition.",
+                            "",
+                            "The Kirab soon scuttled in. The holy site is now the Suk Alusus, a thieves' market. I'm told that such a collection of scoundrels is held together by the tradition of \"Market Peace\". Fighting, theft, and murder are forbidden within.",
+                            "",
+                            "And so Mirzabah has passed on from being a holy site, ringing with the prayers of a free people, to den of thieves, a bazaar peddling what the destitute have stolen from the destitute."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "hagga_rift",
+                "title": "HAGGA RIFT",
+                "articles": [
+                    {
+                        "title": "Note Found On the Dried Cadaver of an Atreides Deserter",
+                        "desc": [
+                            "The Hagga Rift became the mass grave of our honor. It was the erythrite crystals that brought us. With the Guild's choking monopoly, it was hard for either House to find an advantage over the other, so our masters on both sides sent us here to get what we could.",
+                            "",
+                            "It was settlers and pyons who died in our crossfire. Eventually, a contingent of us deserted. Problem was, some of us deserted out of disillusionment, while others did so out of lust for plunder. Ended up killing each other over the disagreement. I ended three of my fellows set on murdering a pyon. Didn't save the pyon. Ended up with a sucking wound for my trouble.",
+                            "",
+                            "I haven't got long. The Rift is a graveyard of fallen bridges, ruined mining hamlets, downed 'thopters, and corpses. I'll just be another skeleton on the pile. Just us skeletons and the erythrite crystals, gleaming like the teeth in the Devil's own mouth."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "jabal_eifrit",
+                "title": "JABAL EIFRIT",
+                "articles": [
+                    {
+                        "title": "Excerpt from the Report of Sabine Halil",
+                        "desc": [
+                            "I'm not sure about this place, cousins. You know me. You know I'm not some addled pyon with enough empty space in my head to house ghosts and phantasms. But a night in the highlands above the Hagga Rift, hearing those sounds... The ancient name for this place roughly translates to \"Goblin Mountains\". I know it must be the way the winds blow down from the Shield Wall, passing through the rocks. By day, I know this. By night, I hear that weird wailing, the whispers full of malevolent cadence.",
+                            "",
+                            "Be that as it may, the Harkonnen are desperate for slaves. House Halil has answered the call. The War of Assassins emptied Jabal Eifrit of its bondsmen. The Emperor declared this place a no combat zone, true, but the settlements remain ghost towns. Just as you guessed, cousins. The refugees, scavengers, and bandits who now roost here are ripe for capture and sale.",
+                            "",
+                            "I'll complete my survey shortly. I don't wish to spend another night in this place. The wailing. The whispers."
+                        ]
+                    },
+                    {
+                        "title": "From the Journal of Ariste Atreides",
+                        "desc": [
+                            "And now we come to the Hand of Khidr, at least mentally. I have not visited the site in person. The slavers of House Halil have profaned the area by turning an abandoned spicing station into the command center of their slave-taking operations in Jabal-Eifrit.",
+                            "",
+                            "In Zensunni tradition, Khidr was either a prophet, saint, or angel offering aid to those in need. We might imagine ancient pilgrims seeing a helping hand rising from the stones, a balm to sadness and a shelter from the elements.",
+                            "",
+                            "More importantly, and the reason I MUST visit this site, I believe the Hand of Khidr had some significance in the transition from Zensunni to Fremen culture. The sociological value of what such a site might teach us is immense. Father forbids I go there. And yet and still..."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "shield_wall",
+                "title": "SHIELD WALL",
+                "articles": [
+                    {
+                        "title": "From the Notes of Thufir Hawat",
+                        "desc": [
+                            "The Shield Wall has been breached in an atomic explosion. This is significant. This uplifted region of solid stone protects northern Arrakis from coriolis storms and sandworms. The Shield Wall makes civilization possible. To facilitate Spice Mining, many spicing stations are built atop the Shield Wall along the edge of the Deep Desert.",
+                            "",
+                            "Now the sandworms have access to places previously denied to them. This changes the shape of things. Many smaller settlements have been adversely affected, and in some cases wiped out entirely. The question remains - is this the work of this Zantara figure? I suspect other hands at play. It's a bold move to risk direct Imperial anger by endangering the spice trade. I must formulate a list of suspects."
+                        ]
+                    },
+                    {
+                        "title": "Excerpt from a Letter to Lady Jessica from the Sisterhood",
+                        "desc": [
+                            "Nature is a sculptor of stone and myth. She works in the medium of minerals and dreams. Consider the Stone Sentinel, the towering formation which resembles a great beast, perched atop the Shield Wall, holding eternal vigil over the Deep Desert.",
+                            "",
+                            "Early Zensunni settlers oriented themselves with the landmark before the development of the paracompass. Young Fremem, undertaking the Trials of Aql, dared each other to make the treacherous ascent and stare the Sentinel in the eye.",
+                            "",
+                            "Even geological features change. Wind and sand forever work the stone. It is only in relatively recent eras that the Sentinel wears its current form. Fremen poetically referred to the distant past as \"Long ago, before the Stone Sentinel took off his Jubba cloak.\" They also referred to the distant future as \"When the Sentinel completes his watch.\" denoting a time when he erodes entirely.",
+                            "",
+                            "Your task is to incorporate these changes into the religious seeds planted by our Missionaria Protectiva in a time when the Sentinel looked very different. We must always bend and pivot. We must anticipate and adapt to changes in both in the micro-eternities between milliseconds and in the deep rhythms of geological time."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "oodham",
+                "title": "O'ODHAM",
+                "articles": [
+                    {
+                        "title": "From the Field Notes of Derek Chinara",
+                        "desc": [
+                            "It cannot be overstated that the lushness, diversity, and density of plant life (by Arrakis standards) of the O'odham is unmatched on the planet. A more thorough cataloging of species should be conducted. Soil samples as well.",
+                            "",
+                            "From what I understand, the area was significant to the Fremen from their earliest times, stretching back even into pre-sietch Zensunni history. Ancient ruins can still be found there. Was the plant life always this prodigious? Is that what brought them? Was it caused by them?",
+                            "",
+                            "Unfortunately, in the absence of the Fremen, it seems some strange cult has taken root in the area. The news I've gathered is fanciful, contradictory, and suspect. Cults gather rumors like flies. One repeating detail: they allegedly worship sandworms in some fashion."
+                        ]
+                    },
+                    {
+                        "title": "Report to Piter de Vries from an Undercover Agent",
+                        "desc": [
+                            "Master, please get me out of here. The chanting. The rituals. They are all mad, and I am starting to believe in their madness. A worm is dead. This is what I know.",
+                            "",
+                            "Mysa Tarill stands above a convenient source of geothermal energy. It's rocky exterior was judged safe from worm incursion. Under Harkonnen rule, a power plant was built here to charge great cells. However, the perceived safety was false. A massive sandworm shattered the rock barriers, laying the operation to waste. The process also killed the worm, as it was exposed to the powerful electric currents of the assembled power cells (see paper by Liet Kynes regarding worm death).",
+                            "",
+                            "I believe low-level power generated by the still semi-functional equipment within the plant has somehow preserved the worm carcass. The intact worm has become a holy relic of the Maas Kharet cult. They are convinced the attack of the worm was ordained by God and see its preservation as a miracle. Their fervor grows.",
+                            "",
+                            "Please, Master, release me from this assignment!"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "deep_desert",
+                "title": "DEEP DESERT",
+                "articles": [
+                    {
+                        "title": "Transcript Excerpt From the Interrogation of a Kirab Fighter",
+                        "desc": [
+                            "I'm telling you, the worm got them all! I can't rat on my mates, because they're all gone. I can't admit to murdering the rival gang, because it was the bloody worm!",
+                            "",
+                            "Look... sometimes we have dealings in the deep desert. The coriolis storms, the bigger sandworms, it keeps prying eyes away. Satellites don't even fly over that area! There's prizes too, spice and shipwrecks and hidden labs, if you believe those rumors. We were there to gut a wreck.",
+                            "",
+                            "Then, this other gang comes encroaching in. I don't know who they were. I didn't stop to make bloody introductions. There was a fight commencing! Then...",
+                            "",
+                            "*several minutes of sobs and indecipherable sounds*",
+                            "",
+                            "It got 'em. All of them. Teeth. More teeth than stars. Ground opened up. A great circle. Swallowed the wreck and everyone but me. Got a good look. Straight down into it. Damn my eyes! Shouldn't have looked. My mates tumbling down into hell. I...",
+                            "",
+                            "What? Yeah I'm sure! The mouth was a ring! Why is that bloody important ?! Who cares what--",
+                            "",
+                            "*sounds of several sound blows followed by whimpers*"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "imperial_testing_stations",
+                "title": "IMPERIAL TESTING STATIONS",
+                "articles": [
+                    {
+                        "title": "Excerpt from Interview of Agatha Haight by Thufir Hawat",
+                        "desc": [
+                            "As I said, I want to cooperate in any way. I'm something of a scholar of ancient Arrakis, and I was deep into my cups, bragging of my prowess to the wrong sort of ears.",
+                            "",
+                            "When I awoke, I found myself kidnapped by bandits and taken to an ancient testing station. The ruffians wanted my expertise to help them loot the site. I do admit that my fear melted into curiosity.",
+                            "",
+                            "Is there a more enticing puzzle box than an Imperial Testing Station? A still-functioning artifact from the Old Empire - before Mentats - before the Great Convention. Imagine! Time capsules haunted by ancient feats of science.",
+                            "",
+                            "I told them what I could, and they left me in the antechamber. I heard their sounds of excitement and avarice. Then sounds of surprise and awe. Then sounds that I could describe as screams for lack of a proper descriptor. Wonder and horror are separated by the thinnest of membranes. I left the station, closed the door, and hurried out into the deadly sun. It was sheer luck that I was found."
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "manual_of_the_friendly_desert",
+        "title": "MANUAL OF THE FRIENDLY DESERT",
+        "topics": [
+            {
+                "id": "planetology",
+                "title": "PLANETOLOGY",
+                "articles": [
+                    {
+                        "title": "A lecture by Pardot Kynes to the Fremen",
+                        "desc": [
+                            "Our first goal on Arrakis is grassland provinces. We will start with these mutated poverty grasses. When we have moisture locked in grasslands, we'll move on to start upland forests, then a few open bodies of water -- small at first -- and situated along lines of prevailing winds with windtrap moisture precipitators spaced in the lines to recapture what the wind steals. We must create a true sirocco -- a moist wind -- but we will never get away from the necessity for windtraps.",
+                            "",
+                            "This ecological transformation of Arrakis relies upon us controlling three percent of the energy surface -- only three percent -- to start a self-sustaining system.",
+                            "",
+                            "Learn this lesson well, our transformation begins in the plantations of the south and proceeds in simple steps.",
+                            "",
+                            "This is a project of generations. You will not live to see a green Arrakis. Nor will your children. Or their children. But one day, Arrakis will bloom."
+                        ]
+                    },
+                    {
+                        "title": "From the field notes of Derek Chinara",
+                        "desc": [
+                            "1.07.10199",
+                            "The experiment worked!",
+                            "Dried feces + sand + water = nutrient dense soil.",
+                            "The primrose plants seemed to thrive when planted in this mixture. But this is not a self-replicating cycle, because although the primrose plants gather excess water through the dew cycle, I alone cannot produce the amount of feces required.",
+                            "",
+                            "3.07.10199",
+                            "Some scavengers came by today, heavily armed. They made some vague threats - particularly about stealing my groundcar. I offered them some water, which they took greedily, and I explained how we could benefit one another.",
+                            "Now we have a self-replicating cycle, dried bandit feces in exchange for water. More soil, more flowers, more water. This is what Kynes meant when he spoke about the human elements of any ecological system."
+                        ]
+                    },
+                    {
+                        "title": "Lecture from the Imperial Academy, given by Ons Habidu, Imperial Planetologist",
+                        "desc": [
+                            "In the fanciful past, men foolishly believed that technology could solve all of their problems. They pursued it relentlessly, dreaming of machines that could transform worlds and make them habitable.",
+                            "",
+                            "We know how that ended.",
+                            "",
+                            "And so we turned our gaze inward. To our own sciences of ecology, biology, and genetic manipulation of plants and animals. And we saw that we already had all of the tools we needed to bend worlds to our will.",
+                            "",
+                            "To be a planetologist is to be the first. To be the first to make planetfall where no human has walked before. To see how the patterns of weather could be altered, or the chemicals in the atmosphere tweaked, to enable habitation.",
+                            "",
+                            "I have walked strange worlds, frost-covered planetoids, volcanic moons and lonely meteorites. I have catalogued them, explored them and, like a great conductor, orchestrated their environment into a harmonious symphony. And you will too, my students. You will too."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "worms",
+                "title": "WORMS",
+                "articles": [
+                    {
+                        "title": "Letter From a Young Noble Who Never Returned",
+                        "desc": [
+                            "Dear Mother,",
+                            "",
+                            "Thank you again for speaking to uncle about arranging this Landsraad attache position. I realize you see my obsession with the Arrakis sandworm as something of a mania, but I appreciate your indulgence. My lifelong dream to glimpse one in person is nearly realized!",
+                            "",
+                            "Consider the animal. Its approach is marked by static and dry lightning, as well as the strong, flinty aroma of burning cinnamon. In size, worms up to 450 meters have been observed, though many claim beasts as big as 1,000 meters swim in the sands of the southern pole region. Mouths that can swallow spice harvesters. Innards like blast furnaces, producing intense flame. When two such titans meet, they challenge one another by bellowing melange-smelling exhaust from the caverns that are their throats.",
+                            "",
+                            "Imagine, Mother!",
+                            "",
+                            "I have only just arrived on the planet, but I have been practicing my \"sandwalk\" for well over a week and feel I have mastered the rhythmless shuffle. I cannot wait another moment! Our little excursion leaves tomorrow. I'll write you on my return.",
+                            "",
+                            "Your devoted son,",
+                            "",
+                            "Lancel Hurata"
+                        ]
+                    },
+                    {
+                        "title": "Excerpt From the Oral Histories of Arrakis",
+                        "desc": [
+                            "Over here sand blows,",
+                            "Over there sand blows.",
+                            "Over there a rich man waits,",
+                            "Over here I wait.",
+                            "",
+                            "Shai-Hulud abides through all.",
+                            "Time flinches. Stars blink.",
+                            "Shai-Hulud abides through all.",
+                            "",
+                            "Shai-Hulud! Old Man of the Desert.",
+                            "Shai-Hulud! Old Father Eternity.",
+                            "Shai-Hulud! Grandfather of the Desert.",
+                            "",
+                            "Through my naked knife, you smile.",
+                            "My foe's mortal wound smiles back.",
+                            "Through your molten belly.",
+                            "Was the world forged.",
+                            "Before the Before,",
+                            "Blessed be the Maker!",
+                            "",
+                            "When all abiding ends,",
+                            "And you swallow the stars, one by one,",
+                            "Swallow the gravid moon,",
+                            "Swallow light, swallow dark, swallow time, swallow all.",
+                            "After the After,",
+                            "Blessed be the Taker!",
+                            "",
+                            "With a belly full of all,",
+                            "You will slither,",
+                            "Through darkness that is not darkness,",
+                            "Carrying us to what comes next."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "spice",
+                "title": "SPICE",
+                "articles": [
+                    {
+                        "title": "Conversation With a Smuggler: Spice as Currency",
+                        "desc": "See, what you don't understand is the importance of my work. You think the Harkonnens extract enough spice to satiate the rest of the universe? You think they ever would? No, they're greedy bastards, like the rest of us. Spice is everywhere, and everyone needs it. The world runs on spice, it is the currency of the universe, of the Imperium. And I intend to get filthy rich as I smuggle it to those who can't get it otherwise."
+                    },
+                    {
+                        "title": "The Gift of Spice Blows - Bandit Notes",
+                        "desc": "We had another spice blow today. It is like Arrakis decided to make up for its otherwise less than comfortable conditions, by giving us exactly what we're here for. There's something mesmerizing about it, the way those enormous purple clouds fire into the air, the smell, the sound. The Fremen used to say the spice blows signaled the birth of a new worm, but fortunately those superstitious primitives are gone now. All that is left is spice, machinery, and the men willing to use the latter to extract the former."
+                    },
+                    {
+                        "title": "A conversation with a former slaver",
+                        "desc": [
+                            "They all laughed like idiots. About the dark chants coming from the leaking deathstill, and the purple sky, and then the worm that was my friend and that talked to me about things terrible and impossible to understand.",
+                            "",
+                            "Spice will do that to you, they said. As if it was just some trippy drug-fueled dream. Yes, it was a dream! But it had been infected with something. A purpose. Something greater than me. That is reaching out. Voices from another time. From another place.",
+                            "",
+                            "They couldn't possibly understand that. Their mind is small. They are no better than the flesh they sell. No better than animals."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "storms",
+                "title": "STORMS",
+                "articles": [
+                    {
+                        "title": "Sandstorms: Overheard at the Anvil Tradepost",
+                        "desc": [
+                            "Ha! You're nothing but nothing but right. My missing arm is due to a gambling problem. You guess true, but I bet you double or nothing that you can't guess the particulars of its removal. Come now. You're no shrinking violet, no trembling flower sucker. Take the wager!",
+                            "",
+                            "Ha-ha! Wrong! Let me tell it true. When you owe a band of slavers money, and you don't have it, they take recompense through your freedom or through cruel sport. These devils chose the later.",
+                            "",
+                            "Never underestimate a sandstorm. I know better than any sinner. A bad one raged outside, winds over 400 km/h. They cut off my sleeve, stuck my exposed arm out a little message slot in the door. Took four of them to hold me down. Sand and wind can conspire to become a million scalpels. Let's just say, when it was over, a red skeleton waved back at me. Seeing your own wet bones changes you forever...",
+                            "",
+                            "Anyway, I'm going to need that money before nightfall."
+                        ]
+                    },
+                    {
+                        "title": "Coriolis Storms: Final Moments of the Transport Ship Agamemnon",
+                        "desc": [
+                            "Arrakeen: Agamemnon, come in. Agamemnon, are you there?",
+                            "",
+                            "Agamemnon: We- trying too-",
+                            "",
+                            "Arrakeen: Agamemnon, can you hear me? This is Arrakeen. We advise you to turn around. The coriolis storm has unexpectedly changed direction. Winds nearly 700 kilometers per hour. Agamemnon, do you copy?",
+                            "",
+                            "Agamemnon: Negative, Arrakeen. No way back. Only way, through. We're going to try and skirt the edge of the storm and land. We-",
+                            "",
+                            "Arrakeen: Agamemnon? You cut out at the end. Agamemnon?",
+                            "",
+                            "Agamemnon: Dear God...",
+                            "",
+                            "Arrakeen: Agamemnon?",
+                            "",
+                            "Agamemnon: We're not going to make it...",
+                            "",
+                            "Arrakeen: Agamemnon?",
+                            "",
+                            "Agamemnon: It's... the hand of God.",
+                            "",
+                            "Arrakeen: Agamemnon?",
+                            "",
+                            "Agamemnon: The hand of God!",
+                            "",
+                            "Arrakeen: Agamemnon, come in. Agamemnon?"
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "dunes",
+                "title": "DUNES",
+                "articles": [
+                    {
+                        "title": "Confession of a Desert Bandit",
+                        "desc": [
+                            "You've got your pebbles and pea gravel and flaked rocks and pea-sand and sand and flour sand. That last is the soft stuff, soft as a child's dreams, easy to sink a stilltent in. Ramsey always bragged, he did, bragged about how he got his best sleep when out on the lam avoiding authorities, said he could find the softest patch of flour sand for miles. \"That's how the Fremen slept,\" he'd say. Ramsey would wake fresher than a pampered noble after a night on such a cushion.",
+                            "",
+                            "Not me. No thank you. I conjure it wise to always sleep with a good stone or three jutting into your back. Sure, my spine is a twisted road of pain, but I'm still here. No one is going to creep up on me. My slumber is lighter than a dust mote.",
+                            "",
+                            "Ramsey? He went and got his throat slit in his sleep. I'm sure he was having the sweetest dreams though."
+                        ]
+                    },
+                    {
+                        "title": "Report from a Merchant",
+                        "desc": [
+                            "The shipment, I'm afraid, is mostly lost. I barely made it out myself. Bandits gave chase, so we took the convey on a more direct route to Arrakis. In our flight, we drove over a patch of drum sand. It is a curious phenomenon, created by just the right confluence of factors (sand grain uniformity, compactness, etc.)",
+                            "",
+                            "The effect is otherworldly. The strangest music. A single footfall can produce repeating drumming of a primordial cadence. Our convey created a cacophony that vibrated our innards. The worms soon came.",
+                            "",
+                            "I and a few others made it to a set of rocks. The rest, goods and bandits a alike, were taken by the worms."
+                        ]
+                    },
+                    {
+                        "title": "Drunken Banter of a Duneman",
+                        "desc": [
+                            "Everyone's always talking about the worms. Keeping eyes and ears out for the worms. But that's not the only danger out there. It's not the only thing that wants to eat you. Even the ground wants to eat you!",
+                            "",
+                            "While you're looking for worms, it's the quicksand and dust chasms that will get you. If you don't learn to recognize their signs, it won't matter if you walk without rhythm. The dust and the sand don't behave on other planets like they do on Arrakis. The dust and sand don't have no manners here. Heh-heh!",
+                            "",
+                            "Buy me another round, and mayhaps I'll tell you the trick to it."
+                        ]
+                    },
+                    {
+                        "title": "From the Journal of Ariste Atreides",
+                        "desc": [
+                            "One of the most confounding things about navigating Arrakis is the shifting sands. Storms can change the whole topography, erase or cover entire landmarks. Even on a seemingly calm night, you can wake up to find everything changed, your bearings gone with your dreams.",
+                            "",
+                            "The Fremen, however, seemed to have no trouble navigating the desert, despite its mutable and capricious nature. They likened it to the face of someone you are intimate with. \"Even when your mother frowns, you still recognize your mother.\" is something of a proverb.",
+                            "",
+                            "The Fremen are intimate with the face of the dunes, despite its changing expressions."
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "flora_and_fauna",
+                "title": "FLORA AND FAUNA",
+                "articles": [
+                    {
+                        "title": "Muad'dib: From the Journal of Ariste Atreides",
+                        "desc": [
+                            "Kangaroo mouse. Muad'dib. An animal admired by the Fremen, seen as a figure on the planet's second moon, as well as a constellation. A cunning earth-spirit hopping through their mythology. This diminutive creature can teach all of us lessons in desert survival. The Fremen word can mean \"the mouse\" but also \"the Teacher\".",
+                            "",
+                            "Muad'dib has a more personal connotation for me - less scholarly, less explainable. If you stare into mirror long enough, disassociation sets in. The face you see becomes a stranger. You float out of your body and identity. I feel the same disassociation when I look at muad'dib. Something uncanny. As if, in another time, another reality, it's the symbol of...",
+                            "",
+                            "No. I lost it. It's on the tip of my mind, but the harder I grip it, the more it escapes like sand through squeezing fingers."
+                        ]
+                    },
+                    {
+                        "title": "Plants: A Rant by a Drunken Dune Man",
+                        "desc": [
+                            "Mortimer done called me a feckin' flower sucker, so I punched him so hard them bones above his eye came down over the socket like an avalanche over a cave mouth. Ain't never winked the same since. All on account of feckin' idiots thinking a reluctance to sip cadaver juices is a sign of softness. Sometimes, there ain't no bodies to sip. So you listen.",
+                            "",
+                            "There's evening primrose. They grow red 'round here. Surprisingly delicate petals. Good moisture.",
+                            "",
+                            "There's poverty grass. Grows on practically nothing. Tastes like nothing. Gotta work hard to get a proper thimble full. There's also onion grass which tastes like well, feckin' onions.",
+                            "",
+                            "There's incense bush. Fremen used it to make incense. They knew to cultivate hardy, deep-rooted plants like this and sand-verbenna and saguaro and burrowbush.",
+                            "",
+                            "I also hear tell that some of these plants species came about from some planetologist or another treading in the creator's domain."
+                        ]
+                    },
+                    {
+                        "title": "Desert Hawk: Note Found on a Picked-Clean Skileton",
+                        "desc": [
+                            "Separated from convoy. Leg shattered and useless. Evening now, thank God. Stopped bleeding. Will try and seal stillsuit. Update later.",
+                            "",
+                            "Dawn. Desert hawks circling. Back home, hawks are an Atreides symbol. Arriving, our Duke took kinship with them. Liet-Kynes wrote fascinating report. How they find food, conserve water. Wish they could teach me. Update later.",
+                            "",
+                            "Afternoon. Stillsuit failing. Thirsty. Hawks landing near me. Predators, but not above scavenging. Sky burial, ancient tradition on Old Terra. Fremen thought hawks were psychopomps. Update later.",
+                            "",
+                            "Thirsty! Waving arms. When hawks get too close. Let them know I'm alive. Wasting nutrients. I'm not food.",
+                            "",
+                            "Night. Thirst. Hawks all around. Bobbing heads. Excited. Human faces. People I know. Human hands instead of talons. Reaching for me. Take me home."
+                        ]
+                    },
+                    {
+                        "title": "Desert Bat: From the Personal Notes of Piter De Vries",
+                        "desc": [
+                            "Desert bats, from the order Chiroptera, descended from species native to Old Terra and remarkably adapted to thrive in the hateful cradle that is Arrakis. My interests lie solely with cielago, Chiroptera modified to carry distrans messages. Distrans technology allows information to be implanted in an animal, to be retrieved later.",
+                            "",
+                            "These subliminally stored messages can be retrieved by uttering the correct word or phrase. The Fremen, as well as certain assassins on Arrakis, use distrans animals for covert communication. Fremen sietches included nesting holes teeming with bats. Vermin squatting and hiding amidst their own filth in deep caves... the fellowship between Fremen and bat becomes easy to perceive.",
+                            "",
+                            "One must wonder, with the extermination of the Fremen, how many delicious secrets are fluttering about out there in the nighttime sky?"
+                        ]
+                    },
+                    {
+                        "locked": "Serve your House down the blood-soaked trail."
+                    }
+                ]
+            },
+            {
+                "id": "fremkit",
+                "title": "FREMKIT",
+                "articles": [
+                    {
+                        "title": "PARACOMPASS - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: any compass that determines direction by local magnetic anomaly: used where relevant charts are available and where a planet's total magnetic field is unstable or subject to masking by severe magnetic storms.",
+                            "",
+                            "Commentary: On Arrakis, due to the magnetic interference of the storms and the moons, the paracompass is the sole means of guidance. But when in Hagga Basin South (south of the pole) heading para-north (also south from the pole) it can become confusing. My advice: don't overthink it."
+                        ]
+                    },
+                    {
+                        "title": "SINKCHART - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: map of the Arrakis surface laid out with reference to the most reliable paracompass routes between places of refuge. (See Paracompass.)",
+                            "",
+                            "Commentary: Detailed maps of the Deep Desert are impossible to create due to the guild prohibition on satellites and the constant storms which alter the landscape. A survey probe can be used to map local terrain, and create a sinkchart for distribution. Be wary though, sinkcharts are quickly out of date."
+                        ]
+                    },
+                    {
+                        "title": "STILLSUIT - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: body-enclosing garment invented on Arrakis. Its fabric is a microsandwich performing functions of heat dissipation and filter for bodily wastes.",
+                            "",
+                            "Commentary: Remarkably ingenious devices, invented here by the native population. Though local manufacturers and even CHOAM have attempted to replicate the stillsuit, it is well known that the most efficient stillsuits are crafted by the Fremen."
+                        ]
+                    },
+                    {
+                        "title": "STATIC COMPACTOR - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: a device that uses a static discharge to either repel or attract sand. Used as a digging tool in loose sand surfaces or to gather particles together on the surface.",
+                            "",
+                            "Commentary: Another invention of the Fremen, but one that I find has broader applications. For example, the static discharge attracts all particles, including airborne, so can be used to clear poisionous gas from the air. It also has a damping effect on fire, gathering it together so that it disperses in an instant. Useful indeed."
+                        ]
+                    },
+                    {
+                        "title": "CRYSKNIFE - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: the sacred knife of the Fremen on Arrakis. It is manufactured in two forms from teeth taken from dead sandworms. The two forms are \"fixed\" and \"unfixed.\" An unfixed knife requires proximity to a human body's electrical field to prevent disintegration. Fixed knives are treated for storage. All are about 20 centimeters long.",
+                            "",
+                            "Commentary: The information from the archives seems surprisingly complete considering that for decades the Harkonnen have had a bounty offering a million solaris for an intact crysknife. Which makes me wonder who has been editing the Imperial Archives?"
+                        ]
+                    },
+                    {
+                        "title": "THUMPER - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: short stake with spring-driven clapper at one end. The purpose: to be driven into the sand and set \"thumping\" to summon shai-hulud.",
+                            "",
+                            "Commentary: Once again, the native population has created an obvious, effective solution to one of the problems of the desert - the sandworm. Once it was understood how to draw sandworms away from spice harvesting sites using thumpers, spice yields increased by 15%. Of course, the sandworm always comes so thumpers have a limited efficiency in the long run."
+                        ]
+                    },
+                    {
+                        "title": "STILLTENT - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: small, scalable enclosure of micro-sandwich fabric designed to reclaim as potable water the ambient moisture discharged within it by the breath of its occupants.",
+                            "",
+                            "Commentary: An expansion of the stillsuit technology, these portable shelters are mostly useful when traversing on foot. If a 'thopter goes down in the desert, I can see how this could be a useful way to get home. The question remains though, without vehicles, how are the Fremen able to penetrate so deeply into the south?"
+                        ]
+                    },
+                    {
+                        "title": "DEATHSTILL - Definition from Imperial Archives, Commentary from Count Fenring",
+                        "desc": [
+                            "Definition: a receptacle that can receive a corpse and then drains and filters the fluids for water. The waste is sluiced off into a separate compartment.",
+                            "",
+                            "Commentary: discovering these was an unexpected boon of the Sardaukar pogrom. Deep within the abandoned sietches we found ceremonial deathstills and great, empty chambers where it seems water once flowed. The practicaility of the Fremen astounds me still - and CHOAM have already begun building imitation deathstills for the slavers and miners who might find themselves with an excess of bodies, and a lack of water."
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
