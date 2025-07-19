@@ -154,3 +154,99 @@ add_screen_key_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Fra
     buttons := ui.get(screen, "footer_bar/key_buttons")
     return add_button(buttons, name, text)
 }
+
+add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: string, with_details_header := false, details_header_icon := "") -> (body, list, details: ^ui.Frame) {
+    body = ui.add_frame(parent,
+        { name=name },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    list = ui.add_frame(body,
+        { name="list", flags={.scissor}, layout={dir=.down,gap=10,scroll={step=20}} },
+        { point=.top_left },
+        { point=.bottom_right, rel_point=.bottom, offset={-40,0} },
+    )
+
+    add_scrollbar(list)
+
+    details = ui.add_frame(body, {
+        name    = "details",
+        flags   = {.scissor},
+        layout  = {dir=.down,pad=1,scroll={step=20}},
+        text    = "#0005",
+        draw    = draw_gradient_fade_down_rect,
+    },
+        { point=.bottom_left, rel_point=.bottom, offset={40,0} },
+        { point=.top_right },
+    )
+
+    add_scrollbar(details)
+
+    if with_details_header {
+        header_h :: 40
+
+        details_header := ui.add_frame(body, {
+            name        = "details_header",
+            size_min    = {0,header_h},
+            flags       = {.terse,.terse_height},
+            text_format = "<wrap,left,pad=14:6,font=text_4m,color=primary_l3>%s",
+            draw        = draw_header_bar_primary,
+        },
+            { point=.top_left, rel_point=.top, offset={40,0} },
+            { point=.top_right },
+        )
+
+        ui.set_anchors(details,
+            { point=.top_left, rel_point=.bottom_left, rel_frame=details_header },
+            { point=.bottom_right },
+        )
+
+        ui.add_frame(details_header, {
+            name        = "aside",
+            flags       = {.terse,.terse_size},
+            text_format = "<pad=14:6,font=text_4r,color=primary_l3>%s",
+        },
+            { point=.right },
+        )
+
+        if details_header_icon != "" {
+            diamond_size :: 60
+            diamond_gap :: 15
+            details_header.anchors[0].offset.x += diamond_size + diamond_gap
+
+            icon := ui.add_frame(details_header, {
+                name    = "icon",
+                size    = diamond_size,
+                text    = details_header_icon,
+                draw    = draw_icon_diamond_primary,
+            },
+                { point=.right, rel_point=.left, offset={-diamond_gap,0} },
+            )
+
+            ui.add_frame(details_header, {
+                name    = "bg_line_right",
+                order   = -1,
+                text    = "primary_d2",
+                size    = {0,2},
+                draw    = draw_gradient_fade_right_rect,
+            },
+                { point=.right, rel_point=.left, offset={4,0} },
+                { point=.left, rel_point=.right, rel_frame=icon, offset={-1,0} },
+            )
+
+            ui.add_frame(details_header, {
+                name    = "bg_line_down",
+                order   = -1,
+                text    = "primary_d2",
+                size    = {1,0},
+                draw    = draw_gradient_fade_down_rect,
+            },
+                { point=.top, rel_point=.bottom, rel_frame=icon },
+                { point=.bottom, rel_point=.bottom_left, rel_frame=details, offset={-diamond_gap-diamond_size/2,0} },
+            )
+        }
+    }
+
+    return
+}

@@ -74,6 +74,17 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,
     }
 }
 
+draw_icon_diamond :: proc (icon: string, rect: Rect, bg_color: Color, opacity: f32) {
+    draw.diamond(rect, core.alpha(bg_color, opacity))
+    draw.diamond_lines(core.rect_inflated(rect, -rect.w/10), 4, colors.get(.bg2, alpha=opacity))
+
+    ln_color := colors.get(.primary, brightness=-.4, alpha=opacity)
+    draw.diamond_lines(rect, 3, ln_color)
+
+    sp_color := colors.get(.primary, alpha=opacity)
+    draw_sprite(icon, core.rect_inflated(rect, -rect.w/4), sp_color)
+}
+
 draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
     font_tr := &fonts.get_by_name(font).font_tr
     draw.text_center(text, core.rect_center(rect), font_tr, color)
@@ -102,6 +113,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
 
     th := f32(1)
     c := colors.get(.primary, alpha=t.opacity)
+    c_a0 := core.alpha(c, 0)
 
     // background
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
@@ -119,8 +131,8 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     draw.line({x2,y2}, {xr,yc}, th, c)
 
     // middle lines
-    if limit_x<xl           do draw.rect_gradient_horizontal({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, {}, c)
-    if limit_x+limit_w>xr   do draw.rect_gradient_horizontal({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, {})
+    if limit_x<xl           do draw.rect_gradient_horizontal({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, c_a0, c)
+    if limit_x+limit_w>xr   do draw.rect_gradient_horizontal({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, c_a0)
 
     draw_terse(t, drop_shadow=true)
 }
@@ -178,18 +190,21 @@ draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
 
 draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {
     color := colors.get_by_name(f.text, alpha=f.opacity)
-    draw.rect_gradient_vertical(f.rect, color, {})
+    color_a0 := core.alpha(color, 0)
+    draw.rect_gradient_vertical(f.rect, color, color_a0)
 }
 
 draw_gradient_fade_up_and_down_rect :: proc (f: ^ui.Frame) {
     color := colors.get_by_name(f.text, alpha=f.opacity)
-    draw.rect_gradient_vertical(core.rect_half_top(f.rect), {}, color)
-    draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, {})
+    color_a0 := core.alpha(color, 0)
+    draw.rect_gradient_vertical(core.rect_half_top(f.rect), color_a0, color)
+    draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, color_a0)
 }
 
 draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {
     color := colors.get_by_name(f.text, alpha=f.opacity)
-    draw.rect_gradient_horizontal(f.rect, color, {})
+    color_a0 := core.alpha(color, 0)
+    draw.rect_gradient_horizontal(f.rect, color, color_a0)
 }
 
 draw_game_title :: proc (f: ^ui.Frame) {
@@ -262,4 +277,22 @@ draw_tutorial_item :: proc (f: ^ui.Frame) {
 draw_label_box :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, colors.get(.primary, brightness=-.2))
     draw_terse(f.terse, colors.get(.bg0))
+}
+
+draw_codex_section_item :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, colors.get(.primary, brightness=-.7))
+    draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=-.4))
+    draw_text_center("ART GOES HERE", f.rect, "text_6l", colors.get(.primary, brightness=-.6))
+    draw_terse(f.terse, drop_shadow=true)
+}
+
+draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
+    draw_icon_diamond(f.text, f.rect, colors.get(.primary, brightness=-.6), f.opacity)
+}
+
+draw_header_bar_primary :: proc (f: ^ui.Frame) {
+    color := colors.get(.primary, brightness=-.4, alpha=f.opacity)
+    color_a0 := core.alpha(color, 0)
+    draw.rect_gradient_horizontal(f.rect, color, color_a0)
+    draw_terse(f.terse, drop_shadow=true)
 }
