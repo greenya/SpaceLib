@@ -71,10 +71,9 @@ get_by_name :: #force_inline proc (name: string) -> ^Font {
 @private
 create_font_from_default :: proc (scale := f32(1)) -> ^Font {
     font_rl := rl.GetFontDefault()
-    font_height := scale * f32(font_rl.baseSize)
     return create_font_from_rl_font(font_rl,
-        height              = font_height,
-        rune_spacing_ratio  = font_height * .1,
+        height              = scale * f32(font_rl.baseSize),
+        rune_spacing_ratio  = .1,
     )
 }
 
