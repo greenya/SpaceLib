@@ -745,8 +745,8 @@ update_rect :: proc (f: ^Frame) {
 
     if .terse in f.flags do update_terse(f)
 
-    if f.size.x > 0 && f.size_min.x > 0 do f.size.x = max(f.size.x, f.size_min.x)
-    if f.size.y > 0 && f.size_min.y > 0 do f.size.y = max(f.size.y, f.size_min.y)
+    if f.size_min.x > 0 do f.size.x = max(f.size.x, f.size_min.x)
+    if f.size_min.y > 0 do f.size.y = max(f.size.y, f.size_min.y)
 
     if f.actor != nil do wheel_actor(f)
 }
