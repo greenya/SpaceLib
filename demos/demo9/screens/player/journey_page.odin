@@ -70,10 +70,8 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         })
     }
 
-    // FIXME: ui.Frame.layout.dir: .up and .up_and_down doesn't calc correctly (if used here)
-
     details := ui.add_frame(tutorial,
-        { name="details", flags={.scissor}, layout={dir=.down,pad=1,scroll={step=20},align=.center} },
+        { name="details", flags={.scissor}, layout={dir=.up_and_down,pad=1,scroll={step=20},align=.center} },
         { point=.bottom_left, rel_point=.bottom, offset={40,0} },
         { point=.top_right },
     )

@@ -619,16 +619,17 @@ drag_actor :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 @private
 drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     actor := &f.actor.(Actor_Scrollbar_Thumb)
+    p := f.parent
 
     if is_layout_dir_vertical(actor.content) {
-        space := f.parent.rect.h - f.rect.h
-        ratio := core.clamp_ratio(mouse_pos.y-captured_pos.y, f.parent.rect.y, f.parent.rect.y + f.parent.rect.h - f.rect.h)
+        space := p.rect.h - f.rect.h
+        ratio := core.clamp_ratio(mouse_pos.y-captured_pos.y, p.rect.y, p.rect.y+p.rect.h-f.rect.h)
         f.anchors[0].offset.y = space * ratio
         scroll := &actor.content.layout.scroll
         scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
     } else {
-        space := f.parent.rect.w - f.rect.w
-        ratio := core.clamp_ratio(mouse_pos.x-captured_pos.x, f.parent.rect.x, f.parent.rect.x + f.parent.rect.w - f.rect.w)
+        space := p.rect.w - f.rect.w
+        ratio := core.clamp_ratio(mouse_pos.x-captured_pos.x, p.rect.x, p.rect.x+p.rect.w-f.rect.w)
         f.anchors[0].offset.x = space * ratio
         scroll := &actor.content.layout.scroll
         scroll.offset = scroll.offset_min + ratio*(scroll.offset_max-scroll.offset_min)
@@ -896,6 +897,16 @@ update_rect_for_children_with_layout :: proc (f: ^Frame) {
 
         scroll.offset_min = min(0, dir_content_size[0])
         scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
+
+        #partial switch f.layout.dir {
+        case .left, .up:
+            scroll.offset_min = -scroll.offset_max
+            scroll.offset_max = 0
+        case .left_and_right, .up_and_down:
+            scroll.offset_max /= 2
+            scroll.offset_min = -scroll.offset_max
+        }
+
         scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
 
         if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
