@@ -8,7 +8,7 @@ import "spacelib:ui"
 app_tooltip_create :: proc () {
     root := ui.add_frame(app.ui.root,
         { name="tooltip", order=9, flags={.hidden,.pass}, size={384,0},
-            layout={ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
+            layout=ui.Flow{ dir=.down, auto_size=.dir }, draw=draw_tooltip_bg },
         { rel_point=.mouse },
     )
 
@@ -25,7 +25,7 @@ app_tooltip_create :: proc () {
 
     ui.add_frame(root, { name="image", size={0,128+16+16}, draw=draw_tooltip_image, text="[PH] image" })
 
-    stats := ui.add_frame(root, { name="stats", size={0,72}, layout={dir=.left_and_right,gap=20}, draw=draw_tooltip_stats })
+    stats := ui.add_frame(root, { name="stats", size={0,72}, layout=ui.Flow{dir=.left_and_right,gap=20}, draw=draw_tooltip_stats })
     for name in ([] string { "stat1", "stat2", "stat3", "stat4" }) {
         item := ui.add_frame(stats, { name=name, flags={.terse,.terse_width},
             text_format="<font=text_18,color=bw_95>%s\n<font=text_32,color=bw_da>%.1f",
@@ -34,7 +34,7 @@ app_tooltip_create :: proc () {
     }
 
     resists := ui.add_frame(root, { name="resists", size={0,80},
-        layout={dir=.left_and_right,size={40,64},gap=4,align=.center}, draw=draw_tooltip_resists })
+        layout=ui.Flow{dir=.left_and_right,size={40,64},gap=4,align=.center}, draw=draw_tooltip_resists })
 
     for name in ([] string { "bleed", "fire", "lightning", "poison", "blight" }) {
         ui.add_frame(resists, { name=name, text="??", draw=draw_tooltip_resists_item })

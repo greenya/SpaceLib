@@ -38,7 +38,7 @@ add_modal :: proc () {
     modals.modal = ui.add_frame(modals.layer, {
         name    = "modal",
         size    = {640,0},
-        layout  = {dir=.down,auto_size=.dir,pad=30},
+        layout  = ui.Flow { dir=.down, auto_size=.dir, pad=30 },
         draw    = partials.draw_window_rect,
     }, { point=.center })
 
@@ -57,7 +57,7 @@ add_modal :: proc () {
     buttons := ui.add_frame(modals.modal, {
         name    = "buttons",
         size    = {0,90},
-        layout  = {dir=.left_and_right,gap=20,align=.end},
+        layout  = ui.Flow { dir=.left_and_right, gap=20, align=.end },
     })
 
     for i in 1..=max_buttons {

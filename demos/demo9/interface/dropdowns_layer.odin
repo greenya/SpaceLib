@@ -32,7 +32,7 @@ add_dropdowns_layer :: proc (order: int) {
 
     dropdowns.dropdown = ui.add_frame(dropdowns.layer, {
         name    = "dropdown",
-        layout  = {dir=.down,auto_size=.dir},
+        layout  = ui.Flow { dir=.down, auto_size=.dir },
         draw    = partials.draw_button_dropdown_rect,
     })
 

@@ -58,7 +58,7 @@ app_startup :: proc () {
         terse_draw_proc = proc (text: ^terse.Terse) {
             draw_terse(text)
         },
-        overdraw_proc = proc (f: ^ui.Frame) {
+        frame_overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return
             draw.debug_frame(f)
             draw.debug_frame_layout(f)

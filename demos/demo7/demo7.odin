@@ -32,7 +32,7 @@ main :: proc () {
     app.ui = ui.create()
 
     time_scale_control := ui.add_frame(app.ui.root,
-        { layout={ dir=.up_and_down, align=.end, size={120,40}, gap=10 } },
+        { layout=ui.Flow{ dir=.up_and_down, align=.end, size={120,40}, gap=10 } },
         { point=.right, offset={-20,0} },
     )
 
@@ -76,7 +76,7 @@ main :: proc () {
     )
 
     container := ui.add_frame(popup,
-        { name="slots", layout={ dir=.left_and_right, align=.center, size={80,140}, pad=40 } },
+        { name="slots", layout=ui.Flow{ dir=.left_and_right, align=.center, size={80,140}, pad=40 } },
         { point=.top_left, rel_point=.bottom_left, rel_frame=popup_header },
         { point=.bottom, rel_point=.top, rel_frame=popup_button },
         { point=.right },
@@ -165,7 +165,7 @@ draw_panel_header :: proc (f: ^ui.Frame) {
     tx_color := core.alpha({255,255,255,255}, f.opacity)
     ln_color := core.alpha(core.brightness({140,180,220,255}, .4), f.opacity)
 
-    draw.rect(core.rect_line_bottom(core.rect_inflated(f.rect, {-40,0}), 4), ln_color)
+    draw.rect(core.rect_bar_bottom(core.rect_inflated(f.rect, {-40,0}), 4), ln_color)
     draw.text_center(f.text, core.rect_center(f.rect)+{0,8}, font, tx_color)
 }
 
@@ -204,13 +204,13 @@ anim_hide_slide_down :: proc (f: ^ui.Frame) {
 anim_slot_enter_feedback :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
-    base_w := f.parent.layout.size.x
+    base_w := ui.layout_flow(f.parent).size.x
     f.size = { base_w + base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
 }
 
 anim_slot_leave_feedback :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
-    base_w := f.parent.layout.size.x
+    base_w := ui.layout_flow(f.parent).size.x
     f.size = { base_w*2 - base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
 }

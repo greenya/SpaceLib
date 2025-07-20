@@ -94,7 +94,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         options_panel := ui.add_frame(tab_content, {
             name="options_panel",
             flags={ .hidden, .scissor },
-            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
+            layout=ui.Flow{ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
         }, { point=.top_left }, { point=.bottom_right })
 
@@ -120,7 +120,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         content := ui.add_frame(how_to_play_panel, {
             name="content",
             flags={ .scissor },
-            layout={ dir=.down, gap=25, scroll={ step=20 } },
+            layout=ui.Flow{ dir=.down, gap=25, scroll={ step=20 } },
         }, { point=.top_left, offset={20,20} }, { point=.bottom_right, offset={-10-scrollbar_w-20,-20} })
 
         ui.add_frame(content, { flags={.terse,.terse_height}, text=
@@ -130,9 +130,9 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             "at the start of the game; if destroyed, the game ends." })
 
         { // test scrolling child frame
-            inline_container := ui.add_frame(content, { layout={ dir=.down, auto_size=.dir } })
+            inline_container := ui.add_frame(content, { layout=ui.Flow{ dir=.down, auto_size=.dir } })
             ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="<top,left,color=c7>Test scrolling child frame" })
-            sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout={dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
+            sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout=ui.Flow{dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
             for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
                 ui.add_frame(sc, { flags={.capture,.radio,.terse}, text=text, draw=draw_ui_button })
             }
@@ -175,7 +175,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         about_panel := ui.add_frame(tab_content, {
             name="about_panel",
             flags={ .hidden, .scissor },
-            layout={ dir=.down, pad=20, gap=5, scroll={step=20} },
+            layout=ui.Flow{ dir=.down, pad=20, gap=5, scroll={step=20} },
             draw_after=draw_ui_border_17,
         }, { point=.top_left }, { point=.bottom_right })
 
@@ -200,7 +200,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     }
 
     tab_bar := ui.add_frame(root,
-        { name="tab_bar", layout={ dir=.down, size={0,50}, gap=10 } },
+        { name="tab_bar", layout=ui.Flow{ dir=.down, size={0,50}, gap=10 } },
         { point=.top_left, rel_point=.top_right, rel_frame=tab_content, offset={15,0} },
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
     )
@@ -253,14 +253,14 @@ main_menu_add_exit_dialog :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     )
 
     container := ui.add_frame(root, { size={440,0}, draw=draw_ui_panel,
-        layout={ dir=.up_and_down, gap=40, pad=40, auto_size=.dir } }, { point=.center })
+        layout=ui.Flow{ dir=.up_and_down, gap=40, pad=40, auto_size=.dir } }, { point=.center })
 
     ui.add_frame(container, {
         flags={.terse,.terse_height},
         text="<wrap,color=c7,font=anaheim_huge,icon=exit></font> Exit the game?",
     })
 
-    button_row := ui.add_frame(container, { size={0,50}, layout={ dir=.left_and_right, gap=20 } })
+    button_row := ui.add_frame(container, { size={0,50}, layout=ui.Flow{ dir=.left_and_right, gap=20 } })
 
     ui.add_frame(button_row, { flags={.capture,.terse}, text="Yes", size={150,0}, draw=draw_ui_button, click=proc (f: ^ui.Frame) {
         app.exit_requested = true

@@ -23,7 +23,7 @@ add :: proc (parent: ^ui.Frame) {
 
     replies := ui.add_frame(screen, {
         name    = "replies",
-        layout  = {dir=.down,gap=10,auto_size=.dir},
+        layout  = ui.Flow { dir=.down, gap=10, auto_size=.dir },
     },
         { point=.bottom_left, offset={300,-40} },
         { point=.bottom_right, offset={-300,-40} },

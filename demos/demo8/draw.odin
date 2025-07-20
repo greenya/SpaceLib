@@ -79,7 +79,7 @@ draw_menu_item :: proc (f: ^ui.Frame) {
     draw_text_center(f.text, f.rect, "text_20", tx_color)
     if f.selected {
         ln_color := core.alpha(app.res.colors["bw_1a"].value, f.opacity)
-        draw.rect(core.rect_line_bottom(f.rect, 4), ln_color)
+        draw.rect(core.rect_bar_bottom(f.rect, 4), ln_color)
     }
 }
 
@@ -106,7 +106,7 @@ draw_player_title :: proc (f: ^ui.Frame) {
     tx_color := core.alpha(app.res.colors["bw_bc"].value, f.opacity)
     draw_text_center(f.text, f.rect, "text_24_sparse", tx_color)
     ln_color := core.alpha(app.res.colors["bw_59"].value, f.opacity)
-    ln_rect := core.rect_line_bottom(f.rect, 3)
+    ln_rect := core.rect_bar_bottom(f.rect, 3)
     draw.rect(ln_rect, ln_color)
 }
 
@@ -205,11 +205,11 @@ draw_slot_trait :: proc (f: ^ui.Frame) {
     draw_sprite(trait.icon, core.rect_inflated(rect, -8*hover_ratio), sp_color)
 
     if !is_flat {
-        nm_rect := core.rect_line_bottom(core.rect_inflated(f.rect, -8), 48)
+        nm_rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -8), 48)
         draw_text_center(trait.name, nm_rect, "text_16", sp_color)
 
         for lv := max_trait_levels; lv > 0; lv -= 1 {
-            pr_rect := core.rect_line_bottom(nm_rect, nm_rect.w/max_trait_levels)
+            pr_rect := core.rect_bar_bottom(nm_rect, nm_rect.w/max_trait_levels)
             pr_rect.w /= max_trait_levels
             pr_rect.x += f32(lv-1)*pr_rect.w
 

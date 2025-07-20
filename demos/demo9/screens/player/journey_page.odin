@@ -77,6 +77,9 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
 
+    card_gap :: 15
+    ui.layout_flow(list).gap = card_gap
+
     for data_section in data.codex {
         section := ui.add_frame(list, {
             name        = data_section.id,
@@ -92,14 +95,16 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
 
         topics := ui.add_frame(list, {
             name    = "topics",
-            layout  = { dir=.right, auto_size=.full, size={150,230}, gap=15 },
+            layout  = ui.Grid { dir=.right_down, wrap=5, aspect_ratio=15./23, gap=card_gap, auto_size=true },
         })
+
         for data_topic in data_section.topics {
             ui.add_frame(topics, {
-                name=data_topic.id,
-                flags={.terse},
-                text=data_topic.title,
-                text_format="<wrap,pad=8,font=text_4l,color=primary_l2>%s",
+                name        = data_topic.id,
+                flags       = {.terse},
+                text        = data_topic.title,
+                text_format = "<wrap,pad=8,font=text_4l,color=primary_l2>%s",
+                draw        = partials.draw_header_bar_primary,
             })
         }
     }
@@ -108,8 +113,9 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
     _, list, details := partials.add_screen_page_body_with_list_and_details(parent, "tutorial")
 
-    details.layout.dir = .up_and_down
-    details.layout.align = .center
+    details_flow := ui.layout_flow(details)
+    details_flow.dir = .up_and_down
+    details_flow.align = .center
     details.draw = nil
 
     for tip in data.tutorial_tips {
@@ -126,7 +132,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
     details_column := ui.add_frame(details, {
         name    = "column",
         size    = {400,0},
-        layout  = {dir=.up_and_down,auto_size=.dir,gap=1},
+        layout  = ui.Flow { dir=.up_and_down,auto_size=.dir,gap=1 },
         text    = "primary_d8",
         draw    = partials.draw_color_rect,
     })

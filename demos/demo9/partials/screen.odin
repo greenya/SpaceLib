@@ -34,7 +34,7 @@ add_screen_header_bar :: proc (screen: ^ui.Frame) {
     )
 
     tabs := ui.add_frame(header_bar,
-        { name="tabs", layout={ dir=.left_and_right, auto_size=.dir } },
+        { name="tabs", layout=ui.Flow{ dir=.left_and_right, auto_size=.dir } },
         { point=.top },
         { point=.bottom },
     )
@@ -65,13 +65,13 @@ add_screen_footer_bar :: proc (screen: ^ui.Frame) {
     )
 
     ui.add_frame(footer_bar,
-        { name="pyramid_buttons", layout={ dir=.right, align=.end, gap=20 } },
+        { name="pyramid_buttons", layout=ui.Flow{ dir=.right, align=.end, gap=20 } },
     )
 
     move_screen_pyramid_buttons(screen, .left)
 
     ui.add_frame(footer_bar,
-        { name="key_buttons", layout={ dir=.left, align=.center, gap=6 } },
+        { name="key_buttons", layout=ui.Flow{ dir=.left, align=.center, gap=6 } },
         { point=.right, offset={-screen_pad,0} },
     )
 }
@@ -114,12 +114,13 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
 
 move_screen_pyramid_buttons :: proc (screen: ^ui.Frame, side: enum { left, center }) {
     list := ui.get(screen, "footer_bar/pyramid_buttons")
+    flow := ui.layout_flow(list)
     switch side {
     case .left:
-        list.layout.dir = .right
+        flow.dir = .right
         ui.set_anchors(list, { point=.bottom_left, offset={screen_pad,0} })
     case .center:
-        list.layout.dir = .left_and_right
+        flow.dir = .left_and_right
         ui.set_anchors(list, { point=.bottom })
     }
 }
@@ -163,7 +164,7 @@ add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: str
     )
 
     list = ui.add_frame(body,
-        { name="list", flags={.scissor}, layout={dir=.down,gap=10,scroll={step=20}} },
+        { name="list", flags={.scissor}, layout=ui.Flow{ dir=.down,gap=10,scroll={step=20} } },
         { point=.top_left },
         { point=.bottom_right, rel_point=.bottom, offset={-40,0} },
     )
@@ -173,7 +174,7 @@ add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: str
     details = ui.add_frame(body, {
         name    = "details",
         flags   = {.scissor},
-        layout  = {dir=.down,pad=1,scroll={step=20}},
+        layout  = ui.Flow { dir=.down,pad=1,scroll={step=20} },
         text    = "#0005",
         draw    = draw_gradient_fade_down_rect,
     },
