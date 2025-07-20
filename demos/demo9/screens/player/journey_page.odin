@@ -47,7 +47,7 @@ add_journey_page :: proc () {
 
     for t in journey_page_tabs do t.add(content)
 
-    ui.print_frame_tree(journey_page, max_depth=2)
+    // ui.print_frame_tree(journey_page, max_depth=2)
 
     ui.click(tabs, "codex")
 }
@@ -72,10 +72,14 @@ add_journey_page_contract :: proc (parent: ^ui.Frame) {
     partials.add_placeholder_note(contract, "CONTRACT SECTION GOES HERE...")
 }
 
+codex_page: ^ui.Frame
+
 add_journey_page_codex :: proc (parent: ^ui.Frame) {
-    _, list, _ := partials.add_screen_page_body_with_list_and_details(
+    page, list, details := partials.add_screen_page_body_with_list_and_details(
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
+
+    codex_page = page
 
     for data_section in data.codex {
         section := ui.add_frame(list, {
@@ -117,10 +121,53 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
             })
         }
     }
+
+    details_flow := ui.layout_flow(details)
+    details_flow.pad = 15
+    details_flow.gap = 15
+
+    max_articles :: 10
+    for i in 0..<max_articles {
+        article := ui.add_frame(details, {
+            name        = fmt.tprintf("article_%i", i),
+            flags       = {.terse,.terse_height},
+            text_format = "<wrap,left,font=text_4r,color=primary_l2>%s\n\n<font=text_4l,color=primary_d2>%s",
+        })
+
+        at := fmt.tprintf("%i. Title Goes Here...", i+1)
+        ac := fmt.tprint("Content goes here...")
+        ui.set_text(article, at, ac)
+
+        ui.add_frame(details, {
+            name    = fmt.tprintf("line_%i", i),
+            text    = "primary_a2",
+            size    = {0,1},
+            draw    = partials.draw_color_rect,
+        })
+    }
 }
 
 journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
-    fmt.print(#procedure, section_id, topic_id)
+    fmt.println("-------------------------------------")
+    fmt.println("section_id", section_id)
+    fmt.println("topic_id", topic_id)
+    fmt.println("-------------------------------------")
+
+    data_topic := data.get_codex_topic(section_id, topic_id)
+    fmt.println("data_topic", data_topic)
+
+    header := ui.get(codex_page, "details_header")
+    ui.set_text(header, data_topic.title)
+
+    aside := ui.get(header, "aside")
+    unlocked_articles, total_articles := data.get_codex_topic_stats(data_topic)
+    ui.set_text(aside, fmt.tprintf("%i/%i", unlocked_articles, total_articles))
+
+    // TODO: fill details
+    // details := ui.get(codex_page, "details")
+
+    // ui.print_frame_tree(codex_page, max_depth=2)
+    ui.update(codex_page)
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {

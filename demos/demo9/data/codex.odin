@@ -69,3 +69,16 @@ get_codex_topic_stats :: proc (topic: Codex_Topic) -> (unlocked_articles, total_
     for a in topic.articles do if a.locked == "" do unlocked_articles += 1
     return
 }
+
+get_codex_topic :: proc (section_id, topic_id: string) -> Codex_Topic {
+    for s in codex {
+        if s.id == section_id {
+            for t in s.topics {
+                if t.id == topic_id {
+                    return t
+                }
+            }
+        }
+    }
+    fmt.panicf("Failed to locate topic \"%s\" in section \"%s\"", topic_id, section_id)
+}

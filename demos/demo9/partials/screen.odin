@@ -191,7 +191,7 @@ add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: str
             name        = "details_header",
             size_min    = {0,header_h},
             flags       = {.terse,.terse_height},
-            text_format = "<wrap,left,pad=14:6,font=text_4m,color=primary_l3>%s",
+            text_format = "<wrap,left,pad=15:6,font=text_4m,color=primary_l3>%s",
             draw        = draw_header_bar_primary,
         },
             { point=.top_left, rel_point=.top, offset={40,0} },
