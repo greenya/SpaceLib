@@ -36,12 +36,6 @@ TODO: terse: add support for "image" command <image=name[:left][:right]>, add pr
 
 TODO: terse: investigate if text measuring of a word can be improved (performance wise) by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
-TODO: draw.texture() should take arg of enum { .fill (default), .contain/fit, .cover }. The idea is to have it like this https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit, e.g.:
-    - .fill -- draw src rect -> dest rect
-    - .fit -- aspect-ratio aware fit into dest rect
-    - .cover -- aspect ratio aware cover dest rect
-    p.s.: use center alignment always OR add additional enum arg { .center (default), .start, .end }
-
 TODO: ui: Grid: support other directions
 TODO: ui: Grid: support scroll
 

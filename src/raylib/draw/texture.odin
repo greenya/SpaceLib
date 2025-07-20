@@ -3,14 +3,64 @@ package spacelib_raylib_draw
 import rl "vendor:raylib"
 import "../../core"
 
-texture :: proc (tex: rl.Texture, src, dst: Rect, origin := Vec2 {}, rot_degree := f32(0), tint := core.white) {
+// https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
+Texture_Fit :: enum {
+    // aspect-ratio unaware scaling fit:
+    // - src fills dst
+    fill,
+
+    // aspect-ratio aware scaling fit:
+    // - whole src will be shown inside dst
+    // - the align defines part of dst to stick to
+    contain,
+
+    // aspect-ratio aware scaling fit:
+    // - whole dst gets covered by src
+    // - the align defines which part of src should stay in dst (will not be truncated)
+    cover,
+
+    // aspect-ratio aware unscaling fit:
+    // - src placed in the center of dst
+    // - src parts get truncated when outside of dst
+    none,
+}
+
+// extra alignment for .contain and .cover only
+Texture_Fit_Align :: enum {
+    center,
+    start,
+    end,
+}
+
+texture :: proc (
+    tex         : rl.Texture,
+    src         : Rect,
+    dst         : Rect,
+    origin      := Vec2 {},
+    rot_degree  := f32(0),
+    fit         := Texture_Fit.fill,
+    fit_align   := Texture_Fit_Align.center,
+    tint        := core.white,
+) {
+    src := src
+    dst := dst
+
+    if fit != .fill {
+        fit_src_to_dst(&src, &dst, fit, fit_align)
+    }
+
     src_rl := transmute (rl.Rectangle) src
     dst_rl := transmute (rl.Rectangle) dst
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_degree, tint_rl)
 }
 
-texture_wrap :: proc (tex: rl.Texture, src, dst: Rect, tint := core.white) {
+texture_wrap :: proc (
+    tex     : rl.Texture,
+    src     : Rect,
+    dst     : Rect,
+    tint    := core.white,
+) {
     is_whole_tex_used := src.x == 0 && src.y == 0 && i32(src.w) == tex.width && i32(src.h) == tex.height
     if is_whole_tex_used {
         texture(tex, Rect { 0, 0, dst.w, dst.h }, dst, tint=tint)
@@ -35,8 +85,84 @@ texture_wrap :: proc (tex: rl.Texture, src, dst: Rect, tint := core.white) {
     }
 }
 
-texture_npatch :: proc (tex: rl.Texture, info: rl.NPatchInfo, dst: Rect, origin := Vec2 {}, rot_degree := f32(0), tint := Color {255,255,255,255}) {
+texture_npatch :: proc (
+    tex         : rl.Texture,
+    info        : rl.NPatchInfo,
+    dst         : Rect,
+    origin      := Vec2 {},
+    rot_degree  := f32(0),
+    tint        := core.white,
+) {
     dst_rl := transmute (rl.Rectangle) dst
     tint_rl := rl.Color(tint)
     rl.DrawTextureNPatch(tex, info, dst_rl, origin, rot_degree, tint_rl)
+}
+
+@private
+fit_src_to_dst :: #force_inline proc (src, dst: ^Rect, fit: Texture_Fit, fit_align: Texture_Fit_Align) {
+    if src.w < 1 || src.h < 1 || dst.w < 1 || dst.h < 1 do return
+
+    switch fit {
+    case .fill:
+        // nothing to do
+
+    case .contain:
+        src_aspect := src.w/src.h
+        dst_aspect := dst.w/dst.h
+        if dst_aspect > src_aspect {
+            dst_w := dst.w / dst_aspect
+            switch fit_align {
+            case .center    : dst.x += (dst.w-dst_w)/2
+            case .start     : // already aligned
+            case .end       : dst.x += dst.w-dst_w
+            }
+            dst.w = dst_w
+        } else {
+            dst_h := dst.h * dst_aspect
+            switch fit_align {
+            case .center    : dst.y += (dst.h-dst_h)/2
+            case .start     : // already aligned
+            case .end       : dst.y += dst.h-dst_h
+            }
+            dst.h = dst_h
+        }
+
+    case .cover:
+        src_aspect := src.w/src.h
+        dst_aspect := dst.w/dst.h
+        if src_aspect > dst_aspect {
+            src_w := src.w * dst_aspect
+            switch fit_align {
+            case .center    : src.x += (src.w-src_w)/2
+            case .start     : // already aligned
+            case .end       : src.x += src.w-src_w
+            }
+            src.w = src_w
+        } else {
+            src_h := src.h / dst_aspect
+            switch fit_align {
+            case .center    : src.y += (src.h-src_h)/2
+            case .start     : // already aligned
+            case .end       : src.y += src.h-src_h
+            }
+            src.h = src_h
+        }
+
+    case .none:
+        dst_center := core.rect_center(dst^)
+        src_proj := core.rect_from_center(dst_center, { src.w, src.h })
+        dst_proj := core.rect_intersection(dst^, src_proj)
+
+        proj_dh := (src.h-dst_proj.h)/2
+        proj_dx := (src.w-dst_proj.w)/2
+        dst^ = core.rect_inflated(dst_proj, {proj_dx,proj_dh})
+
+        off_w_half_neg := min(0, (dst_proj.w-src.w)/2)
+        off_h_half_neg := min(0, (dst_proj.h-src.h)/2)
+        if off_w_half_neg < 0 || off_h_half_neg < 0 {
+            off_size := Vec2 { off_w_half_neg, off_h_half_neg }
+            src^ = core.rect_inflated(src^, off_size)
+            dst^ = core.rect_inflated(dst^, off_size)
+        }
+    }
 }
