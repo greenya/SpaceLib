@@ -164,7 +164,7 @@ add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: str
     )
 
     list = ui.add_frame(body,
-        { name="list", flags={.scissor}, layout=ui.Flow{ dir=.down,gap=10,scroll={step=20} } },
+        { name="list", flags={.scissor}, layout=ui.Flow{ dir=.down,gap=10,scroll={step=30} } },
         { point=.top_left },
         { point=.bottom_right, rel_point=.bottom, offset={-40,0} },
     )

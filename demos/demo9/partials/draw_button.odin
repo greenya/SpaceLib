@@ -39,7 +39,7 @@ draw_button_diamond :: proc (f: ^ui.Frame) {
     draw.diamond_lines(rect, 3, ln_color)
 
     sp_color := colors.get(.primary, brightness=f.selected ? 0 : -.5 * (1-hv_ratio))
-    draw_sprite(f.text, core.rect_inflated(rect, -rect.w/4), sp_color)
+    draw_sprite(f.text, core.rect_inflated(rect, -rect.w/4), tint=sp_color)
 }
 
 draw_button_featured :: proc (f: ^ui.Frame) {
@@ -94,7 +94,7 @@ draw_button_radio_pin :: proc (f: ^ui.Frame) {
 
 draw_button_radio_pin_nav :: proc (f: ^ui.Frame) {
     tx_color := colors.get(.primary, brightness=f.entered ? .3 : -.3)
-    draw_sprite(f.text, f.rect, tx_color)
+    draw_sprite(f.text, f.rect, tint=tx_color)
 }
 
 draw_button_dropdown_button :: proc (f: ^ui.Frame) {
@@ -108,7 +108,7 @@ draw_button_dropdown_button :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 1, br_color)
 
     sp_rect := Rect { f.rect.x+f.rect.w-f.rect.h, f.rect.y, f.rect.h, f.rect.h }
-    draw_sprite("arrow_drop_down", sp_rect, br_color)
+    draw_sprite("arrow_drop_down", sp_rect, tint=br_color)
 }
 
 draw_button_dropdown_rect :: proc (f: ^ui.Frame) {

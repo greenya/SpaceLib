@@ -107,7 +107,7 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     )
 
     scroll_container := ui.add_frame(welcome_area,
-        { name="scroll_container", layout=ui.Flow{ dir=.down,scroll={step=10} }, flags={.scissor} },
+        { name="scroll_container", layout=ui.Flow{ dir=.down,scroll={step=20} }, flags={.scissor} },
         { point=.top_left, rel_point=.bottom_left, rel_frame=header },
         { point=.bottom_right },
     )
@@ -168,7 +168,7 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
     )
 
     scroll_container := ui.add_frame(notifications_area,
-        { name="scroll_container", layout=ui.Flow{ dir=.down,scroll={step=10} }, flags={.scissor} },
+        { name="scroll_container", layout=ui.Flow{ dir=.down,scroll={step=20} }, flags={.scissor} },
         { point=.top_left, rel_point=.bottom_left, offset={0,10}, rel_frame=title },
         { point=.bottom_right },
     )

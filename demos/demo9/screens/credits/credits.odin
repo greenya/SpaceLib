@@ -56,9 +56,9 @@ add_credits_page :: proc () {
     content := ui.add_frame(page, {
         name    = "content",
         flags   = {.scissor},
-        layout  = ui.Flow { dir=.down, scroll={step=10} },
+        layout  = ui.Flow { dir=.down, scroll={step=30} },
         tick    = proc (f: ^ui.Frame) {
-            if is_autoscroll do ui.wheel(f, -.033)
+            if is_autoscroll do ui.wheel(f, -.011)
         },
     },
         { point=.top_left, offset={content_pad,0} },

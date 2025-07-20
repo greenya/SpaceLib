@@ -19,11 +19,11 @@ _ :: fmt
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
+draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit_align := draw.Texture_Fit_Align.center, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
     case Rect           : if sprite.wrap    do draw.texture_wrap    (sprite.tex^, info, rect, tint=tint)
-                          else              do draw.texture         (sprite.tex^, info, rect, tint=tint)
+                          else              do draw.texture         (sprite.tex^, info, rect, fit=fit, fit_align=fit_align, tint=tint)
     case rl.NPatchInfo  :                      draw.texture_npatch  (sprite.tex^, info, rect, tint=tint)
     }
 }
@@ -48,7 +48,7 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
             case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, t.opacity, shadow_only=_shadow_pass)
             case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), t.opacity, font="text_4r", shadow_only=_shadow_pass)
             case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, t.opacity, shape=.diamond, shadow_only=_shadow_pass)
-            case                                    : draw_sprite(word.text, rect, tint)
+            case                                    : draw_sprite(word.text, rect, tint=tint)
             }
         } else if word.text != "" && word.text != " " {
             draw.text(word.text, {rect.x,rect.y}, word.font, tint)
@@ -68,7 +68,7 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,
     if !shadow_only {
         tx_color := colors.get(.bg0, alpha=opacity)
         switch text {
-        case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tx_color)
+        case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tint=tx_color)
         case        : draw_text_center(text, rect, font, tx_color)
         }
     }
@@ -82,7 +82,7 @@ draw_icon_diamond :: proc (icon: string, rect: Rect, bg_color: Color, opacity: f
     draw.diamond_lines(rect, 3, ln_color)
 
     sp_color := colors.get(.primary, alpha=opacity)
-    draw_sprite(icon, core.rect_inflated(rect, -rect.w/4), sp_color)
+    draw_sprite(icon, core.rect_inflated(rect, -rect.w/4), tint=sp_color)
 }
 
 draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
@@ -248,7 +248,7 @@ draw_window_rect :: proc (f: ^ui.Frame) {
 
     icon_rect := core.rect_scaled(dim_rect, .6)
     icon_color := colors.get(.primary, alpha=f.opacity)
-    draw_sprite("priority_high", icon_rect, icon_color)
+    draw_sprite("priority_high", icon_rect, tint=icon_color)
 }
 
 draw_card_rect :: proc (f: ^ui.Frame) {
@@ -280,10 +280,42 @@ draw_label_box :: proc (f: ^ui.Frame) {
 }
 
 draw_codex_section_item :: proc (f: ^ui.Frame) {
-    draw.rect(f.rect, colors.get(.primary, brightness=-.7))
-    draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=-.4))
-    draw_text_center("ART GOES HERE", f.rect, "text_6l", colors.get(.primary, brightness=-.6))
+    bg_color := colors.get(.primary, brightness=-.7)
+    draw.rect(f.rect, bg_color)
+
+    if f.selected {
+        gr_rect := core.rect_bar_bottom(f.rect, f.rect.h/10)
+        draw.rect_gradient_vertical(gr_rect, bg_color, colors.get(.primary))
+    }
+
+    sp_rect := core.rect_moved(f.rect, {-f.rect.w/20,0})
+    draw_sprite("book-pile", sp_rect, fit=.contain, fit_align=.end, tint=colors.get(.primary, brightness=-.4))
+
+    draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
     draw_terse(f.terse, drop_shadow=true)
+}
+
+draw_codex_topic_item :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, colors.get(.primary, brightness=-.8))
+
+    sp_rect := core.rect_inflated(f.rect, -f.rect.h/20)
+    draw_sprite("book-cover", sp_rect, fit=.contain, tint=colors.get(.primary, brightness=-.4))
+
+    hv_ratio := ui.hover_ratio(f, .Linear, .111, .Cubic_Out, .333)
+
+    tx_offset := Vec2 { 0, f.rect.h/4 } * (1-hv_ratio)
+
+    tx_bg_rect_h := max(f.rect.h/4, f.terse.rect.h)
+    tx_bg_rect_h += hv_ratio * (f.rect.h-tx_bg_rect_h)
+    tx_bg_rect := core.rect_bar_center_horizontal(f.rect, tx_bg_rect_h)
+    tx_bg_rect = core.rect_moved(tx_bg_rect, tx_offset)
+    tx_bg_color := core.ease_color(core.black, colors.get(.accent, brightness=-.6), hv_ratio)
+    tx_bg_color = core.alpha(tx_bg_color, .8)
+    draw.rect(tx_bg_rect, tx_bg_color)
+
+    draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
+
+    draw_terse(f.terse, offset=tx_offset, drop_shadow=true)
 }
 
 draw_icon_diamond_primary :: proc (f: ^ui.Frame) {

@@ -39,18 +39,18 @@ draw_screen_tab_points :: proc (f: ^ui.Frame) {
 
 draw_screen_pyramid_button :: proc (f: ^ui.Frame) {
     sp_color := colors.get(f.entered ? .accent : .primary, brightness=-.5, alpha=f.opacity)
-    draw_sprite("shape_pilar_gradient", f.rect, sp_color)
+    draw_sprite("shape_pilar_gradient", f.rect, tint=sp_color)
 
     if f.captured {
         pl_color := core.brightness(sp_color, .1)
-        draw_sprite("shape_pilar_gradient", f.rect, pl_color)
+        draw_sprite("shape_pilar_gradient", f.rect, tint=pl_color)
     }
 }
 
 draw_screen_pyramid_button_icon :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f.parent, .Cubic_Out, .333, .Linear, .222)
     sp_color := colors.get(.primary, brightness=-.5*(1-hv_ratio), alpha=f.opacity)
-    draw_sprite(f.text, f.rect, sp_color)
+    draw_sprite(f.text, f.rect, tint=sp_color)
 }
 
 draw_screen_curtain_cross_switch_screen_ratio :: .7

@@ -116,7 +116,7 @@ add_list_column :: proc (page: ^ui.Frame) -> ^ui.Frame {
     pad :: partials.screen_pad
 
     list := ui.add_frame(page,
-        { name="list", size={560,0}, layout=ui.Flow{ dir=.down,size={0,80},pad=1,gap=15,scroll={step=20} }, flags={.scissor} },
+        { name="list", size={560,0}, layout=ui.Flow{ dir=.down,size={0,80},pad=1,gap=15,scroll={step=30} }, flags={.scissor} },
         { point=.top_left, offset={1.5*pad,2*pad} },
         { point=.bottom_left, offset={1.5*pad,-2*pad} },
     )
@@ -150,7 +150,7 @@ add_details_column :: proc (page, list: ^ui.Frame) -> ^ui.Frame {
     )
 
     content := ui.add_frame(details,
-        { name="content", layout=ui.Flow{ dir=.down,scroll={step=10} }, flags={.scissor} },
+        { name="content", layout=ui.Flow{ dir=.down,scroll={step=30} }, flags={.scissor} },
         { point=.top_left, rel_point=.bottom_left, rel_frame=line, offset={0,20} },
         { point=.top_right, rel_point=.bottom_right, rel_frame=line, offset={0,20} },
         { point=.bottom, rel_point=.bottom },

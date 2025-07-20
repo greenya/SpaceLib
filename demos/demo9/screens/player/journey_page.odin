@@ -77,17 +77,19 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
 
-    card_gap :: 15
-    ui.layout_flow(list).gap = card_gap
-
     for data_section in data.codex {
         section := ui.add_frame(list, {
             name        = data_section.id,
-            size        = {0,220},
+            size        = {0,200},
             flags       = {.check,.terse},
             text_format = "<wrap,top,left,pad=24:16,font=text_4m,color=primary_l3>%s\n<gap=.2,font=text_4r,color=primary_d3>%s",
             draw        = partials.draw_codex_section_item,
-            // click       = ...
+            click       = proc (f: ^ui.Frame) {
+                topics := f.parent.children[ui.index(f)+1]
+                assert(topics.name == "topics")
+                if f.selected   do ui.show(topics)
+                else            do ui.hide(topics)
+            },
         })
 
         finished_topics, total_topics := data.get_codex_section_stats(data_section)
@@ -95,7 +97,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
 
         topics := ui.add_frame(list, {
             name    = "topics",
-            layout  = ui.Grid { dir=.right_down, wrap=5, aspect_ratio=15./23, gap=card_gap, auto_size=true },
+            flags   = {.hidden},
+            layout  = ui.Grid { dir=.right_down, wrap=5, aspect_ratio=15./23, gap=10, auto_size=true },
         })
 
         for data_topic in data_section.topics {
@@ -103,11 +106,21 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
                 name        = data_topic.id,
                 flags       = {.terse},
                 text        = data_topic.title,
-                text_format = "<wrap,pad=8,font=text_4l,color=primary_l2>%s",
-                draw        = partials.draw_header_bar_primary,
+                text_format = "<wrap,pad=12:6,font=text_4l,color=primary_l2>%s",
+                draw        = partials.draw_codex_topic_item,
+                click       = proc (f: ^ui.Frame) {
+                    topics := f.parent
+                    assert(topics.name == "topics")
+                    section := topics.parent.children[ui.index(topics)-1]
+                    journey_page_show_codex_topic(section.name, f.name)
+                },
             })
         }
     }
+}
+
+journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
+    fmt.print(#procedure, section_id, topic_id)
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
