@@ -329,8 +329,28 @@ layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
     panic("Layout is not Grid")
 }
 
-first_visible_child :: #force_inline proc (f: ^Frame) -> ^Frame {
-    for child in f.children do if .hidden not_in child.flags do return child
+prev_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
+    if f.parent != nil {
+        prev_idx := index(f) - 1
+        if prev_idx >= 0 {
+            return f.parent.children[prev_idx]
+        }
+    }
+    return nil
+}
+
+next_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
+    if f.parent != nil {
+        next_idx := index(f) + 1
+        if next_idx < len(f.parent.children) {
+            return f.parent.children[next_idx]
+        }
+    }
+    return nil
+}
+
+first_visible_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+    for child in parent.children do if .hidden not_in child.flags do return child
     return nil
 }
 
