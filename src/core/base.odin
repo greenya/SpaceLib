@@ -27,10 +27,12 @@ rect_half_right     :: #force_inline proc (r: Rect) -> Rect { return { r.x+r.w/2
 rect_half_top       :: #force_inline proc (r: Rect) -> Rect { return { r.x, r.y, r.w, r.h/2 } }
 rect_half_bottom    :: #force_inline proc (r: Rect) -> Rect { return { r.x, r.y+r.h/2, r.w, r.h/2 } }
 
-rect_bar_top        :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y, r.w, thick } }
-rect_bar_bottom     :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y+r.h-thick, r.w, thick } }
-rect_bar_left       :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y, thick, r.h } }
-rect_bar_right      :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x+r.w-thick, r.y, thick, r.h } }
+rect_bar_top                :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y, r.w, thick } }
+rect_bar_bottom             :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y+r.h-thick, r.w, thick } }
+rect_bar_left               :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y, thick, r.h } }
+rect_bar_right              :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x+r.w-thick, r.y, thick, r.h } }
+rect_bar_center_horizontal  :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y+(r.h-thick)/2, r.w, thick } }
+rect_bar_center_vertical    :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x+(r.w-thick)/2, r.y, thick, r.h } }
 
 rect_moved :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
     return { r.x+v.x, r.y+v.y, r.w, r.h }
