@@ -42,6 +42,9 @@ TODO: draw.texture() should take arg of enum { .fill (default), .contain/fit, .c
     - .cover -- aspect ratio aware cover dest rect
     p.s.: use center alignment always OR add additional enum arg { .center (default), .start, .end }
 
+TODO: ui: Grid: support other directions
+TODO: ui: Grid: support scroll
+
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
 TODO: ui: add support for "size_ratio"
@@ -81,8 +84,6 @@ TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f)
 TODO: [?] ui: add "wait=f32(0)" arg to ui.animate(),
     add Frame.anim.state (enum: none, waiting, animating)
     it should do: waiting (if wait>0) -> animating (for dt) -> ratio=0 -> ... ratio=1 -> none
-
-TODO: [?] ui: add support for wrapping items ("wrap=true") when using "layout"; rework "gap" and "pad" to be Vec2
 
 TODO: [?] ui: add support for automatic child frames generation for each text_terse.groups item
     // - Frame.name should be group name

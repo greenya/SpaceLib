@@ -71,34 +71,43 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
     thick :: 2
     color := core.alpha(_debug_frame_color(f), .222)
 
-    #partial switch f.layout.dir {
-    case .left:
-        rect_x2 := f.rect.x + f.rect.w
-        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            line({ rect_x2, y }, { rect_x2+size, y }, thick, color)
+    switch l in f.layout {
+    case ui.Flow:
+        switch l.dir {
+        case .left:
+            rect_x2 := f.rect.x + f.rect.w
+            for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+                line({ rect_x2, y }, { rect_x2+size, y }, thick, color)
+            }
+        case .right:
+            for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+                line({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
+            }
+        case .left_and_right:
+            rect_cx := f.rect.x + f.rect.w/2
+            for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
+                line({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
+            }
+        case .up:
+            rect_y2 := f.rect.y + f.rect.h
+            for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+                line({ x, rect_y2 }, { x, rect_y2+size }, thick, color)
+            }
+        case .down:
+            for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+                line({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
+            }
+        case .up_and_down:
+            rect_cy := f.rect.y + f.rect.h/2
+            for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
+                line({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
+            }
         }
-    case .right:
-        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            line({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
-        }
-    case .left_and_right:
-        rect_cx := f.rect.x + f.rect.w/2
-        for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
-            line({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
-        }
-    case .up:
-        rect_y2 := f.rect.y + f.rect.h
-        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            line({ x, rect_y2 }, { x, rect_y2+size }, thick, color)
-        }
-    case .down:
-        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            line({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
-        }
-    case .up_and_down:
-        rect_cy := f.rect.y + f.rect.h/2
-        for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
-            line({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
+    case ui.Grid:
+        switch l.dir {
+        case .right_down:
+            line({ f.rect.x+20, f.rect.y+20 }, { f.rect.x+20+20, f.rect.y+20 }, thick*2, color)
+            line({ f.rect.x+20+20, f.rect.y+20 }, { f.rect.x+20+20, f.rect.y+20+20 }, thick*2, color)
         }
     }
 }

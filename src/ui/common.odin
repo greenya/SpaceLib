@@ -25,16 +25,19 @@ print_frame_tree :: proc (
     if f.entered                do fmt.sbprint(&sb, " entered")
     if f.captured               do fmt.sbprint(&sb, " captured")
     if f.selected               do fmt.sbprint(&sb, " selected")
-    if f.layout.dir != .none    do fmt.sbprintf(&sb, " layout")
+
+    switch l in f.layout {
+    case Flow: fmt.sbprintf(&sb, " flow")
+    case Grid: fmt.sbprintf(&sb, " grid")
+    }
 
     for v in Flag do if v in f.flags && v not_in skip_flags do fmt.sbprintf(&sb, " %v", v)
 
     if sb.buf[len(sb.buf)-1] != '{' do strings.write_rune(&sb, ' ')
     strings.write_rune(&sb, '}')
 
-    if _depth == max_depth && len(f.children) > 0 {
-        fmt.sbprintf(&sb, " // children=%d", len(f.children))
-    }
+    if _depth == max_depth && len(f.children) == 1  do fmt.sbprint(&sb, " // 1 child")
+    if _depth == max_depth && len(f.children) > 1   do fmt.sbprintf(&sb, " // %d children", len(f.children))
 
     fmt.println(strings.to_string(sb))
 
