@@ -629,6 +629,15 @@ destroy_frame_tree :: proc (f: ^Frame) {
 }
 
 @private
+destroy_terse_frame_tree :: proc (f: ^Frame) {
+    for child in f.children do destroy_terse_frame_tree(child)
+    if f.terse != nil {
+        terse.destroy(f.terse)
+        f.terse = nil
+    }
+}
+
+@private
 prepare_frame_tree :: proc (f: ^Frame) {
     if f.anim.tick != nil {
         f.anim.ratio = core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)

@@ -225,6 +225,10 @@ draw :: proc (ui: ^UI) {
     draw_frame_tree(ui.root)
 }
 
+reset_terse :: proc (ui: ^UI) {
+    destroy_terse_frame_tree(ui.root)
+}
+
 @private
 push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
     assert(ui.phase != .none)
