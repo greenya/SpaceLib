@@ -40,23 +40,27 @@ Font :: struct {
 @private fonts: [ID] ^Font
 @private names: map [string] ID
 
-create :: proc () {
+create :: proc (scale := f32(1)) {
     assert(names == nil)
     names = core.map_enum_names_to_values(ID)
 
+    assert(fonts == {})
     for id in ID do switch id {
     case .default: fonts[id] = create_font_from_default(scale=2)
-    case .text_4l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_4r: fonts[id] = create_font_from_data(#load("Kanit-Regular.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_4m: fonts[id] = create_font_from_data(#load("Kanit-Medium.ttf"), height=28, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_6l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=46, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_8l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=82, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4r: fonts[id] = create_font_from_data(#load("Kanit-Regular.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4m: fonts[id] = create_font_from_data(#load("Kanit-Medium.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_6l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=46*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_8l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=82*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     }
 }
 
 destroy :: proc () {
     delete(names)
+    names = nil
+
     for font, id in fonts do destroy_font(font, should_unload_rl_font = id!=.default)
+    fonts = {}
 }
 
 get :: #force_inline proc (id: ID) -> ^Font {
