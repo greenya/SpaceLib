@@ -9,6 +9,7 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame = nil, next: ^Fra
     if thumb != nil {
         ensure(thumb.parent != nil, "Thumb must have parent (track)")
         ensure(len(thumb.anchors) == 1, "Thumb must have exactly 1 anchor, its offset will reflect thumb position")
+        ensure(.capture in thumb.flags, "Thumb must have .capture flag to allow dragging")
     }
 
     content.actor = Actor_Scrollbar_Content { thumb=thumb, next=next, prev=prev }
