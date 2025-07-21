@@ -1,9 +1,9 @@
-#+private
 package data
 
 import "core:fmt"
 import "core:strings"
 
+@private
 Text :: union { string, [] string }
 
 text_to_string :: proc (text: Text, allocator := context.allocator) -> string {
@@ -15,6 +15,7 @@ text_to_string :: proc (text: Text, allocator := context.allocator) -> string {
     return strings.to_string(b)
 }
 
+@private
 delete_text :: proc (text: Text) {
     switch v in text {
     case string     : delete(v)

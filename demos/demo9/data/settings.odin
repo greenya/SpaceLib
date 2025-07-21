@@ -95,7 +95,3 @@ get_setting :: proc (id: string) -> Setting {
     }
     fmt.panicf("Setting \"%s\" was not found", id)
 }
-
-get_setting_desc :: proc (s: Setting, allocator := context.allocator) -> string {
-    return text_to_string(s.desc, allocator)
-}

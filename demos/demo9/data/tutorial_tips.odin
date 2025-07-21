@@ -36,7 +36,3 @@ get_tutorial_tip :: proc (id: string) -> Tutorial_Tip {
     for t in tutorial_tips do if t.id == id do return t
     fmt.panicf("Tutorial tip \"%s\" was not found", id)
 }
-
-get_tutorial_tip_desc :: proc (t: Tutorial_Tip, allocator := context.allocator) -> string {
-    return text_to_string(t.desc, allocator)
-}

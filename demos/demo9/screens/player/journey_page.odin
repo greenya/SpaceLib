@@ -89,8 +89,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
             text_format = "<wrap,top,left,pad=24:16,font=text_4m,color=primary_l3>%s\n<gap=.2,font=text_4r,color=primary_d3>%s",
             draw        = partials.draw_codex_section_item,
             click       = proc (f: ^ui.Frame) {
-                topics := f.parent.children[ui.index(f)+1]
-                assert(topics.name == "topics")
+                topics := ui.next_sibling(f)
+                assert(topics != nil && topics.name == "topics")
                 if f.selected   do ui.show(topics)
                 else            do ui.hide(topics)
             },
@@ -114,8 +114,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
                 draw        = partials.draw_codex_topic_item,
                 click       = proc (f: ^ui.Frame) {
                     topics := f.parent
-                    assert(topics.name == "topics")
-                    section := topics.parent.children[ui.index(topics)-1]
+                    section := ui.prev_sibling(topics)
+                    assert(section != nil)
                     journey_page_show_codex_topic(section.name, f.name)
                 },
             })
@@ -127,34 +127,32 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
     details_flow.gap = 15
 
     max_articles :: 10
-    for i in 0..<max_articles {
-        article := ui.add_frame(details, {
-            name        = fmt.tprintf("article_%i", i),
-            flags       = {.terse,.terse_height},
-            text_format = "<wrap,left,font=text_4r,color=primary_l2>%s\n\n<font=text_4l,color=primary_d2>%s",
+    for _ in 0..<max_articles {
+        ui.add_frame(details, {
+            name    = "article",
+            flags   = {.terse,.terse_height},
         })
 
-        at := fmt.tprintf("%i. Title Goes Here...", i+1)
-        ac := fmt.tprint("Content goes here...")
-        ui.set_text(article, at, ac)
-
         ui.add_frame(details, {
-            name    = fmt.tprintf("line_%i", i),
+            name    = "line",
             text    = "primary_a2",
             size    = {0,1},
             draw    = partials.draw_color_rect,
         })
     }
+
+    // preselect topic
+    ui.click(list, "~the_imperium")
 }
 
 journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
-    fmt.println("-------------------------------------")
-    fmt.println("section_id", section_id)
-    fmt.println("topic_id", topic_id)
-    fmt.println("-------------------------------------")
+    // fmt.println("-------------------------------------")
+    // fmt.println("section_id", section_id)
+    // fmt.println("topic_id", topic_id)
+    // fmt.println("-------------------------------------")
 
     data_topic := data.get_codex_topic(section_id, topic_id)
-    fmt.println("data_topic", data_topic)
+    // fmt.println("data_topic", data_topic)
 
     header := ui.get(codex_page, "details_header")
     ui.set_text(header, data_topic.title)
@@ -163,10 +161,29 @@ journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
     unlocked_articles, total_articles := data.get_codex_topic_stats(data_topic)
     ui.set_text(aside, fmt.tprintf("%i/%i", unlocked_articles, total_articles))
 
-    // TODO: fill details
-    // details := ui.get(codex_page, "details")
+    details := ui.get(codex_page, "details")
+    ui.hide_children(details)
+    for data_article, i in data_topic.articles {
+        article := details.children[i*2]
 
-    // ui.print_frame_tree(codex_page, max_depth=2)
+        locked := data_article.locked
+        if locked != "" {
+            text := fmt.tprintf("<wrap,left,font=text_4l,color=primary_d5>%s", locked)
+            ui.set_text(article, text, shown=true)
+        } else {
+            text := fmt.tprintf(
+                "<wrap,left,font=text_4r,color=primary_l2>%i. %s\n\n<font=text_4l,color=primary_d2>%s",
+                i+1,
+                data_article.title,
+                data.text_to_string(data_article.desc, context.temp_allocator),
+            )
+            ui.set_text(article, text, shown=true)
+        }
+
+        line := details.children[i*2+1]
+        ui.show(line)
+    }
+
     ui.update(codex_page)
 }
 
@@ -234,7 +251,7 @@ journey_page_show_tutorial_tip :: proc (id: string) {
 
     // desc
     desc := ui.get(column, "desc")
-    tip_desc := data.get_tutorial_tip_desc(tip, context.temp_allocator)
+    tip_desc := data.text_to_string(tip.desc, context.temp_allocator)
     if tip_desc != ""   do ui.set_text(desc, tip_desc, shown=true)
     else                do ui.hide(desc)
 

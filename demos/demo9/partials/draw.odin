@@ -323,7 +323,7 @@ draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
 }
 
 draw_header_bar_primary :: proc (f: ^ui.Frame) {
-    color := colors.get(.primary, brightness=-.4, alpha=f.opacity)
+    color := colors.get(.primary, brightness=-.5, alpha=f.opacity)
     color_a0 := core.alpha(color, 0)
     draw.rect_gradient_horizontal(f.rect, color, color_a0)
     draw_terse(f.terse, drop_shadow=true)

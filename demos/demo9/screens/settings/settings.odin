@@ -174,7 +174,7 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
     ui.set_text(details, name)
 
     item := data.get_setting(name)
-    item_desc := data.get_setting_desc(item, context.temp_allocator)
+    item_desc := data.text_to_string(item.desc, context.temp_allocator)
     if item_desc != "" {
         ui.set_text(ui.get(details, "title"), item.title)
         ui.set_text(ui.get(details, "content/text"), item_desc)
