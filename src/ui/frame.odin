@@ -41,6 +41,7 @@ Frame :: struct {
     left_time       : f32,
     click           : Frame_Proc,
     wheel           : Frame_Wheel_Proc,
+    drag            : Frame_Drag_Proc,
     captured        : bool,
     selected        : bool,
 
@@ -168,6 +169,7 @@ Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
+Frame_Drag_Proc     :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2)
 
 add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
     assert(init.parent == nil, "Pass parent as argument, not in init value")
@@ -590,7 +592,10 @@ click_radio :: proc (f: ^Frame) {
 
 @private
 drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
-    if f.actor != nil do drag_actor(f, mouse_pos, captured_pos)
+    if disabled(f) do return
+
+    if f.actor != nil   do drag_actor(f, mouse_pos, captured_pos)
+    if f.drag != nil    do f.drag(f, mouse_pos, captured_pos)
 }
 
 @private
