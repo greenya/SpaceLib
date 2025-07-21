@@ -99,10 +99,11 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         finished_topics, total_topics := data.get_codex_section_stats(data_section)
         ui.set_text(section, data_section.title, fmt.tprintf("%i/%i", finished_topics, total_topics))
 
+        topics_wrap :: 5
         topics := ui.add_frame(list, {
             name    = "topics",
             flags   = {.hidden},
-            layout  = ui.Grid { dir=.right_down, wrap=5, aspect_ratio=15./23, gap=10, auto_size=true },
+            layout  = ui.Grid { dir=.right_down, wrap=topics_wrap, aspect_ratio=15./23, gap=10, auto_size=true },
         })
 
         for data_topic in data_section.topics {
@@ -118,6 +119,14 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
                     assert(section != nil)
                     journey_page_show_codex_topic(section.name, f.name)
                 },
+            })
+        }
+
+        empty_cards_to_add := topics_wrap - (len(data_section.topics) % topics_wrap)
+        if empty_cards_to_add < topics_wrap do for _ in 0..<empty_cards_to_add {
+            ui.add_frame(topics, {
+                text = "primary_a3",
+                draw = partials.draw_gradient_fade_up_and_down_rect,
             })
         }
     }
