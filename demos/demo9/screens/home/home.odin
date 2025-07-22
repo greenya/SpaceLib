@@ -109,7 +109,7 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
         { point=.bottom_right },
     )
 
-    partials.add_placeholder_image(scroll_container, ._16x9)
+    partials.add_placeholder_image(scroll_container, size_aspect=16./9)
 
     content := ui.add_frame(scroll_container,
         { name="content", text_format="<wrap,pad=20:10,left,font=text_4r,color=primary_d2>%s", flags={.terse,.terse_height} },

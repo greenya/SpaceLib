@@ -251,7 +251,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         draw        = partials.draw_hexagon_rect_wide_hangout_accent,
     })
 
-    details.image = partials.add_placeholder_image(details.column, ._11x5)
+    details.image = partials.add_placeholder_image(details.column, size_aspect=11./5)
     ui.set_name(details.image, "image")
 
     details.desc = ui.add_frame(details.column, {

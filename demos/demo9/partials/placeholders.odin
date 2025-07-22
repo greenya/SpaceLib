@@ -14,27 +14,17 @@ add_placeholder_note :: proc (parent: ^ui.Frame, text: string) -> ^ui.Frame {
     )
 }
 
-Placeholder_Image_Aspect_Ratio :: enum {
-    default,
-    _16x9,
-    _11x5,
-}
+add_placeholder_image :: proc (parent: ^ui.Frame, size_aspect := f32(0)) -> ^ui.Frame {
+    frame := ui.add_frame(parent, {
+        name        = "ph_image",
+        text        = "IMAGE PLACEHOLDER",
+        size_aspect = size_aspect,
+        draw        = draw_image_placeholder,
+    })
 
-add_placeholder_image :: proc (parent: ^ui.Frame, aspect_ratio := Placeholder_Image_Aspect_Ratio.default) -> ^ui.Frame {
-    frame := ui.add_frame(parent, { name="ph_image", draw=draw_image_placeholder })
-    text := "IMAGE PLACEHOLDER"
-
-    switch aspect_ratio {
-    case .default:
+    if size_aspect == 0 {
         ui.set_anchors(frame, { point=.top_left }, { point=.bottom_right })
-    case ._16x9:
-        frame.size_aspect = 16./9
-        text = "16:9 IMAGE PLACEHOLDER"
-    case ._11x5:
-        frame.size_aspect = 11./5
-        text = "11:5 IMAGE PLACEHOLDER"
     }
 
-    ui.set_text(frame, text)
     return frame
 }
