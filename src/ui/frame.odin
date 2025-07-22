@@ -312,9 +312,10 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
     }
 }
 
-set_scroll_offset :: proc (f: ^Frame, value: f32) {
-    layout_apply_scroll(f, value, is_absolute=true)
+scroll :: proc (f: ^Frame, value: f32, is_absolute := false) -> (actually_scrolled: bool) {
+    actually_scrolled = layout_apply_scroll(f, value, is_absolute=is_absolute)
     if f.actor != nil do wheel_actor(f)
+    return
 }
 
 layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
@@ -348,6 +349,11 @@ next_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
             return f.parent.children[next_idx]
         }
     }
+    return nil
+}
+
+first_selected_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+    for child in parent.children do if child.selected do return child
     return nil
 }
 
