@@ -1,6 +1,9 @@
 package partials
 
 import "core:fmt"
+import "core:slice"
+
+import "spacelib:core"
 import "spacelib:ui"
 
 screen_pad :: 50
@@ -9,6 +12,8 @@ Screen :: struct {
     root            : ^ui.Frame,
 
     header          : ^ui.Frame,
+    header_left     : ^ui.Frame,
+    header_right    : ^ui.Frame,
     tabs            : ^ui.Frame,
     tabs_prev       : ^ui.Frame,
     tabs_next       : ^ui.Frame,
@@ -49,6 +54,7 @@ add_screen :: proc (parent: ^ui.Frame, name: string, is_empty := false) -> Scree
 @private
 add_screen_header :: proc (screen: ^Screen) {
     bar_h :: 80
+    tab_nav_pad :: 8
 
     screen.header = ui.add_frame(screen.root, {
         order   = 1,
@@ -58,14 +64,28 @@ add_screen_header :: proc (screen: ^Screen) {
         draw    = draw_color_rect,
         tick    = proc (f: ^ui.Frame) {
             tabs := ui.get(f, "tabs")
+            if len(tabs.children) < 2 do return
+
+            tabs_prev := ui.get(f, "tabs_prev")
+            tabs_next := ui.get(f, "tabs_next")
             tabs_flow := ui.layout_flow(tabs)
 
+            tabs_prev.anchors[0].offset.x = -tab_nav_pad
+            tabs_next.anchors[0].offset.x = tab_nav_pad
+
             if tabs_flow.scroll.offset_max != 0 {
-                // todo: set offset to 10px
-                fmt.println("scroll active")
+                selected := ui.first_selected_child(tabs)
+                offset := core.rect_offset_into_view(selected.rect, tabs.rect)
+                if abs(offset.x) > .1 {
+                    dx := offset.x * f.ui.clock.dt * .333
+                    ui.scroll(tabs, dx)
+                }
             } else {
-                // todo: calc offset for prev and next buttons
-                fmt.println("scroll INactive")
+                first := tabs.children[0]
+                tabs_prev.anchors[0].offset.x += first.rect.x-first.parent.rect.x
+
+                last := slice.last(tabs.children[:])
+                tabs_next.anchors[0].offset.x += (last.rect.x+last.rect.w)-(last.parent.rect.x+last.parent.rect.w)
             }
         },
     },
@@ -73,12 +93,28 @@ add_screen_header :: proc (screen: ^Screen) {
         { point=.top_right },
     )
 
+    screen.header_left = ui.add_frame(screen.header,
+        { name="header_left", size={200,0} },
+        { point=.top_left },
+        { point=.bottom_left },
+    )
+
+    screen.header_right = ui.add_frame(screen.header,
+        { name="header_right", size={200,0} },
+        { point=.top_right },
+        { point=.bottom_right },
+    )
+
     tabs_extra_hangout_h :: 50
 
-    screen.tabs = ui.add_frame(screen.header,
-        { name="tabs", flags={.scissor,.pass_self}, layout=ui.Flow{ dir=.left_and_right, size={0,bar_h}, scroll={step=10} } },
-        { point=.top_left, offset={100,0} },
-        { point=.bottom_right, offset={-100,tabs_extra_hangout_h} },
+    screen.tabs = ui.add_frame(screen.header, {
+        name="tabs",
+        flags={.scissor,.pass_self},
+        size={0,bar_h+tabs_extra_hangout_h},
+        layout=ui.Flow{ dir=.left_and_right, size={0,bar_h}, scroll={step=20} },
+    },
+        { point=.top_left, rel_point=.top_right, rel_frame=screen.header_left },
+        { point=.top_right, rel_point=.top_left, rel_frame=screen.header_right },
     )
 
     screen.tabs_prev = ui.add_frame(screen.header, {

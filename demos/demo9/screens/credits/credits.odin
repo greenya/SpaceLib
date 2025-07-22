@@ -16,7 +16,7 @@ add :: proc (parent: ^ui.Frame) {
 
     screen.root.show = proc (f: ^ui.Frame) {
         // reset state each time credits screen is opened
-        ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
+        ui.scroll(ui.get(f, "pages/credits/content"), 0)
         ui.show(screen.key_buttons, "autoscroll_on")
         ui.hide(screen.key_buttons, "autoscroll_off")
         screen.is_autoscroll = false

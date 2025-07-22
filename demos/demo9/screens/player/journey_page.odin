@@ -281,7 +281,7 @@ journey_page_show_tutorial_tip :: proc (id: string) {
     if tip_desc != ""   do ui.set_text(details.desc, tip_desc, shown=true)
     else                do ui.hide(details.desc)
 
-    ui.set_scroll_offset(details.root, 0)
+    ui.scroll(details.root, 0)
     ui.show(details.root)
     ui.update(details.root)
 }
