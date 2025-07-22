@@ -225,6 +225,38 @@ index :: #force_inline proc (child: ^Frame) -> int {
     return i
 }
 
+depth :: #force_inline proc (f: ^Frame) -> int {
+    c := 0
+    for i:=f; i!=nil; i=i.parent do c += 1
+    return c
+}
+
+parents :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
+    list := make([] ^Frame, depth(f), allocator)
+    j := 0
+    for i:=f; i!=nil; i=i.parent {
+        list[j] = i
+        j += 1
+    }
+    return list
+}
+
+path :: #force_inline proc (f: ^Frame, exclude_root := true, allocator := context.allocator) -> string {
+    frames := parents(f, context.temp_allocator)
+    slice.reverse(frames)
+    if exclude_root do frames = frames[1:]
+
+    names := slice.mapper(
+        frames,
+        proc (f: ^Frame) -> string {
+            return f.name != "" ? f.name : "<nil>"
+        },
+        context.temp_allocator,
+    )
+
+    return strings.join(names, "/", allocator)
+}
+
 set_parent :: proc (f: ^Frame, new_parent: ^Frame) {
     if f.parent != nil {
         ordered_remove(&f.parent.children, index(f))
