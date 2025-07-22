@@ -7,6 +7,7 @@ _ :: tm
 Clock :: struct ($T: typeid) where intrinsics.type_is_float(T) {
     time        : T,
     time_scale  : T,
+    dt          : T,
     tick        : int,
     _now        : tm.Tick,
 }
@@ -24,7 +25,8 @@ tick :: proc (c: ^Clock($T)) {
     now := tm.tick_now()
     diff := tm.tick_diff(c._now, now)
     dt := f64(c.time_scale) * tm.duration_seconds(diff)
-    c.time += T(dt)
+    c.dt = T(dt)
+    c.time += c.dt
 
     c._now = now
 }
