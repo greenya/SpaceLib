@@ -50,9 +50,10 @@ rect_scaled :: #force_inline proc (r: Rect, scale: Vec2) -> Rect {
     return { r.x+dx, r.y+dy, w, h }
 }
 
-rect_scaled_from_top_left :: #force_inline proc (r: Rect, scale: Vec2) -> Rect {
-    return { r.x, r.y, r.w*scale.x, r.h*scale.y }
-}
+rect_scaled_top_left    :: #force_inline proc (r: Rect, s: Vec2) -> Rect { return { r.x, r.y, r.w*s.x, r.h*s.y } }
+rect_scaled_top_right   :: #force_inline proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1-s.x), r.y, r.w*s.x, r.h*s.y } }
+rect_scaled_bottom_left :: #force_inline proc (r: Rect, s: Vec2) -> Rect { return { r.x, r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
+rect_scaled_bottom_right:: #force_inline proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1-s.x), r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
 
 rect_from_center :: #force_inline proc (v: Vec2, size: Vec2) -> Rect {
     return { v.x-size.x/2, v.y-size.y/2, size.x, size.y }
