@@ -90,6 +90,24 @@ rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
+rect_offset_into_view :: proc (r: Rect, v: Rect) -> (offset: Vec2) {
+    if r.w <= v.w {
+        r_x2 := r.x + r.w
+        v_x2 := v.x + v.w
+        if r.x < v.x        do offset.x = v.x - r.x
+        else if r_x2 > v_x2 do offset.x = v_x2 - r_x2
+    }
+
+    if r.h <= v.h {
+        r_y2 := r.y + r.h
+        v_y2 := v.y + v.h
+        if r.y < v.y        do offset.y = v.y - r.y
+        else if r_y2 > v_y2 do offset.y = v_y2 - r_y2
+    }
+
+    return
+}
+
 rect_equal_approx :: #force_inline proc (a: Rect, b: Rect, e: f32) -> bool {
     return abs(a.x-b.x)<e && abs(a.y-b.y)<e && abs(a.w-b.w)<e && abs(a.h-b.h)<e
 }
