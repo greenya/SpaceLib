@@ -6,23 +6,22 @@ import "../../data"
 import "../../events"
 import "../../partials"
 
-@private screen: ^ui.Frame
+@private screen: partials.Screen
 
 add :: proc (parent: ^ui.Frame) {
-    assert(screen == nil)
     screen = partials.add_screen(parent, "home")
 
-    settings := partials.add_screen_pyramid_button(screen, "settings", "SETTINGS", icon="settings")
+    settings := partials.add_screen_pyramid_button(&screen, "settings", "SETTINGS", icon="settings")
     settings.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="settings" })
     }
 
-    credits := partials.add_screen_pyramid_button(screen, "credits", "CREDITS", icon="contract")
+    credits := partials.add_screen_pyramid_button(&screen, "credits", "CREDITS", icon="contract")
     credits.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="credits" })
     }
 
-    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(&screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_modal({
             target  = f,
@@ -35,23 +34,21 @@ add :: proc (parent: ^ui.Frame) {
         })
     }
 
-    partials.add_screen_key_button(screen, "request_help", "<icon=key/H> Request Help")
-    partials.add_screen_key_button(screen, "report_bug", "<icon=key/B> Report Bug")
-    partials.add_screen_key_button(screen, "account", "<icon=key/A> Account")
+    partials.add_screen_key_button(&screen, "request_help", "<icon=key/H> Request Help")
+    partials.add_screen_key_button(&screen, "report_bug", "<icon=key/B> Report Bug")
+    partials.add_screen_key_button(&screen, "account", "<icon=key/A> Account")
 
     add_social_links()
     add_account_info()
 
     add_home_page()
 
-    ui.click(screen, "header_bar/tabs/home")
+    ui.click(screen.tabs, "home")
 }
 
 @private
 add_social_links :: proc () {
-    header_bar := ui.get(screen, "header_bar")
-
-    social_links := ui.add_frame(header_bar,
+    social_links := ui.add_frame(screen.header,
         { name="social_links", layout=ui.Flow{ dir=.left, size=62, gap=15, align=.center, auto_size=.dir } },
         { point=.right, rel_point=.bottom_right, offset={-partials.screen_pad,0} },
     )
@@ -59,7 +56,7 @@ add_social_links :: proc () {
     ui.add_frame(social_links, { flags={.capture}, text="language", draw=partials.draw_button_diamond })
     ui.add_frame(social_links, { flags={.capture}, text="mail", draw=partials.draw_button_diamond })
 
-    ui.add_frame(header_bar,
+    ui.add_frame(screen.header,
         { name="social_links_bg_line", flags={.pass}, order=-1, size={0,2}, text="primary_d4",
             draw=partials.draw_color_rect },
         { point=.right },
@@ -69,7 +66,7 @@ add_social_links :: proc () {
 
 @private
 add_account_info :: proc () {
-    account_info := ui.add_frame(ui.get(screen, "header_bar"),
+    account_info := ui.add_frame(screen.header,
         { name="account_info", flags={.terse,.terse_size}, text_format="<left,font=text_4l,color=primary_a6>%s\n%s" },
         { point=.left, offset={partials.screen_pad,0} },
     )
@@ -78,7 +75,7 @@ add_account_info :: proc () {
 
 @private
 add_home_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "home", "HOME")
+    _, page := partials.add_screen_tab_and_page(&screen, "home", "HOME")
 
     add_home_page_welcome_area(page)
     add_home_page_notification_area(page)

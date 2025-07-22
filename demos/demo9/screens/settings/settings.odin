@@ -7,28 +7,27 @@ import "../../data"
 import "../../events"
 import "../../partials"
 
-@private screen: ^ui.Frame
+@private screen: partials.Screen
 
 add :: proc (parent: ^ui.Frame) {
-    assert(screen == nil)
     screen = partials.add_screen(parent, "settings")
 
-    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(&screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="home" })
     }
 
-    partials.add_screen_key_button(screen, "reset_to_default", "<icon=key/X> Reset to Default")
+    partials.add_screen_key_button(&screen, "reset_to_default", "<icon=key/X> Reset to Default")
 
     add_pages()
 
-    ui.click(screen, "header_bar/tabs/gameplay")
+    ui.click(screen.tabs, "gameplay")
 }
 
 @private
 add_pages :: proc () {
     for p in data.get_settings_pages(context.temp_allocator) {
-        _, page := partials.add_screen_tab_and_page(screen, p.page_id, p.page_title)
+        _, page := partials.add_screen_tab_and_page(&screen, p.page_id, p.page_title)
 
         items := data.get_settings_page_items(p.page_id)
         if len(items) > 0 {
@@ -99,8 +98,7 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Setting) {
     case 0      : // skip (expected)
     case 2      : ia = .button_group
     case 3,4,5  : ia = .pins
-    case 6..=10 : ia = .dropdown
-    case        : fmt.panicf("Failed to autodetect setting control appearance for \"%s\"", item.id)
+    case        : ia = .dropdown
     }
 
     switch ia {

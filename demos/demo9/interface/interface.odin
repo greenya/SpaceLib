@@ -41,11 +41,12 @@ create :: proc () {
         scissor_clear_proc  = partials.scissor_clear,
     )
 
-    add_screens_layer(order=0, curtain_order=8)
-    add_dropdowns_layer(order=1)
-    // add_notifications_layer(order=2)
-    // add_tooltips_layer(order=3)
-    add_modals_layer(order=9)
+    add_screens_layer(order=1, curtain_order=8)
+    add_modals_layer(order=2)
+    add_dropdowns_layer(order=3)
+    // add_tooltips_layer(order=4)
+    // add_notifications_layer(order=9)
+    add_dev_layer(order=99)
 }
 
 destroy :: proc () {

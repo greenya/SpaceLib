@@ -5,20 +5,41 @@ import "spacelib:ui"
 
 screen_pad :: 50
 
-add_screen :: proc (parent: ^ui.Frame, name: string, is_empty := false) -> ^ui.Frame {
-    screen := ui.add_frame(parent,
+Screen :: struct {
+    root            : ^ui.Frame,
+
+    header          : ^ui.Frame,
+    tabs            : ^ui.Frame,
+    tabs_prev       : ^ui.Frame,
+    tabs_next       : ^ui.Frame,
+
+    footer          : ^ui.Frame,
+    pyramid_buttons : ^ui.Frame,
+    key_buttons     : ^ui.Frame,
+
+    pages           : ^ui.Frame,
+}
+
+add_screen :: proc (parent: ^ui.Frame, name: string, is_empty := false) -> Screen {
+    screen: Screen
+
+    if ui.find(parent, name) != nil {
+        fmt.panicf("Screen with name \"%s\" already exists", name)
+    }
+
+    screen.root = ui.add_frame(parent,
         { name=name, flags={.hidden} },
         { point=.top_left },
         { point=.bottom_right },
     )
 
     if !is_empty {
-        add_screen_header_bar(screen)
-        add_screen_footer_bar(screen)
-        ui.add_frame(screen,
+        add_screen_header(&screen)
+        add_screen_footer(&screen)
+        screen.pages = ui.add_frame(screen.root,
             { name="pages" },
-            { point=.top_left, rel_point=.bottom_left, rel_frame=ui.get(screen, "header_bar") },
-            { point=.bottom_right, rel_point=.top_right, rel_frame=ui.get(screen, "footer_bar") },
+            { point=.top_left, rel_point=.bottom_left, rel_frame=screen.header },
+            { point=.bottom_right, rel_point=.top_right, rel_frame=screen.footer },
         )
     }
 
@@ -26,58 +47,85 @@ add_screen :: proc (parent: ^ui.Frame, name: string, is_empty := false) -> ^ui.F
 }
 
 @private
-add_screen_header_bar :: proc (screen: ^ui.Frame) {
-    header_bar := ui.add_frame(screen,
-        { name="header_bar", text="bg0", size={0,80}, order=1, draw=draw_color_rect },
+add_screen_header :: proc (screen: ^Screen) {
+    bar_h :: 80
+
+    screen.header = ui.add_frame(screen.root, {
+        order   = 1,
+        name    = "header",
+        text    = "bg0",
+        size    = {0,bar_h},
+        draw    = draw_color_rect,
+        tick    = proc (f: ^ui.Frame) {
+            tabs := ui.get(f, "tabs")
+            tabs_flow := ui.layout_flow(tabs)
+
+            if tabs_flow.scroll.offset_max != 0 {
+                // todo: set offset to 10px
+                fmt.println("scroll active")
+            } else {
+                // todo: calc offset for prev and next buttons
+                fmt.println("scroll INactive")
+            }
+        },
+    },
         { point=.top_left },
         { point=.top_right },
     )
 
-    tabs := ui.add_frame(header_bar,
-        { name="tabs", layout=ui.Flow{ dir=.left_and_right, auto_size=.dir } },
-        { point=.top },
-        { point=.bottom },
+    tabs_extra_hangout_h :: 50
+
+    screen.tabs = ui.add_frame(screen.header,
+        { name="tabs", flags={.scissor,.pass_self}, layout=ui.Flow{ dir=.left_and_right, size={0,bar_h}, scroll={step=10} } },
+        { point=.top_left, offset={100,0} },
+        { point=.bottom_right, offset={-100,tabs_extra_hangout_h} },
     )
 
-    ui.add_frame(header_bar, {
-        name    = "nav_next_tab",
-        text    = "<pad=8,font=text_4l,icon=key/E>",
-        flags   = {.hidden,.capture,.terse,.terse_size},
-        draw    = draw_button,
-        click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
-    }, { point=.left, rel_point=.right, rel_frame=tabs, offset={12,12} })
-
-    ui.add_frame(header_bar, {
-        name    = "nav_prev_tab",
+    screen.tabs_prev = ui.add_frame(screen.header, {
+        name    = "tabs_prev",
         text    = "<pad=8,font=text_4l,icon=key/Q>",
         flags   = {.hidden,.capture,.terse,.terse_size},
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
-    }, { point=.right, rel_point=.left, rel_frame=tabs, offset={-12,12} })
+    },
+        { point=.right, rel_point=.left, rel_frame=screen.tabs, offset={0,12-tabs_extra_hangout_h/2} },
+    )
+
+    screen.tabs_next = ui.add_frame(screen.header, {
+        name    = "tabs_next",
+        text    = "<pad=8,font=text_4l,icon=key/E>",
+        flags   = {.hidden,.capture,.terse,.terse_size},
+        draw    = draw_button,
+        click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "tabs"), allow_rotation=true) },
+    },
+        { point=.left, rel_point=.right, rel_frame=screen.tabs, offset={0,12-tabs_extra_hangout_h/2} },
+    )
 }
 
 @private
-add_screen_footer_bar :: proc (screen: ^ui.Frame) {
-    footer_bar := ui.add_frame(screen,
-        { name="footer_bar", text="bg0", size={0,80}, order=1, draw=draw_color_rect },
+add_screen_footer :: proc (screen: ^Screen) {
+    bar_h :: 80
+
+    screen.footer = ui.add_frame(screen.root,
+        { name="footer_bar", text="bg0", size={0,bar_h}, order=1, draw=draw_color_rect },
         { point=.bottom_left },
         { point=.bottom_right },
     )
 
-    ui.add_frame(footer_bar,
+    screen.pyramid_buttons = ui.add_frame(screen.footer,
         { name="pyramid_buttons", layout=ui.Flow{ dir=.right, align=.end, gap=20 } },
     )
 
     move_screen_pyramid_buttons(screen, .left)
 
-    ui.add_frame(footer_bar,
+    screen.key_buttons = ui.add_frame(screen.footer,
         { name="key_buttons", layout=ui.Flow{ dir=.left, align=.center, gap=6 } },
         { point=.right, offset={-screen_pad,0} },
     )
 }
 
-add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab, page: ^ui.Frame) {
-    tab = ui.add_frame(ui.get(screen, "header_bar/tabs"), {
+add_screen_tab_and_page :: proc (screen: ^Screen, name, text: string) -> (tab, page: ^ui.Frame) {
+    tab = ui.add_frame(screen.tabs, {
         name        = name,
         text        = text,
         text_format = "<bottom,font=text_4l,pad=20:10>%s",
@@ -87,6 +135,9 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
         click       = proc (f: ^ui.Frame) {
             page := ui.get(f, fmt.tprintf("../../../pages/%s", f.name))
             ui.show(page, hide_siblings=true)
+        },
+        wheel       = proc (f: ^ui.Frame, dy: f32) -> bool {
+            return ui.wheel(f.parent, dy)
         },
     })
 
@@ -98,22 +149,22 @@ add_screen_tab_and_page :: proc (screen: ^ui.Frame, name, text: string) -> (tab,
         draw        = draw_screen_tab_points,
     }, { point=.center, rel_point=.bottom, offset={0,6} })
 
-    page = ui.add_frame(ui.get(screen, "pages"),
+    page = ui.add_frame(screen.pages,
         { name=name, text="bg2" , draw=draw_color_rect },
         { point=.top_left },
         { point=.bottom_right },
     )
 
     if len(tab.parent.children) > 1 {
-        ui.show(ui.get(screen, "header_bar/nav_next_tab"))
-        ui.show(ui.get(screen, "header_bar/nav_prev_tab"))
+        ui.show(screen.tabs_prev)
+        ui.show(screen.tabs_next)
     }
 
     return
 }
 
-move_screen_pyramid_buttons :: proc (screen: ^ui.Frame, side: enum { left, center }) {
-    list := ui.get(screen, "footer_bar/pyramid_buttons")
+move_screen_pyramid_buttons :: proc (screen: ^Screen, side: enum { left, center }) {
+    list := screen.pyramid_buttons
     flow := ui.layout_flow(list)
     switch side {
     case .left:
@@ -125,8 +176,8 @@ move_screen_pyramid_buttons :: proc (screen: ^ui.Frame, side: enum { left, cente
     }
 }
 
-add_screen_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string) -> ^ui.Frame {
-    button := ui.add_frame(ui.get(screen, "footer_bar/pyramid_buttons"), {
+add_screen_pyramid_button :: proc (screen: ^Screen, name, text, icon: string) -> ^ui.Frame {
+    button := ui.add_frame(screen.pyramid_buttons, {
         name    = name,
         flags   = {.capture},
         size    = {250,125},
@@ -151,9 +202,8 @@ add_screen_pyramid_button :: proc (screen: ^ui.Frame, name, text, icon: string) 
     return button
 }
 
-add_screen_key_button :: proc (screen: ^ui.Frame, name, text: string) -> ^ui.Frame {
-    buttons := ui.get(screen, "footer_bar/key_buttons")
-    return add_button(buttons, name, text)
+add_screen_key_button :: proc (screen: ^Screen, name, text: string) -> ^ui.Frame {
+    return add_button(screen.key_buttons, name, text)
 }
 
 add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: string, with_details_header := false, details_header_icon := "") -> (body, list, details: ^ui.Frame) {

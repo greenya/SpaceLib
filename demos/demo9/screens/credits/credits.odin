@@ -6,48 +6,49 @@ import "../../data"
 import "../../events"
 import "../../partials"
 
-@private screen: ^ui.Frame
-@private is_autoscroll: bool
+@private screen: struct {
+    using screen    : partials.Screen,
+    is_autoscroll   : bool,
+}
 
 add :: proc (parent: ^ui.Frame) {
-    assert(screen == nil)
-    screen = partials.add_screen(parent, "credits")
+    screen.screen = partials.add_screen(parent, "credits")
 
-    screen.show = proc (f: ^ui.Frame) {
+    screen.root.show = proc (f: ^ui.Frame) {
         // reset state each time credits screen is opened
         ui.set_scroll_offset(ui.get(f, "pages/credits/content"), 0)
-        ui.show(f, "footer_bar/key_buttons/autoscroll_on")
-        ui.hide(f, "footer_bar/key_buttons/autoscroll_off")
-        is_autoscroll = false
+        ui.show(screen.key_buttons, "autoscroll_on")
+        ui.hide(screen.key_buttons, "autoscroll_off")
+        screen.is_autoscroll = false
     }
 
-    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(&screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="home" })
     }
 
-    as_off := partials.add_screen_key_button(screen, "autoscroll_off", "<icon=key/D> Disable Auto-Scroll")
+    as_off := partials.add_screen_key_button(&screen, "autoscroll_off", "<icon=key/D> Disable Auto-Scroll")
     as_off.click = proc (f: ^ui.Frame) {
-        is_autoscroll = false
+        screen.is_autoscroll = false
         ui.show(f, "../autoscroll_on")
         ui.hide(f)
     }
 
-    as_on := partials.add_screen_key_button(screen, "autoscroll_on", "<icon=key/E> Enable Auto-Scroll")
+    as_on := partials.add_screen_key_button(&screen, "autoscroll_on", "<icon=key/E> Enable Auto-Scroll")
     as_on.click = proc (f: ^ui.Frame) {
-        is_autoscroll = true
+        screen.is_autoscroll = true
         ui.show(f, "../autoscroll_off")
         ui.hide(f)
     }
 
     add_credits_page()
 
-    ui.click(screen, "header_bar/tabs/credits")
+    ui.click(screen.tabs, "credits")
 }
 
 @private
 add_credits_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "credits", "CREDITS")
+    _, page := partials.add_screen_tab_and_page(&screen, "credits", "CREDITS")
 
     content_pad :: 320
     track_pad_x :: 80
@@ -58,7 +59,7 @@ add_credits_page :: proc () {
         flags   = {.scissor},
         layout  = ui.Flow { dir=.down, scroll={step=30} },
         tick    = proc (f: ^ui.Frame) {
-            if is_autoscroll do ui.wheel(f, -.011)
+            if screen.is_autoscroll do ui.wheel(f, -.011)
         },
     },
         { point=.top_left, offset={content_pad,0} },

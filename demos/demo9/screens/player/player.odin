@@ -6,16 +6,20 @@ import "../../data"
 import "../../events"
 import "../../partials"
 
-@private screen: ^ui.Frame
+@private screen: struct {
+    using screen: partials.Screen,
+
+    map_    : Map_Page,
+    journey : Journey_Page,
+}
 
 add :: proc (parent: ^ui.Frame) {
-    assert(screen == nil)
-    screen = partials.add_screen(parent, "player")
+    screen.screen = partials.add_screen(parent, "player")
 
-    partials.add_screen_pyramid_button(screen, "social", "SOCIAL", icon="groups")
-    partials.move_screen_pyramid_buttons(screen, .center)
+    partials.add_screen_pyramid_button(&screen, "social", "SOCIAL", icon="groups")
+    partials.move_screen_pyramid_buttons(&screen, .center)
 
-    close := partials.add_screen_key_button(screen, "close", "<icon=key/Esc:1.4:1> Close")
+    close := partials.add_screen_key_button(&screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="home" })
     }
@@ -28,24 +32,24 @@ add :: proc (parent: ^ui.Frame) {
     add_journey_page()
     add_customization_page()
 
-    ui.click(screen, "header_bar/tabs/inventory")
+    ui.click(screen.tabs, "inventory")
 }
 
 @private
 add_inventory_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "inventory", "INVENTORY")
+    _, page := partials.add_screen_tab_and_page(&screen, "inventory", "INVENTORY")
     partials.add_placeholder_note(page, "INVENTORY PAGE GOES HERE...")
 }
 
 @private
 add_crafting_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "crafting", "CRAFTING")
+    _, page := partials.add_screen_tab_and_page(&screen, "crafting", "CRAFTING")
     partials.add_placeholder_note(page, "CRAFTING PAGE GOES HERE...")
 }
 
 @private
 add_research_page :: proc () {
-    tab, page := partials.add_screen_tab_and_page(screen, "research", "RESEARCH")
+    tab, page := partials.add_screen_tab_and_page(&screen, "research", "RESEARCH")
 
     tab_points := ui.get(tab, "points")
     ui.set_text(tab_points, data.player.intel_points_avail, shown=true)
@@ -55,7 +59,7 @@ add_research_page :: proc () {
 
 @private
 add_skills_page :: proc () {
-    tab, page := partials.add_screen_tab_and_page(screen, "skills", "SKILLS")
+    tab, page := partials.add_screen_tab_and_page(&screen, "skills", "SKILLS")
 
     tab_points := ui.get(tab, "points")
     ui.set_text(tab_points, data.player.skill_points_avail, shown=true)
@@ -65,6 +69,6 @@ add_skills_page :: proc () {
 
 @private
 add_customization_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(screen, "customization", "CUSTOMIZATION")
+    _, page := partials.add_screen_tab_and_page(&screen, "customization", "CUSTOMIZATION")
     partials.add_placeholder_note(page, "CUSTOMIZATION PAGE GOES HERE...")
 }

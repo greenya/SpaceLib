@@ -8,22 +8,47 @@ import "spacelib:ui"
 import "../../data"
 import "../../partials"
 
-journey_page: ^ui.Frame
+Journey_Page :: struct {
+    root        : ^ui.Frame,
+    tabs        : ^ui.Frame,
+
+    story       : ^ui.Frame,
+    contracts   : ^ui.Frame,
+
+    codex: struct {
+        root    : ^ui.Frame,
+        list    : ^ui.Frame,
+        details : ^ui.Frame,
+    },
+
+    tutorial: struct {
+        root    : ^ui.Frame,
+        list    : ^ui.Frame,
+        details: struct {
+            root    : ^ui.Frame,
+            column  : ^ui.Frame,
+            title   : ^ui.Frame,
+            image   : ^ui.Frame,
+            desc    : ^ui.Frame,
+        },
+    },
+}
 
 journey_page_tabs: [] struct { name, text, icon: string, add: proc (parent: ^ui.Frame) } = {
     { name="story"      , text="STORY"      , icon="images_mode"            , add=add_journey_page_story },
-    { name="contract"   , text="CONTRACT"   , icon="stylus_fountain_pen"    , add=add_journey_page_contract },
+    { name="contracts"  , text="CONTRACTS"  , icon="stylus_fountain_pen"    , add=add_journey_page_contracts },
     { name="codex"      , text="CODEX"      , icon="auto_stories"           , add=add_journey_page_codex },
     { name="tutorial"   , text="TUTORIAL"   , icon="stacks"                 , add=add_journey_page_tutorial },
 }
 
 add_journey_page :: proc () {
-    _, journey_page = partials.add_screen_tab_and_page(screen, "journey", "JOURNEY")
+    journey := &screen.journey
+    _, journey.root = partials.add_screen_tab_and_page(&screen, "journey", "JOURNEY")
 
     tab_details := make([dynamic] partials.Category_Tab_Details, context.temp_allocator)
     for t in journey_page_tabs do append(&tab_details, partials.Category_Tab_Details { name=t.name, icon=t.icon })
 
-    tabs := partials.add_category_tabs(journey_page, "tabs", items=tab_details[:],
+    journey.tabs = partials.add_category_tabs(journey.root, "tabs", items=tab_details[:],
         click=proc (f: ^ui.Frame) {
             title := ui.get(f, "../title")
             assert(f.order >= 0 && f.order < len(journey_page_tabs))
@@ -32,57 +57,54 @@ add_journey_page :: proc () {
             content := ui.get(f, "../../content")
             ui.show(content, f.name, hide_siblings=true)
 
-            ui.update(journey_page)
+            ui.update(screen.journey.root)
         },
     )
 
-    ui.set_order(tabs, 1)
-    ui.set_anchors(tabs, { point=.top_left, offset={80,70} })
+    ui.set_order(journey.tabs, 1)
+    ui.set_anchors(journey.tabs, { point=.top_left, offset={80,70} })
 
-    content := ui.add_frame(journey_page,
+    content := ui.add_frame(journey.root,
         { name="content" },
-        { point=.top_left, rel_frame=tabs, offset={0,60} },
+        { point=.top_left, rel_frame=journey.tabs, offset={0,60} },
         { point=.bottom_right, offset={-80,-40} },
     )
 
     for t in journey_page_tabs do t.add(content)
 
-    // ui.print_frame_tree(journey_page, max_depth=2)
+    // ui.print_frame_tree(journey.root, max_depth=2)
 
-    ui.click(tabs, "codex")
+    ui.click(journey.tabs, "codex")
 }
 
 add_journey_page_story :: proc (parent: ^ui.Frame) {
-    story := ui.add_frame(parent,
+    screen.journey.story = ui.add_frame(parent,
         { name="story" },
         { point=.top_left },
         { point=.bottom_right },
     )
 
-    partials.add_placeholder_note(story, "STORY SECTION GOES HERE...")
+    partials.add_placeholder_note(screen.journey.story, "STORY SECTION GOES HERE...")
 }
 
-add_journey_page_contract :: proc (parent: ^ui.Frame) {
-    contract := ui.add_frame(parent,
-        { name="contract" },
+add_journey_page_contracts :: proc (parent: ^ui.Frame) {
+    screen.journey.contracts = ui.add_frame(parent,
+        { name="contracts" },
         { point=.top_left },
         { point=.bottom_right },
     )
 
-    partials.add_placeholder_note(contract, "CONTRACT SECTION GOES HERE...")
+    partials.add_placeholder_note(screen.journey.contracts, "CONTRACTS SECTION GOES HERE...")
 }
 
-codex_page: ^ui.Frame
-
 add_journey_page_codex :: proc (parent: ^ui.Frame) {
-    page, list, details := partials.add_screen_page_body_with_list_and_details(
+    codex := &screen.journey.codex
+    codex.root, codex.list, codex.details = partials.add_screen_page_body_with_list_and_details(
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
 
-    codex_page = page
-
     for data_section in data.codex {
-        section := ui.add_frame(list, {
+        section := ui.add_frame(codex.list, {
             name        = data_section.id,
             size        = {0,200},
             flags       = {.check,.terse},
@@ -100,7 +122,7 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         ui.set_text(section, data_section.title, fmt.tprintf("%i/%i", finished_topics, total_topics))
 
         topics_wrap :: 5
-        topics := ui.add_frame(list, {
+        topics := ui.add_frame(codex.list, {
             name    = "topics",
             flags   = {.hidden},
             layout  = ui.Grid { dir=.right_down, wrap=topics_wrap, aspect_ratio=15./23, gap=10, auto_size=true },
@@ -131,18 +153,18 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         }
     }
 
-    details_flow := ui.layout_flow(details)
+    details_flow := ui.layout_flow(codex.details)
     details_flow.pad = 15
     details_flow.gap = 15
 
     max_articles :: 10
     for _ in 0..<max_articles {
-        ui.add_frame(details, {
+        ui.add_frame(codex.details, {
             name    = "article",
             flags   = {.terse,.terse_height},
         })
 
-        ui.add_frame(details, {
+        ui.add_frame(codex.details, {
             name    = "line",
             text    = "primary_a2",
             size    = {0,1},
@@ -151,29 +173,24 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
     }
 
     // preselect topic
-    ui.click(list, "~the_imperium")
+    ui.click(codex.list, "~the_imperium")
 }
 
 journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
-    // fmt.println("-------------------------------------")
-    // fmt.println("section_id", section_id)
-    // fmt.println("topic_id", topic_id)
-    // fmt.println("-------------------------------------")
-
+    codex := &screen.journey.codex
     data_topic := data.get_codex_topic(section_id, topic_id)
     // fmt.println("data_topic", data_topic)
 
-    header := ui.get(codex_page, "details_header")
+    header := ui.get(codex.root, "details_header")
     ui.set_text(header, data_topic.title)
 
     aside := ui.get(header, "aside")
     unlocked_articles, total_articles := data.get_codex_topic_stats(data_topic)
     ui.set_text(aside, fmt.tprintf("%i/%i", unlocked_articles, total_articles))
 
-    details := ui.get(codex_page, "details")
-    ui.hide_children(details)
+    ui.hide_children(codex.details)
     for data_article, i in data_topic.articles {
-        article := details.children[i*2]
+        article := codex.details.children[i*2]
 
         locked := data_article.locked
         if locked != "" {
@@ -189,23 +206,26 @@ journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
             ui.set_text(article, text, shown=true)
         }
 
-        line := details.children[i*2+1]
+        line := codex.details.children[i*2+1]
         ui.show(line)
     }
 
-    ui.update(codex_page)
+    ui.update(codex.root)
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
-    _, list, details := partials.add_screen_page_body_with_list_and_details(parent, "tutorial")
+    tutorial := &screen.journey.tutorial
+    details := &tutorial.details
+    tutorial.root, tutorial.list, details.root = partials.add_screen_page_body_with_list_and_details(
+        parent, "tutorial",
+    )
 
-    details_flow := ui.layout_flow(details)
-    details_flow.dir = .up_and_down
+    details_flow := ui.layout_flow(details.root)
     details_flow.align = .center
-    details.draw = nil
+    details.root.draw = nil
 
     for tip in data.tutorial_tips {
-        ui.add_frame(list, {
+        ui.add_frame(tutorial.list, {
             name        = tip.id,
             flags       = {.radio,.terse,.terse_height},
             text        = tip.title,
@@ -215,7 +235,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         })
     }
 
-    details_column := ui.add_frame(details, {
+    details.column = ui.add_frame(details.root, {
         name    = "column",
         size    = {400,0},
         layout  = ui.Flow { dir=.up_and_down,auto_size=.dir,gap=1 },
@@ -223,7 +243,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         draw    = partials.draw_color_rect,
     })
 
-    ui.add_frame(details_column, {
+    details.title = ui.add_frame(details.column, {
         name        = "title",
         flags       = {.terse,.terse_height},
         text        = "TITLE",
@@ -231,40 +251,37 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
         draw        = partials.draw_hexagon_rect_wide_hangout_accent,
     })
 
-    image := partials.add_placeholder_image(details_column, ._11x5)
-    ui.set_name(image, "image")
+    details.image = partials.add_placeholder_image(details.column, ._11x5)
+    ui.set_name(details.image, "image")
 
-    ui.add_frame(details_column, {
+    details.desc = ui.add_frame(details.column, {
         name        = "desc",
         flags       = {.terse,.terse_height},
         text        = "DESC",
         text_format = "<wrap,top,left,pad=12:10,font=text_4l,color=primary_d2>%s",
     })
 
-    ui.hide(details)
+    ui.hide(details.root)
 }
 
 journey_page_show_tutorial_tip :: proc (id: string) {
     tip := data.get_tutorial_tip(id)
 
-    details := ui.get(screen, "pages/journey/content/tutorial/details")
-    column := ui.get(details, "column")
+    details := screen.journey.tutorial.details
 
     // title
-    ui.set_text(ui.get(column, "title"), tip.title, shown=true)
+    ui.set_text(details.title, tip.title, shown=true)
 
     // image
-    image := ui.get(column, "image")
-    if tip.image != ""  do ui.show(image)
-    else                do ui.hide(image)
+    if tip.image != ""  do ui.show(details.image)
+    else                do ui.hide(details.image)
 
     // desc
-    desc := ui.get(column, "desc")
     tip_desc := data.text_to_string(tip.desc, context.temp_allocator)
-    if tip_desc != ""   do ui.set_text(desc, tip_desc, shown=true)
-    else                do ui.hide(desc)
+    if tip_desc != ""   do ui.set_text(details.desc, tip_desc, shown=true)
+    else                do ui.hide(details.desc)
 
-    ui.set_scroll_offset(details, 0)
-    ui.show(details)
-    ui.update(details)
+    ui.set_scroll_offset(details.root, 0)
+    ui.show(details.root)
+    ui.update(details.root)
 }

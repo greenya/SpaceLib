@@ -44,7 +44,7 @@ open_screen_listener :: proc (args: events.Args) {
 
     if tab_name != "" {
         fmt.println("[screens] preselect tab:", tab_name)
-        tab := ui.find(next_screen, fmt.tprintf("header_bar/tabs/%s", tab_name))
+        tab := ui.find(next_screen, fmt.tprintf("header/tabs/%s", tab_name))
         fmt.assertf(tab != nil, "Screen \"%s\" doesn't have tab \"%s\"", screen_name, tab_name)
         ui.click(tab)
     }
