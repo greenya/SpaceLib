@@ -2,7 +2,7 @@ package partials
 
 import "core:fmt"
 import "core:strings"
-import rl "vendor:raylib"
+import "vendor:raylib"
 
 import "spacelib:core"
 import "spacelib:raylib/draw"
@@ -22,9 +22,9 @@ _ :: fmt
 draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit_align := draw.Texture_Fit_Align.center, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
-    case Rect           : if sprite.wrap    do draw.texture_wrap    (sprite.tex^, info, rect, tint=tint)
-                          else              do draw.texture         (sprite.tex^, info, rect, fit=fit, fit_align=fit_align, tint=tint)
-    case rl.NPatchInfo  :                      draw.texture_npatch  (sprite.tex^, info, rect, tint=tint)
+    case Rect               : if sprite.wrap    do draw.texture_wrap    (sprite.tex^, info, rect, tint=tint)
+                              else              do draw.texture         (sprite.tex^, info, rect, fit=fit, fit_align=fit_align, tint=tint)
+    case raylib.NPatchInfo  :                      draw.texture_npatch  (sprite.tex^, info, rect, tint=tint)
     }
 }
 
@@ -55,7 +55,7 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
         }
     }
 
-    if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(t)
+    if raylib.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(t)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,diamond} = .box, font := "text_4m", shadow_only := false) {

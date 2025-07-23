@@ -18,6 +18,8 @@ Sprite :: struct {
 @private textures: [dynamic] ^rl.Texture
 @private sprites: map [string] ^Sprite
 
+get_textures :: #force_inline proc () -> [] ^rl.Texture { return textures[:] }
+
 create :: proc () {
     assert(len(textures) == 0)
     assert(len(sprites) == 0)

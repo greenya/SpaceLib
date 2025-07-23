@@ -94,13 +94,13 @@ add_screen_header :: proc (screen: ^Screen) {
     )
 
     screen.header_left = ui.add_frame(screen.header,
-        { name="header_left", size={200,0} },
+        { name="header_left", size={100,0} },
         { point=.top_left },
         { point=.bottom_left },
     )
 
     screen.header_right = ui.add_frame(screen.header,
-        { name="header_right", size={200,0} },
+        { name="header_right", size={100,0} },
         { point=.top_right },
         { point=.bottom_right },
     )

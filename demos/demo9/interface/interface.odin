@@ -69,4 +69,5 @@ tick :: proc () {
 
 draw :: proc () {
     ui.draw(ui_)
+    dev_record_ui_stats(ui_.stats)
 }
