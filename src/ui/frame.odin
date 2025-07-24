@@ -344,12 +344,6 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
     }
 }
 
-scroll :: proc (f: ^Frame, value: f32, is_absolute := false) -> (actually_scrolled: bool) {
-    actually_scrolled = layout_apply_scroll(f, value, is_absolute=is_absolute)
-    if f.actor != nil do wheel_actor(f)
-    return
-}
-
 layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
     #partial switch &l in f.layout {
     case Flow: return &l
@@ -362,6 +356,18 @@ layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
     case Grid: return &l
     }
     panic("Layout is not Grid")
+}
+
+scroll :: proc (f: ^Frame, dy: f32) -> (actually_scrolled: bool) {
+    actually_scrolled = layout_apply_scroll(f, dy)
+    if f.actor != nil do wheel_actor(f)
+    return
+}
+
+scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (actually_scrolled: bool) {
+    actually_scrolled = layout_apply_scroll(f, new_offset, is_absolute=true)
+    if f.actor != nil do wheel_actor(f)
+    return
 }
 
 prev_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {

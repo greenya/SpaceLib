@@ -176,7 +176,7 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
     if item_desc != "" {
         ui.set_text(ui.get(details, "title"), item.title)
         ui.set_text(ui.get(details, "content/text"), item_desc)
-        ui.scroll(ui.get(details, "content"), 0)
+        ui.scroll_abs(ui.get(details, "content"), 0)
         ui.show(details)
     } else {
         ui.hide(details)

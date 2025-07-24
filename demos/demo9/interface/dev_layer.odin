@@ -197,12 +197,12 @@ add_dev_stat_perf_monitor :: proc () {
 
                     {
                         point := bottom_left_corner + { f32(j), -f32(stats.draw_time/(time.Microsecond*10)) }
-                        if core.vec_in_rect(point, f.rect) do draw.rect(core.rect_from_center(point, 4), core.yellow)
+                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(point, f.rect), 4), core.yellow)
                     }
 
                     {
                         point := bottom_left_corner + { f32(j), -f32(stats.tick_time/(time.Microsecond*10)) }
-                        if core.vec_in_rect(point, f.rect) do draw.rect(core.rect_from_center(point, 4), core.magenta)
+                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(point, f.rect), 4), core.magenta)
                     }
 
                     j += 1

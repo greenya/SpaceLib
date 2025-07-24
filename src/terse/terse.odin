@@ -6,10 +6,6 @@ import "core:strings"
 import "../core"
 import "../stack"
 
-@private Vec2 :: core.Vec2
-@private Rect :: core.Rect
-@private Color :: core.Color
-
 Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
@@ -65,6 +61,7 @@ Query_Color_Proc    :: proc (name: string) -> Color
 
 default_code_start_rune     :: '<'
 default_code_end_rune       :: '>'
+default_args_separator_rune :: ':'
 default_fonts_stack_size    :: 16
 default_colors_stack_size   :: 16
 default_valign              :: Vertical_Alignment.middle
@@ -157,26 +154,32 @@ create :: proc (
                     case "top"      : terse.valign = .top
                     case "middle"   : terse.valign = .middle
                     case "bottom"   : terse.valign = .bottom
+
                     case "/font":
                         ensure(!stack.is_empty(fonts_stack), "Fonts stack underflow")
                         stack.pop_discard(&fonts_stack)
                         last_opened_command = .none
+
                     case "/color":
                         ensure(!stack.is_empty(colors_stack), "Colors stack underflow")
                         stack.pop_discard(&colors_stack)
                         last_opened_command = .none
+
                     case "/group":
                         ensure(group != nil, "No group to close")
                         group = nil
                         last_opened_command = .none
+
                     case "nobreak":
                         ensure(!nobreak.active, "\"nobreak\" commands cannot be nested")
                         nobreak = { true, len(terse.words)-1 }
                         last_opened_command = .nobreak
+
                     case "/nobreak":
                         ensure(nobreak.active, "No \"nobreak\" to close")
                         nobreak = {}
                         last_opened_command = .none
+
                     case:
                         pair_sep_idx := strings.index(command, "=")
                         if pair_sep_idx >= 0 && pair_sep_idx <= len(command)-2 {
@@ -185,8 +188,10 @@ create :: proc (
                             switch command_name {
                             case "alpha":
                                 alpha = parse_f32(command_value)
+
                             case "brightness":
                                 brightness = parse_f32(command_value)
+
                             case "font":
                                 ensure(!stack.is_full(fonts_stack), "Fonts stack overflow")
                                 font := query_font(command_value)
@@ -194,19 +199,23 @@ create :: proc (
                                 stack.push(&fonts_stack, font)
                                 line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
                                 last_opened_command = .font
+
                             case "color":
                                 ensure(!stack.is_full(colors_stack), "Colors stack overflow")
                                 color := command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
                                 stack.push(&colors_stack, color)
                                 last_opened_command = .color
+
                             case "group":
                                 ensure(group == nil, "Groups cannot be nested")
                                 group = append_group(terse, command_value)
                                 last_opened_command = .group
+
                             case "icon":
                                 assert(word == "")
                                 word, word_icon_scale = parse_icon_args(command_value)
                                 word_is_icon = true
+
                             case "tab":
                                 word_tab_width = f32(parse_int(command_value)) // todo: use parse_f32() when it can parse any float
                                 if line.word_count > 0 {
@@ -215,14 +224,17 @@ create :: proc (
                                     word_tab_width -= last_word_x2_local
                                 }
                                 if word_tab_width != 0 do word_is_tab = true
+
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
                                 line.gap = gap_ratio * stack.top(fonts_stack).height
+
                             case "pad":
                                 ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
                                 terse.pad = parse_vec_int(command_value)
                                 terse.lines[0].rect = core.rect_moved(terse.lines[0].rect, terse.pad)
                                 terse.rect = core.rect_inflated(terse.rect, -terse.pad)
+
                             case:
                                 fmt.panicf("Unknown command pair \"%v\"", command)
                             }
@@ -366,18 +378,6 @@ destroy :: proc (terse: ^Terse) {
     free(terse)
 }
 
-apply_offset :: proc (terse: ^Terse, offset: Vec2) {
-    assert(terse != nil)
-    mv :: core.rect_moved
-
-    terse.rect_input = mv(terse.rect_input, offset)
-    terse.rect = mv(terse.rect, offset)
-
-    for &word in terse.words do word.rect = mv(word.rect, offset)
-    for &line in terse.lines do line.rect = mv(line.rect, offset)
-    for &group in terse.groups do for &r in group.rects do r = mv(r, offset)
-}
-
 @private
 append_line :: proc (terse: ^Terse, font: ^Font, nobreak_first_word_idx := -1) -> ^Line {
     line_rect_y := terse.rect.y
@@ -519,7 +519,7 @@ parse_icon_args :: proc (text: string) -> (name: string, scale: Vec2) {
     name = text
     scale = {1,1}
 
-    pair_sep_idx := strings.index(text, ":")
+    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
     if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
         name = text[0:pair_sep_idx]
         scale = parse_vec(text[pair_sep_idx+1:])
@@ -530,7 +530,7 @@ parse_icon_args :: proc (text: string) -> (name: string, scale: Vec2) {
 
 @private
 parse_vec :: proc (text: string) -> Vec2 {
-    pair_sep_idx := strings.index(text, ":")
+    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
     if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
         return { parse_f32(text[0:pair_sep_idx]), parse_f32(text[pair_sep_idx+1:]) }
     } else {
@@ -538,63 +538,12 @@ parse_vec :: proc (text: string) -> Vec2 {
     }
 }
 
-// parses very very simple float value, from -9.9 to 9.9 only
-// supports absence of optional parts like: X[.0], [0].X
-// note: this should be enough and quick, but maybe rework it so it would parse normally,
-// e.g. any valid floating point value; check the performance, maybe general parsing is slow (?)
-@private
-parse_f32 :: proc (text: string) -> f32 {
-    digit_before_dot, digit_after_dot: f32
-
-    text := text
-    sign := f32(1)
-    if text[0] == '-' {
-        sign = -1
-        text = text[1:]
-    }
-
-    if len(text) == 2 && text[0] == '.' {
-        // format: ".0", ".1" ... ".9"
-        digit_after_dot = f32(text[1]-'0')
-    } else if len(text) == 3 && text[1] == '.' {
-        // format: "0.0", "0.1", ... "9.9"
-        digit_before_dot = f32(text[0]-'0')
-        digit_after_dot = f32(text[2]-'0')
-    } else if len(text) == 1 {
-        // format: "0", "1", ... "9"
-        digit_before_dot = f32(text[0]-'0')
-    } else {
-        fmt.eprintfln("[!] Failed to parse f32 value in \"%v\"", text)
-    }
-
-    return sign * (digit_before_dot + digit_after_dot/10)
-}
-
 @private
 parse_vec_int :: proc (text: string) -> Vec2 {
-    pair_sep_idx := strings.index(text, ":")
+    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
     if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
         return { f32(parse_int(text[0:pair_sep_idx])), f32(parse_int(text[pair_sep_idx+1:])) }
     } else {
         return f32(parse_int(text))
     }
-}
-
-@private
-parse_int :: proc (text: string) -> int {
-    text := text
-    sign := 1
-    if text[0] == '-' {
-        sign = -1
-        text = text[1:]
-    }
-
-    m := 1
-    result := 0
-    #reverse for c in text {
-        result += m * int(c-'0')
-        m *= 10
-    }
-
-    return sign * result
 }
