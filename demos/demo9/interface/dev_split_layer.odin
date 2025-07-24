@@ -1,7 +1,6 @@
 #+private
 package interface
 
-// import "core:fmt"
 import "core:slice"
 
 import "spacelib:ui"
@@ -16,7 +15,7 @@ add_dev_split_mode_layer :: proc () {
     }, { point=.top_left }, { point=.bottom_right })
 
     aside := ui.add_frame(dev.layer_split,
-        { name="aside", size={dev_window_min_size.x,0} },
+        { name="aside", order=1, size={dev_window_min_size.x,0} },
         { point=.top_right },
         { point=.bottom_right },
     )
@@ -53,6 +52,7 @@ disable_dev_split_mode :: proc () {
     ui.set_parent(dev.window, dev.layer)
     ui.clear_anchors(dev.window)
     dev.window.rect = dev.window_rect_saved
+    ui.update(dev.window)
 
     ui.hide(dev.layer_split)
 }

@@ -24,6 +24,9 @@ dev: struct {
     resize_handle   : ^ui.Frame,
     content         : ^ui.Frame,
 
+    monitor         : ^ui.Frame,
+    monitor_floating: bool,
+
     window_mode         : Dev_Window_Mode,
     window_rect_saved   : Rect,
 
@@ -33,7 +36,7 @@ dev: struct {
 
 Dev_Window_Mode :: enum { invisible, visible, aside }
 
-dev_window_min_size :: [2] f32 { 380, 250 }
+dev_window_min_size :: [2] f32 { 380, 230 }
 
 add_dev_layer :: proc (order: int) {
     assert(dev.layer == nil)
@@ -55,6 +58,9 @@ add_dev_layer :: proc (order: int) {
     add_dev_stat_clock()
     add_dev_stat_fonts()
     add_dev_stat_texture_atlas()
+
+    // add order so removing dev.monitor and adding it back will place it correctly
+    for child, i in dev.content.children do child.order = i
 
     add_dev_split_mode_layer()
 }
@@ -134,9 +140,9 @@ add_dev_window :: proc () {
         },
         drag=proc (f: ^ui.Frame, mouse_pos, captured_pos: Vec2) {
             offset := mouse_pos-captured_pos-{f.rect.x,f.rect.y}
-            win_rect := &dev.window.rect
-            win_rect.w = max(dev_window_min_size.x, win_rect.w+offset.x)
-            win_rect.h = max(dev_window_min_size.y, win_rect.h+offset.y)
+            rect := &dev.window.rect
+            rect.w = max(dev_window_min_size.x, rect.w+offset.x)
+            rect.h = max(dev_window_min_size.y, rect.h+offset.y)
             ui.update(f.parent)
         },
     },
@@ -149,9 +155,34 @@ add_dev_window :: proc () {
 add_dev_stat_perf :: proc () {
     add_dev_stat_header(dev.content,"Perf")
 
-    ui.add_frame(dev.content, {
-        size={len(dev.ui_stats_buffer)+160,150},
+    add_dev_stat_perf_monitor()
+
+    {
+        add_dev_stat_text(dev.content, "VSync:")
+        list := add_dev_stat_list_grid(dev.content)
+        add_dev_stat_button(list, "on", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
+        add_dev_stat_button(list, "off", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
+    }
+
+    {
+        add_dev_stat_text(dev.content, "Borderless:")
+        list := add_dev_stat_list_grid(dev.content)
+        add_dev_stat_button(list, "toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
+    }
+}
+
+add_dev_stat_perf_monitor :: proc () {
+    dev.monitor = ui.add_frame(dev.content, {
+        flags={.capture},
+        name="monitor",
+        size={len(dev.ui_stats_buffer)+160,130},
         draw=proc (f: ^ui.Frame) {
+            if dev.monitor_floating {
+                br_rect := core.rect_inflated(f.rect, 5)
+                br_color := core.alpha(core.black, .4)
+                draw.rect(br_rect, br_color)
+            }
+
             draw.rect(f.rect, core.gray3)
 
             j := 0
@@ -180,11 +211,11 @@ add_dev_stat_perf :: proc () {
 
             {
                 point := bottom_left_corner + { f32(j)+10, -f32(100) }
-                rect := Rect { f.rect.x, point.y-22, f32(j)+60, 22 }
-                draw.rect(rect, core.alpha(core.gray5, .75))
-                draw.text("1 ms", point+{5,-20}, fonts.get(.default), core.gray3)
+                rect := Rect { f.rect.x, f.rect.y, f32(j)+50, point.y-f.rect.y }
+                draw.rect(rect, core.alpha(core.gray5, .6))
+                draw.text("1 ms", point+{0,-20}, fonts.get(.default), core.gray3)
 
-                draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{55,-20}, fonts.get(.default), core.gray8)
+                draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{45,-20}, fonts.get(.default), core.gray8)
             }
 
             last_idx := dev.ui_stats_buffer_idx-1
@@ -208,41 +239,56 @@ add_dev_stat_perf :: proc () {
             tick_time_text := fmt.tprintf("tick: %v", stats.tick_time)
             draw.text(tick_time_text, cursor, fonts.get(.default), core.magenta)
         },
+        drag=proc (f: ^ui.Frame, mouse_pos, captured_pos: Vec2) {
+            if !dev.monitor_floating do return
+            offset := mouse_pos - captured_pos
+            f.rect.x = offset.x
+            f.rect.y = offset.y
+        },
     })
 
-    {
-        add_dev_stat_text(dev.content, "VSync:")
-        list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
-        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
-    }
-
-    {
-        add_dev_stat_text(dev.content, "Borderless:")
-        list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "TOGGLE", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
-    }
+    ui.add_frame(dev.monitor, {
+        name="float_toggle",
+        flags={.capture},
+        size=30,
+        draw=proc (f: ^ui.Frame) {
+            if f.entered do draw.rect(f.rect, core.alpha(core.black, .3))
+            icon := dev.monitor_floating ? "keyboard_tab" : "keyboard_tab_rtl"
+            partials.draw_sprite(icon, f.rect, tint=core.gray8)
+        },
+        click=proc (f: ^ui.Frame) {
+            dev.monitor_floating = !dev.monitor_floating
+            if dev.monitor_floating {
+                ui.set_parent(dev.monitor, dev.layer)
+            } else {
+                ui.set_parent(dev.monitor, dev.content)
+            }
+        },
+    },
+        {point=.top_left},
+    )
 }
 
 add_dev_stat_clock :: proc () {
     add_dev_stat_header(dev.content,"Clock")
 
-    add_dev_stat_text(dev.content, "Set time scale:")
+    add_dev_stat_text(dev.content, "Time scale:")
     list := add_dev_stat_list_grid(dev.content)
 
-                add_dev_stat_button(list, "x0.25", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = .25 })
+                add_dev_stat_button(list, "x0.3", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = .3 })
                 add_dev_stat_button(list, "x0.5", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = .5 })
     selected := add_dev_stat_button(list, "x1", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = 1 })
                 add_dev_stat_button(list, "x2", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = 2 })
-                add_dev_stat_button(list, "x4", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = 4 })
+                add_dev_stat_button(list, "x3", click=proc (f: ^ui.Frame) { ui_.clock.time_scale = 3 })
 
     for child in list.children do child.flags += {.radio}
     selected.selected = true
 
     ui.add_frame(dev.content, {
-        size={0,200},
+        size={0,60},
         draw=proc (f: ^ui.Frame) {
-            text := fmt.tprintf("%#v", ui_.clock)
+            c := &ui_.clock
+            text := fmt.tprintf("tick: %v\ntime: %v\ndt: %v", c.tick, c.time, c.dt)
             draw.text(text, {f.rect.x,f.rect.y}, fonts.get(.default), core.gray9)
         },
     })
@@ -251,12 +297,12 @@ add_dev_stat_clock :: proc () {
 add_dev_stat_fonts :: proc () {
     add_dev_stat_header(dev.content,"Fonts")
 
-    add_dev_stat_text(dev.content, "Set font scale:")
+    add_dev_stat_text(dev.content, "Scale:")
     list := add_dev_stat_list_grid(dev.content)
 
                 add_dev_stat_button(list, "x0.8", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(.8) })
                 add_dev_stat_button(list, "x0.9", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(.9) })
-    selected := add_dev_stat_button(list, "x1.0", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1) })
+    selected := add_dev_stat_button(list, "x1", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1) })
                 add_dev_stat_button(list, "x1.1", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1.1) })
                 add_dev_stat_button(list, "x1.2", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1.2) })
 
@@ -266,7 +312,7 @@ add_dev_stat_fonts :: proc () {
     for id in fonts.ID {
         ui.add_frame(dev.content, {
             flags={.terse,.terse_height},
-            text=fmt.tprintf("<left,wrap,color=#eee>%s<tab=120,font=%s>Hello, World!", id, id),
+            text=fmt.tprintf("<left,wrap,color=#eee>%s<tab=120,font=%s>Hellope!", id, id),
         })
     }
 }
@@ -298,7 +344,7 @@ add_dev_stat_texture_atlas :: proc () {
 add_dev_stat_header :: proc (parent: ^ui.Frame, text: string) {
     ui.add_frame(parent, {
         flags={.terse,.terse_height},
-        text=fmt.tprintf("<pad=0:10,left,wrap,color=#333>%s", text),
+        text=fmt.tprintf("<pad=5:10,left,wrap,color=#333>%s", text),
         draw=proc (f: ^ui.Frame) {
             bg_rect := core.rect_inflated(f.rect, {15,0})
             draw.rect(bg_rect, core.gray9)
@@ -317,7 +363,7 @@ add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) {
 add_dev_stat_list_grid :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     return ui.add_frame(parent, {
         layout=ui.Grid{ dir=.right_down, wrap=4, gap=5, aspect_ratio=3, auto_size=true },
-        tick=proc (f: ^ui.Frame) { ui.layout_grid(f).wrap = 1+int(f.rect.w/100) },
+        tick=proc (f: ^ui.Frame) { ui.layout_grid(f).wrap = 1+int(f.rect.w/90) },
     })
 }
 
