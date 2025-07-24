@@ -41,6 +41,41 @@ TODO: ui: Grid: support scroll
 
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
+TODO: ui: support multiple callbacks for some events
+
+    currently when we need to handle an event, we assign a callback, and if its already had some callback, that would just get replaced. Maybe we should add some way to add callbacks into list; maybe not for all, the draw and tick might be just pointers as they are called often (needs testing).
+
+    callbacks:
+        - called every frame if .hidden not_in f.flags:
+            - tick
+            - draw
+            - draw_after
+        - called on demand:
+            - show
+            - hide
+            - enter
+            - leave
+            - click
+            - wheel
+            - drag (called every frame when f.captured)
+
+    // this is how we could add "click" callback to some_frame without need of managing actual value of some_frame.click
+    ui.on_click(some_frame, proc (f: ^ui.Frame) {
+        // ...
+    })
+
+    // it would do something like: append(&f.click, click_proc)
+    // and probably ensure() such callback is not in the list yet
+    // click list should be like: Frame.click: [dynamic] Frame_Proc
+
+    maybe add some callback lists to the UI, so its possible to have global events, for example
+        - on_ui_root_resize     // can be useful when frame want to support different layout depends on screen size
+        - on_ui_capture_start
+        - on_ui_capture_end
+        - on_ui_click
+        - on_ui_wheel
+        - on_ui_drag
+
 TODO: ui: add support for "size_ratio"
 
     just like "size", but allows to set size relative to parent.rect.w/h in ratio; if set, has priority over "size" field ("size" and "size_min" is ignored)

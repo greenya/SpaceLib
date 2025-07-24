@@ -6,33 +6,60 @@ import "core:strings"
 import "../core"
 import "../terse"
 
-Frame :: struct {
-    ui              : ^UI,
+// TODO: make add_frame() to take Frame_Init
+// TODO: make Frame's events to be dynamic arrays of callbacks
+//       - add on_click/wheel/... proc to add callback
+//       - extend arg list of add_frame() so it takes "click: Frame_Proc = nil", "enter:...", "leave:..." etc.
+//         and will call proper on_xxx(); just like with set_anchors()
 
-    parent          : ^Frame,
+Frame_Init :: struct {
     flags           : bit_set [Flag],
     order           : int,
-    children        : [dynamic] ^Frame,
-    layout          : union { Flow, Grid },
 
     rect            : Rect,
-    rect_dirty      : bool,
-    anchors         : [dynamic] Anchor,
     size            : Vec2,
     size_min        : Vec2,
     size_aspect     : f32,
 
+    layout          : union { Flow, Grid },
+
     name            : string,
     text            : string,
     text_format     : string,
+
+    draw            : Frame_Proc,
+    draw_after      : Frame_Proc,
+}
+
+Frame :: struct {
+    ui              : ^UI,
+
+    parent          : ^Frame,
+    // flags           : bit_set [Flag],
+    // order           : int,
+    children        : [dynamic] ^Frame,
+    // layout          : union { Flow, Grid },
+
+    using init      : Frame_Init,
+
+    // rect            : Rect,
+    rect_dirty      : bool,
+    anchors         : [dynamic] Anchor,
+    // size            : Vec2,
+    // size_min        : Vec2,
+    // size_aspect     : f32,
+
+    // name            : string,
+    // text            : string,
+    // text_format     : string,
     terse           : ^terse.Terse,
     actor           : Actor,
 
     tick            : Frame_Proc,
     show            : Frame_Proc,
     hide            : Frame_Proc,
-    draw            : Frame_Proc,
-    draw_after      : Frame_Proc,
+    // draw            : Frame_Proc,
+    // draw_after      : Frame_Proc,
     enter           : Frame_Proc,
     entered         : bool,
     entered_prev    : bool,
