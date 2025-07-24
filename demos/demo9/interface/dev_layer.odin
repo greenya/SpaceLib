@@ -33,7 +33,7 @@ dev: struct {
 
 Dev_Window_Mode :: enum { invisible, visible, aside }
 
-dev_window_min_size :: [2] f32 { 410, 240 }
+dev_window_min_size :: [2] f32 { 380, 250 }
 
 add_dev_layer :: proc (order: int) {
     assert(dev.layer == nil)
@@ -73,7 +73,7 @@ add_dev_window :: proc () {
     header := ui.add_frame(dev.window, {
         name="header",
         flags={.capture,.terse,.terse_height},
-        text="<pad=15:10,left,wrap,color=#eee>Dev Window",
+        text="<pad=15:10,left,wrap,color=#eee>Control Panel",
         draw=proc (f: ^ui.Frame) {
             draw.rect(f.rect, core.gray1)
             partials.draw_terse(f.terse)
@@ -115,7 +115,7 @@ add_dev_window :: proc () {
     dev.content = ui.add_frame(dev.window, {
         name="content",
         flags={.scissor},
-        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={15,0}, gap=5 },
+        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={10,0}, gap=10 },
     },
         { point=.top_left, rel_point=.bottom_left, rel_frame=header },
         { point=.bottom_right },
@@ -150,7 +150,7 @@ add_dev_stat_perf :: proc () {
     add_dev_stat_header(dev.content,"Perf")
 
     ui.add_frame(dev.content, {
-        size={len(dev.ui_stats_buffer)+180,150},
+        size={len(dev.ui_stats_buffer)+160,150},
         draw=proc (f: ^ui.Frame) {
             draw.rect(f.rect, core.gray3)
 
@@ -183,6 +183,8 @@ add_dev_stat_perf :: proc () {
                 rect := Rect { f.rect.x, point.y-22, f32(j)+60, 22 }
                 draw.rect(rect, core.alpha(core.gray5, .75))
                 draw.text("1 ms", point+{5,-20}, fonts.get(.default), core.gray3)
+
+                draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{55,-20}, fonts.get(.default), core.gray8)
             }
 
             last_idx := dev.ui_stats_buffer_idx-1
@@ -211,15 +213,14 @@ add_dev_stat_perf :: proc () {
     {
         add_dev_stat_text(dev.content, "VSync:")
         list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) {  })
-        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) {  })
+        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
+        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
     }
 
     {
-        add_dev_stat_text(dev.content, "Fullscreen:")
+        add_dev_stat_text(dev.content, "Borderless:")
         list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) {  })
-        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) {  })
+        add_dev_stat_button(list, "TOGGLE", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
     }
 }
 
