@@ -18,12 +18,14 @@ Rect :: core.Rect
 
 dev: struct {
     layer           : ^ui.Frame,
+    layer_split     : ^ui.Frame,
 
     window          : ^ui.Frame,
     resize_handle   : ^ui.Frame,
     content         : ^ui.Frame,
 
-    window_mode     : Dev_Window_Mode,
+    window_mode         : Dev_Window_Mode,
+    window_rect_saved   : Rect,
 
     ui_stats_buffer     : [200] ui.Stats,
     ui_stats_buffer_idx : int,
@@ -53,6 +55,8 @@ add_dev_layer :: proc (order: int) {
     add_dev_stat_clock()
     add_dev_stat_fonts()
     add_dev_stat_texture_atlas()
+
+    add_dev_split_mode_layer()
 }
 
 add_dev_window :: proc () {
@@ -138,6 +142,8 @@ add_dev_window :: proc () {
     },
         { point=.bottom_right },
     )
+
+    ui.update(dev.window)
 }
 
 add_dev_stat_perf :: proc () {
@@ -348,8 +354,10 @@ dev_switch_window_mode :: proc (next_mode: Dev_Window_Mode) {
 
     if prev_mode == .aside {
         ui.show(dev.resize_handle)
+        disable_dev_split_mode()
     } else if next_mode == .aside {
         ui.hide(dev.resize_handle)
+        enable_dev_split_mode()
     }
 
     #partial switch next_mode {
