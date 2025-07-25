@@ -820,7 +820,7 @@ update_terse :: proc (f: ^Frame) {
         }
     }
 
-    if scroll_offset_delta != {} {
+    if !core.vec_zero_approx(scroll_offset_delta, e=.5) {
         terse.apply_offset(f.terse, scroll_offset_delta)
     } else {
         terse.destroy(f.terse)

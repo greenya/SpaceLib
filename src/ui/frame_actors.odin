@@ -36,16 +36,16 @@ drag_actor :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 @private
 drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     actor := &f.actor.(Actor_Scrollbar_Thumb)
-    p := f.parent
+    track_rect := &f.parent.rect
     ratio: f32
 
     if is_layout_dir_vertical(actor.content) {
-        space := p.rect.h - f.rect.h
-        ratio = core.clamp_ratio(mouse_pos.y-captured_pos.y, p.rect.y, p.rect.y+p.rect.h-f.rect.h)
+        space := track_rect.h - f.rect.h
+        ratio = core.clamp_ratio(mouse_pos.y-captured_pos.y, track_rect.y, track_rect.y+track_rect.h-f.rect.h)
         f.anchors[0].offset.y = space * ratio
     } else {
-        space := p.rect.w - f.rect.w
-        ratio = core.clamp_ratio(mouse_pos.x-captured_pos.x, p.rect.x, p.rect.x+p.rect.w-f.rect.w)
+        space := track_rect.w - f.rect.w
+        ratio = core.clamp_ratio(mouse_pos.x-captured_pos.x, track_rect.x, track_rect.x+track_rect.w-f.rect.w)
         f.anchors[0].offset.x = space * ratio
     }
 
