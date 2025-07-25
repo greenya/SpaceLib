@@ -184,6 +184,9 @@ Frame_Drag_Proc     :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2)
 add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
     f.init = init
+
+    f.entered_time = -999
+    f.left_time = -999
     f.opacity = 1
 
     set_parent(f, parent)
@@ -335,15 +338,30 @@ animating :: #force_inline proc (f: ^Frame) -> bool {
 }
 
 hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: f32, leave_ease: core.Ease, leave_dur: f32) -> f32 {
+    // ---- simple, but has noticeable twitching when switching states
+    // ---- when durations are large and hover time is short
+    // if f.entered {
+    //     ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dur)
+    //     return core.ease_ratio(ratio, enter_ease)
+    // } else {
+    //     ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
+    //     return 1 - core.ease_ratio(ratio, leave_ease)
+    // }
+
+    // ---- takes into account prev state interrupted duration, but has some bug in math
+    // ---- as it is not smooth all the time, needs fixing
+    // FIXME: fix twitching for large duration and short enter/leave times
     if f.entered {
-        left_ratio_interrupted := 1 - clamp((f.entered_time - f.left_time)/leave_dur, 0, 1)
+        leave_interrupted_dur := f.entered_time - f.left_time
+        leftover_ratio := leave_interrupted_dur<leave_dur ? 1-(leave_interrupted_dur/leave_dur) : 0
         enter_ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dur)
-        ratio := clamp(left_ratio_interrupted + enter_ratio, 0, 1)
+        ratio := clamp(leftover_ratio + enter_ratio, 0, 1)
         return core.ease_ratio(ratio, enter_ease)
     } else {
-        enter_ratio_interrupted := clamp((f.left_time - f.entered_time)/enter_dur, 0, 1)
-        left_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
-        ratio := clamp(1 - enter_ratio_interrupted + left_ratio, 0, 1)
+        enter_interrupted_dur := f.left_time - f.entered_time
+        leftover_ratio := enter_interrupted_dur<enter_dur ? 1-(enter_interrupted_dur/enter_dur) : 0
+        leave_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
+        ratio := clamp(leftover_ratio + leave_ratio, 0, 1)
         return 1 - core.ease_ratio(ratio, leave_ease)
     }
 }
