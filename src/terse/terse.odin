@@ -61,6 +61,7 @@ Query_Color_Proc    :: proc (name: string) -> Color
 
 default_code_start_rune     :: '<'
 default_code_end_rune       :: '>'
+default_command_separator   :: ","
 default_args_separator_rune :: ':'
 default_fonts_stack_size    :: 16
 default_colors_stack_size   :: 16
@@ -96,7 +97,7 @@ create :: proc (
     alpha := f32(1)
     brightness := f32(0)
 
-    fonts_stack: stack.Stack(^Font, default_colors_stack_size)
+    fonts_stack: stack.Stack(^Font, default_fonts_stack_size)
     stack.push(&fonts_stack, query_font(default_font_name))
     ensure(stack.top(fonts_stack).measure_text != nil, "Font.measure_text must be set")
 
@@ -137,7 +138,7 @@ create :: proc (
             }
 
             if code != "" {
-                for &command in strings.split(code, ",", context.temp_allocator) {
+                for &command in strings.split(code, default_command_separator, context.temp_allocator) {
                     if command == "/" do switch last_opened_command {
                     case .none      : panic("Unexpected command \"/\", no command opened previously")
                     case .font      : command = "/font"
