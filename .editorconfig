@@ -16,3 +16,6 @@ indent_style = tab
 
 [credits.txt]
 insert_final_newline = false
+
+[lorem_ipsum.txt]
+insert_final_newline = false

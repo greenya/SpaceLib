@@ -5,14 +5,14 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 import "spacelib:core"
-import "spacelib:terse"
 import "spacelib:raylib/measure"
+import "spacelib:terse"
 
 // --------------------------------------------------------
 // ID format: name_[size][weight][style]
 // --------------------------------------------------------
 // Each part is a single character
-// - size   : "1".."9" = abstract size; we can only say which is bigger (5 bigger then 4), but we cannot say on how much
+// - size   : "1".."9" = abstract size; we can only say which is bigger (5 bigger than 4), but we cannot say on how much
 // - weight : "t"=thin "l"=light, "r"=regular, "m"=medium, "b"=bold
 // - style  : [optional] not set for normal, "i"=italic,
 //            maybe u=underlined, not sure, maybe this should be an extra hint when rendering text as we can just draw

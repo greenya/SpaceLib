@@ -185,8 +185,10 @@ add_dev_stat_perf_monitor :: proc () {
 
             draw.rect(f.rect, core.gray3)
 
-            j := 0
+            dot_size :: 4
+            dot_bounds := core.rect_inflated(f.rect, -2)
             bottom_left_corner := Vec2 { f.rect.x, f.rect.y+f.rect.h }
+            j := 0
 
             for span in ([] [2] int {
                 { dev.ui_stats_buffer_idx, len(dev.ui_stats_buffer) },  // idx (first) -> <100
@@ -196,13 +198,13 @@ add_dev_stat_perf_monitor :: proc () {
                     stats := dev.ui_stats_buffer[i]
 
                     {
-                        point := bottom_left_corner + { f32(j), -f32(stats.draw_time/(time.Microsecond*10)) }
-                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(point, f.rect), 4), core.yellow)
+                        dot := bottom_left_corner + { f32(j), -f32(stats.draw_time/(time.Microsecond*10)) }
+                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(dot, dot_bounds), dot_size), core.yellow)
                     }
 
                     {
-                        point := bottom_left_corner + { f32(j), -f32(stats.tick_time/(time.Microsecond*10)) }
-                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(point, f.rect), 4), core.magenta)
+                        dot := bottom_left_corner + { f32(j), -f32(stats.tick_time/(time.Microsecond*10)) }
+                        draw.rect(core.rect_from_center(core.clamp_vec_to_rect(dot, dot_bounds), dot_size), core.magenta)
                     }
 
                     j += 1

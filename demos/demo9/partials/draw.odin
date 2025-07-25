@@ -35,23 +35,28 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
         draw_terse(t, colors.get(.bg0), offset=offset+{0,2}, _shadow_pass=true)
     }
 
-    for word in t.words {
-        rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-        if core.rect_intersection(rect, t.scissor) == {} do continue
+    for line in t.lines {
+        if !core.rects_intersect(line.rect, t.scissor) do continue
 
-        tint := color != nil ? color.? : word.color
-        tint = core.alpha(tint, t.opacity)
+        for i in 0..<line.word_count {
+            word := &t.words[line.word_start_idx+i]
+            rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
+            if !core.rects_intersect(rect, t.scissor) do continue
 
-        if word.is_icon {
-            prefix :: strings.has_prefix
-            switch {
-            case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, t.opacity, shadow_only=_shadow_pass)
-            case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), t.opacity, font="text_4r", shadow_only=_shadow_pass)
-            case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, t.opacity, shape=.diamond, shadow_only=_shadow_pass)
-            case                                    : draw_sprite(word.text, rect, tint=tint)
+            tint := color != nil ? color.? : word.color
+            tint = core.alpha(tint, t.opacity)
+
+            if word.is_icon {
+                prefix :: strings.has_prefix
+                switch {
+                case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, t.opacity, shadow_only=_shadow_pass)
+                case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), t.opacity, font="text_4r", shadow_only=_shadow_pass)
+                case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, t.opacity, shape=.diamond, shadow_only=_shadow_pass)
+                case                                    : draw_sprite(word.text, rect, tint=tint)
+                }
+            } else if word.text != "" && word.text != " " {
+                draw.text(word.text, {rect.x,rect.y}, word.font, tint)
             }
-        } else if word.text != "" && word.text != " " {
-            draw.text(word.text, {rect.x,rect.y}, word.font, tint)
         }
     }
 
@@ -199,6 +204,13 @@ draw_gradient_fade_up_and_down_rect :: proc (f: ^ui.Frame) {
     color_a0 := core.alpha(color, 0)
     draw.rect_gradient_vertical(core.rect_half_top(f.rect), color_a0, color)
     draw.rect_gradient_vertical(core.rect_half_bottom(f.rect), color, color_a0)
+}
+
+draw_gradient_fade_left_and_right_rect :: proc (f: ^ui.Frame) {
+    color := colors.get_by_name(f.text, alpha=f.opacity)
+    color_a0 := core.alpha(color, 0)
+    draw.rect_gradient_horizontal(core.rect_half_left(f.rect), color_a0, color)
+    draw.rect_gradient_horizontal(core.rect_half_right(f.rect), color, color_a0)
 }
 
 draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {

@@ -50,7 +50,7 @@ destroy :: proc () {
     color_vars = nil
 }
 
-get :: proc (id: ID, brightness := f32(0), alpha := f32(1)) -> Color {
+get :: #force_inline proc (id: ID, brightness := f32(0), alpha := f32(1)) -> Color {
     color := colors[id]
     if brightness != 0  do color = core.brightness(color, brightness)
     if alpha != 1       do color = core.alpha(color, alpha)
