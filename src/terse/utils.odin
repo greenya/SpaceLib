@@ -1,6 +1,7 @@
 package spacelib_terse
 
 import "core:fmt"
+import "core:strings"
 import "../core"
 
 @private Vec2 :: core.Vec2
@@ -9,14 +10,45 @@ import "../core"
 
 apply_offset :: proc (terse: ^Terse, offset: Vec2) {
     assert(terse != nil)
-    mv :: core.rect_moved
 
-    terse.rect_input = mv(terse.rect_input, offset)
-    terse.rect = mv(terse.rect, offset)
+    terse.rect_input.x += offset.x
+    terse.rect_input.y += offset.y
 
-    for &word in terse.words do word.rect = mv(word.rect, offset)
-    for &line in terse.lines do line.rect = mv(line.rect, offset)
-    for &group in terse.groups do for &r in group.rects do r = mv(r, offset)
+    terse.rect.x += offset.x
+    terse.rect.y += offset.y
+
+    for &word in terse.words {
+        word.rect.x += offset.x
+        word.rect.y += offset.y
+    }
+
+    for &line in terse.lines {
+        line.rect.x += offset.x
+        line.rect.y += offset.y
+    }
+
+    for &group in terse.groups do for &rect in group.rects {
+        rect.x += offset.x
+        rect.y += offset.y
+    }
+}
+
+text_of_group :: proc (terse: ^Terse, group_idx: int, allocator := context.allocator) -> string {
+    assert(terse != nil)
+    assert(group_idx >= 0 && group_idx < len(terse.groups))
+
+    group := terse.groups[group_idx]
+    if group.word_count == 0 do return ""
+
+    sb := strings.builder_make(allocator)
+    for i in 0..<group.word_count {
+        word := &terse.words[i + group.word_start_idx]
+        if !word.is_icon {
+            fmt.sbprintf(&sb, "%s%s", i > 0 ? " " : "", word.text)
+        }
+    }
+
+    return strings.to_string(sb)
 }
 
 size_of_terse :: proc (terse: ^Terse) -> (total: int) {
