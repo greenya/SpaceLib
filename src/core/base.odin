@@ -90,6 +90,19 @@ rect_intersection :: #force_inline proc (a: Rect, b: Rect) -> Rect {
     return {}
 }
 
+rects_intersect :: #force_inline proc (a: Rect, b: Rect) -> bool {
+    x1 := max(a.x, b.x)
+    x2 := min(a.x+a.w, b.x+b.w)
+    if x2 >= x1 {
+        y1 := max(a.y, b.y)
+        y2 := min(a.y+a.h, b.y+b.h)
+        if y2 >= y1 {
+            return true
+        }
+    }
+    return false
+}
+
 rect_offset_into_view :: proc (r: Rect, v: Rect) -> (offset: Vec2) {
     if r.w <= v.w {
         r_x2 := r.x + r.w
