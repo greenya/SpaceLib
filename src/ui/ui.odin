@@ -84,7 +84,7 @@ create :: proc (
     ui := new(UI)
 
     ui^ = {
-        root                    = add_frame(nil, { ui=ui, flags={.pass_self} }),
+        root                    = add_frame(nil, { flags={.pass_self} }),
 
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
@@ -105,6 +105,7 @@ create :: proc (
 
     clock.init(&ui.clock)
 
+    ui.root.ui = ui
     return ui
 }
 

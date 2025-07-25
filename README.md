@@ -70,6 +70,9 @@ TODO: ui: support multiple callbacks for some events
     // and probably ensure() such callback is not in the list yet
     // click list should be like: Frame.click: [dynamic] Frame_Proc
 
+    // extend arg list of add_frame() so it takes "click: Frame_Proc = nil", "enter:...", "leave:..." etc.
+    // and will call proper on_xxx(); just like with set_anchors()
+
     maybe add some callback lists to the UI, so its possible to have global events, for example
         - on_ui_root_resize     // can be useful when frame want to support different layout depends on screen size
         - on_ui_capture_start

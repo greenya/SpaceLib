@@ -6,12 +6,6 @@ import "core:strings"
 import "../core"
 import "../terse"
 
-// TODO: make add_frame() to take Frame_Init
-// TODO: make Frame's events to be dynamic arrays of callbacks
-//       - add on_click/wheel/... proc to add callback
-//       - extend arg list of add_frame() so it takes "click: Frame_Proc = nil", "enter:...", "leave:..." etc.
-//         and will call proper on_xxx(); just like with set_anchors()
-
 Frame_Init :: struct {
     flags           : bit_set [Flag],
     order           : int,
@@ -27,50 +21,39 @@ Frame_Init :: struct {
     text            : string,
     text_format     : string,
 
+    tick            : Frame_Proc,
+    show            : Frame_Proc,
+    hide            : Frame_Proc,
     draw            : Frame_Proc,
     draw_after      : Frame_Proc,
+    enter           : Frame_Proc,
+    leave           : Frame_Proc,
+    click           : Frame_Proc,
+    wheel           : Frame_Wheel_Proc,
+    drag            : Frame_Drag_Proc,
+
+    selected        : bool,
 }
 
 Frame :: struct {
     ui              : ^UI,
 
     parent          : ^Frame,
-    // flags           : bit_set [Flag],
-    // order           : int,
     children        : [dynamic] ^Frame,
-    // layout          : union { Flow, Grid },
 
     using init      : Frame_Init,
 
-    // rect            : Rect,
     rect_dirty      : bool,
     anchors         : [dynamic] Anchor,
-    // size            : Vec2,
-    // size_min        : Vec2,
-    // size_aspect     : f32,
 
-    // name            : string,
-    // text            : string,
-    // text_format     : string,
     terse           : ^terse.Terse,
     actor           : Actor,
 
-    tick            : Frame_Proc,
-    show            : Frame_Proc,
-    hide            : Frame_Proc,
-    // draw            : Frame_Proc,
-    // draw_after      : Frame_Proc,
-    enter           : Frame_Proc,
     entered         : bool,
     entered_prev    : bool,
     entered_time    : f32,
-    leave           : Frame_Proc,
     left_time       : f32,
-    click           : Frame_Proc,
-    wheel           : Frame_Wheel_Proc,
-    drag            : Frame_Drag_Proc,
     captured        : bool,
-    selected        : bool,
 
     anim            : Animation,
     offset          : Vec2,
@@ -198,11 +181,9 @@ Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
 Frame_Drag_Proc     :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2)
 
-add_frame :: proc (parent: ^Frame, init: Frame = {}, anchors: ..Anchor) -> ^Frame {
-    assert(init.parent == nil, "Pass parent as argument, not in init value")
-
+add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
-    f^ = init
+    f.init = init
     f.opacity = 1
 
     set_parent(f, parent)
@@ -361,13 +342,9 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
         return core.ease_ratio(ratio, enter_ease)
     } else {
         enter_ratio_interrupted := clamp((f.left_time - f.entered_time)/enter_dur, 0, 1)
-        if f.left_time != 0 { // prevents default value 0 to be treated as "just left" when ui.clock.time is ~0
-            left_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
-            ratio := clamp(1 - enter_ratio_interrupted + left_ratio, 0, 1)
-            return 1 - core.ease_ratio(ratio, leave_ease)
-        } else {
-            return 0
-        }
+        left_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
+        ratio := clamp(1 - enter_ratio_interrupted + left_ratio, 0, 1)
+        return 1 - core.ease_ratio(ratio, leave_ease)
     }
 }
 
