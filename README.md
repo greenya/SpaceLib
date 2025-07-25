@@ -39,6 +39,8 @@ TODO: terse: investigate if text measuring of a word can be improved (performanc
 TODO: ui: Grid: support other directions
 TODO: ui: Grid: support scroll
 
+    consider separating scroll logic to the Frame root (now its part of Flow method only); the idea is that scrolling should not know/care about layout method; the layout method should provide info for the scroll, size needed to fit all children
+
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
 
 TODO: ui: support multiple callbacks for some events
@@ -120,7 +122,7 @@ TODO: [?] ui: add support for automatic child frames generation for each text_te
     // - the idea is to be able to have enter/leave/click for any group in terse
     // - maybe we need to add Frame.draw/enter/leave/click_terse_group for handling events for those dynamic children
 
-TODO: [?] ui: maybe add support for Frame.drag: Drag_Proc (f: ^Frame, op: Drag_Operation) // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
+TODO: [?] ui: maybe extend Frame.drag to support op: Drag_Operation // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 
 TODO: [?] ui: maybe add support for logic resolution 1280x720
 
@@ -143,9 +145,9 @@ TODO: raylib/res: sprite: add support for animations (Sprite.info variant)
     draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
     simple animation has single sequence named "default"
 
-TODO: [?] raylib/res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; need thinking how to make it, but the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
+TODO: [?] raylib/res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
     // [?] maybe we need "spacelib:raylib/audio" package to have "play_random(list: [] rl.Sound)"
-    // ...maybe not // -- needs thinking
+    // ...maybe not
     // [?] maybe just load "book_flip-1" as "book_flip", and extend Sound struct to have
     // "variations: [dynamic] rl.Sound"; keep "using sound_rl" so its possible to just
     // rl.PlaySound() the Sound value directly.
