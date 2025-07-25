@@ -112,8 +112,16 @@ rect_equal_approx :: #force_inline proc (a: Rect, b: Rect, e: f32) -> bool {
     return abs(a.x-b.x)<e && abs(a.y-b.y)<e && abs(a.w-b.w)<e && abs(a.h-b.h)<e
 }
 
+vec_equal_approx :: #force_inline proc (a: Vec2, b: Vec2, e: f32) -> bool {
+    return abs(a.x-b.x)<e && abs(a.y-b.y)<e
+}
+
+vec_zero_approx :: #force_inline proc (a: Vec2, e: f32) -> bool {
+    return abs(a.x)<e && abs(a.y)<e
+}
+
 vec_in_rect :: #force_inline proc (vec: Vec2, r: Rect) -> bool {
-    return r.x < vec.x && r.x+r.w > vec.x && r.y < vec.y && r.y+r.h > vec.y
+    return r.x<vec.x && r.x+r.w>vec.x && r.y<vec.y && r.y+r.h>vec.y
 }
 
 clamp_vec_to_rect :: #force_inline proc (vec: Vec2, r: Rect) -> Vec2 {
