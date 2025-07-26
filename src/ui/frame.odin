@@ -338,19 +338,6 @@ animating :: #force_inline proc (f: ^Frame) -> bool {
 }
 
 hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: f32, leave_ease: core.Ease, leave_dur: f32) -> f32 {
-    // ---- simple, but has noticeable twitching when switching states
-    // ---- when durations are large and hover time is short
-    // if f.entered {
-    //     ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dur)
-    //     return core.ease_ratio(ratio, enter_ease)
-    // } else {
-    //     ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
-    //     return 1 - core.ease_ratio(ratio, leave_ease)
-    // }
-
-    // ---- takes into account prev state interrupted duration, but has some bug in math
-    // ---- as it is not smooth all the time, needs fixing
-    // FIXME: fix twitching for large duration and short enter/leave times
     if f.entered {
         leave_interrupted_dur := f.entered_time - f.left_time
         leftover_ratio := leave_interrupted_dur<leave_dur ? 1-(leave_interrupted_dur/leave_dur) : 0
