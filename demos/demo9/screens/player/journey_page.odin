@@ -125,7 +125,7 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         topics := ui.add_frame(codex.list, {
             name    = "topics",
             flags   = {.hidden},
-            layout  = ui.Grid { dir=.right_down, wrap=topics_wrap, aspect_ratio=15./23, gap=10, auto_size=true },
+            layout  = ui.Grid { dir=.right_down, wrap=topics_wrap, wrap_aspect_ratio=15./23, gap=10, auto_size=true },
         })
 
         for data_topic in data_section.topics {

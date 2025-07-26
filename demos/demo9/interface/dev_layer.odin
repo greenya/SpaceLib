@@ -160,14 +160,14 @@ add_dev_stat_perf :: proc () {
     {
         add_dev_stat_text(dev.content, "VSync:")
         list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "on", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
-        add_dev_stat_button(list, "off", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
+        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
+        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
     }
 
     {
         add_dev_stat_text(dev.content, "Borderless:")
-        list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
+        list := add_dev_stat_list_grid(dev.content, {100,30})
+        add_dev_stat_button(list, "Toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
     }
 }
 
@@ -362,23 +362,21 @@ add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) {
     })
 }
 
-add_dev_stat_list_grid :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+add_dev_stat_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}) -> ^ui.Frame {
     return ui.add_frame(parent, {
-        layout=ui.Grid{ dir=.right_down, wrap=4, gap=5, aspect_ratio=3, auto_size=true },
-        tick=proc (f: ^ui.Frame) { ui.layout_grid(f).wrap = 1+int(f.rect.w/90) },
+        layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size=true },
     })
 }
 
 add_dev_stat_button :: proc (parent: ^ui.Frame, text: string, click: ui.Frame_Proc) -> ^ui.Frame {
     return ui.add_frame(parent, {
         flags={.terse,.terse_height},
-        text=fmt.tprintf("<wrap,color=#eee>%s", text),
+        text=fmt.tprintf("<wrap>%s", text),
         click=click,
         draw=proc (f: ^ui.Frame) {
-            if f.selected   do draw.rect(f.rect, core.gray6)
-            else            do draw.rect(f.rect, f.entered ? core.gray4 : core.gray3)
-            draw.rect_lines(f.rect, 1, core.gray4)
-            partials.draw_terse(f.terse)
+            if f.selected                   do draw.rect(f.rect, core.gray7)
+            else          do if f.entered   do draw.rect(f.rect, core.gray3)
+            partials.draw_terse(f.terse, color=f.selected?core.gray1:core.gray7)
         },
     })
 }

@@ -5,12 +5,13 @@ import "core:slice"
 import "../core"
 
 Grid :: struct {
-    dir         : Grid_Direction,
-    wrap        : int,
-    aspect_ratio: f32,
-    gap         : Vec2,
-    pad         : Vec2,
-    auto_size   : bool,
+    dir                 : Grid_Direction,   // Layout direction of the children. A pair of primary and secondary directions. Grid grows in the secondary direction.
+    size                : Vec2,             // Size of each child.
+    wrap                : int,              // Amount of children per primary direction. If set, `size` is ignored.
+    wrap_aspect_ratio   : f32,              // Aspect ratio of a child. Used only with `wrap>0`. Square (`1`) is assumed when this value is not set (`0`).
+    gap                 : Vec2,             // Spacing between adjacent children.
+    pad                 : Vec2,             // Padding around the outermost children.
+    auto_size           : bool,             // The grid frame will update its `size` after arranging its children.
 }
 
 Grid_Direction :: enum {
@@ -35,21 +36,37 @@ layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
 @private
 update_rect_for_children_of_grid :: proc (f: ^Frame) {
     grid := layout_grid(f)
-    assert(grid.wrap > 0)
-    assert(grid.aspect_ratio > 0)
 
+    wrap: int
     rect: Rect
 
-    switch grid.dir {
-    case .right_down:
-        rect.w = (f.rect.w - 2*grid.pad.x - f32(grid.wrap-1)*grid.gap.x) / f32(grid.wrap)
-        rect.h = rect.w / grid.aspect_ratio
+    if grid.wrap > 0 {
+        wrap = grid.wrap
+        aspect_ratio := grid.wrap_aspect_ratio > 0 ? grid.wrap_aspect_ratio : 1
+
+        switch grid.dir {
+        case .right_down:
+            rect.w = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
+            rect.h = rect.w / aspect_ratio
+        }
+    } else {
+        assert(grid.size.x > 0 && grid.size.y > 0)
+        rect.w = grid.size.x
+        rect.h = grid.size.y
+
+        switch grid.dir {
+        case .right_down:
+            w := f.rect.w - 2*grid.pad.x
+            wrap = int(math.floor(w+grid.gap.x) / (rect.w+grid.gap.x))
+        }
     }
+
+    if wrap < 1 do wrap = 1
 
     vis_children := get_layout_visible_children(f, context.temp_allocator)
 
     for child, i in vis_children {
-        i_div, i_mod := math.divmod(i, grid.wrap)
+        i_div, i_mod := math.divmod(i, wrap)
 
         switch grid.dir {
         case .right_down:
