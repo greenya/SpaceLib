@@ -2,6 +2,18 @@ package spacelib_ui
 
 import "../core"
 
+Actor :: union {
+    Actor_Scrollbar_Content,
+    Actor_Scrollbar_Next,
+    Actor_Scrollbar_Prev,
+    Actor_Scrollbar_Thumb,
+}
+
+Actor_Scrollbar_Content :: struct { thumb, next, prev: ^Frame }
+Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
+Actor_Scrollbar_Next    :: struct { content: ^Frame }
+Actor_Scrollbar_Prev    :: struct { content: ^Frame }
+
 setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame = nil, next: ^Frame = nil, prev: ^Frame = nil) {
     ensure(layout_scroll(content) != nil, "Content frame must have layout with scroll")
     ensure(thumb != nil || next != nil || prev != nil, "At least one actor must be used")

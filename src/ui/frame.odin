@@ -78,79 +78,6 @@ Flag :: enum {
     terse_hit_rect,
 }
 
-Anchor :: struct {
-    point       : Anchor_Point,
-    rel_point   : Anchor_Point,
-    rel_frame   : ^Frame,
-    offset      : Vec2,
-}
-
-Anchor_Point :: enum {
-    none,
-    mouse,
-    top_left,
-    top,
-    top_right,
-    left,
-    center,
-    right,
-    bottom_left,
-    bottom,
-    bottom_right,
-}
-
-Flow :: struct {
-    dir         : Flow_Direction,
-    align       : Flow_Alignment,
-    scroll      : Layout_Scroll,
-    size        : Vec2,
-    gap         : f32,
-    pad         : Vec2,
-    auto_size   : Flow_Auto_Size,
-}
-
-Flow_Direction :: enum {
-    left,
-    left_and_right,
-    right,
-    up,
-    up_and_down,
-    down,
-}
-
-Flow_Alignment :: enum {
-    start,
-    center,
-    end,
-}
-
-Flow_Auto_Size :: enum {
-    none,
-    full,
-    dir,
-}
-
-Grid :: struct {
-    dir         : Grid_Direction,
-    wrap        : int,
-    aspect_ratio: f32,
-    gap         : Vec2,
-    pad         : Vec2,
-    auto_size   : bool,
-}
-
-Grid_Direction :: enum {
-    right_down,
-    // TODO: support other Grid directions
-    // down_right,
-    // left_down,
-    // down_left,
-    // right_up,
-    // up_right,
-    // left_up,
-    // up_left,
-}
-
 Layout_Scroll :: struct {
     step        : f32,
     offset      : f32,
@@ -164,18 +91,6 @@ Animation :: struct {
     end     : f32,
     ratio   : f32,
 }
-
-Actor :: union {
-    Actor_Scrollbar_Content,
-    Actor_Scrollbar_Next,
-    Actor_Scrollbar_Prev,
-    Actor_Scrollbar_Thumb,
-}
-
-Actor_Scrollbar_Content :: struct { thumb, next, prev: ^Frame }
-Actor_Scrollbar_Thumb   :: struct { content: ^Frame }
-Actor_Scrollbar_Next    :: struct { content: ^Frame }
-Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
@@ -205,21 +120,6 @@ add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> 
     }
 
     return f
-}
-
-set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
-    clear_anchors(f)
-    for a in anchors {
-        init := a
-        assert(init.point != .mouse, "Mouse anchor can only be used as rel_point.")
-        if init.point == .none      do init.point = .top_left
-        if init.rel_point == .none  do init.rel_point = init.point
-        append(&f.anchors, init)
-    }
-}
-
-clear_anchors :: #force_inline proc (f: ^Frame) {
-    resize(&f.anchors, 0)
 }
 
 update :: proc (f: ^Frame, repeat := 1) {
@@ -351,20 +251,6 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
         ratio := clamp(leftover_ratio + leave_ratio, 0, 1)
         return 1 - core.ease_ratio(ratio, leave_ease)
     }
-}
-
-layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
-    #partial switch &l in f.layout {
-    case Flow: return &l
-    }
-    panic("Layout is not Flow")
-}
-
-layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
-    #partial switch &l in f.layout {
-    case Grid: return &l
-    }
-    panic("Layout is not Grid")
 }
 
 scroll :: proc (f: ^Frame, dy: f32) -> (actually_scrolled: bool) {

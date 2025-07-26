@@ -1,5 +1,41 @@
 package spacelib_ui
 
+Anchor :: struct {
+    point       : Anchor_Point,
+    rel_point   : Anchor_Point,
+    rel_frame   : ^Frame,
+    offset      : Vec2,
+}
+
+Anchor_Point :: enum {
+    none,
+    mouse,
+    top_left,
+    top,
+    top_right,
+    left,
+    center,
+    right,
+    bottom_left,
+    bottom,
+    bottom_right,
+}
+
+set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
+    clear_anchors(f)
+    for a in anchors {
+        init := a
+        assert(init.point != .mouse, "Mouse anchor can only be used as rel_point.")
+        if init.point == .none      do init.point = .top_left
+        if init.rel_point == .none  do init.rel_point = init.point
+        append(&f.anchors, init)
+    }
+}
+
+clear_anchors :: proc (f: ^Frame) {
+    resize(&f.anchors, 0)
+}
+
 @private
 update_rect_with_anchors :: proc (f: ^Frame) {
     result_dir := Rect_Dir { r=f.size.x, b=f.size.y }

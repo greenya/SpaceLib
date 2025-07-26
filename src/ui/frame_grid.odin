@@ -4,6 +4,34 @@ import "core:math"
 import "core:slice"
 import "../core"
 
+Grid :: struct {
+    dir         : Grid_Direction,
+    wrap        : int,
+    aspect_ratio: f32,
+    gap         : Vec2,
+    pad         : Vec2,
+    auto_size   : bool,
+}
+
+Grid_Direction :: enum {
+    right_down,
+    // TODO: support other Grid directions
+    // down_right,
+    // left_down,
+    // down_left,
+    // right_up,
+    // up_right,
+    // left_up,
+    // up_left,
+}
+
+layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
+    #partial switch &l in f.layout {
+    case Grid: return &l
+    }
+    panic("Layout is not Grid")
+}
+
 @private
 update_rect_for_children_of_grid :: proc (f: ^Frame) {
     grid := layout_grid(f)

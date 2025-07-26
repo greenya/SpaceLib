@@ -3,6 +3,44 @@ package spacelib_ui
 import "core:slice"
 import "../core"
 
+Flow :: struct {
+    dir         : Flow_Direction,
+    align       : Flow_Alignment,
+    scroll      : Layout_Scroll,
+    size        : Vec2,
+    gap         : f32,
+    pad         : Vec2,
+    auto_size   : Flow_Auto_Size,
+}
+
+Flow_Direction :: enum {
+    left,
+    left_and_right,
+    right,
+    up,
+    up_and_down,
+    down,
+}
+
+Flow_Alignment :: enum {
+    start,
+    center,
+    end,
+}
+
+Flow_Auto_Size :: enum {
+    none,
+    full,
+    dir,
+}
+
+layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
+    #partial switch &l in f.layout {
+    case Flow: return &l
+    }
+    panic("Layout is not Flow")
+}
+
 @private
 update_rect_for_children_of_flow :: proc (f: ^Frame) {
     prev_rect: Rect
