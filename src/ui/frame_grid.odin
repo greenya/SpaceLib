@@ -5,13 +5,24 @@ import "core:slice"
 import "../core"
 
 Grid :: struct {
-    dir                 : Grid_Direction,   // Layout direction of the children. A pair of primary and secondary directions. Grid grows in the secondary direction.
-    size                : Vec2,             // Size of each child.
-    wrap                : int,              // Amount of children per primary direction. If set, `size` is ignored.
-    wrap_aspect_ratio   : f32,              // Aspect ratio of a child. Used only with `wrap>0`. Square (`1`) is assumed when this value is not set (`0`).
-    gap                 : Vec2,             // Spacing between adjacent children.
-    pad                 : Vec2,             // Padding around the outermost children.
-    auto_size           : bool,             // The grid frame will update its `size` after arranging its children.
+    // Layout direction of the children. A pair of primary and secondary directions.
+    // Grid grows in primary direction up to `wrap` items, and indefinitely in the secondary direction.
+    dir         : Grid_Direction,
+    // Size of each child.
+    // If not set, it will be decided from `wrap`, `ratio` and width of the frame.
+    size        : Vec2,
+    // Amount of children per primary direction.
+    // If not set, it will be decided from `size` (must be set) and width of the frame.
+    wrap        : int,
+    // Aspect ratio of a child.
+    // Used only with `wrap>0` and `size=0`. Square (`1`) is assumed when this value is not set (`0`).
+    ratio       : f32,
+    // Spacing between adjacent children.
+    gap         : Vec2,
+    // Padding around the outermost children.
+    pad         : Vec2,
+    // The grid frame will update its `size` after arranging its children.
+    auto_size   : bit_set [Grid_Auto_Size],
 }
 
 Grid_Direction :: enum {
@@ -26,6 +37,11 @@ Grid_Direction :: enum {
     // up_left,
 }
 
+Grid_Auto_Size :: enum {
+    width,
+    height,
+}
+
 layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
     #partial switch &l in f.layout {
     case Grid: return &l
@@ -37,33 +53,38 @@ layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
 update_rect_for_children_of_grid :: proc (f: ^Frame) {
     grid := layout_grid(f)
 
-    wrap: int
-    rect: Rect
+    wrap := grid.wrap
+    size := grid.size
+    skip_vis_children := false
 
-    if grid.wrap > 0 {
-        wrap = grid.wrap
-        aspect_ratio := grid.wrap_aspect_ratio > 0 ? grid.wrap_aspect_ratio : 1
+    assert(wrap >= 0)
 
-        switch grid.dir {
-        case .right_down:
-            rect.w = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
-            rect.h = rect.w / aspect_ratio
+    if wrap > 0 {
+        if size == {} {
+            ratio := grid.ratio > 0 ? grid.ratio : 1
+            switch grid.dir {
+            case .right_down:
+                size.x = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
+                size.y = size.x / ratio
+            }
         }
-    } else {
-        assert(grid.size.x > 0 && grid.size.y > 0)
-        rect.w = grid.size.x
-        rect.h = grid.size.y
-
+    } else if wrap == 0 {
+        assert(size.x > 0 && size.y > 0, "Grid.size must be set when Grid.wrap==0.")
         switch grid.dir {
         case .right_down:
             w := f.rect.w - 2*grid.pad.x
-            wrap = int(math.floor(w+grid.gap.x) / (rect.w+grid.gap.x))
+            wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
         }
+        skip_vis_children = wrap < 1
+    } else {
+        panic("Grid.wrap cannot be negative.")
     }
 
-    if wrap < 1 do wrap = 1
+    rect := Rect {0,0,size.x,size.y}
 
-    vis_children := get_layout_visible_children(f, context.temp_allocator)
+    vis_children := !skip_vis_children\
+        ? get_layout_visible_children(f, context.temp_allocator)\
+        : {}
 
     for child, i in vis_children {
         i_div, i_mod := math.divmod(i, wrap)
@@ -78,18 +99,20 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         child.rect_dirty = false
     }
 
-    if grid.auto_size {
+    if grid.auto_size != {} {
         if len(vis_children) > 0 {
             fc := vis_children[0]
             lc := slice.last(vis_children[:])
+            lc_div0 := vis_children[min( wrap, len(vis_children) )-1]
 
             switch grid.dir {
             case .right_down:
-                f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + 2*grid.pad.y
+                if .width in grid.auto_size     do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + 2*grid.pad.x
+                if .height in grid.auto_size    do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + 2*grid.pad.y
             }
         } else {
-            if is_layout_dir_vertical(f)    do f.size.y = 0
-            else                            do f.size.x = 0
+            if .width in grid.auto_size     do f.size.x = 0
+            if .height in grid.auto_size    do f.size.y = 0
         }
     }
 }

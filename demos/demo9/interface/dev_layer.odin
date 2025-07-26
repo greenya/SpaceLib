@@ -364,7 +364,7 @@ add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) {
 
 add_dev_stat_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}) -> ^ui.Frame {
     return ui.add_frame(parent, {
-        layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size=true },
+        layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size={.height} },
     })
 }
 

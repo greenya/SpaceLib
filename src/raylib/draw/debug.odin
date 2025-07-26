@@ -104,10 +104,11 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
             }
         }
     case ui.Grid:
-        switch l.dir {
-        case .right_down:
-            line({ f.rect.x+20, f.rect.y+20 }, { f.rect.x+20+20, f.rect.y+20 }, thick*2, color)
-            line({ f.rect.x+20+20, f.rect.y+20 }, { f.rect.x+20+20, f.rect.y+20+20 }, thick*2, color)
+        mark := Rect {0,0,8,8}
+        for i in 0..<2 do for j in 0..<2 {
+            mark.x = f.rect.x + 10*f32(i) - 20
+            mark.y = f.rect.y + 10*f32(j)
+            rect(mark, color)
         }
     }
 }

@@ -91,6 +91,8 @@ TODO: ui: key press handling
 
 TODO: ui: add global opacity handling
 
+    ----- // also consider switching Color from [4] u8 to [4] f32, as we are doing a lot of alpha and brightness tweaks and every time we basically convert each component to f32 and back; and with this "global opacity" change, we will do it even more (well, only for one component... but for every drawing); test the speed of such change.
+
     The idea is to allow any frame drawing function to not worry about f.opacity, as long as any drawing is done using raylib/draw.* procs. A lot of calls like "core.alpha(..., f.opacity)" should be possible to get rid of. In case when some manual drawing needed directly using Raylib, the actual opacity can be read using draw.opacity().
 
     The following steps i see needs to be done:
@@ -112,6 +114,8 @@ TODO: ui: add global opacity handling
         - notes:
             * we do not use opacity stack, as we expect to set opacity for every frame
             * we always restore opacity to 1.0; this should be fine, but if not, then we need to add f.ui.opacity_get_proc() and save the value to restore it after the drawing; lets keep blind 1.0 for now
+
+TODO: ui: fix hover_ratio(): fix twitching for large duration and short enter/leave times
 
 TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
 
