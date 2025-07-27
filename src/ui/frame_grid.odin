@@ -4,6 +4,7 @@ import "core:math"
 import "core:slice"
 import "../core"
 
+// Arranges `children` in the grid where each cell has same size.
 Grid :: struct {
     // Layout direction of the children. A pair of primary and secondary directions.
     // Grid grows in primary direction up to `wrap` items, and indefinitely in the secondary direction.
@@ -15,13 +16,14 @@ Grid :: struct {
     // If not set, it will be decided from `size` (must be set) and width of the frame.
     wrap        : int,
     // Aspect ratio of a child.
-    // Used only with `wrap>0` and `size=0`. Square (`1`) is assumed when this value is not set (`0`).
+    // Used only with `wrap > 0` and `size = 0`. Square (`1`) is assumed when this value is not set (`0`).
     ratio       : f32,
     // Spacing between adjacent children.
     gap         : Vec2,
     // Padding around the outermost children.
     pad         : Vec2,
     // The grid frame will update its `size` after arranging its children.
+    // Width and height can be marked for auto sizing separately.
     auto_size   : bit_set [Grid_Auto_Size],
 }
 
@@ -99,7 +101,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         }
 
         child.rect = core.rect_moved(rect, child.offset)
-        child.rect_dirty = false
+        child._rect_dirty = false
     }
 
     if grid.auto_size != {} {

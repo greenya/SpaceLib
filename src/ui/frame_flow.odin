@@ -3,6 +3,9 @@ package spacelib_ui
 import "core:slice"
 import "../core"
 
+// Arranges `children` in the single row/column.
+// Child frames can have different sizes.
+// Supports scroll.
 Flow :: struct {
     // Layout direction of the children.
     // Direction with `_center` suffix will align items to the center of the direction.
@@ -11,6 +14,11 @@ Flow :: struct {
     // Width/height is considered "not set" if it is zero.
     // The priority goes: `child.size > flow.size > parent.size`.
     // For example: child.size={100,0}, flow.size={0,50} -> resulting child size will be {100,50}.
+    //
+    // Flow supports child's `size_aspect` and `size_min`.
+    // For example, you can have a flow with vertical direction and a child with only size_aspect=5
+    // and size_min={0,100}, this will make it to take whole width of the flow, height will be width/5
+    // as long as the value is greater than 100.
     size        : Vec2,
     // Children alignment in orthogonal direction to the `dir`.
     align       : Flow_Alignment,
@@ -23,6 +31,7 @@ Flow :: struct {
     // Padding around the outermost children.
     pad         : Vec2,
     // The flow frame will update its `size` after arranging its children.
+    // Width and height can be marked for auto sizing separately.
     auto_size   : bit_set [Flow_Auto_Size],
 }
 
@@ -86,6 +95,9 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
             else                do rect.w = rect.h*child.size_aspect
         }
 
+        if child.size_min.x > 0 do rect.w = max(rect.w, child.size_min.x)
+        if child.size_min.y > 0 do rect.h = max(rect.h, child.size_min.y)
+
         switch flow.dir {
         case .left:
             rect.x = has_prev_rect ? prev_rect.x-rect.w-flow.gap : f.rect.x+f.rect.w-rect.w-flow.pad.x
@@ -120,7 +132,7 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         }
 
         child.rect = core.rect_moved(rect, child.offset)
-        child.rect_dirty = false
+        child._rect_dirty = false
     }
 
     if len(vis_children) > 0 {

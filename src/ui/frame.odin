@@ -7,57 +7,133 @@ import "../core"
 import "../terse"
 
 Frame_Init :: struct {
+    // Set of flags.
     flags           : bit_set [Flag],
-    order           : int,
 
+    // Absolute rectangle of the frame.
+    // In most cases will be updated by the UI depending on `anchors` or `layout`.
+    // Set it directly only when frame is not anchored and is not child of a `layout`.
+    // For example, the root frame generally has set this directly to screen resolution.
     rect            : Rect,
+
+    // Size. Set only one value to set only it, e.g. size={200,0} will effectively set width,
+    // and leave height open for calculations by `anchors` and `layout`.
     size            : Vec2,
-    size_min        : Vec2,
+
+    // Size aspect ratio. Considered "not set" if it is zero.
+    // The value used only by `anchors` and `Flow` of the parent frame.
+    // The value is applied only when one dimension is known and another is zero (not set nor calculated).
     size_aspect     : f32,
 
+    // Minimal size. Width and height are processed separately.
+    // Width/height is considered "not set" if it is zero.
+    // The value is used only by `Flow` of the parent frame.
+    // The value is applied after all size calculations has been made.
+    size_min        : Vec2,
+
+    // Layout method for `children`.
+    // Affects only children without `anchors`.
     layout          : union { Flow, Grid },
 
+    // Relative order of this frame to other siblings.
+    // This value effects order of this frame in the `parent.children` array. It is not an index,
+    // but a priority. Use `index()` to get the zero-based index. The higher `order`, the later
+    // frame drawn and input tested (its above any lower-order sibling frame).
+    //
+    // Note: adding all frames with the same `order` (say 0) will keep the order same the order
+    // they were added. But when adding a frame with say order `-1` will ensure the new frame will
+    // be first, but the order of all children with same value (said 0) is effectively undefined.
+    // This is due to sorting done to children list after each add.
+    //
+    // So general rule: if some frames needs order, you probably want all frames to have `order` set
+    // (and different) for consistent sort result.
+    order           : int,
+
+    // Name. Not unique.
     name            : string,
+
+    // Text.
     text            : string,
+    // Text format for the `text`.
+    // If set, the `text` will contain result of `fmt.aprintf(text_format, ...values)`, when calling `set_text()`.
     text_format     : string,
 
+    // Tick callback. Called when `ui.phase == .ticking`.
+    // At this point, the `rect` of the frame and each of its children has been calculated.
+    // Called before any event callbacks (e.g. `enter`, `click`, etc.)
+    // Called on every tick when frame is not `.hidden`.
     tick            : Frame_Proc,
+
+    // Draw callback. Called when `ui.phase == .drawing`.
+    // Called before setting own scissor (if used) and before drawing children.
+    // Called on every draw when frame is not `.hidden`.
+    draw            : Frame_Proc,
+
+    // Post draw callback. Called when `ui.phase == .drawing`.
+    // Called after restoring previous scissor (if used) and after drawing children.
+    // Called on every draw when frame is not `.hidden`.
+    draw_after      : Frame_Proc,
+
     show            : Frame_Proc,
     hide            : Frame_Proc,
-    draw            : Frame_Proc,
-    draw_after      : Frame_Proc,
     enter           : Frame_Proc,
     leave           : Frame_Proc,
     click           : Frame_Proc,
     wheel           : Frame_Wheel_Proc,
     drag            : Frame_Drag_Proc,
 
+    // Indicates the frame is selected.
+    // Use with `.check` flag if you want UI to toggle it on `click`.
+    // Use with `.radio` flag if you want UI to turn it ON on `click` for this frame while turn it OFF
+    // for all siblings with `.radio` flag.
     selected        : bool,
 }
 
 Frame :: struct {
+    // UI this frame is part of.
+    // Can be `nil` in case the frame is detached (e.g. `parent == nil`).
+    // Note: detached frames will not be destroyed on `destroy_ui()`.
     ui              : ^UI,
 
+    // Parent frame.
     parent          : ^Frame,
+    // Child frames. Sorted according to `child.order`.
     children        : [dynamic] ^Frame,
 
+    // Init part of the `Frame` struct.
     using init      : Frame_Init,
 
-    rect_dirty      : bool,
+    // Anchors.
+    // Anchors calculation is using `size` and `size_aspect` to decide on final `rect`.
+    // Note: `parent.layout` skips frames with `anchors`.
     anchors         : [dynamic] Anchor,
 
+    // Terse.
+    // Enabled by `.terse` flag.
     terse           : ^terse.Terse,
-    actor           : Actor,
 
+    // Indicates the mouse has entered the `rect` of the frame or any of its children.
     entered         : bool,
+    // `entered` value of the previous tick.
     entered_prev    : bool,
+    // Time (in seconds) when the mouse entered the `rect` of the frame or any of its children.
     entered_time    : f32,
+    // Time (in seconds) when the mouse left the `rect` of the frame or any of its children.
     left_time       : f32,
+    // Indicates the frame has captured the mouse.
+    // Enabled by `.capture` flag.
     captured        : bool,
 
+    // Animation state.
     anim            : Animation,
+    // Offset to be applied for final `rect`. For animation purposes.
     offset          : Vec2,
+    // Opacity of the frame. The UI only manages the value, the drawing is done by the drawing callbacks,
+    // and they should use this value if necessary.
     opacity         : f32,
+
+    _rect_dirty     : bool,
+    _actor          : Actor,
 }
 
 Flag :: enum {
@@ -255,13 +331,13 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
 
 scroll :: proc (f: ^Frame, dy: f32) -> (actually_scrolled: bool) {
     actually_scrolled = layout_apply_scroll(f, dy)
-    if f.actor != nil do wheel_actor(f)
+    if f._actor != nil do wheel_actor(f)
     return
 }
 
 scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (actually_scrolled: bool) {
     actually_scrolled = layout_apply_scroll(f, new_offset, is_absolute=true)
-    if f.actor != nil do wheel_actor(f)
+    if f._actor != nil do wheel_actor(f)
     return
 }
 
@@ -357,10 +433,10 @@ hide_children :: proc (parent: ^Frame) {
 wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return false
 
-    if layout_apply_scroll(f, dy)           do consumed = true
-    if f.actor != nil && wheel_actor(f, dy) do consumed = true
-    if f.wheel != nil && f.wheel(f, dy)     do consumed = true
-    if .block_wheel in f.flags              do consumed = true
+    if layout_apply_scroll(f, dy)               do consumed = true
+    if f._actor != nil && wheel_actor(f, dy)    do consumed = true
+    if f.wheel != nil && f.wheel(f, dy)         do consumed = true
+    if .block_wheel in f.flags                  do consumed = true
 
     return
 }
@@ -380,7 +456,7 @@ click_by_frame :: proc (f: ^Frame) {
 
     if .check in f.flags    do f.selected = !f.selected
     if .radio in f.flags    do click_radio(f)
-    if f.actor != nil       do click_actor(f)
+    if f._actor != nil      do click_actor(f)
     if f.click != nil       do f.click(f)
 }
 
@@ -533,7 +609,7 @@ click_radio :: proc (f: ^Frame) {
 drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     if disabled(f) do return
 
-    if f.actor != nil   do drag_actor(f, mouse_pos, captured_pos)
+    if f._actor != nil  do drag_actor(f, mouse_pos, captured_pos)
     if f.drag != nil    do f.drag(f, mouse_pos, captured_pos)
 }
 
@@ -546,7 +622,7 @@ sort_children :: #force_inline proc (parent: ^Frame) {
 
 @private
 set_rect_dirty_frame_tree :: proc (f: ^Frame) {
-    f.rect_dirty = true
+    f._rect_dirty = true
     for child in f.children do set_rect_dirty_frame_tree(child)
 }
 
@@ -588,7 +664,7 @@ prepare_frame_tree :: proc (f: ^Frame) {
     f.entered = false
     f.captured = false
 
-    f.rect_dirty = true
+    f._rect_dirty = true
     for child in f.children do prepare_frame_tree(child)
 
     f.ui.stats.frames_total += 1
@@ -650,7 +726,7 @@ draw_frame_tree :: proc (f: ^Frame) {
 
 @private
 update_rect :: proc (f: ^Frame) {
-    if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f._rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
 
     switch l in f.layout {
     case Flow: update_rect_for_children_of_flow(f)
@@ -659,10 +735,7 @@ update_rect :: proc (f: ^Frame) {
 
     if .terse in f.flags do update_terse(f)
 
-    if f.size_min.x > 0 do f.size.x = max(f.size.x, f.size_min.x)
-    if f.size_min.y > 0 do f.size.y = max(f.size.y, f.size_min.y)
-
-    if f.actor != nil do wheel_actor(f)
+    if f._actor != nil do wheel_actor(f)
 }
 
 @private
@@ -702,8 +775,13 @@ update_terse :: proc (f: ^Frame) {
         )
     }
 
-    if f.flags & {.terse_size,.terse_width} != {} do f.size.x = f.terse.rect.w
-    if f.flags & {.terse_size,.terse_height} != {} do f.size.y = f.terse.rect.h
+    if f.flags & {.terse_size,.terse_width} != {} {
+        f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w
+    }
+
+    if f.flags & {.terse_size,.terse_height} != {} {
+        f.size.y = f.size_min.y>0 ? max(f.size_min.y, f.terse.rect.h) : f.terse.rect.h
+    }
 }
 
 @private
