@@ -108,7 +108,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
     for data_section in data.codex {
         section := ui.add_frame(codex.list, {
             name        = data_section.id,
-            size        = {0,200},
+            size_aspect = 4.5,
+            size_min    = {0,120},
             flags       = {.check,.terse},
             text_format = "<wrap,top,left,pad=24:16,font=text_4m,color=primary_l3>%s\n<gap=.2,font=text_4r,color=primary_d3>%s",
             draw        = partials.draw_codex_section_item,
@@ -212,7 +213,7 @@ journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
         ui.show(line)
     }
 
-    ui.update(codex.root)
+    ui.update(codex.details)
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
