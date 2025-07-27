@@ -27,13 +27,12 @@ Grid :: struct {
 
 Grid_Direction :: enum {
     right_down,
-    // TODO: support other Grid directions
-    // down_right,
-    // left_down,
-    // down_left,
+    left_down,
     // right_up,
-    // up_right,
     // left_up,
+    // down_right,
+    // down_left,
+    // up_right,
     // up_left,
 }
 
@@ -62,16 +61,12 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     if wrap > 0 {
         if size == {} {
             ratio := grid.ratio > 0 ? grid.ratio : 1
-            switch grid.dir {
-            case .right_down:
-                size.x = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
-                size.y = size.x / ratio
-            }
+            size.x = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
+            size.y = size.x / ratio
         }
     } else if wrap == 0 {
         assert(size.x > 0 && size.y > 0, "Grid.size must be set when Grid.wrap==0.")
-        switch grid.dir {
-        case .right_down:
+        if is_layout_dir_vertical(f) {
             w := f.rect.w - 2*grid.pad.x
             wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
         }
@@ -81,6 +76,8 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     }
 
     rect := Rect {0,0,size.x,size.y}
+    f_rect_x2 := f.rect.x+f.rect.w
+    // f_rect_y2 := f.rect.y+f.rect.h
 
     vis_children := !skip_vis_children\
         ? get_layout_visible_children(f, context.temp_allocator)\
@@ -92,6 +89,12 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         switch grid.dir {
         case .right_down:
             rect.x = f.rect.x+grid.pad.x + f32(i_mod)*rect.w + f32(i_mod)*grid.gap.x
+        case .left_down:
+            rect.x = f_rect_x2-grid.pad.x - f32(i_mod+1)*rect.w - f32(i_mod)*grid.gap.x
+        }
+
+        switch grid.dir {
+        case .right_down, .left_down:
             rect.y = f.rect.y+grid.pad.y + f32(i_div)*rect.h + f32(i_div)*grid.gap.y
         }
 
@@ -107,8 +110,14 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
             switch grid.dir {
             case .right_down:
-                if .width in grid.auto_size     do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + 2*grid.pad.x
-                if .height in grid.auto_size    do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + 2*grid.pad.y
+                if .width in grid.auto_size do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + 2*grid.pad.x
+            case .left_down:
+                if .width in grid.auto_size do f.size.x = fc.rect.x+fc.rect.w - lc_div0.rect.x + 2*grid.pad.x
+            }
+
+            switch grid.dir {
+            case .right_down, .left_down:
+                if .height in grid.auto_size do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + 2*grid.pad.y
             }
         } else {
             if .width in grid.auto_size     do f.size.x = 0
