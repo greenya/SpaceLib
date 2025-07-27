@@ -59,6 +59,7 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
+default_escape_rune         :: '\\'
 default_code_start_rune     :: '<'
 default_code_end_rune       :: '>'
 default_command_separator   :: ","
@@ -110,7 +111,7 @@ create :: proc (
 
     last_opened_command: enum { none, font, color, group, nobreak }
 
-    cursor: struct { type: enum { text, code }, start: int }
+    cursor: struct { type: enum { text, escape, code }, start: int }
     code, word      : string
     word_is_icon    : bool
     word_icon_scale : Vec2
@@ -120,21 +121,32 @@ create :: proc (
     for para in strings.split(text, "\n", context.temp_allocator) {
         line := append_line(terse, stack.top(fonts_stack))
 
-        cursor = { type=.text, start=0 }
+        cursor = { .text, 0 }
         for i:=0; i<len(para); i+=1 {
-            if para[i] == default_code_start_rune && cursor.type == .text {
-                word = para[cursor.start:i]
-                cursor = { start=i+1, type=.code }
+            switch cursor.type {
+            case .text:
+                switch {
+                case para[i] == ' ':
+                    word = para[cursor.start:i+1]
+                    cursor = { .text, i+1 }
+                case para[i] == default_code_start_rune:
+                    word = para[cursor.start:i]
+                    cursor = { .code, i+1 }
+                case para[i] == default_escape_rune:
+                    word = para[cursor.start:i]
+                    cursor = { .escape, -1 }
+                }
+            case .escape:
+                cursor = { .text, i }
+            case .code:
+                if para[i] == default_code_end_rune {
+                    code = para[cursor.start:i]
+                    cursor = { start=i+1, type=.text }
+                }
             }
 
-            if para[i] == default_code_end_rune && cursor.type == .code {
-                code = para[cursor.start:i]
-                cursor = { start=i+1, type=.text }
-            }
-
-            if (para[i] == ' ' || i == len(para)-1) && cursor.type == .text {
+            if i == len(para)-1 && cursor.type == .text && word == "" {
                 word = para[cursor.start:i+1]
-                cursor = { start=i+1, type=.text }
             }
 
             if code != "" {
