@@ -32,7 +32,7 @@ main :: proc () {
     app.ui = ui.create()
 
     time_scale_control := ui.add_frame(app.ui.root,
-        { layout=ui.Flow{ dir=.up_and_down, align=.end, size={120,40}, gap=10 } },
+        { layout=ui.Flow{ dir=.down, align=.end, size={120,40}, gap=10, auto_size={.height} } },
         { point=.right, offset={-20,0} },
     )
 
@@ -63,23 +63,21 @@ main :: proc () {
         { point=.center },
     )
 
-    popup_header := ui.add_frame(popup,
+    /*popup_header :=*/ ui.add_frame(popup,
         { size={0,100}, text="Hello, World!", draw=draw_panel_header },
         { point=.top_left },
         { point=.top_right },
     )
 
-    popup_button := ui.add_frame(popup,
+    /*popup_button :=*/ ui.add_frame(popup,
         { size={170,70}, text="Close", flags={.capture}, draw=draw_button,
             click=proc (f: ^ui.Frame) { ui.animate(f.parent, anim_hide_slide_down, .2) } },
         { point=.bottom, offset={0,-40} },
     )
 
     container := ui.add_frame(popup,
-        { name="slots", layout=ui.Flow{ dir=.left_and_right, align=.center, size={80,140}, pad=40 } },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=popup_header },
-        { point=.bottom, rel_point=.top, rel_frame=popup_button },
-        { point=.right },
+        { name="slots", layout=ui.Flow{ dir=.right, align=.center, size={80,140}, pad=30, auto_size={.width,.height} } },
+        { point=.center },
     )
 
     for text in ([] string { "A", "B", "C", "D", "E" }) {

@@ -49,7 +49,7 @@ add :: proc (parent: ^ui.Frame) {
 @private
 add_social_links :: proc () {
     social_links := ui.add_frame(screen.header,
-        { name="social_links", layout=ui.Flow{ dir=.left, size=62, gap=15, align=.center, auto_size=.dir } },
+        { name="social_links", layout=ui.Flow{ dir=.left, size=62, gap=15, align=.center, auto_size={.width} } },
         { point=.right, rel_point=.bottom_right, offset={-partials.screen_pad,0} },
     )
 
@@ -119,7 +119,7 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
     ui.set_text(content, data.info.welcome.content)
 
     buttons_bar := ui.add_frame(welcome_area,
-        { name="buttons_bar", size={0,60}, layout=ui.Flow{ dir=.left_and_right,size={200,0},gap=30 } },
+        { name="buttons_bar", size={0,60}, layout=ui.Flow{ dir=.right_center,size={200,0},gap=30 } },
         { point=.bottom_left, rel_point=.top_left, rel_frame=header, offset={0,-40} },
         { point=.bottom_right, rel_point=.top_right, rel_frame=header, offset={0,-40} },
     )

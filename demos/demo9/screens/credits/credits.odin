@@ -83,7 +83,7 @@ add_lorem_ipsum_page :: proc () {
         name    = "info",
         text    = "#0008",
         size    = {240,0},
-        layout  = ui.Flow { dir=.down, auto_size=.dir, pad={20,50}, gap=20 },
+        layout  = ui.Flow { dir=.down, pad={20,50}, gap=20, auto_size={.height} },
         draw    = partials.draw_gradient_fade_up_and_down_rect,
     },
         { point=.right, rel_point=.left, rel_frame=screen.lorem_content, offset={-40,0} },

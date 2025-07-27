@@ -238,7 +238,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
     details.column = ui.add_frame(details.root, {
         name    = "column",
         size    = {400,0},
-        layout  = ui.Flow { dir=.up_and_down,auto_size=.dir,gap=1 },
+        layout  = ui.Flow { dir=.down,auto_size={.height},gap=1 },
         text    = "primary_d8",
         draw    = partials.draw_color_rect,
     })

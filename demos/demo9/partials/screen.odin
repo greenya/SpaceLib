@@ -111,7 +111,7 @@ add_screen_header :: proc (screen: ^Screen) {
         name="tabs",
         flags={.scissor,.pass_self},
         size={0,bar_h+tabs_extra_hangout_h},
-        layout=ui.Flow{ dir=.left_and_right, size={0,bar_h}, scroll={step=20} },
+        layout=ui.Flow{ dir=.right_center, size={0,bar_h}, scroll={step=20} },
     },
         { point=.top_left, rel_point=.top_right, rel_frame=screen.header_left },
         { point=.top_right, rel_point=.top_left, rel_frame=screen.header_right },
@@ -207,7 +207,7 @@ move_screen_pyramid_buttons :: proc (screen: ^Screen, side: enum { left, center 
         flow.dir = .right
         ui.set_anchors(list, { point=.bottom_left, offset={screen_pad,0} })
     case .center:
-        flow.dir = .left_and_right
+        flow.dir = .right_center
         ui.set_anchors(list, { point=.bottom })
     }
 }

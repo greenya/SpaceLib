@@ -96,7 +96,7 @@ add_dev_window :: proc () {
     )
 
     view := ui.add_frame(header,
-        { name="view", layout=ui.Flow{ dir=.right, auto_size=.dir, size=40, align=.center } },
+        { name="view", layout=ui.Flow{ dir=.right, auto_size={.width}, size=40, align=.center } },
         { point=.right },
     )
 

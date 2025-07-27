@@ -51,7 +51,7 @@ add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] str
     assert(len(names) > default_idx)
     assert(len(names) == len(titles))
 
-    parent.layout = ui.Flow { dir=.left_and_right, size={120,40}, align=.center }
+    parent.layout = ui.Flow { dir=.right_center, size={120,40}, align=.center }
 
     for name, i in names {
         ui.add_frame(parent, {
@@ -81,7 +81,7 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
     pin_h :: 12
 
     pins := ui.add_frame(parent,
-        { name="pins", layout=ui.Flow{ dir=.left_and_right,gap=4,pad=pin_pad } },
+        { name="pins", layout=ui.Flow{ dir=.right_center,gap=4,pad=pin_pad } },
         { point=.top_left, rel_point=.left },
         { point=.bottom_right },
     )
@@ -157,7 +157,7 @@ Category_Tab_Details :: struct {
 add_category_tabs :: proc (parent: ^ui.Frame, name: string, items: [] Category_Tab_Details, click: ui.Frame_Proc = nil) -> ^ui.Frame {
     tabs := ui.add_frame(parent, {
         name    = name,
-        layout  = ui.Flow { dir=.right, gap=20, auto_size=.dir, align=.center },
+        layout  = ui.Flow { dir=.right, gap=20, auto_size={.width}, align=.center },
     })
 
     ensure(len(items) > 0 && len(items) < 10)

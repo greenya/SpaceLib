@@ -44,9 +44,9 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
     )
 
     tabs := ui.add_frame(root,
-        { name="tabs", layout=ui.Flow{ dir=.left_and_right, size={160,0} } },
-        { point=.top_left },
-        { point=.bottom_right },
+        { name="tabs", layout=ui.Flow{ dir=.right, size={160,0}, auto_size={.width} } },
+        { point=.top },
+        { point=.bottom },
     )
 
     for info in ([] struct { name:string, text:string } {
@@ -205,7 +205,7 @@ app_menu_add_page_archetype :: proc (parent: ^ui.Frame) {
     // middle bottom
 
     prime_perk := ui.add_frame(root,
-        { name="prime_perk", size={300,0}, layout=ui.Flow{ dir=.down, align=.center, gap=20, auto_size=.dir } },
+        { name="prime_perk", size={300,0}, layout=ui.Flow{ dir=.down, align=.center, gap=20, auto_size={.height} } },
         { point=.top, rel_point=.center, offset={0,40} },
     )
 
@@ -237,9 +237,12 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
         )
 
+        list_dir: ui.Grid_Direction = is_left ? .left_down : .right_down
+        list_point: ui.Anchor_Point = is_left ? .top_right : .top_left
+
         list := ui.add_frame(skills,
-            { name="list", layout=ui.Flow{ dir=is_left?.left:.right, size=128, gap=8, pad={24,32}, auto_size=.full } },
-            { point=is_left?.top_right:.top_left },
+            { name="list", layout=ui.Grid{ dir=list_dir, size=128, wrap=3, gap=8, pad={24,32}, auto_size={.height} } },
+            { point=list_point },
         )
 
         skill_ids := is_left\
@@ -270,9 +273,12 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
             { point=is_left?.right:.left, rel_point=.center, offset={(is_left?1:-1)*20,0} },
         )
 
+        list_dir: ui.Grid_Direction = is_left ? .left_down : .right_down
+        list_point: ui.Anchor_Point = is_left ? .top_right : .top_left
+
         list := ui.add_frame(perks,
-            { name="list", layout=ui.Flow{ dir=is_left?.left:.right, size={64,108}, gap=16, pad={24,32}, auto_size=.full } },
-            { point=is_left?.top_right:.top_left },
+            { name="list", layout=ui.Grid{ dir=list_dir, size={64,108}, wrap=4, gap=16, pad={24,32}, auto_size={.height} } },
+            { point=list_point },
         )
 
         icon := is_left ? "sword-wound" : "potion-ball"
@@ -403,9 +409,8 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     // bottom area
 
     weapon_bar := ui.add_frame(ring,
-        { layout=ui.Flow{ dir=.left_and_right, size={240,80}, gap=16, align=.center } },
-        { point=.left, rel_point=.center, offset=app_menu_pos_on_art_ring(math.τ/4 +.75) },
-        { point=.right, rel_point=.center, offset=app_menu_pos_on_art_ring(math.τ/4 -.75) },
+        { layout=ui.Flow{ dir=.right, size={240,80}, gap=16, align=.center, auto_size={.width} } },
+        { point=.center, offset={0,app_menu_art_ring_radius*.73} },
     )
 
     for _ in 0..<3 {
@@ -415,7 +420,7 @@ app_menu_add_page_character :: proc (parent: ^ui.Frame) {
     // side stats column
 
     stats_column := ui.add_frame(ring,
-        { layout=ui.Flow{ dir=.up_and_down } },
+        { layout=ui.Flow{ dir=.down, auto_size={.height} } },
         { point=.left, offset={-188,0} },
     )
 
@@ -503,28 +508,25 @@ app_menu_add_page_traits :: proc (parent: ^ui.Frame) {
         { point=.top, offset={0,32} },
     )
 
-    list := ui.add_frame(root,
-        { name="list", layout=ui.Flow{ dir=.down, gap=12, auto_size=.full } },
-        { point=.top, rel_point=.bottom, rel_frame=header, offset={0,32} },
-    )
-
-    row_count :: 3
-    col_count :: 8
-
     trait_ids := [] string {
         "longshot", "potency", "vigor", "endurance",
         "spirit", "expertise", "amplitude", "blood_bond",
         "bloodstream", "siphoner",
     }
 
-    for row_idx in 0..<row_count {
-        row := ui.add_frame(list, { name="row", layout=ui.Flow{ dir=.right, size={100,220}, gap=12, auto_size=.full } })
-        for col_idx in 0..<col_count {
-            trait_idx := row_idx*col_count + col_idx
-            trait_id := trait_idx < len(trait_ids) ? trait_ids[trait_idx] : ""
-            ui.add_frame(row, { name="slot_trait", text=trait_id, draw=draw_slot_trait,
-                enter=app_tooltip_show, leave=app_tooltip_hide })
-        }
+    cols :: 8
+    rows :: 3
+
+    traits := ui.add_frame(root,
+        { name="traits", layout=ui.Grid{ dir=.right_down, wrap=cols, size={100,220}, gap=12, auto_size={.width,.height} } },
+        { point=.top, rel_point=.bottom, rel_frame=header, offset={0,32} },
+    )
+
+    for i in 0..<cols*rows {
+        trait_id := i < len(trait_ids) ? trait_ids[i] : ""
+        ui.add_frame(traits, {
+            name="slot_trait", text=trait_id, draw=draw_slot_trait, enter=app_tooltip_show, leave=app_tooltip_hide,
+        })
     }
 }
 
@@ -536,31 +538,28 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
     )
 
     sections := ui.add_frame(root,
-        { name="sections", layout=ui.Flow{ dir=.down, gap=10, auto_size=.full } },
+        { name="sections", layout=ui.Flow{ dir=.down, gap=10, auto_size={.width,.height} } },
         { point=.center },
     )
 
-    col_count :: 9
+    cols :: 9
 
-    for info in ([] struct { name:string, text:string, row_count:int, item_tag: App_Data_Item_Tag } {
+    for info in ([] struct { name:string, text:string, rows:int, item_tag: App_Data_Item_Tag } {
         { "consumables" , "<font=text_16,color=bw_59>CONSUMABLES" , 2, .consumable },
         { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, .quest },
         { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, .material },
     }) {
         item_ids := app_data_item_ids_filtered_by_tag(info.item_tag, context.temp_allocator)
 
-        section := ui.add_frame(sections, { name=info.name, layout=ui.Flow{ dir=.down, gap=10, align=.center, auto_size=.full } })
+        section := ui.add_frame(sections, { name=info.name, layout=ui.Flow{ dir=.down, gap=10, align=.center, auto_size={.width,.height} } })
         ui.add_frame(section, { name="header", text=info.text, flags={.terse,.terse_height,.terse_width} })
 
-        rows := ui.add_frame(section, { layout=ui.Flow{ dir=.down, gap=12, auto_size=.full } })
-        for row_idx in 0..<info.row_count {
-            row := ui.add_frame(rows, { layout=ui.Flow{ dir=.right, gap=12, auto_size=.full } })
-            for col_idx in 0..<col_count {
-                item_idx := row_idx*col_count + col_idx
-                item_id := item_idx < len(item_ids) ? item_ids[item_idx] : ""
-                ui.add_frame(row, { size=100, name="slot_item", text=item_id, draw=draw_slot_item,
-                    enter=app_tooltip_show, leave=app_tooltip_hide })
-            }
+        grid := ui.add_frame(section, { layout=ui.Grid{ dir=.right_down, size=100, wrap=cols, gap=12, auto_size={.width,.height} } })
+        for i in 0..<cols*info.rows {
+            item_id := i < len(item_ids) ? item_ids[i] : ""
+            ui.add_frame(grid, {
+                name="slot_item", text=item_id, draw=draw_slot_item, enter=app_tooltip_show, leave=app_tooltip_hide,
+            })
         }
     }
 }
