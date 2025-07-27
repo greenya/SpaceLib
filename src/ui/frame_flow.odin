@@ -4,22 +4,35 @@ import "core:slice"
 import "../core"
 
 Flow :: struct {
+    // Layout direction of the children.
+    // Direction with `_center` suffix will align items to the center of the direction.
     dir         : Flow_Direction,
-    align       : Flow_Alignment,
-    scroll      : Layout_Scroll,
+    // Default size for a child. Width and height are processed separately.
+    // Width/height is considered "not set" if it is zero.
+    // The priority goes: `child.size > flow.size > parent.size`.
+    // For example: child.size={100,0}, flow.size={0,50} -> resulting child size will be {100,50}.
     size        : Vec2,
+    // Children alignment in orthogonal direction to the `dir`.
+    align       : Flow_Alignment,
+    // Scroll info. Set `scroll.step` to enable scroll processing.
+    // `scroll.offset*` values will be updated automatically.
+    // Setting `auto_size` to same direction will effectively disable scrolling conditions.
+    scroll      : Layout_Scroll,
+    // Spacing between adjacent children.
     gap         : f32,
+    // Padding around the outermost children.
     pad         : Vec2,
-    auto_size   : Flow_Auto_Size,
+    // The flow frame will update its `size` after arranging its children.
+    auto_size   : bit_set [Flow_Auto_Size],
 }
 
 Flow_Direction :: enum {
     left,
-    left_and_right,
     right,
+    right_center,
     up,
-    up_and_down,
     down,
+    down_center,
 }
 
 Flow_Alignment :: enum {
@@ -29,9 +42,8 @@ Flow_Alignment :: enum {
 }
 
 Flow_Auto_Size :: enum {
-    none,
-    full,
-    dir,
+    width,
+    height,
 }
 
 layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
@@ -78,13 +90,13 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         case .left:
             rect.x = has_prev_rect ? prev_rect.x-rect.w-flow.gap : f.rect.x+f.rect.w-rect.w-flow.pad.x
             rect.y = f.rect.y + flow.pad.y
-        case .left_and_right, .right:
+        case .right, .right_center:
             rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+flow.gap : f.rect.x+flow.pad.x
             rect.y = f.rect.y + flow.pad.y
         case .up:
             rect.x = f.rect.x + flow.pad.x
             rect.y = has_prev_rect ? prev_rect.y-rect.h-flow.gap : f.rect.y+f.rect.h-rect.h-flow.pad.y
-        case .up_and_down, .down:
+        case .down, .down_center:
             rect.x = f.rect.x + flow.pad.x
             rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+flow.gap : f.rect.y+flow.pad.y
         }
@@ -93,13 +105,13 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         has_prev_rect = true
 
         switch flow.dir {
-        case .left, .left_and_right, .right:
+        case .left, .right, .right_center:
             switch flow.align {
             case .start : // already aligned
             case .center: rect.y += (f.rect.h-rect.h)/2   - flow.pad.y
             case .end   : rect.y +=  f.rect.h-rect.h    - 2*flow.pad.y
             }
-        case .up, .up_and_down, .down:
+        case .up, .down, .down_center:
             switch flow.align {
             case .start : // already aligned
             case .center: rect.x += (f.rect.w-rect.w)/2   - flow.pad.x
@@ -116,14 +128,14 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         lc := slice.last(vis_children[:])
 
         #partial switch flow.dir {
-        case .left_and_right:
+        case .right_center:
             fc_x1               := fc.rect.x
             lc_x2               := lc.rect.x + lc.rect.w
             children_center_x   := (fc_x1 + lc_x2) / 2
             frame_center_x      := f.rect.x + f.rect.w/2
             dx                  := frame_center_x - children_center_x
             for child in vis_children do child.rect.x += dx
-        case .up_and_down:
+        case .down_center:
             fc_y1               := fc.rect.y
             lc_y2               := lc.rect.y + lc.rect.h
             children_center_y   := (fc_y1 + lc_y2) / 2
@@ -135,31 +147,29 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
 
     full_content_size, dir_content_size, dir_rect_size := get_flow_content_size(f, vis_children)
 
-    if flow.auto_size == .full {
-        f.size = full_content_size
-    } else if flow.auto_size == .dir {
-        if is_dir_vertical  do f.size.y = dir_content_size[1]
-        else                do f.size.x = dir_content_size[1]
-    } else {
-        scroll := layout_scroll(f)
-        if scroll != nil {
-            scroll.offset_min = min(0, dir_content_size[0])
-            scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
+    if flow.auto_size != {} {
+        if .width in flow.auto_size     do f.size.x = full_content_size.x
+        if .height in flow.auto_size    do f.size.y = full_content_size.y
+    }
 
-            #partial switch flow.dir {
-            case .left, .up:
-                scroll.offset_min = -scroll.offset_max
-                scroll.offset_max = 0
-            case .left_and_right, .up_and_down:
-                scroll.offset_max /= 2
-                scroll.offset_min = -scroll.offset_max
-            }
+    scroll := layout_scroll(f)
+    if scroll != nil {
+        scroll.offset_min = min(0, dir_content_size[0])
+        scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
 
-            scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
-
-            if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
-            else                do for child in vis_children do child.rect.x -= scroll.offset
+        #partial switch flow.dir {
+        case .left, .up:
+            scroll.offset_min = -scroll.offset_max
+            scroll.offset_max = 0
+        case .right_center, .down_center:
+            scroll.offset_max /= 2
+            scroll.offset_min = -scroll.offset_max
         }
+
+        scroll.offset = clamp(scroll.offset, scroll.offset_min, scroll.offset_max)
+
+        if is_dir_vertical  do for child in vis_children do child.rect.y -= scroll.offset
+        else                do for child in vis_children do child.rect.x -= scroll.offset
     }
 }
 
@@ -186,7 +196,7 @@ get_flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_cont
         case .up: // children grow up
             min_y1 = lc.rect.y
             max_y2 = fc.rect.y + fc.rect.h
-        case .down, .up_and_down: // children grow down
+        case .down, .down_center: // children grow down
             min_y1 = fc.rect.y
             max_y2 = lc.rect.y + lc.rect.h
         }
@@ -201,7 +211,7 @@ get_flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_cont
         case .left: // children grow left
             min_x1 = lc.rect.x
             max_x2 = fc.rect.x + fc.rect.w
-        case .right, .left_and_right: // children grow right
+        case .right, .right_center: // children grow right
             min_x1 = fc.rect.x
             max_x2 = lc.rect.x + lc.rect.w
         }

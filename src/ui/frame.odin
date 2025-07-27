@@ -721,8 +721,15 @@ get_layout_visible_children :: proc (parent: ^Frame, allocator := context.alloca
 @private
 is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
     switch l in f.layout {
-    case Flow: return l.dir == .down || l.dir == .up || l.dir == .up_and_down
-    case Grid: return l.dir == .right_down
+    case Flow:
+        switch l.dir {
+        case .up, .down, .down_center       : return true
+        case .left, .right, .right_center   : return false
+        }
+    case Grid:
+        switch l.dir {
+        case .right_down, .left_down: return true
+        }
     }
     panic("Frame has no layout")
 }

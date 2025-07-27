@@ -83,7 +83,7 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
             for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
                 line({ f.rect.x, y }, { f.rect.x-size, y }, thick, color)
             }
-        case .left_and_right:
+        case .right_center:
             rect_cx := f.rect.x + f.rect.w/2
             for y := f.rect.y; y <= f.rect.y+f.rect.h; y += step {
                 line({ rect_cx-size, y }, { rect_cx+size, y }, thick, color)
@@ -97,7 +97,7 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
             for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
                 line({ x, f.rect.y }, { x, f.rect.y-size }, thick, color)
             }
-        case .up_and_down:
+        case .down_center:
             rect_cy := f.rect.y + f.rect.h/2
             for x := f.rect.x; x <= f.rect.x+f.rect.w; x += step {
                 line({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
