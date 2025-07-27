@@ -33,6 +33,16 @@ apply_offset :: proc (terse: ^Terse, offset: Vec2) {
     }
 }
 
+text_escaped :: proc (text: string, allocator := context.allocator) -> (result: string, was_allocation: bool) {
+    old := strings.builder_make(context.temp_allocator)
+    fmt.sbprint(&old, default_code_start_rune)
+
+    new := strings.builder_make(context.temp_allocator)
+    fmt.sbprint(&new, default_escape_rune, default_code_start_rune, sep="")
+
+    return strings.replace_all(text, strings.to_string(old), strings.to_string(new), allocator)
+}
+
 text_of_group :: proc (terse: ^Terse, group_idx: int, allocator := context.allocator) -> string {
     assert(terse != nil)
     assert(group_idx >= 0 && group_idx < len(terse.groups))
