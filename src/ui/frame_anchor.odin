@@ -38,7 +38,15 @@ clear_anchors :: proc (f: ^Frame) {
 
 @private
 update_rect_with_anchors :: proc (f: ^Frame) {
-    result_dir := Rect_Dir { r=f.size.x, b=f.size.y }
+    initial_size := f.size
+
+    size_aspect_applied := false
+    if f.size_aspect != 0 {
+        if      initial_size.x>1 && initial_size.y==0 { initial_size.y=initial_size.x/f.size_aspect; size_aspect_applied=true }
+        else if initial_size.y>1 && initial_size.x==0 { initial_size.x=initial_size.y*f.size_aspect; size_aspect_applied=true }
+    }
+
+    result_dir := Rect_Dir { r=initial_size.x, b=initial_size.y }
     result_pin: Rect_Pin
 
     for anchor in f.anchors {
@@ -235,12 +243,17 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         result_dir.b - result_dir.t,
     }
 
-    if f.size_aspect != 0 {
+    // when we have anchors of two neighboring points, we cannot apply size_aspect until
+    // we resolve the rect, which will include the distance we use; for example, when
+    // top_left+top_right points anchored, we need width first to be able calculate height;
+    // that is the reason why late size_aspect application exists (code below).
+
+    if !size_aspect_applied && f.size_aspect != 0 {
         if      f.rect.w>1 && f.rect.h==0 do f.rect.h = f.rect.w/f.size_aspect
         else if f.rect.h>1 && f.rect.w==0 do f.rect.w = f.rect.h*f.size_aspect
     }
 
-    f.rect_dirty = false
+    f._rect_dirty = false
 }
 
 @private Rect_Dir :: struct { l, t, r, b: f32 }
