@@ -19,8 +19,8 @@ info := Info {
     },
 }
 
-credits_text        := #load("credits.txt")
-lorem_ipsum_text    := #load("lorem_ipsum.txt")
+credits_text        := string(#load("credits.txt"))
+lorem_ipsum_text    := string(#load("lorem_ipsum.txt"))
 
 create :: proc () {
     create_codex()

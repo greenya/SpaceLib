@@ -16,6 +16,9 @@ import "../../partials"
     autoscroll          : ^ui.Frame,
     autoscroll_enabled  : bool,
 
+    view_source         : ^ui.Frame,
+    view_source_enabled : bool,
+
     lorem_content       : ^ui.Frame,
     lorem_info          : ^ui.Frame,
     lorem_info_target   : ^terse.Terse,
@@ -60,16 +63,44 @@ add_credits_page :: proc () {
         }
     }
 
-    page.show = proc (f: ^ui.Frame) { ui.show(screen.autoscroll) }
-    page.hide = proc (f: ^ui.Frame) { ui.hide(screen.autoscroll) }
+    {
+        text_on  :: "<icon=key/E> Enable Auto-Scroll"
+        text_off :: "<icon=key/D> Disable Auto-Scroll"
 
-    as_text_on  :: "<icon=key/E> Enable Auto-Scroll"
-    as_text_off :: "<icon=key/D> Disable Auto-Scroll"
+        screen.autoscroll = partials.add_screen_key_button(&screen, "autoscroll", text_on)
+        screen.autoscroll.click = proc (f: ^ui.Frame) {
+            screen.autoscroll_enabled = !screen.autoscroll_enabled
+            ui.set_text(f, screen.autoscroll_enabled ? text_off : text_on)
+        }
+    }
 
-    screen.autoscroll = partials.add_screen_key_button(&screen, "autoscroll", as_text_on)
-    screen.autoscroll.click = proc (f: ^ui.Frame) {
-        screen.autoscroll_enabled = !screen.autoscroll_enabled
-        ui.set_text(f, screen.autoscroll_enabled ? as_text_off : as_text_on)
+    {
+        text_on  :: "View Source Text"
+        text_off :: "View Formatted Text"
+
+        screen.view_source = partials.add_screen_key_button(&screen, "view_source", text_on)
+        screen.view_source.click = proc (f: ^ui.Frame) {
+            screen.view_source_enabled = !screen.view_source_enabled
+            ui.set_text(f, screen.view_source_enabled ? text_off : text_on)
+
+            text := ui.get(screen.root, "pages/credits/content/text")
+            if screen.view_source_enabled {
+                credits_text_escaped, _ := terse.text_escaped(data.credits_text, context.temp_allocator)
+                ui.set_text(text, credits_text_escaped)
+            } else {
+                ui.set_text(text, data.credits_text)
+            }
+        }
+    }
+
+    page.show = proc (f: ^ui.Frame) {
+        ui.show(screen.autoscroll)
+        ui.show(screen.view_source)
+    }
+
+    page.hide = proc (f: ^ui.Frame) {
+        ui.hide(screen.autoscroll)
+        ui.hide(screen.view_source)
     }
 }
 
@@ -177,7 +208,7 @@ add_lorem_ipsum_page :: proc () {
 }
 
 @private
-add_content :: proc (page: ^ui.Frame, data_text: [] byte) -> ^ui.Frame {
+add_content :: proc (page: ^ui.Frame, data_text: string) -> ^ui.Frame {
     content := ui.add_frame(page, {
         name    = "content",
         flags   = {.scissor},
