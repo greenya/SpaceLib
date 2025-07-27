@@ -103,6 +103,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
 
+    codex.list.draw_after = partials.draw_after_codex_section_item
+
     for data_section in data.codex {
         section := ui.add_frame(codex.list, {
             name        = data_section.id,
@@ -147,8 +149,8 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         empty_cards_to_add := topics_wrap - (len(data_section.topics) % topics_wrap)
         if empty_cards_to_add < topics_wrap do for _ in 0..<empty_cards_to_add {
             ui.add_frame(topics, {
-                text = "primary_a3",
-                draw = partials.draw_gradient_fade_up_and_down_rect,
+                text = "#fff1",
+                draw = partials.draw_color_rect,
             })
         }
     }

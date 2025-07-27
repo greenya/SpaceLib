@@ -295,16 +295,27 @@ draw_codex_section_item :: proc (f: ^ui.Frame) {
     bg_color := colors.get(.primary, brightness=-.7)
     draw.rect(f.rect, bg_color)
 
-    if f.selected {
-        gr_rect := core.rect_bar_bottom(f.rect, f.rect.h/10)
-        draw.rect_gradient_vertical(gr_rect, bg_color, colors.get(.primary))
-    }
-
     sp_rect := core.rect_moved(f.rect, {-f.rect.w/20,0})
     draw_sprite("book-pile", sp_rect, fit=.contain, fit_align=.end, tint=colors.get(.primary, brightness=-.4))
 
     draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
     draw_terse(f.terse, drop_shadow=true)
+}
+
+draw_after_codex_section_item :: proc (f: ^ui.Frame) {
+    flow := ui.layout_flow(f)
+
+    top_scrolled_h := min(60, flow.scroll.offset - flow.scroll.offset_min)
+    if top_scrolled_h > 0 {
+        bg_rect := core.rect_bar_top(f.rect, top_scrolled_h)
+        draw.rect_gradient_vertical(bg_rect, colors.get(.bg2), Color {})
+    }
+
+    bottom_scrolled_h := min(60, flow.scroll.offset_max - flow.scroll.offset)
+    if bottom_scrolled_h > 0 {
+        bg_rect := core.rect_bar_bottom(f.rect, bottom_scrolled_h)
+        draw.rect_gradient_vertical(bg_rect, Color {}, colors.get(.bg2))
+    }
 }
 
 draw_codex_topic_item :: proc (f: ^ui.Frame) {
