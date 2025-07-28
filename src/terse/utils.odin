@@ -65,21 +65,10 @@ size_of_terse :: proc (terse: ^Terse) -> (total: int) {
     if terse == nil do return
 
     total = size_of(Terse)
-
-    for word in terse.words {
-        total += size_of(word)
-    }
-
-    for line in terse.lines {
-        total += size_of(line)
-    }
-
-    for group in terse.groups {
-        total += size_of(group)
-        for rect in group.rects {
-            total += size_of(rect)
-        }
-    }
+    total += size_of(Word) * cap(terse.words)
+    total += size_of(Line) * cap(terse.lines)
+    total += size_of(Group) * cap(terse.groups)
+    for group in terse.groups do total += size_of(Rect) * cap(group.rects)
 
     return
 }
