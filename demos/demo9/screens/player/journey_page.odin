@@ -150,6 +150,7 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         empty_cards_to_add := topics_wrap - (len(data_section.topics) % topics_wrap)
         if empty_cards_to_add < topics_wrap do for _ in 0..<empty_cards_to_add {
             ui.add_frame(topics, {
+                name = "ph",
                 text = "#fff1",
                 draw = partials.draw_color_rect,
             })

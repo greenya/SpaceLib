@@ -69,7 +69,7 @@ add_credits_page :: proc () {
 
         screen.autoscroll = partials.add_screen_key_button(&screen, "autoscroll", text_on)
         screen.autoscroll.click = proc (f: ^ui.Frame) {
-            screen.autoscroll_enabled = !screen.autoscroll_enabled
+            screen.autoscroll_enabled ~= true
             ui.set_text(f, screen.autoscroll_enabled ? text_off : text_on)
         }
     }
@@ -80,7 +80,7 @@ add_credits_page :: proc () {
 
         screen.view_source = partials.add_screen_key_button(&screen, "view_source", text_on)
         screen.view_source.click = proc (f: ^ui.Frame) {
-            screen.view_source_enabled = !screen.view_source_enabled
+            screen.view_source_enabled ~= true
             ui.set_text(f, screen.view_source_enabled ? text_off : text_on)
 
             text := ui.get(screen.root, "pages/credits/content/text")

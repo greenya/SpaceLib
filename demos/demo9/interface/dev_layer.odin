@@ -27,6 +27,11 @@ dev: struct {
     monitor         : ^ui.Frame,
     monitor_floating: bool,
 
+    frames_label_code           : int,
+    frames_under_mouse_drawing  : bool,
+    frames_under_mouse_store    : [100] ^ui.Frame,
+    frames_under_mouse_slice    : [] ^ui.Frame,
+
     window_mode         : Dev_Window_Mode,
     window_rect_saved   : Rect,
 
@@ -51,6 +56,9 @@ add_dev_layer :: proc (order: int) {
                 else                                do dev.window.flags += {.hidden}
             }
         },
+        draw    = proc (f: ^ui.Frame) {
+            if dev.frames_under_mouse_drawing do dev_draw_frames_under_mouse()
+        },
     }, { point=.top_left }, { point=.bottom_right })
 
     add_dev_window()
@@ -63,6 +71,9 @@ add_dev_layer :: proc (order: int) {
     for child, i in dev.content.children do child.order = i
 
     add_dev_split_mode_layer()
+
+    // name root frame debug display
+    ui.set_name(ui_.root, "root")
 }
 
 add_dev_window :: proc () {
@@ -79,7 +90,7 @@ add_dev_window :: proc () {
     header := ui.add_frame(dev.window, {
         name="header",
         flags={.capture,.terse,.terse_height},
-        text="<pad=15:10,left,wrap,color=#eee>Control Panel",
+        text="<pad=15:10,left,wrap,color=#eee>Dev",
         draw=proc (f: ^ui.Frame) {
             draw.rect(f.rect, core.gray1)
             partials.draw_terse(f.terse)
@@ -153,21 +164,40 @@ add_dev_window :: proc () {
 }
 
 add_dev_stat_perf :: proc () {
-    add_dev_stat_header(dev.content,"Perf")
+    add_dev_stat_header(dev.content, "Perf")
 
     add_dev_stat_perf_monitor()
 
     {
         add_dev_stat_text(dev.content, "VSync:")
         list := add_dev_stat_list_grid(dev.content)
-        add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
-        add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
+        on := add_dev_stat_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
+        on.selected = true
+        on.flags += {.radio}
+        off := add_dev_stat_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
+        off.flags += {.radio}
     }
 
     {
         add_dev_stat_text(dev.content, "Borderless:")
         list := add_dev_stat_list_grid(dev.content, {100,30})
         add_dev_stat_button(list, "Toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
+    }
+
+    {
+        label := add_dev_stat_text(dev.content, "")
+        ui.set_text_format(label, "<left,wrap,color=#eee>Drawn: %i of %i\nMouse cursor frame stack:")
+        label.tick = proc (f: ^ui.Frame) {
+            stats := dev_last_stats_buffer()
+            code := stats.frames_total + (stats.frames_drawn << 16)
+            if code == dev.frames_label_code do return // skip label update when values seems the same
+            dev.frames_label_code = code
+            ui.set_text(f, stats.frames_drawn, stats.frames_total)
+        }
+
+        list := add_dev_stat_list_grid(dev.content, {100,30})
+        toggle := add_dev_stat_button(list, "Toggle", click=proc (f: ^ui.Frame) { dev.frames_under_mouse_drawing ~= true })
+        toggle.flags += {.check}
     }
 }
 
@@ -220,9 +250,7 @@ add_dev_stat_perf_monitor :: proc () {
                 draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{45,-20}, fonts.get(.default), core.gray8)
             }
 
-            last_idx := dev.ui_stats_buffer_idx-1
-            if last_idx < 0 do last_idx = len(dev.ui_stats_buffer)-1
-            stats := dev.ui_stats_buffer[last_idx]
+            stats := dev_last_stats_buffer()
             cursor := Vec2 {f.rect.x+f32(j)+10,f.rect.y+f.rect.h-5}
 
             cursor.y -= 20
@@ -259,9 +287,10 @@ add_dev_stat_perf_monitor :: proc () {
             partials.draw_sprite(icon, f.rect, tint=core.gray8)
         },
         click=proc (f: ^ui.Frame) {
-            dev.monitor_floating = !dev.monitor_floating
+            dev.monitor_floating ~= true
             if dev.monitor_floating {
                 ui.set_parent(dev.monitor, dev.layer)
+                dev.monitor.rect.x -= dev.monitor.rect.w+30
             } else {
                 ui.set_parent(dev.monitor, dev.content)
             }
@@ -272,7 +301,7 @@ add_dev_stat_perf_monitor :: proc () {
 }
 
 add_dev_stat_clock :: proc () {
-    add_dev_stat_header(dev.content,"Clock")
+    add_dev_stat_header(dev.content, "Clock")
 
     add_dev_stat_text(dev.content, "Time scale:")
     list := add_dev_stat_list_grid(dev.content)
@@ -297,7 +326,7 @@ add_dev_stat_clock :: proc () {
 }
 
 add_dev_stat_fonts :: proc () {
-    add_dev_stat_header(dev.content,"Fonts")
+    add_dev_stat_header(dev.content, "Fonts")
 
     add_dev_stat_text(dev.content, "Scale:")
     list := add_dev_stat_list_grid(dev.content)
@@ -355,8 +384,8 @@ add_dev_stat_header :: proc (parent: ^ui.Frame, text: string) {
     })
 }
 
-add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) {
-    ui.add_frame(parent, {
+add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) -> ^ui.Frame {
+    return ui.add_frame(parent, {
         flags={.terse,.terse_height},
         text=fmt.tprintf("<left,wrap,color=#eee>%s", text),
     })
@@ -365,6 +394,7 @@ add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) {
 add_dev_stat_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}) -> ^ui.Frame {
     return ui.add_frame(parent, {
         layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size={.height} },
+        draw=proc (f: ^ui.Frame) { draw.rect(core.rect_bar_center_horizontal(f.rect, 6), core.gray3) },
     })
 }
 
@@ -388,10 +418,16 @@ dev_set_fonts_scale :: proc (scale: f32) {
     ui.update(ui_.root)
 }
 
-dev_record_ui_stats :: proc (stats: ui.Stats) {
-    dev.ui_stats_buffer[dev.ui_stats_buffer_idx] = stats
+dev_ui_draw_ended :: proc () {
+    dev.ui_stats_buffer[dev.ui_stats_buffer_idx] = ui_.stats
     dev.ui_stats_buffer_idx += 1
     if dev.ui_stats_buffer_idx >= len(dev.ui_stats_buffer) do dev.ui_stats_buffer_idx = 0
+}
+
+dev_last_stats_buffer :: proc () -> ^ui.Stats {
+    last_idx := dev.ui_stats_buffer_idx-1
+    if last_idx < 0 do last_idx = len(dev.ui_stats_buffer)-1
+    return &dev.ui_stats_buffer[last_idx]
 }
 
 dev_switch_window_mode :: proc (next_mode: Dev_Window_Mode) {
@@ -410,5 +446,17 @@ dev_switch_window_mode :: proc (next_mode: Dev_Window_Mode) {
     #partial switch next_mode {
     case .invisible : ui.hide(dev.window)
     case .visible   : ui.show(dev.window)
+    }
+}
+
+dev_draw_frames_under_mouse :: proc () {
+    if !dev.frames_under_mouse_drawing do return
+    font := fonts.get(.default)
+    pos := Vec2 { 10, 10 }
+    for j, i in ui_.mouse_frames {
+        path := ui.path_string(j, allocator=context.temp_allocator)
+        text := fmt.tprintf("[%i] %s", i, path)
+        draw.text(text, pos, font, tint=core.gray9)
+        pos.y += 20
     }
 }

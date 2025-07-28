@@ -1,6 +1,5 @@
 package interface
 
-// import "core:fmt"
 import rl "vendor:raylib"
 
 import "spacelib:core"
@@ -69,5 +68,6 @@ tick :: proc () {
 
 draw :: proc () {
     ui.draw(ui_)
-    dev_record_ui_stats(ui_.stats)
+    dev_ui_draw_ended()
+    dev_draw_frames_under_mouse()
 }
