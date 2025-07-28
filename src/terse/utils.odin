@@ -61,6 +61,15 @@ text_of_group :: proc (terse: ^Terse, group_idx: int, allocator := context.alloc
     return strings.to_string(sb)
 }
 
+shrink_terse :: proc (terse: ^Terse) {
+    if terse == nil do return
+
+    shrink(&terse.words)
+    shrink(&terse.lines)
+    shrink(&terse.groups)
+    for &group in terse.groups do shrink(&group.rects)
+}
+
 size_of_terse :: proc (terse: ^Terse) -> (total: int) {
     if terse == nil do return
 
