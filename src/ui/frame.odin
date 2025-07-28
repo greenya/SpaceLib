@@ -543,7 +543,7 @@ wheel :: proc {
 click_by_frame :: proc (f: ^Frame) {
     if disabled(f) do return
 
-    if .check in f.flags    do f.selected = !f.selected
+    if .check in f.flags    do f.selected ~= true
     if .radio in f.flags    do click_radio(f)
     if f.actor != nil       do click_actor(f)
     if f.click != nil       do f.click(f)

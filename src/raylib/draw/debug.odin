@@ -54,7 +54,7 @@ debug_frame :: proc (f: ^ui.Frame) {
         line({ c.x-9, c.y }, { c.x+8, c.y }, 1, color)
         line({ c.x, c.y-9 }, { c.x, c.y+8 }, 1, color)
 
-        text := fmt.tprintf("%v x %v", f.rect.w, f.rect.h)
+        text := fmt.tprintf("%.0fx%.0f", f.rect.w, f.rect.h)
         pos := Vec2 { f.rect.x+f.rect.w-4, f.rect.y+2 }
         _debug_text_right(text, pos, color)
     }
