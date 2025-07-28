@@ -2,9 +2,9 @@ package demo7
 
 import "core:fmt"
 import "spacelib:core"
+import "spacelib:core/tracking_allocator"
 import "spacelib:raylib/draw"
 import "spacelib:raylib/res"
-import "spacelib:tracking_allocator"
 import "spacelib:ui"
 import rl "vendor:raylib"
 

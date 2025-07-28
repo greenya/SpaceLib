@@ -4,7 +4,7 @@ import "core:fmt"
 import "core:slice"
 import "core:strings"
 import "../core"
-import "../stack"
+import "../core/stack"
 
 Terse :: struct {
     rect        : Rect,

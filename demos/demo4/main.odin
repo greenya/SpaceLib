@@ -1,6 +1,6 @@
 package demo4
 
-import "spacelib:tracking_allocator"
+import "spacelib:core/tracking_allocator"
 
 main :: proc () {
     context.allocator = tracking_allocator.init()

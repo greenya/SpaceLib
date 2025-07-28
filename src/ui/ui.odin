@@ -2,9 +2,9 @@ package spacelib_ui
 
 import "core:slice"
 import "core:time"
-import "../clock"
 import "../core"
-import "../stack"
+import "../core/clock"
+import "../core/stack"
 import "../terse"
 
 UI :: struct {

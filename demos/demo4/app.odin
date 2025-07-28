@@ -2,11 +2,12 @@ package demo4
 
 import "core:fmt"
 import rl "vendor:raylib"
-import "spacelib:clock"
+
 import "spacelib:core"
+import "spacelib:core/clock"
+import "spacelib:core/tracking_allocator"
 import "spacelib:ui"
 import "spacelib:terse"
-import "spacelib:tracking_allocator"
 import "spacelib:raylib/draw"
 
 Vec2 :: core.Vec2

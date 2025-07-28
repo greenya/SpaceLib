@@ -1,19 +1,21 @@
 # SpaceLib
 
-* /clock                - clock with time scale support
-* /core                 - core types and utility procs
-* /events               - [planned] [maybe] event bus
-* /raylib               - helpers when using Raylib
-* /sdl3                 - [planned] set of helpers when using SDL3
-* /stack                - stack data type
-* /terse                - text layout calculation
-* /tracking_allocator   - tracking allocator
-* /tweens               - [planned] [maybe] tweening support
-* /ui                   - ui manager
+    /core                       - core types and utilities
+        /clock                  - clock with time scale support
+        /stack                  - fixed stack
+        /tracking_allocator     - tracking allocator
+    /events                     - [planned] [maybe] event bus
+    /raylib                     - helpers when using Raylib
+    /sdl2 (3?)                  - [planned] helpers when using SDL
+    /terse                      - text layout calculation
+    /tweens                     - [planned] [maybe] tween manager
+    /ui                         - ui manager
 
 ## TODOs
 
-TODO: core: add support for HSL color format --- https://www.youtube.com/watch?v=vvPklRN0Tco
+TODO: core: add support for HSL color format
+
+    https://www.youtube.com/watch?v=vvPklRN0Tco
 
     - maybe consider changing Color to be [4]f32 instead of [4]u8, as we are doing a lot of alpha and brightness tweaking and every time we convert 4 values to f32 and back to u8
 
@@ -27,14 +29,18 @@ TODO: terse: add ability to have a line with differently aligned parts -- abilit
 
 TODO: terse: rework parse_f32, parse_int, parse_vec_i, parse_vec -- should be only parse_vec and parse f32, which just handle any f32 text value
 
-TODO: terse: add support for "image" command <image=name[:left][:right]>, add proc for query image size by name (Query_Image_Proc). Image should support alignment: center (default), left, right:
-- when "center", the image starts with new line, positioned at the center, text continues after image from next new line
-- when "left" or "right", image will stick to given size, text should flow on other size of the image, e.g. the image basically affects the following lines width, until image height end
-[MAYBE] do not add "query" proc, but have format like: <image=name:200x200[:left][:right]> width and height are required, if width=0, the width will be input rect.w, if height=0 -- input rect.h
+TODO: terse: add support for "image" command
+
+    Maybe <image=name[:left][:right]>, add proc for query image size by name (Query_Image_Proc). Image should support alignment: center (default), left, right:
+        - when "center", the image starts with new line, positioned at the center, text continues after image from next new line
+        - when "left" or "right", image will stick to given size, text should flow on other size of the image, e.g. the image basically affects the following lines width, until image height end
+
+    [MAYBE] do not add "query" proc, but have format like: <image=name:200x200[:left][:right]> width and height are required, if width=0, the width will be input rect.w, if height=0 -- input rect.h
 
 TODO: terse: investigate if text measuring of a word can be improved (performance wise) by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
 TODO: ui: Grid: support other directions
+
 TODO: ui: Grid: support scroll
 
     consider separating scroll logic to the Frame root (now its part of Flow method only); the idea is that scrolling should not know/care about layout method; the layout method should provide info for the scroll, size needed to fit all children
@@ -122,12 +128,15 @@ TODO: [?] ui: add "wait=f32(0)" arg to ui.animate(),
     it should do: waiting (if wait>0) -> animating (for dt) -> ratio=0 -> ... ratio=1 -> none
 
 TODO: [?] ui: add support for automatic child frames generation for each text_terse.groups item
-    // - Frame.name should be group name
-    // - updating terse should handle child frames (add/remove/update)
-    // - the idea is to be able to have enter/leave/click for any group in terse
-    // - maybe we need to add Frame.draw/enter/leave/click_terse_group for handling events for those dynamic children
 
-TODO: [?] ui: maybe extend Frame.drag to support op: Drag_Operation // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
+    - Frame.name should be group name
+    - updating terse should handle child frames (add/remove/update)
+    - the idea is to be able to have enter/leave/click for any group in terse
+    - maybe we need to add Frame.draw/enter/leave/click_terse_group for handling events for those dynamic children
+
+TODO: [?] ui: drag-n-drop frame info
+
+    maybe extend Frame.drag to support op: Drag_Operation // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
 
 TODO: [?] ui: maybe add support for logic resolution 1280x720
 
@@ -146,11 +155,15 @@ TODO: [?] terse: maybe add support for nested groups? need to see good reason wi
 TODO: raylib/res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
 
 TODO: raylib/res: sprite: add support for animations (Sprite.info variant)
+
     would be nice to support animation names, so its possible to express something like:
     draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
     simple animation has single sequence named "default"
 
-TODO: [?] raylib/res: audio: maybe add support for variations, e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
+TODO: [?] raylib/res: audio: maybe add support for variations
+
+    e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
+
     // [?] maybe we need "spacelib:raylib/audio" package to have "play_random(list: [] rl.Sound)"
     // ...maybe not
     // [?] maybe just load "book_flip-1" as "book_flip", and extend Sound struct to have

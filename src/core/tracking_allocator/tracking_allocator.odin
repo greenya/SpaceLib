@@ -3,18 +3,17 @@ package spacelib_tracking_allocator
 import "core:fmt"
 import "core:mem"
 
-/*
+@private max_issues_printed :: 10
+@private track: mem.Tracking_Allocator
 
-Usage:
-
-    import "spacelib:tracking_allocator"
-    main :: proc () {
-        context.allocator = tracking_allocator.init()
-        defer tracking_allocator.print_report()
-        ...
-    }
-
-*/
+// Usage:
+//
+//      import "spacelib:tracking_allocator"
+//      main :: proc () {
+//          context.allocator = tracking_allocator.init()
+//          defer tracking_allocator.print_report()
+//          ...
+//      }
 
 init :: proc () -> mem.Allocator {
     mem.tracking_allocator_init(&track, context.allocator)
@@ -39,7 +38,7 @@ print_report :: proc () {
         fmt.eprintfln("[TA] %v allocation(s) not freed:", len(track.allocation_map))
         i := 0; for _, entry in track.allocation_map {
             fmt.eprintfln("[TA] - %v bytes @ %v", entry.size, entry.location)
-            i += 1; if i == 10 {
+            i += 1; if i == max_issues_printed {
                 fmt.eprintln("[TA] ... (and more)")
                 break
             }
@@ -50,7 +49,7 @@ print_report :: proc () {
         fmt.eprintfln("[TA] %v incorrect free(s):", len(track.bad_free_array))
         for entry, i in track.bad_free_array {
             fmt.eprintfln("[TA] - %p @ %v", entry.memory, entry.location)
-            if i == 10 {
+            if i == max_issues_printed {
                 fmt.eprintln("[TA] ... (and more)")
                 break
             }
@@ -68,6 +67,3 @@ print_report_with_issues_only :: proc () {
         fmt.println("[TA] No issues")
     }
 }
-
-@private
-track: mem.Tracking_Allocator

@@ -3,10 +3,12 @@ package demo5
 import "core:fmt"
 import "core:time"
 import rl "vendor:raylib"
+
 import "spacelib:core"
+import "spacelib:core/tracking_allocator"
 import "spacelib:terse"
-import "spacelib:tracking_allocator"
 import "spacelib:raylib/draw"
+
 _ :: fmt
 
 Vec2 :: core.Vec2
