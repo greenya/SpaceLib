@@ -17,7 +17,7 @@ add_button :: proc (parent: ^ui.Frame, name, text: string, flags: bit_set [ui.Fl
 add_text_and_scrollbar :: proc (target: ^ui.Frame) -> (text, track, thumb: ^ui.Frame) {
     text = ui.add_frame(target, {
         name="text",
-        flags={.terse,.terse_height},
+        flags={.terse,.terse_height,.terse_shrink},
         text_format="<wrap,left,font=text_4l,color=primary>%s",
     })
 

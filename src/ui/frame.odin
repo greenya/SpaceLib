@@ -11,13 +11,14 @@ Frame_Init :: struct {
     flags: bit_set [Flag],
 
     // Absolute rectangle of the frame.
-    // In most cases will be updated by the UI depending on `anchors` or `layout`.
-    // Set it directly only when frame is not anchored and is not child of a `layout`.
-    // For example, the root frame generally has set this directly to screen resolution.
+    // In most cases, this is updated automatically by the UI based on `anchors` or the parent's `layout`.
+    // You should set it manually only if the frame is not anchored and not a child of a `layout`.
+    // For example, the root frame typically sets this directly to match the screen resolution.
     rect: Rect,
 
-    // Size. Set only one value to set only it, e.g. size={200,0} will effectively set width,
-    // and leave height open for calculations by `anchors` and `layout`.
+    // Size. Width and height are processed separately.
+    // For example, size={200,0} will effectively set width, and leave height open for calculations
+    // by `anchors` and `parent.layout`.
     size: Vec2,
 
     // Size aspect ratio. Considered "not set" if it is zero.
@@ -222,6 +223,9 @@ Flag :: enum {
     // The frame's `terse.rect` is used for mouse hit test instead of `rect`.
     // This flag must be used with `.terse` flag.
     terse_hit_rect,
+    // The frame's `terse` will be additionally processed by `terse.shrink_terse()` after regeneration.
+    // This flag must be used with `.terse` flag.
+    terse_shrink,
 }
 
 Layout_Scroll :: struct {
@@ -843,6 +847,7 @@ update_terse :: proc (f: ^Frame) {
             f.ui.scissor_rect,
             f.opacity,
         )
+        if .terse_shrink in f.flags do terse.shrink_terse(f.terse)
     }
 
     if f.flags & {.terse_size,.terse_width} != {} {
