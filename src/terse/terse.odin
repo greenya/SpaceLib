@@ -93,7 +93,11 @@ create :: proc (
     terse.lines.allocator = allocator
     terse.groups.allocator = allocator
 
-    if text == "" do return terse
+    if text == "" {
+        terse.rect.w = 0
+        terse.rect.h = 0
+        return terse
+    }
 
     alpha := f32(1)
     brightness := f32(0)
