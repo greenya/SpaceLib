@@ -14,6 +14,7 @@ Grid :: struct {
 
     // Size of each child.
     // If not set, it will be decided from `wrap`, `ratio` and width of the frame.
+    // Can be partially set, e.g. width or height only.
     size: Vec2,
 
     // Amount of children per primary direction.
@@ -21,7 +22,8 @@ Grid :: struct {
     wrap: int,
 
     // Aspect ratio of a child.
-    // Used only with `wrap > 0` and `size == 0`.
+    // Used only when width or height is left for calculation.
+    // For example: size={100,0}, ratio=.7; or wrap=5, ratio=1.2.
     // Square (`1`) is assumed when this value is not set (`0`).
     ratio: f32,
 
@@ -65,9 +67,6 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
     wrap := grid.wrap
     size := grid.size
-    skip_vis_children := false
-
-    assert(wrap >= 0)
 
     if wrap > 0 {
         if size == {} {
@@ -76,23 +75,27 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
             size.y = size.x / ratio
         }
     } else if wrap == 0 {
-        assert(size.x > 0 && size.y > 0, "Grid.size must be set when Grid.wrap==0.")
+        ratio := grid.ratio > 0 ? grid.ratio : 1
+        switch {
+        case size.x  > 0 && size.y == 0: size.y = size.x / ratio
+        case size.x == 0 && size.y  > 0: size.x = size.y * ratio
+        case size.x == 0 && size.y == 0: panic("Grid.size (width and/or height) must be set when Grid.wrap==0")
+        }
         if is_layout_dir_vertical(f) {
             w := f.rect.w - 2*grid.pad.x
             wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
         }
-        skip_vis_children = wrap < 1
     } else {
         panic("Grid.wrap cannot be negative.")
     }
+
+    if wrap < 1 do wrap = 1
 
     rect := Rect {0,0,size.x,size.y}
     f_rect_x2 := f.rect.x+f.rect.w
     // f_rect_y2 := f.rect.y+f.rect.h
 
-    vis_children := !skip_vis_children\
-        ? get_layout_visible_children(f, context.temp_allocator)\
-        : {}
+    vis_children := get_layout_visible_children(f, context.temp_allocator)
 
     for child, i in vis_children {
         i_div, i_mod := math.divmod(i, wrap)
