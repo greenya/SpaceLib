@@ -794,8 +794,7 @@ draw_frame_tree :: proc (f: ^Frame) {
                 is_drawn = true
             }
         } else {
-            if f.terse != nil {
-                assert(f.ui.terse_draw_proc != nil, "UI.terse_draw_proc must not be nil when using terse")
+            if f.terse != nil && f.ui.terse_draw_proc != nil {
                 f.ui.terse_draw_proc(f.terse)
                 is_drawn = true
             }
