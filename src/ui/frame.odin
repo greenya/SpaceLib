@@ -299,7 +299,7 @@ depth :: #force_inline proc (f: ^Frame) -> int {
     return c
 }
 
-parents :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
+path :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
     list := make([] ^Frame, depth(f), allocator)
     j := 0
     for i:=f; i!=nil; i=i.parent {
@@ -309,10 +309,13 @@ parents :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] 
     return list
 }
 
-path :: #force_inline proc (f: ^Frame, exclude_root := true, allocator := context.allocator) -> string {
-    frames := parents(f, context.temp_allocator)
+path_string :: #force_inline proc (f: ^Frame, include_root := true, include_self := true, allocator := context.allocator) -> string {
+    frames := path(f, context.temp_allocator)
+
+    if !include_self do frames = frames[1:]
+    if len(frames) == 0 do return ""
     slice.reverse(frames)
-    if exclude_root do frames = frames[1:]
+    if !include_root do frames = frames[1:]
 
     names := slice.mapper(
         frames,
@@ -616,13 +619,12 @@ passed :: #force_inline proc (f: ^Frame) -> bool {
 }
 
 find :: proc (parent: ^Frame, path: string) -> ^Frame {
-    found_child := parent
+    found := parent
     for name in strings.split(path, "/", context.temp_allocator) {
-        found_child = find_by_rule(found_child, name)
-        if found_child == nil do return nil
+        found = find_by_rule(found, name)
+        if found == nil do return nil
     }
-    assert(found_child != parent) // this is expected as strings.split() never returns empty slice, but lets keep the assert
-    return found_child
+    return found
 }
 
 get :: proc (parent: ^Frame, path: string) -> ^Frame {
@@ -632,22 +634,23 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
 }
 
 @private
-find_by_rule :: proc (parent: ^Frame, rule: string) -> ^Frame {
+find_by_rule :: proc (f: ^Frame, rule: string) -> ^Frame {
     rule := rule
     allow_non_direct_child := false
 
-    if rule == ".." do return parent.parent
+    if rule == "." do return f
+    if rule == ".." do return f.parent
 
     if len(rule) > 0 && rule[0] == '~' {
         rule = rule[1:]
         allow_non_direct_child = true
     }
 
-    for child in parent.children {
+    for child in f.children {
         if child.name == rule do return child
         found_child := find_by_rule(child, rule)
         if found_child != nil {
-            if found_child.parent != parent && !allow_non_direct_child {
+            if found_child.parent != f && !allow_non_direct_child {
                 found_child = nil
             } else {
                 return found_child
