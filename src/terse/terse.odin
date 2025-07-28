@@ -174,12 +174,12 @@ create :: proc (
 
                     case "/font":
                         ensure(!stack.is_empty(fonts_stack), "Fonts stack underflow")
-                        stack.pop_discard(&fonts_stack)
+                        stack.drop(&fonts_stack)
                         last_opened_command = .none
 
                     case "/color":
                         ensure(!stack.is_empty(colors_stack), "Colors stack underflow")
-                        stack.pop_discard(&colors_stack)
+                        stack.drop(&colors_stack)
                         last_opened_command = .none
 
                     case "/group":
