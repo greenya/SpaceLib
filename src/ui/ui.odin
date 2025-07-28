@@ -8,39 +8,87 @@ import "../core"
 import "../terse"
 
 UI :: struct {
-    root                : ^Frame,
+    // Root frame.
+    root: ^Frame,
 
-    mouse               : Mouse_Input,
-    mouse_prev          : Mouse_Input,
+    // Mouse state passed to `tick()`.
+    mouse       : Mouse_Input,
+    mouse_prev  : Mouse_Input,
 
-    clock               : clock.Clock(f32),
-    phase               : Processing_Phase,
-    captured            : Captured_Info,
+    // Clock.
+    // Use `clock.time` and `clock.dt` for timing and smooth updates.
+    // Adjust `clock.time_scale` to control the speed of all animations.
+    clock: clock.Clock(f32),
 
-    mouse_frames        : [dynamic] ^Frame,
-    entered_frames      : [dynamic] ^Frame,
-    auto_hide_frames    : [dynamic] ^Frame,
+    // Processing phase.
+    // This value is usually not needed, as each frame's callback runs in a known phase:
+    // `draw` and `draw_after` are called during the `.draw` phase; all others during the `.tick` phase.
+    phase: Processing_Phase,
 
-    scissor_rect        : Rect,
-    scissor_rects       : [dynamic] Rect,
-    scissor_set_proc    : Scissor_Set_Proc,
-    scissor_clear_proc  : Scissor_Clear_Proc,
+    // Mouse capture state.
+    // Typically not needed directly, as `Frame.captured` reflects this state within any frame's callback.
+    captured: Captured_Info,
 
-    terse_query_font_proc   : terse.Query_Font_Proc,
-    terse_query_color_proc  : terse.Query_Color_Proc,
-    terse_draw_proc         : Terse_Draw_Proc,
+    // Visible frames currently under the mouse cursor, updated every tick.
+    mouse_frames: [dynamic] ^Frame,
+    // Frames that received the `enter` event (candidates for future `leave` event).
+    entered_frames: [dynamic] ^Frame,
+    // Frames with `.auto_hide` flag, updated every tick.
+    auto_hide_frames: [dynamic] ^Frame,
 
-    frame_overdraw_proc : Frame_Proc,
-    stats               : Stats,
+    // Current scissor absolute rectangle.
+    // Usually not needed directly, as it is automatically applied during a child frame's `draw` callback.
+    // This value may change between frame `draw` calls, and represents the intersection of all parent scissors,
+    // defining the actual visible area on screen for the frame currently being drawn.
+    scissor_rect: Rect,
 
-    get                 : proc (ui: ^UI, path: string) -> ^Frame,
-    find                : proc (ui: ^UI, path: string) -> ^Frame,
-    show                : proc (ui: ^UI, path: string, hide_siblings := false),
-    hide                : proc (ui: ^UI, path: string),
-    click               : proc (ui: ^UI, path: string),
-    wheel               : proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
-    animate             : proc (ui: ^UI, path: string, tick: Frame_Proc, dur: f32),
-    set_text            : proc (ui: ^UI, path: string, values: ..any),
+    // Current stack of all scissor absolute rectangles.
+    scissor_rects: [dynamic] Rect,
+
+    // Callback for applying scissor rectangle during drawing phase.
+    scissor_set_proc: Scissor_Set_Proc,
+
+    // Callback for clearing scissor rectangle during drawing phase.
+    scissor_clear_proc: Scissor_Clear_Proc,
+
+    // Callback for querying font information. Should be set if you use `.terse` frames.
+    terse_query_font_proc: terse.Query_Font_Proc,
+
+    // Callback for querying color information. Should be set if you use `.terse` frames.
+    terse_query_color_proc: terse.Query_Color_Proc,
+
+    // Fallback drawing callback for `.terse` frames.
+    // Used when a frame does not have its own `draw` callback.
+    terse_draw_proc: Terse_Draw_Proc,
+
+    // Callback for extra drawing for every frame. Called after frame's `draw` and before drawing any children.
+    frame_overdraw_proc: Frame_Proc,
+
+    // Usage statistics counters.
+    // Automatically reset at the start of each `tick()` and updated until the end of `draw()`.
+    // Access these values only after all phases are complete, e.g., at the end of the main loop.
+    stats: Stats,
+
+    // Shortcut for `get(ui.root, ...)`
+    get: proc (ui: ^UI, path: string) -> ^Frame,
+    // Shortcut for `find(ui.root, ...)`
+    find: proc (ui: ^UI, path: string) -> ^Frame,
+    // Shortcut for `show(ui.root, ...)`
+    show: proc (ui: ^UI, path: string, hide_siblings := false),
+    // Shortcut for `hide(ui.root, ...)`
+    hide: proc (ui: ^UI, path: string),
+    // Shortcut for `click(ui.root, ...)`
+    click: proc (ui: ^UI, path: string),
+    // Shortcut for `wheel(ui.root, ...)`
+    wheel: proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
+    // Shortcut for `animate(ui.root, ...)`
+    animate: proc (ui: ^UI, path: string, tick: Frame_Proc, dur: f32),
+    // Shortcut for `set_name(ui.root, ...)`
+    set_name: proc (ui: ^UI, path: string, name: string),
+    // Shortcut for `set_text(ui.root, ...)`
+    set_text: proc (ui: ^UI, path: string, values: ..any, shown := false),
+    // Shortcut for `set_text_format(ui.root, ...)`
+    set_text_format: proc (ui: ^UI, path: string, text_format: string),
 }
 
 Mouse_Input :: struct {
@@ -100,7 +148,9 @@ create :: proc (
         click                   = ui_click,
         wheel                   = ui_wheel,
         animate                 = ui_animate,
+        set_name                = ui_set_name,
         set_text                = ui_set_text,
+        set_text_format         = ui_set_text_format,
     }
 
     clock.init(&ui.clock)
@@ -123,6 +173,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     phase_started := time.tick_now()
     ui.phase = .tick
     defer {
+        ui.mouse_prev = mouse
         ui.phase = .none
         ui.stats.tick_time = time.tick_since(phase_started)
     }
@@ -208,7 +259,6 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
     if !mouse_input_consumed && lmb_pressed do ui.captured = { outside=true }
     if ui.captured.outside && lmb_released do ui.captured = {}
 
-    ui.mouse_prev = mouse
     return
 }
 
@@ -302,6 +352,16 @@ ui_animate :: #force_inline proc (ui: ^UI, path: string, tick: Frame_Proc, dur: 
 }
 
 @private
-ui_set_text :: #force_inline proc (ui: ^UI, path: string, values: ..any) {
-    set_text(get(ui.root, path), ..values)
+ui_set_name :: #force_inline proc (ui: ^UI, path: string, name: string) {
+    set_name(get(ui.root, path), name)
+}
+
+@private
+ui_set_text :: #force_inline proc (ui: ^UI, path: string, values: ..any, shown := false) {
+    set_text(get(ui.root, path), ..values, shown=shown)
+}
+
+@private
+ui_set_text_format :: #force_inline proc (ui: ^UI, path: string, text_format: string) {
+    set_text_format(get(ui.root, path), text_format)
 }

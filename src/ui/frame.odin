@@ -148,9 +148,7 @@ Frame :: struct {
     terse: ^terse.Terse,
 
     // Indicates that the mouse has entered the `rect` of the frame or any of its children.
-    entered: bool,
-
-    // `entered` value of the previous tick.
+    entered     : bool,
     entered_prev: bool,
 
     // Time (in seconds) when the mouse entered the `rect` of the frame or any of its children.
@@ -180,8 +178,10 @@ Frame :: struct {
     // to use it when rendering. If `terse != nil`, the `terse.opacity` will be updated automatically.
     opacity: f32,
 
-    _rect_dirty : bool,
-    _actor      : Actor,
+    // Actor state.
+    actor: Actor,
+
+    rect_dirty: bool,
 }
 
 Flag :: enum {
@@ -417,13 +417,13 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
 
 scroll :: proc (f: ^Frame, dy: f32) -> (actually_scrolled: bool) {
     actually_scrolled = layout_apply_scroll(f, dy)
-    if f._actor != nil do wheel_actor(f)
+    if f.actor != nil do wheel_actor(f)
     return
 }
 
 scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (actually_scrolled: bool) {
     actually_scrolled = layout_apply_scroll(f, new_offset, is_absolute=true)
-    if f._actor != nil do wheel_actor(f)
+    if f.actor != nil do wheel_actor(f)
     return
 }
 
@@ -519,10 +519,10 @@ hide_children :: proc (parent: ^Frame) {
 wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
     if hidden(f) || disabled(f) do return false
 
-    if layout_apply_scroll(f, dy)               do consumed = true
-    if f._actor != nil && wheel_actor(f, dy)    do consumed = true
-    if f.wheel != nil && f.wheel(f, dy)         do consumed = true
-    if .block_wheel in f.flags                  do consumed = true
+    if layout_apply_scroll(f, dy)           do consumed = true
+    if f.actor != nil && wheel_actor(f, dy) do consumed = true
+    if f.wheel != nil && f.wheel(f, dy)     do consumed = true
+    if .block_wheel in f.flags              do consumed = true
 
     return
 }
@@ -542,7 +542,7 @@ click_by_frame :: proc (f: ^Frame) {
 
     if .check in f.flags    do f.selected = !f.selected
     if .radio in f.flags    do click_radio(f)
-    if f._actor != nil      do click_actor(f)
+    if f.actor != nil       do click_actor(f)
     if f.click != nil       do f.click(f)
 }
 
@@ -695,7 +695,7 @@ click_radio :: proc (f: ^Frame) {
 drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
     if disabled(f) do return
 
-    if f._actor != nil  do drag_actor(f, mouse_pos, captured_pos)
+    if f.actor != nil   do drag_actor(f, mouse_pos, captured_pos)
     if f.drag != nil    do f.drag(f, mouse_pos, captured_pos)
 }
 
@@ -708,7 +708,7 @@ sort_children :: #force_inline proc (parent: ^Frame) {
 
 @private
 set_rect_dirty_frame_tree :: proc (f: ^Frame) {
-    f._rect_dirty = true
+    f.rect_dirty = true
     for child in f.children do set_rect_dirty_frame_tree(child)
 }
 
@@ -751,7 +751,7 @@ prepare_frame_tree :: proc (f: ^Frame) {
     f.entered = false
     f.captured = false
 
-    f._rect_dirty = true
+    f.rect_dirty = true
     for child in f.children do prepare_frame_tree(child)
 
     f.ui.stats.frames_total += 1
@@ -812,7 +812,7 @@ draw_frame_tree :: proc (f: ^Frame) {
 
 @private
 update_rect :: proc (f: ^Frame) {
-    if f._rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
 
     switch l in f.layout {
     case Flow: update_rect_for_children_of_flow(f)
@@ -821,7 +821,7 @@ update_rect :: proc (f: ^Frame) {
 
     if .terse in f.flags do update_terse(f)
 
-    if f._actor != nil do wheel_actor(f)
+    if f.actor != nil do wheel_actor(f)
 }
 
 @private

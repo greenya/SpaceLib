@@ -24,15 +24,15 @@ setup_scrollbar_actors :: proc (content: ^Frame, thumb: ^Frame = nil, next: ^Fra
         ensure(.capture in thumb.flags, "Thumb must have .capture flag to allow dragging")
     }
 
-    content._actor = Actor_Scrollbar_Content { thumb=thumb, next=next, prev=prev }
-    if thumb != nil do thumb._actor = Actor_Scrollbar_Thumb { content=content }
-    if next != nil do next._actor = Actor_Scrollbar_Next { content=content }
-    if prev != nil do prev._actor = Actor_Scrollbar_Prev { content=content }
+    content.actor = Actor_Scrollbar_Content { thumb=thumb, next=next, prev=prev }
+    if thumb != nil do thumb.actor = Actor_Scrollbar_Thumb { content=content }
+    if next != nil do next.actor = Actor_Scrollbar_Next { content=content }
+    if prev != nil do prev.actor = Actor_Scrollbar_Prev { content=content }
 }
 
 @private
 click_actor :: proc (f: ^Frame) {
-    #partial switch a in f._actor {
+    #partial switch a in f.actor {
     case Actor_Scrollbar_Next: wheel(a.content, -1)
     case Actor_Scrollbar_Prev: wheel(a.content, +1)
     }
@@ -40,14 +40,14 @@ click_actor :: proc (f: ^Frame) {
 
 @private
 drag_actor :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
-    #partial switch a in f._actor {
+    #partial switch a in f.actor {
     case Actor_Scrollbar_Thumb: drag_actor_scrollbar_thumb(f, mouse_pos, captured_pos)
     }
 }
 
 @private
 drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
-    actor := &f._actor.(Actor_Scrollbar_Thumb)
+    actor := &f.actor.(Actor_Scrollbar_Thumb)
     track_rect := &f.parent.rect
     ratio: f32
 
@@ -69,7 +69,7 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
 
 @private
 wheel_actor :: proc (f: ^Frame, dy := f32(0)) -> (consumed: bool) {
-    #partial switch _ in f._actor {
+    #partial switch _ in f.actor {
     case Actor_Scrollbar_Content: return wheel_actor_scrollbar_content(f)
     case                        : return false
     }
@@ -77,7 +77,7 @@ wheel_actor :: proc (f: ^Frame, dy := f32(0)) -> (consumed: bool) {
 
 @private
 wheel_actor_scrollbar_content :: proc (f: ^Frame) -> (consumed: bool) {
-    actor := &f._actor.(Actor_Scrollbar_Content)
+    actor := &f.actor.(Actor_Scrollbar_Content)
     thumb := actor.thumb
     next := actor.next
     prev := actor.prev

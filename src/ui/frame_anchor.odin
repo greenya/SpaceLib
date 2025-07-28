@@ -260,7 +260,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         else if f.rect.h>1 && f.rect.w==0 do f.rect.w = f.rect.h*f.size_aspect
     }
 
-    f._rect_dirty = false
+    f.rect_dirty = false
 }
 
 @private Rect_Dir :: struct { l, t, r, b: f32 }

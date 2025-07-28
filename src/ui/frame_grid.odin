@@ -110,7 +110,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         }
 
         child.rect = core.rect_moved(rect, child.offset)
-        child._rect_dirty = false
+        child.rect_dirty = false
     }
 
     if grid.auto_size != {} {
