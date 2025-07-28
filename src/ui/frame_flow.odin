@@ -3,13 +3,14 @@ package spacelib_ui
 import "core:slice"
 import "../core"
 
-// Arranges `children` in the single row/column.
+// Arranges `children` in the single row or column.
 // Child frames can have different sizes.
 // Supports scroll.
 Flow :: struct {
     // Layout direction of the children.
     // Direction with `_center` suffix will align items to the center of the direction.
-    dir         : Flow_Direction,
+    dir: Flow_Direction,
+
     // Default size for a child. Width and height are processed separately.
     // Width/height is considered "not set" if it is zero.
     // The priority goes: `child.size > flow.size > parent.size`.
@@ -19,20 +20,25 @@ Flow :: struct {
     // For example, you can have a flow with vertical direction and a child with only size_aspect=5
     // and size_min={0,100}, this will make it to take whole width of the flow, height will be width/5
     // as long as the value is greater than 100.
-    size        : Vec2,
+    size: Vec2,
+
     // Children alignment in orthogonal direction to the `dir`.
-    align       : Flow_Alignment,
-    // Scroll info. Set `scroll.step` to enable scroll processing.
+    align: Flow_Alignment,
+
+    // Scroll state. Set `scroll.step` to enable scroll processing.
     // `scroll.offset*` values will be updated automatically.
     // Setting `auto_size` to same direction will effectively disable scrolling conditions.
-    scroll      : Layout_Scroll,
+    scroll: Layout_Scroll,
+
     // Spacing between adjacent children.
-    gap         : f32,
+    gap: f32,
+
     // Padding around the outermost children.
-    pad         : Vec2,
+    pad: Vec2,
+
     // The flow frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
-    auto_size   : bit_set [Flow_Auto_Size],
+    auto_size: bit_set [Flow_Auto_Size],
 }
 
 Flow_Direction :: enum {

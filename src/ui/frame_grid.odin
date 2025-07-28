@@ -4,27 +4,36 @@ import "core:math"
 import "core:slice"
 import "../core"
 
-// Arranges `children` in the grid where each cell has same size.
+// Arranges `children` in a grid where each cell has the same size.
+// The grid fills in the primary direction, with up to `wrap` children per row or column.
+// Additional children cause the grid to grow in the secondary direction.
 Grid :: struct {
-    // Layout direction of the children. A pair of primary and secondary directions.
+    // Placement direction of the children. A pair of primary and secondary directions.
     // Grid grows in primary direction up to `wrap` items, and indefinitely in the secondary direction.
-    dir         : Grid_Direction,
+    dir: Grid_Direction,
+
     // Size of each child.
     // If not set, it will be decided from `wrap`, `ratio` and width of the frame.
-    size        : Vec2,
+    size: Vec2,
+
     // Amount of children per primary direction.
     // If not set, it will be decided from `size` (must be set) and width of the frame.
-    wrap        : int,
+    wrap: int,
+
     // Aspect ratio of a child.
-    // Used only with `wrap > 0` and `size = 0`. Square (`1`) is assumed when this value is not set (`0`).
-    ratio       : f32,
+    // Used only with `wrap > 0` and `size == 0`.
+    // Square (`1`) is assumed when this value is not set (`0`).
+    ratio: f32,
+
     // Spacing between adjacent children.
-    gap         : Vec2,
+    gap: Vec2,
+
     // Padding around the outermost children.
-    pad         : Vec2,
+    pad: Vec2,
+
     // The grid frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
-    auto_size   : bit_set [Grid_Auto_Size],
+    auto_size: bit_set [Grid_Auto_Size],
 }
 
 Grid_Direction :: enum {

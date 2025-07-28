@@ -51,8 +51,8 @@ Mouse_Input :: struct {
 
 Processing_Phase :: enum {
     none,
-    ticking,
-    drawing,
+    tick,
+    draw,
 }
 
 Captured_Info :: struct {
@@ -121,7 +121,7 @@ destroy :: proc (ui: ^UI) {
 tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     ui.stats = {}
     phase_started := time.tick_now()
-    ui.phase = .ticking
+    ui.phase = .tick
     defer {
         ui.phase = .none
         ui.stats.tick_time = time.tick_since(phase_started)
@@ -214,7 +214,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
 draw :: proc (ui: ^UI) {
     phase_started := time.tick_now()
-    ui.phase = .drawing
+    ui.phase = .draw
     defer {
         ui.phase = .none
         ui.stats.draw_time = time.tick_since(phase_started)
@@ -243,7 +243,7 @@ push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
 
     append(&ui.scissor_rects, new_rect)
     ui.scissor_rect = new_rect
-    if ui.phase == .drawing && ui.scissor_set_proc != nil {
+    if ui.phase == .draw && ui.scissor_set_proc != nil {
         ui.scissor_set_proc(new_rect)
         ui.stats.scissors_set += 1
     }
@@ -259,10 +259,10 @@ pop_scissor_rect :: proc (ui: ^UI) {
     last_rect := slice.last_ptr(ui.scissor_rects[:])
     if last_rect != nil {
         ui.scissor_rect = last_rect^
-        if ui.phase == .drawing && ui.scissor_set_proc != nil do ui.scissor_set_proc(last_rect^)
+        if ui.phase == .draw && ui.scissor_set_proc != nil do ui.scissor_set_proc(last_rect^)
     } else {
         ui.scissor_rect = ui.root.rect
-        if ui.phase == .drawing && ui.scissor_clear_proc != nil do ui.scissor_clear_proc()
+        if ui.phase == .draw && ui.scissor_clear_proc != nil do ui.scissor_clear_proc()
     }
 }
 

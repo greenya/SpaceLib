@@ -1,10 +1,17 @@
 package spacelib_ui
 
 Anchor :: struct {
-    point       : Anchor_Point,
-    rel_point   : Anchor_Point,
-    rel_frame   : ^Frame,
-    offset      : Vec2,
+    // Point of this frame. If not set, `.top_left` will be used.
+    point: Anchor_Point,
+
+    // Point of the `rel_frame`. If not set, same value as `point` will be used.
+    rel_point: Anchor_Point,
+
+    // The relative frame. If not set, `parent` frame will be used.
+    rel_frame: ^Frame,
+
+    // Offset for the resulting position.
+    offset: Vec2,
 }
 
 Anchor_Point :: enum {
@@ -38,15 +45,15 @@ clear_anchors :: proc (f: ^Frame) {
 
 @private
 update_rect_with_anchors :: proc (f: ^Frame) {
-    initial_size := f.size
+    f_size := f.size
 
-    size_aspect_applied := false
+    size_aspect_applied: bool
     if f.size_aspect != 0 {
-        if      initial_size.x>1 && initial_size.y==0 { initial_size.y=initial_size.x/f.size_aspect; size_aspect_applied=true }
-        else if initial_size.y>1 && initial_size.x==0 { initial_size.x=initial_size.y*f.size_aspect; size_aspect_applied=true }
+        if      f_size.x>1 && f_size.y==0 { f_size.y=f_size.x/f.size_aspect; size_aspect_applied=true }
+        else if f_size.y>1 && f_size.x==0 { f_size.x=f_size.y*f.size_aspect; size_aspect_applied=true }
     }
 
-    result_dir := Rect_Dir { r=initial_size.x, b=initial_size.y }
+    result_dir := Rect_Dir { r=f_size.x, b=f_size.y }
     result_pin: Rect_Pin
 
     for anchor in f.anchors {

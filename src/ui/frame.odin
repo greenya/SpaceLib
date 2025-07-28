@@ -8,32 +8,32 @@ import "../terse"
 
 Frame_Init :: struct {
     // Set of flags.
-    flags           : bit_set [Flag],
+    flags: bit_set [Flag],
 
     // Absolute rectangle of the frame.
     // In most cases will be updated by the UI depending on `anchors` or `layout`.
     // Set it directly only when frame is not anchored and is not child of a `layout`.
     // For example, the root frame generally has set this directly to screen resolution.
-    rect            : Rect,
+    rect: Rect,
 
     // Size. Set only one value to set only it, e.g. size={200,0} will effectively set width,
     // and leave height open for calculations by `anchors` and `layout`.
-    size            : Vec2,
+    size: Vec2,
 
     // Size aspect ratio. Considered "not set" if it is zero.
     // The value used only by `anchors` and `Flow` of the parent frame.
     // The value is applied only when one dimension is known and another is zero (not set nor calculated).
-    size_aspect     : f32,
+    size_aspect: f32,
 
     // Minimal size. Width and height are processed separately.
     // Width/height is considered "not set" if it is zero.
     // The value is used only by `Flow` of the parent frame.
     // The value is applied after all size calculations has been made.
-    size_min        : Vec2,
+    size_min: Vec2,
 
     // Layout method for `children`.
     // Affects only children without `anchors`.
-    layout          : union { Flow, Grid },
+    layout: union { Flow, Grid },
 
     // Relative order of this frame to other siblings.
     // This value effects order of this frame in the `parent.children` array. It is not an index,
@@ -45,112 +45,182 @@ Frame_Init :: struct {
     // be first, but the order of all children with same value (said 0) is effectively undefined.
     // This is due to sorting done to children list after each add.
     //
-    // So general rule: if some frames needs order, you probably want all frames to have `order` set
-    // (and different) for consistent sort result.
-    order           : int,
+    // So general rule: if some frames needs order, you probably want all frames to have `order`
+    // set (and different) for consistent sort result.
+    order: int,
 
     // Name. Not unique.
-    name            : string,
+    // The value will be cloned (allocated).
+    name: string,
 
     // Text.
-    text            : string,
-    // Text format for the `text`.
-    // If set, the `text` will contain result of `fmt.aprintf(text_format, ...values)`, when calling `set_text()`.
-    text_format     : string,
+    // The value will be cloned (allocated).
+    text: string,
 
-    // Tick callback. Called when `ui.phase == .ticking`.
+    // Text format for the `text`. If set, the `text` will contain result of
+    // `fmt.aprintf(text_format, ...values)`, when calling `set_text()`.
+    text_format: string,
+
+    // Tick callback.
     // At this point, the `rect` of the frame and each of its children has been calculated.
     // Called before any event callbacks (e.g. `enter`, `click`, etc.)
-    // Called on every tick when frame is not `.hidden`.
-    tick            : Frame_Proc,
+    // Called on every `tick()` when frame is not `.hidden`.
+    tick: Frame_Proc,
 
-    // Draw callback. Called when `ui.phase == .drawing`.
+    // Draw callback.
     // Called before setting own scissor (if used) and before drawing children.
-    // Called on every draw when frame is not `.hidden`.
-    draw            : Frame_Proc,
+    // Called on every `draw()` when frame is not `.hidden`.
+    draw: Frame_Proc,
 
-    // Post draw callback. Called when `ui.phase == .drawing`.
+    // Post draw callback.
     // Called after restoring previous scissor (if used) and after drawing children.
-    // Called on every draw when frame is not `.hidden`.
-    draw_after      : Frame_Proc,
+    // Called on every `draw()` when frame is not `.hidden`.
+    draw_after: Frame_Proc,
 
-    show            : Frame_Proc,
-    hide            : Frame_Proc,
-    enter           : Frame_Proc,
-    leave           : Frame_Proc,
-    click           : Frame_Proc,
-    wheel           : Frame_Wheel_Proc,
-    drag            : Frame_Drag_Proc,
+    // Triggered when the frame gets shown.
+    // Only for direct frame, e.g. child frames will not be called.
+    show: Frame_Proc,
 
-    // Indicates the frame is selected.
+    // Triggered when the frame gets hidden.
+    // Only for direct frame, e.g. child frames will not be called.
+    hide: Frame_Proc,
+
+    // Mouse status callback. Triggered when the mouse has entered the `rect` of the frame or
+    // any of its children. The callback can expect `entered == true`, and `entered_time` set.
+    enter: Frame_Proc,
+
+    // Mouse status callback. Triggered when the mouse has left the `rect` of the frame or
+    // any of its children. The callback can expect `entered == false`, and `left_time` set.
+    leave: Frame_Proc,
+
+    // Mouse action callback. Triggered when the mouse button is clicked over the `rect`.
+    // By default, the callback is called on button press. If the `.capture` flag is set,
+    // the callback is instead triggered on button release.
+    click: Frame_Proc,
+
+    // Mouse action callback. Triggered when the mouse wheel is scrolled over the `rect`.
+    // The event propagates to deeper frames until it is consumed (i.e., a callback returns `true`).
+    wheel: Frame_Wheel_Proc,
+
+    // Mouse action callback. Triggered while the mouse is being dragged.
+    // Called on every `tick()` for the frame that has `captured` the mouse.
+    drag: Frame_Drag_Proc,
+
+    // Indicates that the frame is selected.
     // Use with `.check` flag if you want UI to toggle it on `click`.
-    // Use with `.radio` flag if you want UI to turn it ON on `click` for this frame while turn it OFF
-    // for all siblings with `.radio` flag.
-    selected        : bool,
+    // Use with `.radio` flag if you want UI to set it to `true` on `click` for this frame while
+    // set it to `false` for all siblings with `.radio` flag.
+    selected: bool,
 }
 
 Frame :: struct {
-    // UI this frame is part of.
-    // Can be `nil` in case the frame is detached (e.g. `parent == nil`).
-    // Note: detached frames will not be destroyed on `destroy_ui()`.
-    ui              : ^UI,
+    // The UI this frame is part of.
+    // Can be `nil` in case the frame is manually detached like `set_parent(f, nil)`.
+    // Note: detached frames will not be destroyed on `destroy()`.
+    ui: ^UI,
 
     // Parent frame.
-    parent          : ^Frame,
+    parent: ^Frame,
+
     // Child frames. Sorted according to `child.order`.
-    children        : [dynamic] ^Frame,
+    children: [dynamic] ^Frame,
 
     // Init part of the `Frame` struct.
-    using init      : Frame_Init,
+    using init: Frame_Init,
 
     // Anchors.
     // Anchors calculation is using `size` and `size_aspect` to decide on final `rect`.
     // Note: `parent.layout` skips frames with `anchors`.
-    anchors         : [dynamic] Anchor,
+    anchors: [dynamic] Anchor,
 
     // Terse.
+    // Created from `text` using `terse.create()`. The UI might regenerate the value when needed,
+    // for example, when new `text` is set or the `rect` is updated.
+    //
+    // Terse requires the UI to have following callbacks set:
+    // - `UI.terse_query_font_proc`
+    // - `UI.terse_query_color_proc`
+    // - `UI.terse_draw_proc`
+    //
     // Enabled by `.terse` flag.
-    terse           : ^terse.Terse,
+    terse: ^terse.Terse,
 
-    // Indicates the mouse has entered the `rect` of the frame or any of its children.
-    entered         : bool,
+    // Indicates that the mouse has entered the `rect` of the frame or any of its children.
+    entered: bool,
+
     // `entered` value of the previous tick.
-    entered_prev    : bool,
+    entered_prev: bool,
+
     // Time (in seconds) when the mouse entered the `rect` of the frame or any of its children.
-    entered_time    : f32,
+    entered_time: f32,
+
     // Time (in seconds) when the mouse left the `rect` of the frame or any of its children.
-    left_time       : f32,
-    // Indicates the frame has captured the mouse.
-    // Enabled by `.capture` flag.
-    captured        : bool,
+    left_time: f32,
+
+    // Indicates that the frame has captured the mouse.
+    // This state begins when the mouse button is pressed and ends when it is released.
+    // Releasing the button over the frame's `rect` triggers the `click` event.
+    //
+    // This behavior is enabled by the `.capture` flag. Without this flag, the frame still receives
+    // a `click`, but it is triggered at the moment the mouse button is pressed, not when it is released.
+    //
+    // Only one frame at any given time can capture the mouse.
+    captured: bool,
 
     // Animation state.
-    anim            : Animation,
-    // Offset to be applied for final `rect`. For animation purposes.
-    offset          : Vec2,
-    // Opacity of the frame. The UI only manages the value, the drawing is done by the drawing callbacks,
-    // and they should use this value if necessary.
-    opacity         : f32,
+    anim: Animation,
 
-    _rect_dirty     : bool,
-    _actor          : Actor,
+    // Offset to be applied for final `rect`. Useful for animation, as we cannot just move frame by
+    // changing its `rect.x` when it is managed by anchors or by `parent.layout`.
+    offset: Vec2,
+
+    // Opacity of the frame. The frame only stores this value; it's up to the drawing callbacks
+    // to use it when rendering. If `terse != nil`, the `terse.opacity` will be updated automatically.
+    opacity: f32,
+
+    _rect_dirty : bool,
+    _actor      : Actor,
 }
 
 Flag :: enum {
+    // The frame is hidden. Hidden frames do not receive any input and no callbacks are triggered,
+    // including `tick`.
     hidden,
+    // The frame is disabled. Action events `click`, `drag` and `wheel` will not be triggered.
     disabled,
+    // The frame and all its children pass all input events.
     pass,
+    // The frame passes all input events. The children are not affected.
     pass_self,
+    // The frame blocks `wheel` event from propagation to deeper frames.
     block_wheel,
+    // The frame can capture mouse. More in `Frame.captured`.
     capture,
+    // The frame's `rect` will be used as a scissor for its children when drawing and calculating mouse hit.
+    //
+    // The following optional UI callbacks are used in drawing phase:
+    // - `UI.scissor_set_proc`
+    // - `UI.scissor_clear_proc`
     scissor,
+    // The frame has trait of a check button. More in `Frame.selected`.
     check,
+    // The frame has trait of a radio button. More in `Frame.selected`.
     radio,
+    // The frame automatically hides itself when clicked outside of its `rect` or any of its children.
     auto_hide,
+    // The frame's `text` is used as terse. More in `Frame.terse`.
     terse,
+    // The frame's `size` is set to value of `terse.rect.w/h`.
+    // This flag must be used with `.terse` flag.
     terse_size,
+    // The frame's `size.y` is set to value of `terse.rect.h`.
+    // This flag must be used with `.terse` flag.
     terse_height,
+    // The frame's `size.x` is set to value of `terse.rect.w`.
+    // This flag must be used with `.terse` flag.
     terse_width,
+    // The frame's `terse.rect` is used for mouse hit test instead of `rect`.
+    // This flag must be used with `.terse` flag.
     terse_hit_rect,
 }
 
