@@ -220,7 +220,7 @@ add_content :: proc (page: ^ui.Frame, data_text: string) -> ^ui.Frame {
 
     text, track, _ := partials.add_text_and_scrollbar(content)
 
-    text.text_format = "<pad=0:40,wrap,left,font=text_4l,color=primary>%s"
+    ui.set_text_format(text, "<pad=0:40,wrap,left,font=text_4l,color=primary>%s")
     ui.set_text(text, data_text)
 
     track.anchors[0].offset = {80,40}

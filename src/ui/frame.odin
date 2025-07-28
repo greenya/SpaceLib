@@ -51,15 +51,16 @@ Frame_Init :: struct {
     order: int,
 
     // Name. Not unique.
-    // The value will be cloned (allocated).
+    // Use `set_name()` to set new value. The value will be cloned (allocated).
     name: string,
 
     // Text.
-    // The value will be cloned (allocated).
+    // Use `set_text()` to set new value. The value will be cloned (allocated).
     text: string,
 
-    // Text format for the `text`. If set, the `text` will contain result of
-    // `fmt.aprintf(text_format, ...values)`, when calling `set_text()`.
+    // Text format for the `text`.
+    // If set, the `text` will be formatted like `fmt.aprintf(f.text_format, ...values)`.
+    // Use `set_text_format()` to set new value. The value will be cloned (allocated).
     text_format: string,
 
     // Tick callback.
@@ -257,16 +258,22 @@ add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> 
     set_parent(f, parent)
     set_anchors(f, ..anchors)
 
-    if f.name != "" {
-        name := f.name
+    name := f.name
+    if name != "" {
         f.name = ""
         set_name(f, name)
     }
 
-    if f.text != "" {
-        text := f.text
+    text := f.text
+    if text != "" {
         f.text = ""
         set_text(f, text)
+    }
+
+    text_format := f.text_format
+    if text_format != "" {
+        f.text_format = ""
+        set_text_format(f, text_format)
     }
 
     return f
@@ -352,6 +359,11 @@ set_text :: proc (f: ^Frame, values: ..any, shown := false) {
 
     if shown do show(f)
     update(f)
+}
+
+set_text_format :: proc (f: ^Frame, text_format: string) {
+    delete(f.text_format)
+    f.text_format = text_format != "" ? strings.clone(text_format) : ""
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
@@ -712,6 +724,7 @@ destroy_frame_tree :: proc (f: ^Frame) {
     terse.destroy(f.terse)
     delete(f.name)
     delete(f.text)
+    delete(f.text_format)
     delete(f.children)
     delete(f.anchors)
     free(f)
