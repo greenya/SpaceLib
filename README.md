@@ -5,7 +5,7 @@
 * /events               - [planned] [maybe] event bus
 * /raylib               - helpers when using Raylib
 * /sdl3                 - [planned] set of helpers when using SDL3
-* /stack                - stack support
+* /stack                - stack data type
 * /terse                - text layout calculation
 * /tracking_allocator   - tracking allocator
 * /tweens               - [planned] [maybe] tweening support
