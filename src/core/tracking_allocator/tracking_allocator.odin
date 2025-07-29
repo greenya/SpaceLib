@@ -3,15 +3,20 @@ package spacelib_tracking_allocator
 import "core:fmt"
 import "core:mem"
 
-@private max_issues_printed :: 10
-@private track: mem.Tracking_Allocator
+Print_Verbosity :: enum {
+    full_always,
+    minimal_unless_issues,
+    silent_unless_issues,
+}
 
-// Usage:
+track: mem.Tracking_Allocator
+
+// Common usage:
 //
-//      import "spacelib:tracking_allocator"
+//      import "spacelib:core/tracking_allocator"
 //      main :: proc () {
 //          context.allocator = tracking_allocator.init()
-//          defer tracking_allocator.print_report()
+//          defer tracking_allocator.print()
 //          ...
 //      }
 
@@ -21,12 +26,30 @@ init :: proc () -> mem.Allocator {
     return mem.tracking_allocator(&track)
 }
 
-current_memory_allocated :: #force_inline proc () -> i64 {
-    return track.current_memory_allocated
+destroy :: proc () {
+    mem.tracking_allocator_destroy(&track)
+    track = {}
 }
 
-print_report :: proc () {
-    fmt.println("[TA] ------------- Report -------------")
+print :: proc (verbosity := Print_Verbosity.full_always, max_issues := 10, and_destroy := true) {
+    has_issues :=\
+        len(track.allocation_map) > 0 ||
+        len(track.bad_free_array) > 0
+
+    if has_issues {
+        print_report(max_issues)
+    } else do switch verbosity {
+        case .full_always           : print_report(max_issues)
+        case .minimal_unless_issues : fmt.println("[TA] No issues")
+        case .silent_unless_issues  : // silence goes here
+    }
+
+    if and_destroy do destroy()
+}
+
+@private
+print_report :: proc (max_issues: int) {
+    fmt.println("[TA] -------------- Report --------------")
     fmt.println("[TA] Current memory allocated :", track.current_memory_allocated)
     fmt.println("[TA] Total memory allocated   :", track.total_memory_allocated)
     fmt.println("[TA] Total allocation count   :", track.total_allocation_count)
@@ -34,36 +57,29 @@ print_report :: proc () {
     fmt.println("[TA] Total free count         :", track.total_free_count)
     fmt.println("[TA] Peak memory allocated    :", track.peak_memory_allocated)
 
-    if len(track.allocation_map) > 0 {
-        fmt.eprintfln("[TA] %v allocation(s) not freed:", len(track.allocation_map))
+    allocation_map_len := len(track.allocation_map)
+    if allocation_map_len > 0 {
+        fmt.eprintfln("[TA] %i allocation(s) not freed:", allocation_map_len)
         i := 0; for _, entry in track.allocation_map {
-            fmt.eprintfln("[TA] - %v bytes @ %v", entry.size, entry.location)
-            i += 1; if i == max_issues_printed {
+            fmt.eprintfln("[TA] - %i bytes @ %v", entry.size, entry.location)
+            i += 1; if i == max_issues {
                 fmt.eprintln("[TA] ... (and more)")
                 break
             }
         }
     }
 
-    if len(track.bad_free_array) > 0 {
-        fmt.eprintfln("[TA] %v incorrect free(s):", len(track.bad_free_array))
+    bad_free_array_len := len(track.bad_free_array)
+    if bad_free_array_len > 0 {
+        fmt.eprintfln("[TA] %i incorrect free(s):", bad_free_array_len)
         for entry, i in track.bad_free_array {
             fmt.eprintfln("[TA] - %p @ %v", entry.memory, entry.location)
-            if i == max_issues_printed {
+            if i == max_issues {
                 fmt.eprintln("[TA] ... (and more)")
                 break
             }
         }
     }
 
-    mem.tracking_allocator_destroy(&track)
-    fmt.println("[TA] ----------------------------------")
-}
-
-print_report_with_issues_only :: proc () {
-    if len(track.allocation_map) > 0 || len(track.bad_free_array) > 0 {
-        print_report()
-    } else {
-        fmt.println("[TA] No issues")
-    }
+    fmt.println("[TA] ------------------------------------")
 }
