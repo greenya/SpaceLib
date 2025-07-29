@@ -401,6 +401,7 @@ end_animation :: proc (f: ^Frame) {
     if f.anim.tick != nil {
         f.anim.ratio = 1
         f.anim.tick(f)
+        f.anim = {}
     }
 }
 
@@ -639,6 +640,13 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
     return target
 }
 
+update :: proc (f: ^Frame, repeat := 1) {
+    for _ in 0..<repeat {
+        set_rect_dirty_frame_tree(f)
+        update_rect_frame_tree(f)
+    }
+}
+
 @private
 find_by_rule :: proc (f: ^Frame, rule: string) -> ^Frame {
     rule := rule
@@ -751,7 +759,9 @@ destroy_terse_frame_tree :: proc (f: ^Frame) {
 @private
 prepare_frame_tree :: proc (f: ^Frame) {
     if f.anim.tick != nil {
-        f.anim.ratio = core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)
+        f.anim.ratio = .hidden in f.flags\
+            ? 1\
+            : core.clamp_ratio(f.ui.clock.time, f.anim.start, f.anim.end)
         f.anim.tick(f)
         if f.anim.ratio == 1 do f.anim = {}
     }
