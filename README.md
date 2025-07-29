@@ -2,8 +2,9 @@
 
     /core                       - core types and utilities
         /clock                  - clock with time scale support
-        /stack                  - fixed stack
-        /tracking_allocator     - tracking allocator
+        /stack                  - fixed size stack
+        /timed_scope            - evaluate scope execution time
+        /tracking_allocator     - memory allocation tracker
     /events                     - [planned] [maybe] event bus
     /raylib                     - helpers when using Raylib
     /sdl2 (3?)                  - [planned] helpers when using SDL
