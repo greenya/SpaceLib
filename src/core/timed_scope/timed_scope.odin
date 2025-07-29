@@ -71,7 +71,7 @@ print :: proc (order := Print_Order.by_name, and_destroy := true) {
         dur_avg := time.Duration(i64(scope.total_dur) / i64(scope.calls))
         dur_avg_ms := time.duration_milliseconds(dur_avg)
         fmt.printfln(
-            "[TS] %0.4f %v (%i) %v..%v",
+            "[TS] %0.3f %v (%i) %v..%v",
             dur_avg_ms, name, scope.calls, scope.min_dur, scope.max_dur,
         )
     }
