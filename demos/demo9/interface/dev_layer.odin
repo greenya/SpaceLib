@@ -56,9 +56,6 @@ add_dev_layer :: proc (order: int) {
                 else                                do dev.window.flags += {.hidden}
             }
         },
-        draw    = proc (f: ^ui.Frame) {
-            if dev.frames_under_mouse_drawing do dev_draw_frames_under_mouse()
-        },
     }, { point=.top_left }, { point=.bottom_right })
 
     add_dev_window()
@@ -418,12 +415,6 @@ dev_set_fonts_scale :: proc (scale: f32) {
     ui.update(ui_.root)
 }
 
-dev_ui_draw_ended :: proc () {
-    dev.ui_stats_buffer[dev.ui_stats_buffer_idx] = ui_.stats
-    dev.ui_stats_buffer_idx += 1
-    if dev.ui_stats_buffer_idx >= len(dev.ui_stats_buffer) do dev.ui_stats_buffer_idx = 0
-}
-
 dev_last_stats_buffer :: proc () -> ^ui.Stats {
     last_idx := dev.ui_stats_buffer_idx-1
     if last_idx < 0 do last_idx = len(dev.ui_stats_buffer)-1
@@ -449,13 +440,22 @@ dev_switch_window_mode :: proc (next_mode: Dev_Window_Mode) {
     }
 }
 
-dev_draw_frames_under_mouse :: proc () {
+dev_draw_ended :: proc () {
+    dev.ui_stats_buffer[dev.ui_stats_buffer_idx] = ui_.stats
+    dev.ui_stats_buffer_idx += 1
+    if dev.ui_stats_buffer_idx >= len(dev.ui_stats_buffer) do dev.ui_stats_buffer_idx = 0
+}
+
+dev_draw_frame_list_under_mouse :: proc () {
     if !dev.frames_under_mouse_drawing do return
+
     font := fonts.get(.default)
     pos := Vec2 { 10, 10 }
+
     for j, i in ui_.mouse_frames {
         path := ui.path_string(j, allocator=context.temp_allocator)
         text := fmt.tprintf("[%i] %s", i, path)
+        draw.text(text, pos+{1,2}, font, tint=core.gray1)
         draw.text(text, pos, font, tint=core.gray9)
         pos.y += 20
     }

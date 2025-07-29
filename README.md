@@ -95,7 +95,7 @@ TODO: ui: key press handling
 
 TODO: ui: add global opacity handling
 
-    ----- // also consider switching Color from [4] u8 to [4] f32, as we are doing a lot of alpha and brightness tweaks and every time we basically convert each component to f32 and back; and with this "global opacity" change, we will do it even more (well, only for one component... but for every drawing); test the speed of such change.
+    ---- // also consider switching Color from [4] u8 to [4] f32, as we are doing a lot of alpha and brightness tweaks and every time we basically convert each component to f32 and back; and with this "global opacity" change, we will do it even more (well, only for one component... but for every drawing); test the speed of such change. // ----
 
     The idea is to allow any frame drawing function to not worry about f.opacity, as long as any drawing is done using raylib/draw.* procs. A lot of calls like "core.alpha(..., f.opacity)" should be possible to get rid of. In case when some manual drawing needed directly using Raylib, the actual opacity can be read using draw.opacity().
 
@@ -145,6 +145,82 @@ TODO: [?] ui: maybe add support for logic resolution 1280x720
         - when drawing, user can scale frame's rect to actual resolution
 
 TODO: [?] ui: add UI.drawing_frames and .updating phase should fill it to be later used in .drawing phase
+
+TODO: [?] ui: add support for template loading
+
+    the idea is to reduce manual add_frame() calls and be able to describe ui in json (?), after its loaded (a tree), we need to hook draw, click etc.; each element could be retrieved by path (already supported). A template for simple dialog could look like below.
+
+```json
+{
+    "name": "dialog",
+    "size": [ 640, 0 ],
+    "layout": {
+        // this is Flow, but somehow loader should understand it
+        "dir": "down",
+        "pad": 30,
+        "auto_size": [ "height" ],
+        "anchors": [
+            { "point": "center" }
+        ]
+    },
+    "children": [
+        {
+            "name": "title",
+            "flags": [ "terse", "terse_height" ],
+            "text_format": "<wrap,pad=30,font=text_4m,color=primary_d2>%s"
+        },
+        {
+            "name": "message",
+            "flags": [ "terse", "terse_height" ],
+            "text_format": "<wrap,font=text_4l,color=primary_d2>%s"
+        },
+        {
+            "name": "buttons",
+            "size": [ 0, 90 ],
+            "layout": { // Flow
+                "dir": "right_center",
+                "gap": 20,
+                "align": "end"
+            },
+            "children": [
+                {
+                    {
+                        "name": "button_1",
+                        "text_format": "<pad=12:6,font=text_4l,color=primary>%s",
+                        "flags": [ "capture", "terse", "terse_size" ]
+                    },
+                    {
+                        "name": "button_2",
+                        "text_format": "<pad=12:6,font=text_4l,color=primary>%s",
+                        "flags": [ "capture", "terse", "terse_size" ]
+                    }
+                }
+            ]
+        }
+    ],
+}
+```
+
+    the usage could be something like:
+
+```odin
+// hypothetical init (once)
+dialog := ui.add_template(parent, "/* template text or simple loaded object is here */")
+dialog.draw = draw_dialog_rect
+for btn in ui.get(dialog, "buttons").children {
+    btn.draw = draw_button
+    btn.click = proc (f: ^ui.Frame) {
+        fmt.printfln("%s was clicked!", f.name)
+    }
+}
+
+// hypothetical use
+ui.set_text(ui.get(dialog, "title"), "Quit Game?")
+ui.set_text(ui.get(dialog, "message"), "Are you sure you want to quit?")
+ui.set_text(ui.get(dialog, "buttons/button_1"), "Confirm")
+ui.set_text(ui.get(dialog, "buttons/button_2"), "Cancel")
+ui.show(dialog)
+```
 
 TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
 

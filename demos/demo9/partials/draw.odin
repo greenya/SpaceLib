@@ -28,7 +28,7 @@ draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {}, drop_shadow := false, _shadow_pass := false) {
+draw_terse :: proc (t: ^terse.Terse, color: Color = {}, offset := Vec2 {}, drop_shadow := false, _shadow_pass := false) {
     assert(t != nil)
 
     if drop_shadow {
@@ -43,7 +43,7 @@ draw_terse :: proc (t: ^terse.Terse, color: Maybe(Color) = nil, offset := Vec2 {
             rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
             if !core.rects_intersect(rect, t.scissor) do continue
 
-            tint := color != nil ? color.? : word.color
+            tint := color.a > 0 ? color : word.color
             tint = core.alpha(tint, t.opacity)
 
             if word.is_icon {

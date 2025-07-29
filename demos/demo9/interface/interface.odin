@@ -68,6 +68,6 @@ tick :: proc () {
 
 draw :: proc () {
     ui.draw(ui_)
-    dev_ui_draw_ended()
-    dev_draw_frames_under_mouse()
+    dev_draw_ended()
+    dev_draw_frame_list_under_mouse()
 }
