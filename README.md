@@ -40,13 +40,9 @@ TODO: terse: add support for "image" command
 
 TODO: terse: investigate if text measuring of a word can be improved (performance wise) by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
-TODO: ui: Grid: support other directions
-
-TODO: ui: Grid: support scroll
-
-    consider separating scroll logic to the Frame root (now its part of Flow method only); the idea is that scrolling should not know/care about layout method; the layout method should provide info for the scroll, size needed to fit all children
-
 TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
+
+TODO: ui: Grid: support other directions
 
 TODO: ui: support multiple callbacks for some events
 

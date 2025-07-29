@@ -32,6 +32,8 @@ destroy :: proc () {
 }
 
 print :: proc (verbosity := Print_Verbosity.full_always, max_issues := 10, and_destroy := true) {
+    defer if and_destroy do destroy()
+
     has_issues :=\
         len(track.allocation_map) > 0 ||
         len(track.bad_free_array) > 0
@@ -43,8 +45,6 @@ print :: proc (verbosity := Print_Verbosity.full_always, max_issues := 10, and_d
         case .minimal_unless_issues : fmt.println("[TA] No issues")
         case .silent_unless_issues  : // silence goes here
     }
-
-    if and_destroy do destroy()
 }
 
 @private

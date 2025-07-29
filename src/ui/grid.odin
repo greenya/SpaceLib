@@ -7,6 +7,7 @@ import "../core"
 // Arranges `children` in a grid where each cell has the same size.
 // The grid fills in the primary direction, with up to `wrap` children per row or column.
 // Additional children cause the grid to grow in the secondary direction.
+// Scroll is not directly supported, but you can place `Grid` inside `Flow` with a scroll.
 Grid :: struct {
     // Placement direction of the children. A pair of primary and secondary directions.
     // Grid grows in primary direction up to `wrap` items, and indefinitely in the secondary direction.

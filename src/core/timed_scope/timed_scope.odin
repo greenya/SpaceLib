@@ -59,6 +59,13 @@ scope_end :: #force_inline proc (name: string, scope_start_time: time.Time) {
 }
 
 print :: proc (order := Print_Order.by_name, and_destroy := true) {
+    defer if and_destroy do destroy()
+
+    if len(scopes) == 0 {
+        fmt.println("[TS] No scopes")
+        return
+    }
+
     fmt.println("[TS] -------------- Report --------------")
 
     scope_entries, _ := slice.map_entries(scopes, context.temp_allocator)
@@ -77,7 +84,6 @@ print :: proc (order := Print_Order.by_name, and_destroy := true) {
     }
 
     fmt.println("[TS] ------------------------------------")
-    if and_destroy do destroy()
 }
 
 @private
