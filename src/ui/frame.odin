@@ -353,12 +353,18 @@ set_name :: proc (f: ^Frame, name: string) {
 }
 
 set_text :: proc (f: ^Frame, values: ..any, shown := false) {
-    delete(f.text)
-    terse.destroy(f.terse)
-    f.terse = nil
-
     format := f.text_format != "" ? f.text_format : "%v"
-    f.text = fmt.aprintf(format, ..values)
+    new_text := fmt.aprintf(format, ..values)
+
+    if f.text != new_text {
+        delete(f.text)
+        f.text = new_text
+
+        terse.destroy(f.terse)
+        f.terse = nil
+    } else {
+        delete(new_text)
+    }
 
     if shown do show(f)
     update(f)

@@ -27,7 +27,6 @@ dev: struct {
     monitor         : ^ui.Frame,
     monitor_floating: bool,
 
-    frames_label_code           : int,
     frames_under_mouse_drawing  : bool,
     frames_under_mouse_store    : [100] ^ui.Frame,
     frames_under_mouse_slice    : [] ^ui.Frame,
@@ -186,9 +185,6 @@ add_dev_stat_perf :: proc () {
         ui.set_text_format(label, "<left,wrap,color=#eee>Drawn: %i of %i\nMouse cursor frame stack:")
         label.tick = proc (f: ^ui.Frame) {
             stats := dev_last_stats_buffer()
-            code := stats.frames_total + (stats.frames_drawn << 16)
-            if code == dev.frames_label_code do return // skip label update when values seems the same
-            dev.frames_label_code = code
             ui.set_text(f, stats.frames_drawn, stats.frames_total)
         }
 
