@@ -5,6 +5,7 @@ import "core:math/rand"
 import "core:slice"
 import "core:strings"
 import rl "vendor:raylib"
+
 import "spacelib:core"
 import "spacelib:core/tracking_allocator"
 import "spacelib:raylib/draw"
@@ -21,7 +22,7 @@ app: struct {
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print_report_with_issues_only()
+    defer tracking_allocator.print(.minimal_unless_issues)
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })

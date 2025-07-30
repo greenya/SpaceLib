@@ -4,7 +4,7 @@ import "spacelib:core/tracking_allocator"
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print_report_with_issues_only()
+    defer tracking_allocator.print(.minimal_unless_issues)
 
     app_startup()
 

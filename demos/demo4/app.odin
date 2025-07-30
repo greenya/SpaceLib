@@ -106,7 +106,7 @@ app_draw :: proc () {
         rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })
         rl.DrawRectangleLinesEx(rect, 2, rl.RED)
         rl.DrawFPS(i32(rect.x+10), i32(rect.y+10))
-        cstr := fmt.ctprintf("TA Memory: %v\n%#v", tracking_allocator.current_memory_allocated(), app.ui.stats)
+        cstr := fmt.ctprintf("TA Memory: %v\n%#v", tracking_allocator.track.current_memory_allocated, app.ui.stats)
         rl.DrawText(cstr, i32(rect.x+10), i32(rect.y+30), 20, rl.GREEN)
     }
 

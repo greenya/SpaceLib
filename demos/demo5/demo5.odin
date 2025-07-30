@@ -16,7 +16,7 @@ Rect :: core.Rect
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print_report_with_issues_only()
+    defer tracking_allocator.print(.minimal_unless_issues)
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })

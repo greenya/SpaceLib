@@ -1,12 +1,13 @@
 package demo7
 
 import "core:fmt"
+import rl "vendor:raylib"
+
 import "spacelib:core"
 import "spacelib:core/tracking_allocator"
 import "spacelib:raylib/draw"
 import "spacelib:raylib/res"
 import "spacelib:ui"
-import rl "vendor:raylib"
 
 Vec2 :: core.Vec2
 Rect :: core.Rect
@@ -19,7 +20,7 @@ app: struct {
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print_report_with_issues_only()
+    defer tracking_allocator.print(.minimal_unless_issues)
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
