@@ -91,8 +91,8 @@ add_dev_window :: proc () {
             draw.rect(f.rect, core.gray1)
             partials.draw_terse(f.terse)
         },
-        drag=proc (f: ^ui.Frame, local_captured_pos, abs_mouse_pos: Vec2) {
-            offset := abs_mouse_pos - local_captured_pos
+        drag=proc (f: ^ui.Frame, info: ui.Drag_Info) {
+            offset := f.ui.mouse.pos - info.start_offset
             f.parent.rect.x = offset.x
             f.parent.rect.y = offset.y
             ui.update(f.parent)
@@ -145,11 +145,11 @@ add_dev_window :: proc () {
         draw=proc (f: ^ui.Frame) {
             partials.draw_sprite("drag_indicator", f.rect, tint=core.gray6)
         },
-        drag=proc (f: ^ui.Frame, local_captured_pos, abs_mouse_pos: Vec2) {
-            offset := abs_mouse_pos - local_captured_pos - {f.rect.x,f.rect.y}
+        drag=proc (f: ^ui.Frame, info: ui.Drag_Info) {
+            offset := f.ui.mouse.pos - info.start_offset - {f.rect.x,f.rect.y}
             rect := &dev.window.rect
-            rect.w = max(dev_window_min_size.x, rect.w+offset.x)
-            rect.h = max(dev_window_min_size.y, rect.h+offset.y)
+            rect.w = max(dev_window_min_size.x, rect.w + offset.x)
+            rect.h = max(dev_window_min_size.y, rect.h + offset.y)
             ui.update(f.parent)
         },
     },
@@ -262,9 +262,9 @@ add_dev_stat_perf_monitor :: proc () {
             tick_time_text := fmt.tprintf("tick: %v", stats.tick_time)
             draw.text(tick_time_text, cursor, fonts.get(.default), core.magenta)
         },
-        drag=proc (f: ^ui.Frame, local_captured_pos, abs_mouse_pos: Vec2) {
+        drag=proc (f: ^ui.Frame, info: ui.Drag_Info) {
             if !dev.monitor_floating do return
-            offset := abs_mouse_pos - local_captured_pos
+            offset := f.ui.mouse.pos - info.start_offset
             f.rect.x = offset.x
             f.rect.y = offset.y
         },

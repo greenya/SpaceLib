@@ -82,10 +82,6 @@ TODO: ui: support multiple callbacks for some events
         - on_ui_wheel
         - on_ui_drag
 
-TODO: ui: add support for "size_ratio"
-
-    just like "size", but allows to set size relative to parent.rect.w/h in ratio; if set, has priority over "size" field ("size" and "size_min" is ignored)
-
 TODO: ui: key press handling
 
     The idea is to be able express frame handles "Esc" or "A" and when that happens, the frame gets "click". Ideally, we want to add all the structure, which will include multiple elements wanting "Esc" (or any other button), but the UI should automatically route "click" to correct one, checking visibility and hierarchy of the frame; it should be possible to open dialog which would close by "Esc" and the "Esc" is also visible below, as dialog has semitransparent layer and the tree is visible below. Any single key can be handled only be single frame at any time, e.g. even if we have tab bar with "Q" and "E" navigation and another tab bar with same keys is shown, only one should consume the key input.
@@ -118,6 +114,18 @@ TODO: ui: add global opacity handling
 
 TODO: ui: fix hover_ratio(): fix twitching for large duration and short enter/leave times
 
+    maybe we should add a separate field -- Frame.hover: Hovering,
+
+    Hovering :: struct {
+        enter_ease  : core.Ease,
+        enter_dur   : f32,
+        leave_ease  : core.Ease,
+        leave_dur   : f32,
+        ratio       : f32,
+    }
+
+    in tick() check if f.hover.enter_dur != 0 && f.hover.enter_dur != 0 -- calc hover.ratio; no need to use buggy hover_ratio(), now we have hover.ratio value, and we can ensure it changes smoothly.
+
 TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
 
 TODO: [?] ui: add "wait=f32(0)" arg to ui.animate(),
@@ -133,7 +141,15 @@ TODO: [?] ui: add support for automatic child frames generation for each text_te
 
 TODO: [?] ui: drag-n-drop frame info
 
-    maybe extend Frame.drag to support op: Drag_Operation // enum: is_drag_target, dragging_started, dragging_now, dragging_ended, is_drop_target, dropping_now
+    currently the dragged frame is always the one who has captured mouse; this means that no other frames receive any enter/leave events; now considered a scenario where we want to create an inventory with ability to drag-n-drop items. The item that got drag is fine, as it receives continuous drag callback; now, how can user get item below the dragged item, to highlight it or perform drop operation when drag is finished. at the moment, there is no other way (i don't see) as manually tinker with ui.mouse_frames list; but it would be nice to be able to express that some frame are drop targets;
+
+    ideas:
+    - add callback drop/drag_beat/drag_target/drop_target... something like that (?)
+    - so the frame can be notified about other's drag activity
+
+    - maybe we should just extend Drag_Info, so it has current hovering frame, and the drag callback can decide what to do with it. This seems better and in one place (the dragged frame has all logic; again, the drag callback will be the same for all inventory slots in most cases, so no issues there).
+
+    - very nice if we could have a way for a group of frames to highlight itself as indication for a user that they are valid targets (like dragging a weapon from inventory, could highlight weapon slots on the character as valid targets); this is probably has nothing to do with drag-target, as the drag handler of the frame who is doing the drag, can ask those frames to highlight itself at phase==.start and ask to disable such highlight at the phase==.end of the drag.
 
 TODO: [?] ui: maybe add support for logic resolution 1280x720
 

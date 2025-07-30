@@ -104,9 +104,9 @@ Processing_Phase :: enum {
 }
 
 Captured_Info :: struct {
-    frame       : ^Frame,
-    frame_pos   : Vec2,
-    outside     : bool,
+    outside : bool,
+    frame   : ^Frame,
+    drag    : Drag_Info,
 }
 
 Stats :: struct {
@@ -211,7 +211,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             }
 
             if lmb_pressed && ui.captured.frame == nil {
-                ui.captured = { frame=f, frame_pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
+                ui.captured = { frame=f }
                 if .capture in f.flags do keep_capture = true
             }
 
@@ -221,8 +221,32 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
         if ui.captured.frame != nil {
             mouse_input_consumed = true
 
-            ui.captured.frame.captured = true
-            drag(ui.captured.frame, ui.captured.frame_pos, ui.mouse.pos)
+            if keep_capture {
+                f := ui.captured.frame
+                d := &ui.captured.drag
+
+                f.captured = true
+
+                switch {
+                case lmb_pressed:
+                    assert(d^ == {})
+                    d^ = {
+                        phase           = .start,
+                        start_mouse_pos = ui.mouse.pos,
+                        start_offset    = ui.mouse.pos - {f.rect.x,f.rect.y},
+                    }
+                case lmb_released:
+                    d.phase = .end
+                case:
+                    d.phase = .dragging
+                }
+
+                new_total_offset := ui.mouse.pos - d.start_mouse_pos
+                d.delta = new_total_offset - d.total_offset
+                d.total_offset = new_total_offset
+
+                drag(ui.captured.frame, ui.captured.drag)
+            }
 
             if lmb_released || !keep_capture {
                 if ui.captured.frame.entered do click(ui.captured.frame)

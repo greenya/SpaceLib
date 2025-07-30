@@ -11,7 +11,7 @@ Frame_Init :: struct {
     flags: bit_set [Flag],
 
     // Absolute rectangle of the frame.
-    // In most cases, this is updated automatically by the UI based on `anchors` or the parent's `layout`.
+    // In most cases, this is updated automatically by the UI based on `anchors` or `parent.layout`.
     // You should set it manually only if the frame is not anchored and not a child of a `layout`.
     // For example, the root frame typically sets this directly to match the screen resolution.
     rect: Rect,
@@ -22,13 +22,13 @@ Frame_Init :: struct {
     size: Vec2,
 
     // Size aspect ratio. Considered "not set" if it is zero.
-    // The value used only by `anchors` and `Flow` of the parent frame.
+    // The value used only by `anchors` and `Flow`.
     // The value is applied only when one dimension is known and another is zero (not set nor calculated).
     size_aspect: f32,
 
     // Minimal size. Width and height are processed separately.
     // Width/height is considered "not set" if it is zero.
-    // The value is used only by `Flow` of the parent frame.
+    // The value is used only by `Flow`.
     // The value is applied after all size calculations has been made.
     size_min: Vec2,
 
@@ -107,7 +107,9 @@ Frame_Init :: struct {
 
     // Mouse action callback. Triggered while the mouse is being dragged.
     // Called on every `tick()` for the frame that has `captured` the mouse.
-    // Should be used with `.capture` flag.
+    //
+    // The callback is guaranteed to be called at least twice, with a proper `info.phase`:
+    // `.start` at the beginning and `.end` at the end of the drag operation.
     drag: Frame_Drag_Proc,
 
     // Indicates that the frame is selected.
@@ -118,6 +120,9 @@ Frame_Init :: struct {
 }
 
 Frame :: struct {
+    // Init part of the `Frame` struct.
+    using init: Frame_Init,
+
     // The UI this frame is part of.
     // Can be `nil` in case the frame is manually detached via `set_parent(f, nil)`.
     // Note: detached frames will not be destroyed on `destroy()`.
@@ -129,9 +134,6 @@ Frame :: struct {
 
     // Child frames. Sorted according to `child.order`.
     children: [dynamic] ^Frame,
-
-    // Init part of the `Frame` struct.
-    using init: Frame_Init,
 
     // Anchors.
     // Anchors calculation is using `size` and `size_aspect` to decide on final `rect`.
@@ -276,9 +278,22 @@ Animation :: struct {
     ratio   : f32,
 }
 
+Drag_Info :: struct {
+    // Phase of the drag operation.
+    phase: enum { start, dragging, end },
+    // Absolute mouse position when the drag started.
+    start_mouse_pos: Vec2,
+    // Local position within the frame where the drag started.
+    start_offset: Vec2,
+    // Total offset since the drag started. This value changes as mouse moves.
+    total_offset: Vec2,
+    // Offset delta since the previous tick. Becomes `0` when the mouse stops moving.
+    delta: Vec2,
+}
+
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
-Frame_Drag_Proc     :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2)
+Frame_Drag_Proc     :: proc (f: ^Frame, info: Drag_Info)
 
 add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
@@ -735,11 +750,11 @@ click_radio :: proc (f: ^Frame) {
 }
 
 @private
-drag :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2) {
+drag :: proc (f: ^Frame, info: Drag_Info) {
     if disabled(f) do return
 
-    if f.actor != nil   do drag_actor(f, local_captured_pos, abs_mouse_pos)
-    if f.drag != nil    do f.drag(f, local_captured_pos, abs_mouse_pos)
+    if f.actor != nil   do drag_actor(f, info)
+    if f.drag != nil    do f.drag(f, info)
 }
 
 @private

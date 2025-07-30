@@ -39,25 +39,27 @@ click_actor :: proc (f: ^Frame) {
 }
 
 @private
-drag_actor :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2) {
+drag_actor :: proc (f: ^Frame, info: Drag_Info) {
     #partial switch a in f.actor {
-    case Actor_Scrollbar_Thumb: drag_actor_scrollbar_thumb(f, local_captured_pos, abs_mouse_pos)
+    case Actor_Scrollbar_Thumb: drag_actor_scrollbar_thumb(f, info)
     }
 }
 
 @private
-drag_actor_scrollbar_thumb :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2) {
+drag_actor_scrollbar_thumb :: proc (f: ^Frame, info: Drag_Info) {
     actor := &f.actor.(Actor_Scrollbar_Thumb)
     track_rect := &f.parent.rect
     ratio: f32
 
+    mouse_pos := f.ui.mouse.pos
+
     if is_layout_dir_vertical(actor.content) {
         space := track_rect.h - f.rect.h
-        ratio = core.clamp_ratio(abs_mouse_pos.y-local_captured_pos.y, track_rect.y, track_rect.y+track_rect.h-f.rect.h)
+        ratio = core.clamp_ratio(mouse_pos.y-info.start_offset.y, track_rect.y, track_rect.y+track_rect.h-f.rect.h)
         f.anchors[0].offset.y = space * ratio
     } else {
         space := track_rect.w - f.rect.w
-        ratio = core.clamp_ratio(abs_mouse_pos.x-local_captured_pos.x, track_rect.x, track_rect.x+track_rect.w-f.rect.w)
+        ratio = core.clamp_ratio(mouse_pos.x-info.start_offset.x, track_rect.x, track_rect.x+track_rect.w-f.rect.w)
         f.anchors[0].offset.x = space * ratio
     }
 
