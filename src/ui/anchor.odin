@@ -45,6 +45,10 @@ clear_anchors :: proc (f: ^Frame) {
 
 @private
 update_rect_with_anchors :: proc (f: ^Frame) {
+    assert(f.rect_status != .ready)
+    assert(f.rect_status != .updating_now, "Anchoring loop detected")
+    f.rect_status = .updating_now
+
     f_size := f.size
 
     size_aspect_applied: bool
@@ -61,7 +65,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         assert(anchor.rel_point != .none)
 
         rel_frame := anchor.rel_frame != nil ? anchor.rel_frame : f.parent
-        update_rect(rel_frame)
+        if rel_frame.rect_status != .ready do update_rect(rel_frame)
 
         rel := rel_frame.rect
         dir := result_dir
@@ -260,7 +264,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
         else if f.rect.h>1 && f.rect.w==0 do f.rect.w = f.rect.h*f.size_aspect
     }
 
-    f.rect_dirty = false
+    f.rect_status = .ready
 }
 
 @private Rect_Dir :: struct { l, t, r, b: f32 }

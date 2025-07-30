@@ -198,7 +198,11 @@ Frame :: struct {
     // Actor state.
     actor: Actor,
 
-    rect_dirty: bool,
+    rect_status: enum {
+        ready,
+        update_needed,
+        updating_now,
+    },
 }
 
 Flag :: enum {
@@ -664,7 +668,7 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
 
 update :: proc (f: ^Frame, repeat := 1) {
     for _ in 0..<repeat {
-        set_rect_dirty_frame_tree(f)
+        mark_rect_for_update_frame_tree(f)
         update_rect_frame_tree(f)
     }
 }
@@ -746,9 +750,9 @@ sort_children :: #force_inline proc (parent: ^Frame) {
 }
 
 @private
-set_rect_dirty_frame_tree :: proc (f: ^Frame) {
-    f.rect_dirty = true
-    for child in f.children do set_rect_dirty_frame_tree(child)
+mark_rect_for_update_frame_tree :: proc (f: ^Frame) {
+    f.rect_status = .update_needed
+    for child in f.children do mark_rect_for_update_frame_tree(child)
 }
 
 @private
@@ -792,7 +796,7 @@ prepare_frame_tree :: proc (f: ^Frame) {
     f.entered = false
     f.captured = false
 
-    f.rect_dirty = true
+    f.rect_status = .update_needed
     for child in f.children do prepare_frame_tree(child)
 
     f.ui.stats.frames_total += 1
@@ -853,7 +857,9 @@ draw_frame_tree :: proc (f: ^Frame) {
 
 @private
 update_rect :: proc (f: ^Frame) {
-    if f.rect_dirty && len(f.anchors) > 0 do update_rect_with_anchors(f)
+    if f.rect_status != .ready && len(f.anchors) > 0 {
+        update_rect_with_anchors(f)
+    }
 
     switch l in f.layout {
     case Flow: update_rect_for_children_of_flow(f)
