@@ -7,7 +7,7 @@ import "../core"
 import "../terse"
 
 Frame_Init :: struct {
-    // Set of flags.
+    // Set of flags. See description of each flag for details.
     flags: bit_set [Flag],
 
     // Absolute rectangle of the frame.
@@ -55,6 +55,7 @@ Frame_Init :: struct {
     name: string,
 
     // Text.
+    // This value might differ from what you've set in case `text_format` is used.
     // Use `set_text()` to set new value. The value will be cloned (allocated).
     text: string,
 
@@ -64,7 +65,7 @@ Frame_Init :: struct {
     text_format: string,
 
     // Tick callback.
-    // At this point, the `rect` of the frame and each of its children has been calculated.
+    // The callback can expect the `rect` of the frame and each of its children has been calculated.
     // Called before any event callbacks (e.g. `enter`, `click`, etc.)
     // Called on every `tick()` when frame is not `.hidden`.
     tick: Frame_Proc,
@@ -75,7 +76,7 @@ Frame_Init :: struct {
     draw: Frame_Proc,
 
     // Post draw callback.
-    // Called after restoring previous scissor (if used) and after drawing children.
+    // Called after drawing children and after restoring previous scissor (if used).
     // Called on every `draw()` when frame is not `.hidden`.
     draw_after: Frame_Proc,
 
@@ -106,6 +107,7 @@ Frame_Init :: struct {
 
     // Mouse action callback. Triggered while the mouse is being dragged.
     // Called on every `tick()` for the frame that has `captured` the mouse.
+    // Should be used with `.capture` flag.
     drag: Frame_Drag_Proc,
 
     // Indicates that the frame is selected.
@@ -117,11 +119,12 @@ Frame_Init :: struct {
 
 Frame :: struct {
     // The UI this frame is part of.
-    // Can be `nil` in case the frame is manually detached like `set_parent(f, nil)`.
+    // Can be `nil` in case the frame is manually detached via `set_parent(f, nil)`.
     // Note: detached frames will not be destroyed on `destroy()`.
     ui: ^UI,
 
     // Parent frame.
+    // This value is `nil` for root and for manually detached frames.
     parent: ^Frame,
 
     // Child frames. Sorted according to `child.order`.
@@ -132,10 +135,11 @@ Frame :: struct {
 
     // Anchors.
     // Anchors calculation is using `size` and `size_aspect` to decide on final `rect`.
-    // Note: `parent.layout` skips frames with `anchors`.
+    // Note: `parent.layout` skips anchored frames.
     anchors: [dynamic] Anchor,
 
-    // Terse.
+    // Terse (measured text).
+    //
     // Created from `text` using `terse.create()`. The UI might regenerate the value when needed,
     // for example, when new `text` is set or the `rect` is updated.
     //
@@ -168,14 +172,27 @@ Frame :: struct {
     captured: bool,
 
     // Animation state.
+    //
+    // Start an animation using `animate()`. The animation callback will be called with this frame as
+    // an argument on every UI tick until the animation ends. The callback is guaranteed to be called
+    // at least twice: once with `anim.ratio == 0` (start of animation, immediately upon calling `animate()`)
+    // and once with `anim.ratio == 1` (end of animation).
+    //
+    // A new animation can be started at any time by calling `animate()` again -- there's no need to check
+    // `animating()` or manually call `end_animation()`; the UI handles that automatically. The animation callback
+    // can always expect to receive a final call with `anim.ratio == 1`, which can be used to show/hide the frame,
+    // update alpha, apply a final offset, etc.
+    //
+    // Only one animation per frame can run at a time.
     anim: Animation,
 
     // Offset to be applied for final `rect`. Useful for animation, as we cannot just move frame by
-    // changing its `rect.x` when it is managed by anchors or by `parent.layout`.
+    // changing its `rect.x` when it is anchored or arranged by `parent.layout`.
     offset: Vec2,
 
     // Opacity of the frame. The frame only stores this value; it's up to the drawing callbacks
     // to use it when rendering. If `terse != nil`, the `terse.opacity` will be updated automatically.
+    // Use `set_opacity()` to change this value for the frame and all its children.
     opacity: f32,
 
     // Actor state.
@@ -185,8 +202,10 @@ Frame :: struct {
 }
 
 Flag :: enum {
-    // The frame is hidden. Hidden frames do not receive any input and no callbacks are triggered,
-    // including `tick`.
+    // The frame is hidden.
+    // Hidden frames do not receive any input, and none of their callbacks (including `tick`) are triggered.
+    // However, if the frame has an unfinished animation, its animation callback is still guaranteed
+    // to be called one final time with `anim.ratio == 1` to ensure proper finalization.
     hidden,
     // The frame is disabled. Action events `click`, `drag` and `wheel` will not be triggered.
     disabled,
@@ -210,30 +229,40 @@ Flag :: enum {
     radio,
     // The frame automatically hides itself when clicked outside of its `rect` or any of its children.
     auto_hide,
-    // The frame's `text` is used as terse. More in `Frame.terse`.
+    // The frame's `text` is used for terse. More in `Frame.terse`.
     terse,
     // The frame's `size` is set to value of `terse.rect.w/h`.
-    // This flag must be used with `.terse` flag.
+    // This flag can be used only with `.terse` flag.
     terse_size,
     // The frame's `size.y` is set to value of `terse.rect.h`.
-    // This flag must be used with `.terse` flag.
+    // This flag can be used only with `.terse` flag.
     terse_height,
     // The frame's `size.x` is set to value of `terse.rect.w`.
-    // This flag must be used with `.terse` flag.
+    // This flag can be used only with `.terse` flag.
     terse_width,
     // The frame's `terse.rect` is used for mouse hit test instead of `rect`.
-    // This flag must be used with `.terse` flag.
+    // This flag can be used only with `.terse` flag.
     terse_hit_rect,
-    // The frame's `terse` will be additionally processed by `terse.shrink_terse()` after regeneration.
-    // This flag must be used with `.terse` flag.
+    // After the frame's `terse` is regenerated, `terse.shrink_terse()` will also be called.
+    // This flag can be used only with `.terse` flag.
     terse_shrink,
 }
 
 Layout_Scroll :: struct {
-    step        : f32,
-    offset      : f32,
-    offset_min  : f32,
-    offset_max  : f32,
+    // Multiplier for mouse wheel delta.
+    step: f32,
+    // Current scroll offset (in pixels).
+    // This can be equal to `offset_min` or `offset_max`, meaning the scroll is at its limit.
+    // Scrolling is also considered "inactive" when `offset_min == offset_max`.
+    offset: f32,
+    // Minimum scroll offset (in pixels).
+    // In most common layout directions this is `0`, but it can be negative in certain cases --
+    // for example, when `Flow.dir == .left`.
+    offset_min: f32,
+    // Maximum scroll offset (in pixels).
+    // In most common layout directions this is `>0`, but it can be `0` while scroll is active --
+    // for example, when `Flow.dir == .left`.
+    offset_max: f32,
 }
 
 Animation :: struct {
@@ -245,7 +274,7 @@ Animation :: struct {
 
 Frame_Proc          :: proc (f: ^Frame)
 Frame_Wheel_Proc    :: proc (f: ^Frame, dy: f32) -> (consumed: bool)
-Frame_Drag_Proc     :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2)
+Frame_Drag_Proc     :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2)
 
 add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> ^Frame {
     f := new(Frame)
@@ -279,17 +308,10 @@ add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> 
     return f
 }
 
-update :: proc (f: ^Frame, repeat := 1) {
-    for _ in 0..<repeat {
-        set_rect_dirty_frame_tree(f)
-        update_rect_frame_tree(f)
-    }
-}
-
 index :: #force_inline proc (child: ^Frame) -> int {
     assert(child.parent != nil)
-    i, _ := slice.linear_search(child.parent.children[:], child)
-    assert(i >= 0, "Bad child. The child has a parent, but that parent's list of children does not include the child. Please use set_parent() for correct re-parenting.")
+    i, _ := #force_inline slice.linear_search(child.parent.children[:], child)
+    assert(i >= 0, "Invalid child state. The frame has a parent, but is not listed among the parent's children. Use set_parent() to re-parent correctly.")
     return i
 }
 
@@ -649,11 +671,11 @@ update :: proc (f: ^Frame, repeat := 1) {
 
 @private
 find_by_rule :: proc (f: ^Frame, rule: string) -> ^Frame {
-    rule := rule
-    allow_non_direct_child := false
-
     if rule == "." do return f
     if rule == ".." do return f.parent
+
+    rule := rule
+    allow_non_direct_child := false
 
     if len(rule) > 0 && rule[0] == '~' {
         rule = rule[1:]
@@ -709,11 +731,11 @@ click_radio :: proc (f: ^Frame) {
 }
 
 @private
-drag :: proc (f: ^Frame, mouse_pos, captured_pos: Vec2) {
+drag :: proc (f: ^Frame, local_captured_pos, abs_mouse_pos: Vec2) {
     if disabled(f) do return
 
-    if f.actor != nil   do drag_actor(f, mouse_pos, captured_pos)
-    if f.drag != nil    do f.drag(f, mouse_pos, captured_pos)
+    if f.actor != nil   do drag_actor(f, local_captured_pos, abs_mouse_pos)
+    if f.drag != nil    do f.drag(f, local_captured_pos, abs_mouse_pos)
 }
 
 @private

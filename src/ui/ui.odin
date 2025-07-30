@@ -104,9 +104,9 @@ Processing_Phase :: enum {
 }
 
 Captured_Info :: struct {
-    frame   : ^Frame,
-    pos     : Vec2,
-    outside : bool,
+    frame       : ^Frame,
+    frame_pos   : Vec2,
+    outside     : bool,
 }
 
 Stats :: struct {
@@ -207,12 +207,11 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                     i.entered_time = ui.clock.time
                     append(&ui.entered_frames, i)
                     if i.enter != nil do i.enter(i)
-                    // fmt.println("->", i.name)
                 }
             }
 
             if lmb_pressed && ui.captured.frame == nil {
-                ui.captured = { frame=f, pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
+                ui.captured = { frame=f, frame_pos=ui.mouse.pos-{f.rect.x,f.rect.y} }
                 if .capture in f.flags do keep_capture = true
             }
 
@@ -223,7 +222,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             mouse_input_consumed = true
 
             ui.captured.frame.captured = true
-            drag(ui.captured.frame, ui.mouse.pos, ui.captured.pos)
+            drag(ui.captured.frame, ui.captured.frame_pos, ui.mouse.pos)
 
             if lmb_released || !keep_capture {
                 if ui.captured.frame.entered do click(ui.captured.frame)
@@ -244,7 +243,6 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             f.left_time = ui.clock.time
             unordered_remove(&ui.entered_frames, i)
             if f.leave != nil do f.leave(f)
-            // fmt.println("<-", f.name)
         }
     }
 
