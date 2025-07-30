@@ -48,7 +48,8 @@ app_startup :: proc () {
     // events.open_dialog({ dialog_id="tyg_rolsum", chat_id="welcome" })
     // events.open_dialog({ dialog_id="ornithopter_pilot", chat_id="welcome" })
     // events.open_screen({ screen_name="settings", tab_name="graphics" })
-    events.open_screen({ screen_name="player", tab_name="journey" })
+    // events.open_screen({ screen_name="player", tab_name="journey" })
+    events.open_screen({ screen_name="player", tab_name="map" })
 }
 
 app_shutdown :: proc () {

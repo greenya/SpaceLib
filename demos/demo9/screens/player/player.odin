@@ -1,10 +1,15 @@
 package player
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../../data"
 import "../../events"
 import "../../partials"
+
+@private Vec2 :: core.Vec2
+@private Rect :: core.Rect
+@private Color :: core.Color
 
 @private screen: struct {
     using screen: partials.Screen,
