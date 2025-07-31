@@ -65,17 +65,19 @@ layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
     #partial switch &l in f.layout {
     case Flow: return &l
     }
-    panic("Layout is not Flow")
+    return nil
 }
 
 @private
 update_rect_for_children_of_flow :: proc (f: ^Frame) {
+    flow := layout_flow(f)
+    assert(flow != nil)
+
     prev_rect: Rect
     has_prev_rect: bool
 
     vis_children := get_layout_visible_children(f, context.temp_allocator)
     is_dir_vertical := is_layout_dir_vertical(f)
-    flow := layout_flow(f)
 
     for child in vis_children {
         rect := Rect {

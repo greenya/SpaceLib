@@ -59,12 +59,13 @@ layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
     #partial switch &l in f.layout {
     case Grid: return &l
     }
-    panic("Layout is not Grid")
+    return nil
 }
 
 @private
 update_rect_for_children_of_grid :: proc (f: ^Frame) {
     grid := layout_grid(f)
+    assert(grid != nil)
 
     wrap := grid.wrap
     size := grid.size
