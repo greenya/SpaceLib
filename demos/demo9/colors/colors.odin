@@ -13,6 +13,7 @@ ID :: enum {
     bg2,
     primary,
     accent,
+    progress,
 }
 
 Tag :: enum {
@@ -39,6 +40,7 @@ create :: proc () {
     case .bg2       : set(id, core.color_from_hex("#223"))
     case .primary   : set(id, core.color_from_hex("#fd9"))
     case .accent    : set(id, core.color_from_hex("#f9f"))
+    case .progress  : set(id, core.color_from_hex("#2cc"))
     }
 }
 

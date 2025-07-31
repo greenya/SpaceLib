@@ -98,26 +98,76 @@ add_map_info_panel :: proc () {
     panel := ui.add_frame(map_.root, {
         flags={.pass},
         name="info_panel",
-        size={480,0},
+        size={420,0},
         layout=ui.Flow{ dir=.down, pad=8, gap=4, auto_size={.height} },
         draw=partials.draw_info_panel_rect,
     },
         { point=.top_left, offset={60,20} },
     )
 
-    partials.add_panel_section_header(panel, "MAP AREA", icon="distance")
+    add_map_info_panel_map_area(panel)
+    add_map_info_panel_landscape(panel)
+    partials.add_panel_section_header(panel, "RESOURCE DENSITY", icon="lens_blur")
+    add_map_info_panel_collectables(panel)
+}
 
-    ui.add_frame(panel, {
+add_map_info_panel_map_area :: proc (parent: ^ui.Frame) {
+    partials.add_panel_section_header(parent, "MAP AREA", icon="distance")
+
+    details := ui.add_frame(parent, {
+        name="details",
+        layout=ui.Flow{ dir=.down, pad={10,10,5,10}, auto_size={.height} },
+    })
+
+    ui.add_frame(details, {
         name="area_name",
         flags={.terse,.terse_height},
         text="Eastern Vermillius Gap",
-        text_format="<left,pad=8:4,font=text_4m,color=primary_l4>%s",
+        text_format="<left,font=text_4m,color=primary_l4>%s",
         draw=partials.draw_text_drop_shadow,
     })
 
-    partials.add_panel_progress_bar(panel, text="AREA COMPLETION", progress_ratio=.95)
+    partials.add_panel_progress_bar(details, title="AREA COMPLETION", progress_ratio=.97)
+}
 
-    partials.add_panel_section_header(panel, "LANDSCAPE", icon="landscape")
-    partials.add_panel_section_header(panel, "RESOURCE DENSITY", icon="lens_blur")
-    partials.add_panel_section_header(panel, "COLLECTABLES", icon="package_2")
+add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
+    partials.add_panel_section_header(parent, "LANDSCAPE", icon="landscape")
+
+    details := add_map_info_panel_grid(parent)
+    for i in ([] struct {icon,text:string} {
+        { icon="flag_circle", text="2/2" },
+        { icon="flag_circle", text="2/2" },
+        { icon="flag_circle", text="1/1" },
+        { icon="flag_circle", text="5/5" },
+        { icon="flag_circle", text="20/21" },
+        { icon="flag_circle", text="1/1" },
+    }) {
+        add_map_info_panel_cell_with_icon_and_text(details, i.icon, i.text)
+    }
+}
+
+add_map_info_panel_collectables :: proc (parent: ^ui.Frame) {
+    partials.add_panel_section_header(parent, "COLLECTABLES", icon="package_2")
+
+    details := add_map_info_panel_grid(parent)
+    add_map_info_panel_cell_with_icon_and_text(details, "cookie", "6/6")
+}
+
+add_map_info_panel_grid :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+    return ui.add_frame(parent, {
+        name="details",
+        layout=ui.Grid{ dir=.right_down, wrap=4, pad=4, gap=2, aspect=3.2, auto_size={.height} },
+    })
+}
+
+add_map_info_panel_cell_with_icon_and_text :: proc (parent: ^ui.Frame, icon, text: string) {
+    cell := ui.add_frame(parent, { name="cell", layout=ui.Flow{ dir=.right } })
+    ui.add_frame(cell, { name="icon", size_aspect=1, text=icon, draw=partials.draw_icon_primary })
+    ui.add_frame(cell, {
+        name="text",
+        flags={.terse,.terse_width},
+        text=text,
+        text_format="<left,pad=10:0,font=text_4l,color=primary_l4>%s",
+        draw=partials.draw_text_drop_shadow,
+    })
 }

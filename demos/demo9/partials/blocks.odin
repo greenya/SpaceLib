@@ -225,11 +225,12 @@ add_category_tabs :: proc (parent: ^ui.Frame, name: string, items: [] Category_T
 
 add_panel_section_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
     row := ui.add_frame(parent, {
-        name="panel_section_header",
+        name="section_header",
+        size={0,40},
         text="#0008",
         draw=draw_color_rect,
-        layout=ui.Flow{ dir=.right, auto_size={.height}, gap=6, pad=2 },
-    } )
+        layout=ui.Flow{ dir=.right, pad=2, align=.center },
+    })
 
     ui.add_frame(row, {
         name="icon",
@@ -242,13 +243,52 @@ add_panel_section_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.
         name="text",
         flags={.terse,.terse_size},
         text=text,
-        text_format="<left,pad=6,font=text_4m,color=primary>%s",
+        text_format="<left,pad=10:0,font=text_4m,color=primary_d2>%s",
         draw=draw_text_drop_shadow,
     })
 
     return row
 }
 
-add_panel_progress_bar :: proc (parent: ^ui.Frame, text: string, progress_ratio: f32) {
+add_panel_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32) -> ^ui.Frame {
+    col := ui.add_frame(parent, {
+        name="progress_bar",
+        layout=ui.Flow{ dir=.down, auto_size={.height} },
+    })
 
+    title := ui.add_frame(col, {
+        name="title",
+        flags={.terse,.terse_height},
+        text=title,
+        text_format="<left,font=text_4l,color=primary>%s",
+        draw=draw_text_drop_shadow,
+    })
+
+    text := ui.add_frame(col, {
+        name="text",
+        flags={.terse,.terse_size},
+        text_format="<left,font=text_4m,color=primary>%i%%",
+        draw=draw_text_drop_shadow,
+    },
+        {point=.right,rel_frame=title},
+    )
+
+    ui.set_text(text, int(progress_ratio*100))
+
+    bar := ui.add_frame(col, {
+        name="bar",
+        size={0,10},
+        layout=ui.Flow{ dir=.right },
+        text="#0006",
+        draw=draw_color_rect,
+    })
+
+    ui.add_frame(bar, {
+        name="fill",
+        size_ratio={.001+progress_ratio,0},
+        text="progress",
+        draw=draw_color_rect,
+    })
+
+    return col
 }
