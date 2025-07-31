@@ -349,13 +349,20 @@ draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
     draw_icon_diamond(f.text, f.rect, colors.get(.primary, brightness=-.6), f.opacity)
 }
 
-draw_icon_primary :: proc (f: ^ui.Frame) {
+draw_icon_primary_with_shadow :: proc (f: ^ui.Frame) {
+    sh_rect := core.rect_moved(f.rect, {f.rect.w/20,f.rect.h/20})
+    draw_sprite(f.text, sh_rect, tint=colors.get(.bg1))
     draw_sprite(f.text, f.rect, tint=colors.get(.primary, brightness=-.2))
 }
 
 draw_icon_box_fill_primary :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, colors.get(.primary, brightness=-.2))
     draw_sprite(f.text, core.rect_inflated(f.rect, -f.rect.w/10), tint=colors.get(.bg1))
+}
+
+draw_icon_diamond_fill_primary :: proc (f: ^ui.Frame) {
+    draw.diamond(f.rect, colors.get(.primary, brightness=-.2))
+    draw_sprite(f.text, core.rect_inflated(f.rect, -f.rect.w/5), tint=colors.get(.bg1))
 }
 
 draw_header_bar_primary :: proc (f: ^ui.Frame) {

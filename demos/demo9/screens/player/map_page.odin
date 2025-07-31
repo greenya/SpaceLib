@@ -1,6 +1,7 @@
 #+private
 package player
 
+// import "core:fmt"
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
@@ -15,7 +16,7 @@ Map_Page :: struct {
     recenter_button : ^ui.Frame,
 
     area            : ^ui.Frame,
-    area_details    : [400] struct { center: Vec2, size: Vec2 },
+    area_land       : [333] struct { center: Vec2, size: Vec2 },
     area_offset     : Vec2,
 
     info_panel      : ^ui.Frame,
@@ -71,7 +72,7 @@ add_map_area :: proc () {
         { point=.bottom_right },
     )
 
-    for &d in map_.area_details {
+    for &d in map_.area_land {
         d = {
             center  = core.random_vec_in_rect({-2000,-2000,4000,4000}),
             size    = core.random_vec_in_rect({0,0,400,400}) + 100,
@@ -84,10 +85,11 @@ draw_map_area :: proc (f: ^ui.Frame) {
     color := Color {200,160,120,255}
 
     draw.rect(f.rect, core.brightness(color, -.6))
+    offset := core.rect_center(f.rect) + map_.area_offset
 
-    for d, i in map_.area_details {
+    for d, i in map_.area_land {
         rect := core.rect_from_center(d.center, d.size)
-        rect = core.rect_moved(rect, map_.area_offset)
+        rect = core.rect_moved(rect, offset)
         draw.rect(rect, core.brightness(color, +.2 -.2*f32(i%4)))
     }
 }
@@ -107,7 +109,7 @@ add_map_info_panel :: proc () {
 
     add_map_info_panel_map_area(panel)
     add_map_info_panel_landscape(panel)
-    partials.add_panel_section_header(panel, "RESOURCE DENSITY", icon="lens_blur")
+    add_map_info_panel_resource_density(panel)
     add_map_info_panel_collectables(panel)
 }
 
@@ -134,7 +136,7 @@ add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
     partials.add_panel_section_header(parent, "LANDSCAPE", icon="landscape")
 
     details := add_map_info_panel_grid(parent)
-    for i in ([] struct {icon,text:string} {
+    for i in ([] struct { icon, text: string } {
         { icon="flag_circle", text="2/2" },
         { icon="flag_circle", text="2/2" },
         { icon="flag_circle", text="1/1" },
@@ -143,6 +145,36 @@ add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
         { icon="flag_circle", text="1/1" },
     }) {
         add_map_info_panel_cell_with_icon_and_text(details, i.icon, i.text)
+    }
+}
+
+add_map_info_panel_resource_density :: proc (parent: ^ui.Frame) {
+    partials.add_panel_section_header(parent, "RESOURCE DENSITY", icon="lens_blur")
+
+    for rank in ([] struct { icon: string, list: [] string } {
+        { icon="stat_3", list={ "cannabis", "spa", "hive", "database", "water_drop" } },
+        { icon="stat_2", list={ "diamond", "deployed_code" } },
+        { icon="stat_1", list={ "coronavirus" } },
+    }) {
+        row := ui.add_frame(parent, {
+            name="row",
+            layout=ui.Flow{ dir=.right, size=32, pad={7,0,0,0}, gap=12, align=.center, auto_size={.height} },
+        })
+
+        ui.add_frame(row, {
+            name="line",
+            size={0,12},
+            text="#0004",
+            draw=partials.draw_gradient_fade_right_rect,
+        },
+            {point=.left},
+            {point=.right},
+        )
+
+        for icon, i in rank.list {
+            if i == 0 do ui.add_frame(row, { text=rank.icon, size_ratio=.8, draw=partials.draw_icon_diamond_fill_primary })
+            ui.add_frame(row, { text=icon, draw=partials.draw_icon_primary_with_shadow })
+        }
     }
 }
 
@@ -156,13 +188,13 @@ add_map_info_panel_collectables :: proc (parent: ^ui.Frame) {
 add_map_info_panel_grid :: proc (parent: ^ui.Frame) -> ^ui.Frame {
     return ui.add_frame(parent, {
         name="details",
-        layout=ui.Grid{ dir=.right_down, wrap=4, pad=4, gap=2, aspect=3.2, auto_size={.height} },
+        layout=ui.Grid{ dir=.right_down, wrap=4, pad=4, gap=2, aspect=3, auto_size={.height} },
     })
 }
 
 add_map_info_panel_cell_with_icon_and_text :: proc (parent: ^ui.Frame, icon, text: string) {
     cell := ui.add_frame(parent, { name="cell", layout=ui.Flow{ dir=.right } })
-    ui.add_frame(cell, { name="icon", size_aspect=1, text=icon, draw=partials.draw_icon_primary })
+    ui.add_frame(cell, { name="icon", size_aspect=1, text=icon, draw=partials.draw_icon_primary_with_shadow })
     ui.add_frame(cell, {
         name="text",
         flags={.terse,.terse_width},
