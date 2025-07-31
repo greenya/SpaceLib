@@ -26,7 +26,7 @@ Grid :: struct {
     // Used only when width or height is left for calculation.
     // For example: size={100,0}, ratio=.7; or wrap=5, ratio=1.2.
     // Square (`1`) is assumed when this value is not set (`0`).
-    ratio: f32,
+    aspect: f32,
 
     // Spacing between adjacent children.
     gap: Vec2,
@@ -69,18 +69,17 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
     wrap := grid.wrap
     size := grid.size
+    aspect := grid.aspect > 0 ? grid.aspect : 1
 
     if wrap > 0 {
         if size == {} {
-            ratio := grid.ratio > 0 ? grid.ratio : 1
             size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
-            size.y = size.x / ratio
+            size.y = size.x / aspect
         }
     } else if wrap == 0 {
-        ratio := grid.ratio > 0 ? grid.ratio : 1
         switch {
-        case size.x  > 0 && size.y == 0: size.y = size.x / ratio
-        case size.x == 0 && size.y  > 0: size.x = size.y * ratio
+        case size.x  > 0 && size.y == 0: size.y = size.x / aspect
+        case size.x == 0 && size.y  > 0: size.x = size.y * aspect
         case size.x == 0 && size.y == 0: panic("Grid.size (width and/or height) must be set when Grid.wrap==0")
         }
         if is_layout_dir_vertical(f) {
