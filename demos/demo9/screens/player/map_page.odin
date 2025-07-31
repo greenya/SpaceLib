@@ -17,6 +17,8 @@ Map_Page :: struct {
     area            : ^ui.Frame,
     area_details    : [400] struct { center: Vec2, size: Vec2 },
     area_offset     : Vec2,
+
+    info_panel      : ^ui.Frame,
 }
 
 add_map_page :: proc () {
@@ -48,15 +50,16 @@ add_map_page :: proc () {
         ui.hide(screen.map_.recenter_button)
     }
 
-    add_map_area(map_.root)
+    add_map_area()
+    add_map_info_panel()
 
     ui.print_frame_tree(map_.root)
 }
 
-add_map_area :: proc (parent: ^ui.Frame) {
+add_map_area :: proc () {
     map_ := &screen.map_
 
-    map_.area = ui.add_frame(parent, {
+    map_.area = ui.add_frame(map_.root, {
         name="area",
         flags={.capture},
         draw=draw_map_area,
@@ -87,4 +90,34 @@ draw_map_area :: proc (f: ^ui.Frame) {
         rect = core.rect_moved(rect, map_.area_offset)
         draw.rect(rect, core.brightness(color, +.2 -.2*f32(i%4)))
     }
+}
+
+add_map_info_panel :: proc () {
+    map_ := &screen.map_
+
+    panel := ui.add_frame(map_.root, {
+        flags={.pass},
+        name="info_panel",
+        size={480,0},
+        layout=ui.Flow{ dir=.down, pad=8, gap=4, auto_size={.height} },
+        draw=partials.draw_info_panel_rect,
+    },
+        { point=.top_left, offset={60,20} },
+    )
+
+    partials.add_panel_section_header(panel, "MAP AREA", icon="distance")
+
+    ui.add_frame(panel, {
+        name="area_name",
+        flags={.terse,.terse_height},
+        text="Eastern Vermillius Gap",
+        text_format="<left,pad=8:4,font=text_4m,color=primary_l4>%s",
+        draw=partials.draw_text_drop_shadow,
+    })
+
+    partials.add_panel_progress_bar(panel, text="AREA COMPLETION", progress_ratio=.95)
+
+    partials.add_panel_section_header(panel, "LANDSCAPE", icon="landscape")
+    partials.add_panel_section_header(panel, "RESOURCE DENSITY", icon="lens_blur")
+    partials.add_panel_section_header(panel, "COLLECTABLES", icon="package_2")
 }

@@ -222,3 +222,33 @@ add_category_tabs :: proc (parent: ^ui.Frame, name: string, items: [] Category_T
 
     return tabs
 }
+
+add_panel_section_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
+    row := ui.add_frame(parent, {
+        name="panel_section_header",
+        text="#0008",
+        draw=draw_color_rect,
+        layout=ui.Flow{ dir=.right, auto_size={.height}, gap=6, pad=2 },
+    } )
+
+    ui.add_frame(row, {
+        name="icon",
+        text=icon,
+        size_aspect=1,
+        draw=draw_icon_box_fill_primary,
+    })
+
+    ui.add_frame(row, {
+        name="text",
+        flags={.terse,.terse_size},
+        text=text,
+        text_format="<left,pad=6,font=text_4m,color=primary>%s",
+        draw=draw_text_drop_shadow,
+    })
+
+    return row
+}
+
+add_panel_progress_bar :: proc (parent: ^ui.Frame, text: string, progress_ratio: f32) {
+
+}

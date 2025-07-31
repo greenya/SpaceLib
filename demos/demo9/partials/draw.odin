@@ -142,6 +142,10 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     draw_terse(t, drop_shadow=true)
 }
 
+draw_text_drop_shadow :: proc (f: ^ui.Frame) {
+    draw_terse(f.terse, drop_shadow=true)
+}
+
 draw_color_rect :: proc (f: ^ui.Frame) {
     color := colors.get_by_name(f.text, alpha=f.opacity)
     draw.rect(f.rect, color)
@@ -345,9 +349,19 @@ draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
     draw_icon_diamond(f.text, f.rect, colors.get(.primary, brightness=-.6), f.opacity)
 }
 
+draw_icon_box_fill_primary :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, colors.get(.primary, brightness=-.2))
+    draw_sprite(f.text, core.rect_inflated(f.rect, 0), tint=colors.get(.bg1))
+}
+
 draw_header_bar_primary :: proc (f: ^ui.Frame) {
     color := colors.get(.primary, brightness=-.5, alpha=f.opacity)
     color_a0 := core.alpha(color, 0)
     draw.rect_gradient_horizontal(f.rect, color, color_a0)
     draw_terse(f.terse, drop_shadow=true)
+}
+
+draw_info_panel_rect  :: proc (f: ^ui.Frame) {
+    draw.rect(f.rect, {0,0,0,80})
+    draw.rect(core.rect_inflated(f.rect, -6), {0,0,0,80})
 }
