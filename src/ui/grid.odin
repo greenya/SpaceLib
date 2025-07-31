@@ -97,7 +97,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     f_rect_x2 := f.rect.x+f.rect.w
     // f_rect_y2 := f.rect.y+f.rect.h
 
-    vis_children := get_layout_visible_children(f, context.temp_allocator)
+    vis_children := layout_visible_children(f, context.temp_allocator)
 
     for child, i in vis_children {
         i_div, i_mod := math.divmod(i, wrap)

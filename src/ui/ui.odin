@@ -167,6 +167,10 @@ destroy :: proc (ui: ^UI) {
     free(ui)
 }
 
+reset_terse :: proc (ui: ^UI) {
+    destroy_terse_in_frame_tree(ui.root)
+}
+
 tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_consumed: bool) {
     ui.stats = {}
     phase_started := time.tick_now()
@@ -295,10 +299,6 @@ draw :: proc (ui: ^UI) {
     ui.scissor_rect = ui.root.rect
 
     draw_frame_tree(ui.root)
-}
-
-reset_terse :: proc (ui: ^UI) {
-    destroy_terse_frame_tree(ui.root)
 }
 
 @private

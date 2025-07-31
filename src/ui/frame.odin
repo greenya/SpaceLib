@@ -12,24 +12,33 @@ Frame_Init :: struct {
 
     // Absolute rectangle of the frame.
     // In most cases, this is updated automatically by the UI based on `anchors` or `parent.layout`.
-    // You should set it manually only if the frame is not anchored and not a child of a `layout`.
+    // You should set it manually only if the frame is not anchored and not a child of a layout.
     // For example, the root frame typically sets this directly to match the screen resolution.
     rect: Rect,
 
-    // Size. Width and height are processed separately.
+    // Size.
+    // Width and height are processed separately.
     // For example, size={200,0} will effectively set width, and leave height open for calculations
     // by `anchors` and `parent.layout`.
     size: Vec2,
 
-    // Size aspect ratio. Considered "not set" if it is zero.
-    // The value used only by `anchors` and `Flow`.
+    // Size aspect ratio.
+    // Considered "not set" if it is zero.
     // The value is applied only when one dimension is known and another is zero (not set nor calculated).
+    // The value used only by `Flow` and `anchors`.
     size_aspect: f32,
 
-    // Minimal size. Width and height are processed separately.
-    // Width/height is considered "not set" if it is zero.
+    // Size ratio.
+    // Sub-values (width and height) are processed separately.
+    // Sub-value is considered "not set" if it is zero.
     // The value is used only by `Flow`.
+    size_ratio: Vec2,
+
+    // Minimal size.
+    // Sub-values (width and height) are processed separately.
+    // Sub-value is considered "not set" if it is zero.
     // The value is applied after all size calculations has been made.
+    // The value is used only by `Flow` and `terse`.
     size_min: Vec2,
 
     // Layout method for `children`.
@@ -789,15 +798,6 @@ destroy_frame_tree :: proc (f: ^Frame) {
 }
 
 @private
-destroy_terse_frame_tree :: proc (f: ^Frame) {
-    for child in f.children do destroy_terse_frame_tree(child)
-    if f.terse != nil {
-        terse.destroy(f.terse)
-        f.terse = nil
-    }
-}
-
-@private
 prepare_frame_tree :: proc (f: ^Frame) {
     if f.anim.tick != nil {
         f.anim.ratio = .hidden in f.flags\
@@ -887,54 +887,7 @@ update_rect :: proc (f: ^Frame) {
 }
 
 @private
-update_terse :: proc (f: ^Frame) {
-    should_rebuild :=
-        f.terse == nil ||
-        (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect, e=.5)) ||
-        (f.terse != nil && !core.rect_equal_approx(f.terse.scissor, f.ui.scissor_rect, e=.5))
-
-    if !should_rebuild do return
-
-    assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
-    assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
-
-    scroll_offset_delta: Vec2
-
-    if f.terse != nil {
-        rect_size_changed :=
-            abs(f.rect.w-f.terse.rect_input.w) > .1 ||
-            abs(f.rect.h-f.terse.rect_input.h) > .1
-        if !rect_size_changed {
-            scroll_offset_delta = { f.rect.x-f.terse.rect_input.x, f.rect.y-f.terse.rect_input.y }
-        }
-    }
-
-    if !core.vec_zero_approx(scroll_offset_delta, e=.5) {
-        terse.apply_offset(f.terse, scroll_offset_delta)
-    } else {
-        terse.destroy(f.terse)
-        f.terse = terse.create(
-            f.text,
-            f.rect,
-            f.ui.terse_query_font_proc,
-            f.ui.terse_query_color_proc,
-            f.ui.scissor_rect,
-            f.opacity,
-        )
-        if .terse_shrink in f.flags do terse.shrink_terse(f.terse)
-    }
-
-    if f.flags & {.terse_size,.terse_width} != {} {
-        f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w
-    }
-
-    if f.flags & {.terse_size,.terse_height} != {} {
-        f.size.y = f.size_min.y>0 ? max(f.size_min.y, f.terse.rect.h) : f.terse.rect.h
-    }
-}
-
-@private
-get_layout_visible_children :: proc (parent: ^Frame, allocator := context.allocator) -> [] ^Frame {
+layout_visible_children :: proc (parent: ^Frame, allocator := context.allocator) -> [] ^Frame {
     assert(parent.layout != nil)
     list := make([dynamic] ^Frame, allocator)
     for child in parent.children {

@@ -76,7 +76,7 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
     prev_rect: Rect
     has_prev_rect: bool
 
-    vis_children := get_layout_visible_children(f, context.temp_allocator)
+    vis_children := layout_visible_children(f, context.temp_allocator)
     is_dir_vertical := is_layout_dir_vertical(f)
 
     for child in vis_children {
@@ -102,6 +102,9 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
             if is_dir_vertical  do rect.h = rect.w/child.size_aspect
             else                do rect.w = rect.h*child.size_aspect
         }
+
+        if child.size_ratio.x > 0 do rect.w *= child.size_ratio.x
+        if child.size_ratio.y > 0 do rect.h *= child.size_ratio.y
 
         if child.size_min.x > 0 do rect.w = max(rect.w, child.size_min.x)
         if child.size_min.y > 0 do rect.h = max(rect.h, child.size_min.y)
@@ -165,7 +168,7 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         }
     }
 
-    full_content_size, dir_content_size, dir_rect_size := get_flow_content_size(f, vis_children)
+    full_content_size, dir_content_size, dir_rect_size := flow_content_size(f, vis_children)
 
     if flow.auto_size != {} {
         if .width in flow.auto_size     do f.size.x = full_content_size.x
@@ -194,7 +197,7 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
 }
 
 @private
-get_flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_size: Vec2, dir_content_size: Vec2, dir_rect_size: f32) {
+flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_size: Vec2, dir_content_size: Vec2, dir_rect_size: f32) {
     flow := layout_flow(f)
     is_dir_vertical := is_layout_dir_vertical(f)
     dir_rect_size = is_dir_vertical ? f.rect.h : f.rect.w
