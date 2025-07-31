@@ -33,8 +33,8 @@ Flow :: struct {
     // Spacing between adjacent children.
     gap: f32,
 
-    // Padding around the outermost children.
-    pad: Vec2,
+    // Padding around the outermost children in order: `[0] left`, `[1] right`, `[2] top`, `[3] bottom`.
+    pad: [4] f32,
 
     // The flow frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
@@ -87,12 +87,12 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
                 ? child.size.x\
                 : flow.size.x != 0\
                     ? flow.size.x\
-                    : f.rect.w - 2*flow.pad.x,
+                    : f.rect.w - flow.pad[L] - flow.pad[R],
             h = child.size.y != 0\
                 ? child.size.y\
                 : flow.size.y != 0\
                     ? flow.size.y\
-                    : f.rect.h - 2*flow.pad.y,
+                    : f.rect.h - flow.pad[T] - flow.pad[B],
         }
 
         if rect.w < 0 do rect.w = 0
@@ -111,17 +111,17 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
 
         switch flow.dir {
         case .left:
-            rect.x = has_prev_rect ? prev_rect.x-rect.w-flow.gap : f.rect.x+f.rect.w-rect.w-flow.pad.x
-            rect.y = f.rect.y + flow.pad.y
+            rect.x = has_prev_rect ? prev_rect.x-rect.w-flow.gap : f.rect.x+f.rect.w-rect.w-flow.pad[R]
+            rect.y = f.rect.y + flow.pad[T]
         case .right, .right_center:
-            rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+flow.gap : f.rect.x+flow.pad.x
-            rect.y = f.rect.y + flow.pad.y
+            rect.x = has_prev_rect ? prev_rect.x+prev_rect.w+flow.gap : f.rect.x+flow.pad[L]
+            rect.y = f.rect.y + flow.pad[T]
         case .up:
-            rect.x = f.rect.x + flow.pad.x
-            rect.y = has_prev_rect ? prev_rect.y-rect.h-flow.gap : f.rect.y+f.rect.h-rect.h-flow.pad.y
+            rect.x = f.rect.x + flow.pad[L]
+            rect.y = has_prev_rect ? prev_rect.y-rect.h-flow.gap : f.rect.y+f.rect.h-rect.h-flow.pad[B]
         case .down, .down_center:
-            rect.x = f.rect.x + flow.pad.x
-            rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+flow.gap : f.rect.y+flow.pad.y
+            rect.x = f.rect.x + flow.pad[L]
+            rect.y = has_prev_rect ? prev_rect.y+prev_rect.h+flow.gap : f.rect.y+flow.pad[T]
         }
 
         prev_rect = rect
@@ -131,14 +131,14 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         case .left, .right, .right_center:
             switch flow.align {
             case .start : // already aligned
-            case .center: rect.y += (f.rect.h-rect.h)/2   - flow.pad.y
-            case .end   : rect.y +=  f.rect.h-rect.h    - 2*flow.pad.y
+            case .center: rect.y += (f.rect.h-rect.h)/2 - (flow.pad[T]+flow.pad[B])/2
+            case .end   : rect.y +=  f.rect.h-rect.h    - (flow.pad[T]+flow.pad[B])
             }
         case .up, .down, .down_center:
             switch flow.align {
             case .start : // already aligned
-            case .center: rect.x += (f.rect.w-rect.w)/2   - flow.pad.x
-            case .end   : rect.x +=  f.rect.w-rect.w    - 2*flow.pad.x
+            case .center: rect.x += (f.rect.w-rect.w)/2 - (flow.pad[L]+flow.pad[R])/2
+            case .end   : rect.x +=  f.rect.w-rect.w    - (flow.pad[L]+flow.pad[R])
             }
         }
 
@@ -206,7 +206,10 @@ flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_
 
     full_rect := vis_children[0].rect
     for child in vis_children[1:] do core.rect_add_rect(&full_rect, child.rect)
-    full_content_size = 2*flow.pad + { full_rect.w, full_rect.h }
+    full_content_size = {
+        full_rect.w + flow.pad[L] + flow.pad[R],
+        full_rect.h + flow.pad[T] + flow.pad[B],
+    }
 
     fc := vis_children[0]
     lc := slice.last(vis_children[:])
@@ -224,8 +227,8 @@ flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_
             max_y2 = lc.rect.y + lc.rect.h
         }
 
-        dir_content_size[0] = min_y1 - f.rect.y - flow.pad.y
-        dir_content_size[1] = max_y2 - f.rect.y + flow.pad.y
+        dir_content_size[0] = min_y1 - f.rect.y - flow.pad[T]
+        dir_content_size[1] = max_y2 - f.rect.y + flow.pad[B]
     } else {
         min_x1: f32
         max_x2: f32
@@ -239,8 +242,8 @@ flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_
             max_x2 = lc.rect.x + lc.rect.w
         }
 
-        dir_content_size[0] = min_x1 - f.rect.x - flow.pad.x
-        dir_content_size[1] = max_x2 - f.rect.x + flow.pad.x
+        dir_content_size[0] = min_x1 - f.rect.x - flow.pad[L]
+        dir_content_size[1] = max_x2 - f.rect.x + flow.pad[R]
     }
 
     dir_content_size = { 0, dir_content_size[1]-dir_content_size[0] }

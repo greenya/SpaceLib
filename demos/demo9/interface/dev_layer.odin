@@ -128,7 +128,7 @@ add_dev_window :: proc () {
     dev.content = ui.add_frame(dev.window, {
         name="content",
         flags={.scissor},
-        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={10,0}, gap=10 },
+        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={10,10,0,0}, gap=10 },
     },
         { point=.top_left, rel_point=.bottom_left, rel_frame=header },
         { point=.bottom_right },

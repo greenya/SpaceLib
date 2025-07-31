@@ -241,7 +241,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
         list_point: ui.Anchor_Point = is_left ? .top_right : .top_left
 
         list := ui.add_frame(skills,
-            { name="list", layout=ui.Grid{ dir=list_dir, size=128, wrap=3, gap=8, pad={24,32}, auto_size={.height} } },
+            { name="list", layout=ui.Grid{ dir=list_dir, size=128, wrap=3, gap=8, pad={24,24,32,32}, auto_size={.height} } },
             { point=list_point },
         )
 
@@ -277,7 +277,7 @@ app_menu_add_page_archetype_line_sections :: proc (parent: ^ui.Frame, is_left: b
         list_point: ui.Anchor_Point = is_left ? .top_right : .top_left
 
         list := ui.add_frame(perks,
-            { name="list", layout=ui.Grid{ dir=list_dir, size={64,108}, wrap=4, gap=16, pad={24,32}, auto_size={.height} } },
+            { name="list", layout=ui.Grid{ dir=list_dir, size={64,108}, wrap=4, gap=16, pad={24,24,32,32}, auto_size={.height} } },
             { point=list_point },
         )
 

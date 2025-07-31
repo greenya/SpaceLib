@@ -31,8 +31,8 @@ Grid :: struct {
     // Spacing between adjacent children.
     gap: Vec2,
 
-    // Padding around the outermost children.
-    pad: Vec2,
+    // Padding around the outermost children in order: `[0] left`, `[1] right`, `[2] top`, `[3] bottom`.
+    pad: [4] f32,
 
     // The grid frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
@@ -73,7 +73,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     if wrap > 0 {
         if size == {} {
             ratio := grid.ratio > 0 ? grid.ratio : 1
-            size.x = (f.rect.w - 2*grid.pad.x - f32(wrap-1)*grid.gap.x) / f32(wrap)
+            size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
             size.y = size.x / ratio
         }
     } else if wrap == 0 {
@@ -84,7 +84,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         case size.x == 0 && size.y == 0: panic("Grid.size (width and/or height) must be set when Grid.wrap==0")
         }
         if is_layout_dir_vertical(f) {
-            w := f.rect.w - 2*grid.pad.x
+            w := f.rect.w - grid.pad[L] - grid.pad[R]
             wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
         }
     } else {
@@ -104,14 +104,14 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
         switch grid.dir {
         case .right_down:
-            rect.x = f.rect.x+grid.pad.x + f32(i_mod)*rect.w + f32(i_mod)*grid.gap.x
+            rect.x = f.rect.x+grid.pad[L] + f32(i_mod)*rect.w + f32(i_mod)*grid.gap.x
         case .left_down:
-            rect.x = f_rect_x2-grid.pad.x - f32(i_mod+1)*rect.w - f32(i_mod)*grid.gap.x
+            rect.x = f_rect_x2-grid.pad[R] - f32(i_mod+1)*rect.w - f32(i_mod)*grid.gap.x
         }
 
         switch grid.dir {
         case .right_down, .left_down:
-            rect.y = f.rect.y+grid.pad.y + f32(i_div)*rect.h + f32(i_div)*grid.gap.y
+            rect.y = f.rect.y+grid.pad[T] + f32(i_div)*rect.h + f32(i_div)*grid.gap.y
         }
 
         child.rect = core.rect_moved(rect, child.offset)
@@ -126,14 +126,14 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
             switch grid.dir {
             case .right_down:
-                if .width in grid.auto_size do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + 2*grid.pad.x
+                if .width in grid.auto_size do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + grid.pad[L]+grid.pad[R]
             case .left_down:
-                if .width in grid.auto_size do f.size.x = fc.rect.x+fc.rect.w - lc_div0.rect.x + 2*grid.pad.x
+                if .width in grid.auto_size do f.size.x = fc.rect.x+fc.rect.w - lc_div0.rect.x + grid.pad[L]+grid.pad[R]
             }
 
             switch grid.dir {
             case .right_down, .left_down:
-                if .height in grid.auto_size do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + 2*grid.pad.y
+                if .height in grid.auto_size do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
             }
         } else {
             if .width in grid.auto_size     do f.size.x = 0
