@@ -7,9 +7,10 @@ import "spacelib:ui"
 import "../colors"
 
 draw_button :: proc (f: ^ui.Frame) {
+    disabled := .disabled in f.flags
     offset := f.captured ? Vec2 {0,2} : {}
     rect := core.rect_moved(f.rect, offset)
-    hv_ratio := ui.hover_ratio(f, .Linear, .155, .Linear, .155)
+    hv_ratio := disabled ? 0 : ui.hover_ratio(f, .Linear, .155, .Linear, .155)
 
     bg_top_color := colors.get(.primary, brightness=-.9*(1-hv_ratio*.3), alpha=f.opacity)
     bg_bottom_color := colors.get(.bg1, brightness=-.9, alpha=f.opacity)
@@ -20,6 +21,8 @@ draw_button :: proc (f: ^ui.Frame) {
     draw.rect_lines(rect, 1, ln_color)
 
     draw_terse(f.terse, offset=offset)
+
+    if disabled do draw.rect(rect, {0,0,0,120})
 }
 
 draw_button_diamond :: proc (f: ^ui.Frame) {

@@ -222,7 +222,9 @@ Flag :: enum {
     // However, if the frame has an unfinished animation, its animation callback is still guaranteed
     // to be called one final time with `anim.ratio == 1` to ensure proper finalization.
     hidden,
-    // The frame is disabled. Action events `click`, `drag` and `wheel` will not be triggered.
+    // The frame is disabled.
+    // The frame will not be able to capture mouse even with `.capture` flag.
+    // Action events `click`, `drag` and `wheel` will not be triggered.
     disabled,
     // The frame and all its children pass all input events.
     pass,
@@ -577,7 +579,7 @@ hide_children :: proc (parent: ^Frame) {
 }
 
 wheel_by_frame :: proc (f: ^Frame, dy: f32) -> (consumed: bool) {
-    if hidden(f) || disabled(f) do return false
+    if disabled(f) do return false
 
     if layout_apply_scroll(f, dy)           do consumed = true
     if f.actor != nil && wheel_actor(f, dy) do consumed = true

@@ -214,7 +214,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 }
             }
 
-            if lmb_pressed && ui.captured.frame == nil {
+            if lmb_pressed && ui.captured.frame == nil && .disabled not_in f.flags {
                 ui.captured = { frame=f }
                 if .capture in f.flags do keep_capture = true
             }
@@ -249,7 +249,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 d.delta = new_total_offset - d.total_offset
                 d.total_offset = new_total_offset
 
-                drag(ui.captured.frame, ui.captured.drag)
+                drag(f, d^)
             }
 
             if lmb_released || !keep_capture {
