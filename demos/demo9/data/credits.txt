@@ -27,7 +27,7 @@ Delta<tab=200><font=text_6l>4,000</><tab=400>N/A
 Epsilon<tab=200>5,000<tab=400>N/A
 
 <left>                      All leading spaces are trimmed.
-<tab=200>                   Use tab=X to move cursor to X. This line uses "tab=200".
+<tab=200>                   Use tab=X to move cursor to X. Wrapped lines will continue last tab X. This line uses "tab=200".
 
 <font=text_6l>Color, Alpha, Brightness</>
 

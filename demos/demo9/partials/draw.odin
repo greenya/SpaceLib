@@ -95,7 +95,7 @@ draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) 
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
-draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, bg_color: Color, hangout := false) {
+draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, ln_color, bg_color: Color, drop_shadow := true, hangout := false) {
     x1, y1, x2, y2, yc, xl, xr: f32
 
     if hangout {
@@ -117,7 +117,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     }
 
     th := f32(1)
-    c := colors.get(.primary, alpha=t.opacity)
+    c := core.alpha(ln_color, t.opacity)
     c_a0 := core.alpha(c, 0)
 
     // background
@@ -139,7 +139,7 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     if limit_x<xl           do draw.rect_gradient_horizontal({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, c_a0, c)
     if limit_x+limit_w>xr   do draw.rect_gradient_horizontal({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, c_a0)
 
-    draw_terse(t, drop_shadow=true)
+    draw_terse(t, drop_shadow=drop_shadow)
 }
 
 draw_text_drop_shadow :: proc (f: ^ui.Frame) {
@@ -160,41 +160,47 @@ draw_image_placeholder :: proc (f: ^ui.Frame) {
 }
 
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
-    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, colors.get(.bg1))
+    pr := f.parent.rect
+    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1))
 }
 
 draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
-    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, colors.get(.bg1), hangout=true)
+    pr := f.parent.rect
+    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1), hangout=true)
+}
+
+draw_hexagon_rect_fill_hangout_self_rect :: proc (f: ^ui.Frame) {
+    r := f.rect
+    color := colors.get(.primary, brightness=-.2)
+    draw_hexagon_header(f.terse, f.terse.rect, r.x, r.w, color, color, drop_shadow=false, hangout=true)
 }
 
 draw_hexagon_rect_hangout_short_lines :: proc (f: ^ui.Frame) {
     rect := f.terse.rect
     line_w := rect.h
-    draw_hexagon_header(f.terse, rect, rect.x-2*line_w, rect.w+4*line_w, colors.get(.bg1), hangout=true)
+    draw_hexagon_header(f.terse, rect, rect.x-2*line_w, rect.w+4*line_w, colors.get(.primary), colors.get(.bg1), hangout=true)
 }
 
 draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
-    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, colors.get(.bg1))
+    pr := f.parent.rect
+    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1))
 }
 
 draw_hexagon_rect_wide_hangout :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
-    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, colors.get(.bg1), hangout=true)
+    pr := f.parent.rect
+    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1), hangout=true)
 }
 
 draw_hexagon_rect_wide_hangout_accent :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
+    pr := f.parent.rect
     bg_color := colors.get(.accent, brightness=-.8)
-    draw_hexagon_header(f.terse, f.rect, parent_rect.x, parent_rect.w, bg_color, hangout=true)
+    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), bg_color, hangout=true)
 }
 
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
-    parent_rect := f.parent.rect
+    pr := f.parent.rect
     bg_color := colors.get(.bg1, alpha=.5)
-    draw_hexagon_header(f.terse, f.terse.rect, parent_rect.x, parent_rect.w, bg_color)
+    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), bg_color)
 }
 
 draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {

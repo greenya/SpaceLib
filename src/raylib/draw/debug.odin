@@ -103,6 +103,18 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
                 line({ x, rect_cy-size }, { x, rect_cy+size }, thick, color)
             }
         }
+        if l.scroll.step > 0 do switch l.dir {
+        case .left, .right, .right_center:
+            bar := core.rect_bar_top(f.rect, 8)
+            bar = core.rect_inflated(bar, {-8,0})
+            bar.y += 4
+            rect(bar, color)
+        case .up, .down, .down_center:
+            bar := core.rect_bar_left(f.rect, 8)
+            bar = core.rect_inflated(bar, {0,-8})
+            bar.x += 4
+            rect(bar, color)
+        }
     case ui.Grid:
         mark := Rect {0,0,8,8}
         for i in 0..<2 do for j in 0..<2 {
