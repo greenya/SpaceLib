@@ -213,8 +213,8 @@ add_content :: proc (page: ^ui.Frame, data_text: string) -> ^ui.Frame {
         flags   = {.scissor},
         layout  = ui.Flow { dir=.down, scroll={step=30} },
     },
-        { point=.top_left, offset={320,0} },
-        { point=.bottom_right, offset={-320,0} },
+        { point=.top_left, offset={360,0} },
+        { point=.bottom_right, offset={-360,0} },
     )
 
     text, track, _ := partials.add_text_and_scrollbar(content)

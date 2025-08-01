@@ -1,4 +1,4 @@
-package dialog
+package conversation
 
 import "core:fmt"
 
@@ -15,14 +15,14 @@ import "../../partials"
     talk        : ^ui.Frame,
     replies     : ^ui.Frame,
 
-    current_talk: events.Open_Dialog,
-    next_talk   : events.Open_Dialog,
+    current_talk: events.Start_Conversation,
+    next_talk   : events.Start_Conversation,
 }
 
 max_replies :: 8
 
 add :: proc (parent: ^ui.Frame) {
-    screen.screen = partials.add_screen(parent, "dialog", is_empty=true)
+    screen.screen = partials.add_screen(parent, "conversation", is_empty=true)
 
     pad_x :: 300
     pad_y :: 40
@@ -40,8 +40,8 @@ add :: proc (parent: ^ui.Frame) {
             name        = fmt.tprintf("reply_%i", i),
             flags       = {.capture,.terse,.terse_height},
             text_format = "<wrap,left,pad=15:5,font=text_4l,color=primary_l8>%s",
-            draw        = partials.draw_dialog_reply,
-            click       = click_dialog_reply,
+            draw        = partials.draw_conversation_reply,
+            click       = click_conversation_reply,
         })
     }
 
@@ -57,20 +57,20 @@ add :: proc (parent: ^ui.Frame) {
 
     // ui.print_frame_tree(screen)
 
-    events.listen(.open_dialog, open_dialog_listener)
+    events.listen(.start_conversation, start_conversation_listener)
 }
 
 @private
-open_dialog_listener :: proc (args: events.Args) {
-    events.open_screen({ screen_name="dialog" })
+start_conversation_listener :: proc (args: events.Args) {
+    events.open_screen({ screen_name="conversation" })
 
-    args := args.(events.Open_Dialog)
-    dialog_id, chat_id, chat_text_override := args.dialog_id, args.chat_id, args.chat_text_override
-    assert(dialog_id != "")
+    args := args.(events.Start_Conversation)
+    conversation_id, chat_id, chat_text_override := args.conversation_id, args.chat_id, args.chat_text_override
+    assert(conversation_id != "")
     assert(chat_id != "")
 
-    dialog, chat := data.get_dialog_chat(dialog_id, chat_id)
-    if screen.current_talk == {} do fmt.println("[dialog start]", dialog.npc_name)
+    conversation, chat := data.get_conversation_chat(conversation_id, chat_id)
+    if screen.current_talk == {} do fmt.println("[conversation start]", conversation.npc_name)
 
     chat_text := chat_text_override != ""\
         ? chat_text_override\
@@ -78,13 +78,13 @@ open_dialog_listener :: proc (args: events.Args) {
             ? chat.text\
             : "..."
 
-    ui.set_text(screen.talk, dialog.npc_name, chat_text)
+    ui.set_text(screen.talk, conversation.npc_name, chat_text)
 
     assert(len(screen.replies.children) >= len(chat.replies))
     ui.hide_children(screen.replies)
     for r, i in chat.replies {
         reply := screen.replies.children[i]
-        icon := data.dialog_reply_action_icon[r.action]
+        icon := data.conversation_reply_action_icon[r.action]
         text := icon != ""\
             ? fmt.tprintf("<icon=%s> %s", icon, r.text)\
             : r.text
@@ -95,11 +95,11 @@ open_dialog_listener :: proc (args: events.Args) {
 }
 
 @private
-click_dialog_reply :: proc (f: ^ui.Frame) {
+click_conversation_reply :: proc (f: ^ui.Frame) {
     reply_idx := ui.index(f)
     fmt.println("[reply clicked]", reply_idx)
 
-    _, chat := data.get_dialog_chat(screen.current_talk.dialog_id, screen.current_talk.chat_id)
+    _, chat := data.get_conversation_chat(screen.current_talk.conversation_id, screen.current_talk.chat_id)
     reply := chat.replies[reply_idx]
 
     if reply.action != .none {
@@ -110,7 +110,7 @@ click_dialog_reply :: proc (f: ^ui.Frame) {
     } else {
         next_chat_id := reply.next != "" ? reply.next : chat.id
         screen.next_talk = {
-            dialog_id           = screen.current_talk.dialog_id,
+            conversation_id     = screen.current_talk.conversation_id,
             chat_id             = next_chat_id,
             chat_text_override  = reply.next_text,
         }
@@ -123,7 +123,7 @@ anim_next_talk :: proc (f: ^ui.Frame) {
     if f.anim.ratio == 0 {
         screen.root.flags += {.pass}
         ui.set_opacity(screen.root, 0)
-        events.open_dialog(screen.next_talk)
+        events.start_conversation(screen.next_talk)
     }
 
     ratio := core.ease_ratio(f.anim.ratio, .Cubic_In)

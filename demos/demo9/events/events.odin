@@ -11,7 +11,7 @@ ID :: enum {
     close_dropdown,
     open_modal,
     close_modal,
-    open_dialog,
+    start_conversation,
 }
 
 Args :: union {
@@ -21,7 +21,7 @@ Args :: union {
     Close_Dropdown,
     Open_Modal,
     Close_Modal,
-    Open_Dialog,
+    Start_Conversation,
 }
 
 exit_app :: proc () { send(.exit_app) }
@@ -73,9 +73,9 @@ Close_Modal :: struct {
     target: ^ui.Frame `fmt:"p"`,
 }
 
-open_dialog :: proc (args: Open_Dialog) { send(.open_dialog, args) }
-Open_Dialog :: struct {
-    dialog_id           : string,
+start_conversation :: proc (args: Start_Conversation) { send(.start_conversation, args) }
+Start_Conversation :: struct {
+    conversation_id     : string,
     chat_id             : string,
     chat_text_override  : string,
 }

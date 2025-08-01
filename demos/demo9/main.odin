@@ -9,6 +9,7 @@ main :: proc () {
     app_startup()
 
     for app_running() {
+        free_all(context.temp_allocator)
         app_tick()
         app_draw()
     }

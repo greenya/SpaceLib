@@ -146,7 +146,7 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     draw_text_center("?", q_rect, "text_4l", q_color)
 }
 
-draw_dialog_reply :: proc (f: ^ui.Frame) {
+draw_conversation_reply :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .111)
     offset := f.captured ? Vec2 {1,1} : {}
 
