@@ -56,8 +56,8 @@ app_startup :: proc () {
             if name[0] == '#'   do return core.color_from_hex(name)
             else                do return assets_color(name).val
         },
-        terse_draw_proc = proc (text: ^terse.Terse) {
-            draw_terse(text)
+        terse_draw_proc = proc (f: ^ui.Frame) {
+            draw_terse(f)
         },
         frame_overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return

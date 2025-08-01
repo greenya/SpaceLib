@@ -89,7 +89,7 @@ add_dev_window :: proc () {
         text="<pad=15:10,left,wrap,color=#eee>Dev",
         draw=proc (f: ^ui.Frame) {
             draw.rect(f.rect, core.gray1)
-            partials.draw_terse(f.terse)
+            partials.draw_terse(f)
         },
         drag=proc (f: ^ui.Frame, info: ui.Drag_Info) {
             offset := f.ui.mouse.pos - info.start_offset
@@ -372,7 +372,7 @@ add_dev_stat_header :: proc (parent: ^ui.Frame, text: string) {
         draw=proc (f: ^ui.Frame) {
             bg_rect := core.rect_inflated(f.rect, {15,0})
             draw.rect(bg_rect, core.gray9)
-            partials.draw_terse(f.terse)
+            partials.draw_terse(f)
         },
     })
 }
@@ -399,7 +399,7 @@ add_dev_stat_button :: proc (parent: ^ui.Frame, text: string, click: ui.Frame_Pr
         draw=proc (f: ^ui.Frame) {
             if f.selected                   do draw.rect(f.rect, core.gray7)
             else          do if f.entered   do draw.rect(f.rect, core.gray3)
-            partials.draw_terse(f.terse, color=f.selected?core.gray1:core.gray7)
+            partials.draw_terse(f, color=f.selected?core.gray1:core.gray7)
         },
     })
 }

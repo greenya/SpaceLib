@@ -26,14 +26,14 @@ create :: proc () {
     assert(ui_ == nil)
 
     ui_ = ui.create(
-        terse_query_font_proc = proc (name: string) -> ^terse.Font {
+        terse_query_font_proc = #force_inline proc (name: string) -> ^terse.Font {
             return &fonts.get_by_name(name).font_tr
         },
-        terse_query_color_proc = proc (name: string) -> core.Color {
+        terse_query_color_proc = #force_inline proc (name: string) -> core.Color {
             return colors.get_by_name(name)
         },
-        terse_draw_proc = proc (terse: ^terse.Terse) {
-            partials.draw_terse(terse)
+        terse_draw_proc = #force_inline proc (f: ^ui.Frame) {
+            partials.draw_terse(f)
         },
         frame_overdraw_proc = partials.frame_overdraw,
         scissor_set_proc    = partials.scissor_set,

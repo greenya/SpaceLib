@@ -5,7 +5,6 @@ import "core:strings"
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
-import "spacelib:terse"
 import rl "vendor:raylib"
 
 draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
@@ -45,18 +44,18 @@ draw_icon_card :: proc (name: string, rect: Rect, opacity: f32) {
     draw_sprite(name, rect, sp_color)
 }
 
-draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
-    assert(t != nil)
-    for word in t.words {
+draw_terse :: proc (f: ^ui.Frame, override_color := "", offset := Vec2 {}) {
+    assert(f.terse != nil)
+    for word in f.terse.words {
         // if word.in_group do continue
 
         rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
         tint := override_color != "" ? app.res.colors[override_color].value : word.color
-        tint = core.alpha(tint, t.opacity)
+        tint = core.alpha(tint, f.opacity)
         if word.is_icon {
             has_prefix :: strings.has_prefix
-            if has_prefix(word.text, "key.")        do draw_icon_key(word.text[4:], rect, t.opacity)
-            else if has_prefix(word.text, "card.")  do draw_icon_card(word.text[5:], rect, t.opacity)
+            if has_prefix(word.text, "key.")        do draw_icon_key(word.text[4:], rect, f.opacity)
+            else if has_prefix(word.text, "card.")  do draw_icon_card(word.text[5:], rect, f.opacity)
             else                                    do draw_sprite(word.text, rect, tint)
         } else if word.text != " " {
             pos := Vec2 { rect.x, rect.y }
@@ -66,7 +65,7 @@ draw_terse :: proc (t: ^terse.Terse, override_color := "", offset := Vec2 {}) {
         }
     }
 
-    if app.debug_drawing do draw.debug_terse(t)
+    if app.debug_drawing do draw.debug_terse(f.terse)
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {
@@ -86,7 +85,7 @@ draw_menu_item :: proc (f: ^ui.Frame) {
 draw_menu_item_nav :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {0,2} : {}
     tx_color := f.entered ? "bw_da" : "bw_6c"
-    draw_terse(f.terse, override_color=tx_color, offset=offset)
+    draw_terse(f, override_color=tx_color, offset=offset)
 
     if f.entered {
         ln_color := core.alpha(app.res.colors["bw_59"], f.opacity)
@@ -286,25 +285,25 @@ draw_tooltip_bg :: proc (f: ^ui.Frame) {
 draw_tooltip_title :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }
 
 draw_tooltip_subtitle :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_11"].value, .9* f.opacity)
     draw.rect(f.rect, bg_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }
 
 draw_tooltip_desc :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_20"].value, .9* f.opacity)
     draw.rect(f.rect, bg_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }
 
 draw_tooltip_body :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_2c"].value, .9* f.opacity)
     draw.rect(f.rect, bg_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }
 
 draw_tooltip_image :: proc(f: ^ui.Frame) {
@@ -351,5 +350,5 @@ draw_tooltip_resists_item :: proc (f: ^ui.Frame) {
 draw_tooltip_actions :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(app.res.colors["bw_00"].value, .8* f.opacity)
     draw.rect(f.rect, bg_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }

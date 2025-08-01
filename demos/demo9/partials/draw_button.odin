@@ -20,7 +20,7 @@ draw_button :: proc (f: ^ui.Frame) {
     ln_color := colors.get(.primary, alpha=f.opacity*.3 + hv_ratio*.7)
     draw.rect_lines(rect, 1, ln_color)
 
-    draw_terse(f.terse, offset=offset)
+    draw_terse(f, offset=offset)
 
     if disabled do draw.rect(rect, {0,0,0,120})
 }
@@ -67,7 +67,7 @@ draw_button_featured :: proc (f: ^ui.Frame) {
     draw.rect_lines(ln_rect, 1, ln_color)
 
     tx_color := colors.get(.primary, brightness=hv_ratio/2)
-    draw_terse(f.terse, tx_color, drop_shadow=true)
+    draw_terse(f, tx_color, drop_shadow=true)
 }
 
 draw_button_radio_rect :: proc (f: ^ui.Frame) {
@@ -134,7 +134,7 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
 
     aox :: draw_button_dropdown_item_anim_offset_x
 
-    draw_terse(f.terse, offset={aox*.5*hv_ratio,0}, color=colors.get(.bg0))
+    draw_terse(f, offset={aox*.5*hv_ratio,0}, color=colors.get(.bg0))
 
     hv_ratio = ui.hover_ratio(f, .Bounce_Out, .888, .Cubic_In, .333)
     q_w :: 20
@@ -155,5 +155,5 @@ draw_dialog_reply :: proc (f: ^ui.Frame) {
     bg_rect := core.rect_moved(f.rect, offset)
     draw.rect(bg_rect, bg_color)
 
-    draw_terse(f.terse, offset=offset, drop_shadow=true)
+    draw_terse(f, offset=offset, drop_shadow=true)
 }

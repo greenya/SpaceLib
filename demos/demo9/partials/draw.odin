@@ -28,30 +28,29 @@ draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, color: Color = {}, offset := Vec2 {}, drop_shadow := false, _shadow_pass := false) {
-    assert(t != nil)
+draw_terse :: proc (f: ^ui.Frame, color: Color = {}, offset := Vec2 {}, drop_shadow := false, _shadow_pass := false) {
+    assert(f.terse != nil)
 
     if drop_shadow {
-        draw_terse(t, colors.get(.bg0), offset=offset+{0,2}, _shadow_pass=true)
+        draw_terse(f, color=colors.get(.bg0), offset=offset+{0,2}, _shadow_pass=true)
     }
 
-    for line in t.lines {
-        if !core.rects_intersect(line.rect, t.scissor) do continue
+    for &line in f.terse.lines {
+        if !core.rects_intersect(line.rect, f.ui.scissor_rect) do continue
 
-        for i in 0..<line.word_count {
-            word := &t.words[line.word_start_idx+i]
+        for word in terse.line_words(f.terse, &line) {
             rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
-            if !core.rects_intersect(rect, t.scissor) do continue
+            if !core.rects_intersect(rect, f.ui.scissor_rect) do continue
 
             tint := color.a > 0 ? color : word.color
-            tint = core.alpha(tint, t.opacity)
+            tint = core.alpha(tint, f.opacity)
 
             if word.is_icon {
                 prefix :: strings.has_prefix
                 switch {
-                case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, t.opacity, shadow_only=_shadow_pass)
-                case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), t.opacity, font="text_4r", shadow_only=_shadow_pass)
-                case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, t.opacity, shape=.diamond, shadow_only=_shadow_pass)
+                case prefix(word.text, "key/")          : draw_icon_key(word.text[4:], rect, f.opacity, shadow_only=_shadow_pass)
+                case prefix(word.text, "key_tiny/")     : draw_icon_key(word.text[9:], core.rect_moved(rect, {0,-1}), f.opacity, font="text_4r", shadow_only=_shadow_pass)
+                case prefix(word.text, "key_diamond/")  : draw_icon_key(word.text[12:], rect, f.opacity, shape=.diamond, shadow_only=_shadow_pass)
                 case                                    : draw_sprite(word.text, rect, tint=tint)
                 }
             } else if word.text != "" && word.text != " " {
@@ -60,7 +59,7 @@ draw_terse :: proc (t: ^terse.Terse, color: Color = {}, offset := Vec2 {}, drop_
         }
     }
 
-    if raylib.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(t)
+    if raylib.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(f.terse)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,diamond} = .box, font := "text_4m", shadow_only := false) {
@@ -95,7 +94,7 @@ draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) 
     draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
-draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32, ln_color, bg_color: Color, drop_shadow := true, hangout := false) {
+draw_hexagon_header :: proc (f: ^ui.Frame, rect: Rect, limit_x, limit_w: f32, ln_color, bg_color: Color, drop_shadow := true, hangout := false) {
     x1, y1, x2, y2, yc, xl, xr: f32
 
     if hangout {
@@ -117,11 +116,11 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     }
 
     th := f32(1)
-    c := core.alpha(ln_color, t.opacity)
+    c := core.alpha(ln_color, f.opacity)
     c_a0 := core.alpha(c, 0)
 
     // background
-    c_bg := core.alpha(bg_color, t.opacity)
+    c_bg := core.alpha(bg_color, f.opacity)
     draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, c_bg)
 
     // top and bottom lines
@@ -140,11 +139,11 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     if limit_x<xl           do draw.rect_gradient_horizontal({ x=limit_x, y=yc-1, w=xl-limit_x, h=th }, c_a0, c)
     if limit_x+limit_w>xr   do draw.rect_gradient_horizontal({ x=xr, y=yc-1, w=limit_x+limit_w-xr, h=th }, c, c_a0)
 
-    draw_terse(t, drop_shadow=drop_shadow)
+    draw_terse(f, drop_shadow=drop_shadow)
 }
 
 draw_text_drop_shadow :: proc (f: ^ui.Frame) {
-    draw_terse(f.terse, drop_shadow=true)
+    draw_terse(f, drop_shadow=true)
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {
@@ -161,47 +160,90 @@ draw_image_placeholder :: proc (f: ^ui.Frame) {
 }
 
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1))
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+    )
 }
 
 draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1), hangout=true)
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+        hangout     = true,
+    )
 }
 
 draw_hexagon_rect_fill_hangout_self_rect :: proc (f: ^ui.Frame) {
-    r := f.rect
     color := colors.get(.primary, brightness=-.2)
-    draw_hexagon_header(f.terse, f.terse.rect, r.x, r.w, color, color, drop_shadow=false, hangout=true)
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.rect.x,
+        limit_w     = f.rect.w,
+        ln_color    = color,
+        bg_color    = color,
+        drop_shadow = false,
+        hangout     = true,
+    )
 }
 
 draw_hexagon_rect_hangout_short_lines :: proc (f: ^ui.Frame) {
-    rect := f.terse.rect
-    line_w := rect.h
-    draw_hexagon_header(f.terse, rect, rect.x-2*line_w, rect.w+4*line_w, colors.get(.primary), colors.get(.bg1), hangout=true)
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.terse.rect.x - 2*f.terse.rect.h,
+        limit_w     = f.terse.rect.w + 4*f.terse.rect.h,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+        hangout     = true,
+    )
 }
 
 draw_hexagon_rect_wide :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1))
+    draw_hexagon_header(f,
+        rect        = f.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+    )
 }
 
 draw_hexagon_rect_wide_hangout :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), colors.get(.bg1), hangout=true)
+    draw_hexagon_header(f,
+        rect        = f.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+        hangout     = true,
+    )
 }
 
 draw_hexagon_rect_wide_hangout_accent :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    bg_color := colors.get(.accent, brightness=-.8)
-    draw_hexagon_header(f.terse, f.rect, pr.x, pr.w, colors.get(.primary), bg_color, hangout=true)
+    draw_hexagon_header(f,
+        rect        = f.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.accent, brightness=-.8),
+        hangout     = true,
+    )
 }
 
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
-    pr := f.parent.rect
-    bg_color := colors.get(.bg1, alpha=.5)
-    draw_hexagon_header(f.terse, f.terse.rect, pr.x, pr.w, colors.get(.primary), bg_color)
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1, alpha=.5),
+    )
 }
 
 draw_gradient_fade_down_rect :: proc (f: ^ui.Frame) {
@@ -294,12 +336,12 @@ draw_card_rect :: proc (f: ^ui.Frame) {
 
 draw_tutorial_item :: proc (f: ^ui.Frame) {
     draw_card_rect(f)
-    draw_terse(f.terse, drop_shadow=true)
+    draw_terse(f, drop_shadow=true)
 }
 
 draw_label_box :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, colors.get(.primary, brightness=-.2))
-    draw_terse(f.terse, colors.get(.bg0))
+    draw_terse(f, color=colors.get(.bg0))
 }
 
 draw_codex_section_item :: proc (f: ^ui.Frame) {
@@ -310,7 +352,7 @@ draw_codex_section_item :: proc (f: ^ui.Frame) {
     draw_sprite("book-pile", sp_rect, fit=.contain, fit_align=.end, tint=colors.get(.primary, brightness=-.4))
 
     draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
-    draw_terse(f.terse, drop_shadow=true)
+    draw_terse(f, drop_shadow=true)
 }
 
 draw_after_codex_section_item :: proc (f: ^ui.Frame) {
@@ -349,7 +391,7 @@ draw_codex_topic_item :: proc (f: ^ui.Frame) {
 
     draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
 
-    draw_terse(f.terse, offset=tx_offset, drop_shadow=true)
+    draw_terse(f, offset=tx_offset, drop_shadow=true)
 }
 
 draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
@@ -376,7 +418,7 @@ draw_header_bar_primary :: proc (f: ^ui.Frame) {
     color := colors.get(.primary, brightness=-.5, alpha=f.opacity)
     color_a0 := core.alpha(color, 0)
     draw.rect_gradient_horizontal(f.rect, color, color_a0)
-    draw_terse(f.terse, drop_shadow=true)
+    draw_terse(f, drop_shadow=true)
 }
 
 draw_info_panel_rect :: proc (f: ^ui.Frame) {

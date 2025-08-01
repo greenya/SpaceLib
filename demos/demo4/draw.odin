@@ -3,7 +3,6 @@ package demo4
 import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:core"
-import "spacelib:terse"
 import "spacelib:ui"
 import "spacelib:raylib/draw"
 _ :: fmt
@@ -20,10 +19,10 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
     }
 }
 
-draw_terse :: proc (t: ^terse.Terse, override_color: ^Color = nil, offset := Vec2 {}) {
-    if app.debug_drawing do draw.debug_terse(t)
+draw_terse :: proc (f: ^ui.Frame, override_color: ^Color = nil, offset := Vec2 {}) {
+    if app.debug_drawing do draw.debug_terse(f.terse)
 
-    for word in t.words {
+    for word in f.terse.words {
         // if word.in_group do continue
 
         rect := core.rect_moved(word.rect, offset)
@@ -59,8 +58,8 @@ draw_ui_panel :: proc (f: ^ui.Frame) {
 draw_ui_button :: proc (f: ^ui.Frame) {
     if ui.disabled(f) {
         draw_sprite(.panel_9, f.rect, colors[.c3].val)
-        draw_terse(f.terse, &colors[.c2], {+1,+1})
-        draw_terse(f.terse, &colors[.c4], {-1,-1})
+        draw_terse(f, &colors[.c2], {+1,+1})
+        draw_terse(f, &colors[.c4], {-1,-1})
         return
     }
 
@@ -73,17 +72,17 @@ draw_ui_button :: proc (f: ^ui.Frame) {
     text_color: Color = f.entered ? colors[.c7] : colors[.c6]
 
     if f.captured {
-        draw_terse(f.terse, &text_color)
+        draw_terse(f, &text_color)
     } else {
-        draw_terse(f.terse, &colors[.c2], {+1,+1})
-        draw_terse(f.terse, &text_color, {-1,-1})
+        draw_terse(f, &colors[.c2], {+1,+1})
+        draw_terse(f, &text_color, {-1,-1})
     }
 }
 
 draw_ui_checkbox :: proc (f: ^ui.Frame) {
     offset := f.captured ? Vec2 {+2,+2} : Vec2 {}
     text_color := f.entered ? &colors[.c8] : &colors[.c6]
-    draw_terse(f.terse, text_color, offset)
+    draw_terse(f, text_color, offset)
 
     assert(len(f.terse.groups) == 1)
     assert(len(f.terse.groups[0].rects) == 1)
@@ -102,7 +101,7 @@ draw_ui_link :: proc (f: ^ui.Frame) {
     }
 
     text_color := f.entered ? &colors[.c8] : &colors[.c6]
-    draw_terse(f.terse, text_color, offset)
+    draw_terse(f, text_color, offset)
 }
 
 draw_ui_button_sprite :: proc (f: ^ui.Frame, sprite_id: Sprite_ID) {

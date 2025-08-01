@@ -174,8 +174,7 @@ add_lorem_ipsum_page :: proc () {
     track.anchors[1].offset.x = 19
 
     // we don't expect group list to change,
-    // only group positions will change when content gets scrolled or resized,
-    // so we can create all nav buttons now
+    // only group positions will change when content gets scrolled or resized
     tr := ui.get(screen.lorem_content, "text").terse
     for _, i in tr.groups {
         text := terse.text_of_group(tr, i, context.temp_allocator)
@@ -185,7 +184,7 @@ add_lorem_ipsum_page :: proc () {
             text    = fmt.tprintf("<wrap,left,font=text_4l>%i. %s", i+1, text),
             draw    = proc (f: ^ui.Frame) {
                 color := colors.get(.primary, brightness=f.entered?.4:-.4)
-                partials.draw_terse(f.terse, color=color)
+                partials.draw_terse(f, color=color)
             },
             click   = proc (f: ^ui.Frame) {
                 lorem_text := ui.get(screen.lorem_content, "text")

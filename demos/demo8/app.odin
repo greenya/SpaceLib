@@ -50,8 +50,8 @@ app_startup :: proc () {
         terse_query_color_proc = proc (name: string) -> core.Color {
             return app.res.colors[name].value
         },
-        terse_draw_proc = proc (terse: ^terse.Terse) {
-            draw_terse(terse)
+        terse_draw_proc = proc (f: ^ui.Frame) {
+            draw_terse(f)
         },
         frame_overdraw_proc = proc (f: ^ui.Frame) {
             if !app.debug_drawing do return

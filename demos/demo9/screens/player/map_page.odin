@@ -38,9 +38,9 @@ add_map_page :: proc () {
     map_page.legend_button.click = proc (f: ^ui.Frame) {
         map_page.legend_panel_opened ~= true
         if map_page.legend_panel_opened {
-            ui.animate(map_page.legend_panel, anim_map_legend_panel_appear, 1.333)
+            ui.animate(map_page.legend_panel, anim_map_legend_panel_appear, .333)
         } else {
-            ui.animate(map_page.legend_panel, anim_map_legend_panel_disappear, 1.333)
+            ui.animate(map_page.legend_panel, anim_map_legend_panel_disappear, .333)
         }
     }
 

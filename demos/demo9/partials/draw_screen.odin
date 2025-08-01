@@ -26,7 +26,7 @@ draw_screen_tab :: proc (f: ^ui.Frame) {
     }
 
     tx_color := colors.get(f.selected ? .accent : .primary)
-    draw_terse(f.terse, tx_color, drop_shadow=true)
+    draw_terse(f, tx_color, drop_shadow=true)
 }
 
 draw_screen_tab_points :: proc (f: ^ui.Frame) {
@@ -34,7 +34,7 @@ draw_screen_tab_points :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
     br_color := core.brightness(bg_color, -.555)
     draw.rect_lines(f.rect, 2, br_color)
-    draw_terse(f.terse)
+    draw_terse(f)
 }
 
 draw_screen_pyramid_button :: proc (f: ^ui.Frame) {
