@@ -8,6 +8,26 @@ import "../core"
 @private Rect :: core.Rect
 @private Color :: core.Color
 
+line_words :: #force_inline proc (terse: ^Terse, line: ^Line) -> [] Word {
+    if line.word_count > 0 {
+        low := line.word_start_idx
+        high := line.word_start_idx + line.word_count
+        return terse.words[low:high]
+    } else {
+        return nil
+    }
+}
+
+group_words :: #force_inline proc (terse: ^Terse, group: ^Group) -> [] Word {
+    if group.word_count > 0 {
+        low := group.word_start_idx
+        high := group.word_start_idx + group.word_count
+        return terse.words[low:high]
+    } else {
+        return nil
+    }
+}
+
 apply_offset :: proc (terse: ^Terse, offset: Vec2) {
     assert(terse != nil)
 

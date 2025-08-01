@@ -289,7 +289,11 @@ create :: proc (
                     }
 
                     if line_break_allowed {
+                        continue_tab_width := last_line_continue_tab_width(terse)
                         line = append_line(terse, font, nobreak_first_word_idx)
+                        if continue_tab_width > 0 {
+                            append_word(terse, "", {continue_tab_width,size.y}, font, {}, false, group)
+                        }
                     }
                 }
 
@@ -329,10 +333,7 @@ create :: proc (
         if offset_rect_y > 0 {
             for &line in terse.lines {
                 line.rect.y += offset_rect_y
-                for i in 0..<line.word_count {
-                    word := &terse.words[line.word_start_idx + i]
-                    word.rect.y += offset_rect_y
-                }
+                for &w in line_words(terse, &line) do w.rect.y += offset_rect_y
             }
         }
     }
@@ -344,18 +345,13 @@ create :: proc (
         case .center, .right:
             offset_rect_x := (terse.rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
             line.rect.x += offset_rect_x
-            for i in 0..<line.word_count {
-                word := &terse.words[line.word_start_idx + i]
-                word.rect.x += offset_rect_x
-            }
+            for &w in line_words(terse, &line) do w.rect.x += offset_rect_x
         }
 
         // vertically center words in a line in case they have different heights
-        line_height := line.rect.h
-        for i in 0..<line.word_count {
-            word := &terse.words[line.word_start_idx + i]
-            space := (line_height - word.rect.h)/2
-            word.rect.y += space
+        for &w in line_words(terse, &line) {
+            space := (line.rect.h - w.rect.h)/2
+            w.rect.y += space
         }
     }
 
@@ -370,14 +366,13 @@ create :: proc (
     // generate rects for terse.groups
     for &group in terse.groups {
         prev_line_idx := int(-1)
-        for i in 0..<group.word_count {
-            word := &terse.words[group.word_start_idx + i]
-            if word.line_idx != prev_line_idx {
-                append(&group.rects, word.rect)
+        for &w in group_words(terse, &group) {
+            if w.line_idx != prev_line_idx {
+                append(&group.rects, w.rect)
             } else {
-                core.rect_add_rect(slice.last_ptr(group.rects[:]), word.rect)
+                core.rect_add_rect(slice.last_ptr(group.rects[:]), w.rect)
             }
-            prev_line_idx = word.line_idx
+            prev_line_idx = w.line_idx
         }
     }
 
@@ -424,10 +419,9 @@ append_line :: proc (terse: ^Terse, font: ^Font, nobreak_first_word_idx := -1) -
 
         word_x_offset := -(terse.words[line.word_start_idx].rect.x - prev_line.rect.x)
         word_y_offset := line.rect.y - prev_line.rect.y
-        for i in 0..<line.word_count {
-            word := &terse.words[line.word_start_idx + i]
-            word.rect.x += word_x_offset
-            word.rect.y += word_y_offset
+        for &w in line_words(terse, &line) {
+            w.rect.x += word_x_offset
+            w.rect.y += word_y_offset
         }
 
         update_line_width(terse, prev_line)
@@ -471,19 +465,31 @@ apply_last_line_gap :: proc (terse: ^Terse) {
     if line.gap == 0 do return
 
     line.rect.y += line.gap
-    for i in 0..<line.word_count {
-        word := &terse.words[line.word_start_idx + i]
-        word.rect.y += line.gap
-    }
+    for &w in line_words(terse, line) do w.rect.y += line.gap
 }
 
 @private
 line_has_printable_words :: proc (terse: ^Terse, line: ^Line) -> bool {
-    for i in 0..<line.word_count {
-        word := &terse.words[line.word_start_idx + i]
-        if len(word.text) > 0 && word.text != " " do return true
+    for w in line_words(terse, line) {
+        if len(w.text) > 0 && w.text != " " do return true
     }
     return false
+}
+
+@private
+last_line_continue_tab_width :: proc (terse: ^Terse) -> f32 {
+    // text text text      <tab=x> text text text| <- wrap
+    // <---continue_tab_width----> text...       |
+
+    if len(terse.lines) > 0 {
+        line := slice.last_ptr(terse.lines[:])
+        #reverse for w in line_words(terse, line) {
+            if w.text == "" { // TODO: this is ugly, consider adding flags to Word, so its possible to detect tab for sure
+                return w.rect.x + w.rect.w - line.rect.x
+            }
+        }
+    }
+    return 0
 }
 
 @private
