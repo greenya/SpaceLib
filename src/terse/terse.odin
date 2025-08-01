@@ -9,10 +9,8 @@ import "../core/stack"
 Terse :: struct {
     rect        : Rect,
     rect_input  : Rect,
-    scissor     : Rect,
     pad         : Vec2,
     wrap        : bool,
-    opacity     : f32,
     valign      : Vertical_Alignment,
     words       : [dynamic] Word,
     lines       : [dynamic] Line,
@@ -76,8 +74,6 @@ create :: proc (
     rect        : Rect,
     query_font  : Query_Font_Proc,
     query_color : Query_Color_Proc,
-    scissor     := Rect {},
-    opacity     := f32(1),
     allocator   := context.allocator,
 ) -> ^Terse {
     ensure(query_font != nil)
@@ -86,8 +82,6 @@ create :: proc (
     terse := new(Terse, allocator)
     terse.rect = rect
     terse.rect_input = rect
-    terse.scissor = scissor
-    terse.opacity = opacity
     terse.valign = default_valign
     terse.words.allocator = allocator
     terse.lines.allocator = allocator

@@ -18,8 +18,6 @@ TODO: core: add support for HSL color format
 
     https://www.youtube.com/watch?v=vvPklRN0Tco
 
-    - maybe consider changing Color to be [4]f32 instead of [4]u8, as we are doing a lot of alpha and brightness tweaking and every time we convert 4 values to f32 and back to u8
-
 TODO: terse: add support for <overflow> command
 
     allow to have text fit to any size without need for scrollbar; very needed for dropdown boxes and similar limited space controls; at least to be able to use it for one liners (not wrapping text); ideally support two modes:
@@ -86,32 +84,6 @@ TODO: ui: key press handling
 
     The idea is to be able express frame handles "Esc" or "A" and when that happens, the frame gets "click". Ideally, we want to add all the structure, which will include multiple elements wanting "Esc" (or any other button), but the UI should automatically route "click" to correct one, checking visibility and hierarchy of the frame; it should be possible to open dialog which would close by "Esc" and the "Esc" is also visible below, as dialog has semitransparent layer and the tree is visible below. Any single key can be handled only be single frame at any time, e.g. even if we have tab bar with "Q" and "E" navigation and another tab bar with same keys is shown, only one should consume the key input.
 
-TODO: ui: add global opacity handling
-
-    ---- // also consider switching Color from [4] u8 to [4] f32, as we are doing a lot of alpha and brightness tweaks and every time we basically convert each component to f32 and back; and with this "global opacity" change, we will do it even more (well, only for one component... but for every drawing); test the speed of such change. // ----
-
-    The idea is to allow any frame drawing function to not worry about f.opacity, as long as any drawing is done using raylib/draw.* procs. A lot of calls like "core.alpha(..., f.opacity)" should be possible to get rid of. In case when some manual drawing needed directly using Raylib, the actual opacity can be read using draw.opacity().
-
-    The following steps i see needs to be done:
-
-    - raylib/draw & terse:
-        - add set_opacity(f32), opacity() -> f32, @private _opacity := f32(1)
-        - every drawing proc (shapes and text) should tweak alpha of the color before drawing, maybe something like:
-            color_rl := rl.Color(core.alpha(color, _opacity))
-        - remove Terse.opacity, i guess we don't need it anymore
-    - ui:
-        - ui.create() should allow optional opacity set proc, so the ui creating can be extended with:
-            opacity_set_proc = proc (o: f32) {
-                draw.set_opacity(o)
-            },
-        - after drawing frame tree, reset opacity to 1, something like:
-            if f.ui.opacity_set_proc != nil do f.ui.opacity_set_proc(1)
-        - inside frame drawing, before any drawing we set frame' opacity, like:
-            if f.ui.opacity_set_proc != nil do f.ui.opacity_set_proc(f.opacity)
-        - notes:
-            * we do not use opacity stack, as we expect to set opacity for every frame
-            * we always restore opacity to 1.0; this should be fine, but if not, then we need to add f.ui.opacity_get_proc() and save the value to restore it after the drawing; lets keep blind 1.0 for now
-
 TODO: ui: fix hover_ratio(): fix twitching for large duration and short enter/leave times
 
     maybe we should add a separate field -- Frame.hover: Hovering,
@@ -125,6 +97,10 @@ TODO: ui: fix hover_ratio(): fix twitching for large duration and short enter/le
     }
 
     in tick() check if f.hover.enter_dur != 0 && f.hover.enter_dur != 0 -- calc hover.ratio; no need to use buggy hover_ratio(), now we have hover.ratio value, and we can ensure it changes smoothly.
+
+TODO: [?] core: maybe consider changing Color to be 4 floats instead 4 bytes
+
+    we are doing a lot of alpha and brightness tweaking and every time we convert 1-3 values to f32 and back to u8
 
 TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
 

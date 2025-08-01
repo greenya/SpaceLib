@@ -38,6 +38,8 @@ UI :: struct {
 
     // Current scissor absolute rectangle.
     // Usually not needed directly, as it is automatically applied during a child frame's `draw` callback.
+    // Useful when drawing heavy frame which is never fully visible.
+    //
     // This value may change between frame `draw` calls, and represents the intersection of all parent scissors,
     // defining the actual visible area on screen for the frame currently being drawn.
     scissor_rect: Rect,
@@ -59,14 +61,15 @@ UI :: struct {
 
     // Fallback drawing callback for `.terse` frames.
     // Used when a frame does not have its own `draw` callback.
-    terse_draw_proc: Terse_Draw_Proc,
+    terse_draw_proc: Frame_Proc,
 
-    // Callback for extra drawing for every frame. Called after frame's `draw` and before drawing any children.
+    // Callback for extra drawing for every frame.
+    // Called after frame's `draw` and before drawing any children.
     frame_overdraw_proc: Frame_Proc,
 
     // Usage statistics counters.
     // Automatically reset at the start of each `tick()` and updated until the end of `draw()`.
-    // Access these values only after all phases are complete, e.g., at the end of the main loop.
+    // Accurate values are expected only after all phases are complete, e.g., at the end of the main loop.
     stats: Stats,
 
     // Shortcut for `get(ui.root, ...)`
@@ -119,14 +122,13 @@ Stats :: struct {
 
 Scissor_Set_Proc    :: proc (r: Rect)
 Scissor_Clear_Proc  :: proc ()
-Terse_Draw_Proc     :: proc (terse: ^terse.Terse)
 
 create :: proc (
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
     terse_query_color_proc  : terse.Query_Color_Proc = nil,
-    terse_draw_proc         : Terse_Draw_Proc = nil,
+    terse_draw_proc         : Frame_Proc = nil,
     frame_overdraw_proc     : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)

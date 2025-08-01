@@ -7,8 +7,7 @@ import "../terse"
 update_terse :: proc (f: ^Frame) {
     should_rebuild :=
         f.terse == nil ||
-        (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect, e=.5)) ||
-        (f.terse != nil && !core.rect_equal_approx(f.terse.scissor, f.ui.scissor_rect, e=.5))
+        (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect, e=.5))
 
     if !should_rebuild do return
 
@@ -35,8 +34,6 @@ update_terse :: proc (f: ^Frame) {
             f.rect,
             f.ui.terse_query_font_proc,
             f.ui.terse_query_color_proc,
-            f.ui.scissor_rect,
-            f.opacity,
         )
         if .terse_shrink in f.flags do terse.shrink_terse(f.terse)
     }

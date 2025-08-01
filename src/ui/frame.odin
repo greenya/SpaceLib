@@ -154,10 +154,10 @@ Frame :: struct {
     // Created from `text` using `terse.create()`. The UI might regenerate the value when needed,
     // for example, when new `text` is set or the `rect` is updated.
     //
-    // Terse requires the UI to have following callbacks set:
+    // Terse uses following callbacks:
     // - `UI.terse_query_font_proc`
     // - `UI.terse_query_color_proc`
-    // - `UI.terse_draw_proc`
+    // - `UI.terse_draw_proc` (optional)
     //
     // Enabled by `.terse` flag.
     terse: ^terse.Terse,
@@ -202,7 +202,7 @@ Frame :: struct {
     offset: Vec2,
 
     // Opacity of the frame. The frame only stores this value; it's up to the drawing callbacks
-    // to use it when rendering. If `terse != nil`, the `terse.opacity` will be updated automatically.
+    // to use it when rendering.
     // Use `set_opacity()` to change this value for the frame and all its children.
     opacity: f32,
 
@@ -827,22 +827,16 @@ update_frame_tree :: proc (f: ^Frame) {
 draw_frame_tree :: proc (f: ^Frame) {
     if .hidden in f.flags do return
 
-    if f.terse != nil do f.terse.opacity = f.opacity
-
     is_drawn: bool
-    in_scissor := core.rect_intersection(f.rect, f.ui.scissor_rect) != {}
+    in_scissor := core.rects_intersect(f.rect, f.ui.scissor_rect)
 
     if in_scissor {
         if f.draw != nil {
-            if .terse not_in f.flags || f.terse != nil {
-                f.draw(f)
-                is_drawn = true
-            }
-        } else {
-            if f.terse != nil && f.ui.terse_draw_proc != nil {
-                f.ui.terse_draw_proc(f.terse)
-                is_drawn = true
-            }
+            f.draw(f)
+            is_drawn = true
+        } else if f.terse != nil && f.ui.terse_draw_proc != nil {
+            f.ui.terse_draw_proc(f)
+            is_drawn = true
         }
     }
 

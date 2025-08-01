@@ -67,7 +67,7 @@ debug_frame_tree :: proc (f: ^ui.Frame) {
 
 debug_frame_scissor :: proc (f: ^ui.Frame) {
     if .scissor in f.flags {
-        rect_lines(core.rect_inflated(f.rect, 4), 4, core.magenta)
+        rect_lines(core.rect_inflated(f.rect, 4), 4, core.aqua)
     }
 }
 
@@ -160,20 +160,17 @@ debug_terse :: proc (t: ^terse.Terse) {
     for line in t.lines do rect_lines(line.rect, 1, {255,255,128,80})
     for word in t.words do rect_lines(word.rect, 1, {255,255,0,40})
 
-    groups_color :: Color {255,0,255,255}
-    groups_text_color   :: Color {0,0,0,255}
+    group_color         :: core.magenta
+    group_name_color    :: core.black
+
     for group in t.groups do for i_rect, i in group.rects {
-        rect_lines(i_rect, 3, groups_color)
+        rect_lines(i_rect, 3, group_color)
         if i == 0 {
             font := rl.GetFontDefault()
             size := rl.MeasureTextEx(font, fmt.ctprint(group.name), 10, 2)
-            rect({ i_rect.x, i_rect.y-size.y, size.x+2, size.y }, groups_color)
-            _debug_text(group.name, { i_rect.x+2, i_rect.y-size.y }, groups_text_color)
+            rect({ i_rect.x, i_rect.y-size.y, size.x+2, size.y }, group_color)
+            _debug_text(group.name, { i_rect.x+2, i_rect.y-size.y }, group_name_color)
         }
-    }
-
-    if t.scissor != {} {
-        rect_lines(core.rect_inflated(t.scissor, 2), 2, core.aqua)
     }
 }
 
