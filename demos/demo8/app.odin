@@ -99,14 +99,14 @@ app_tick :: proc () {
                     ? "weight_md"\
                     : "weight_hv"
 
-        app.ui->set_text("scrap_count", t)
-        app.ui->set_text("page_archetype/primary/level", 10+t%20)
-        app.ui->set_text("page_archetype/secondary/level", 10+t%20)
-        app.ui->set_text("page_character/primary/level", 10+t%20)
-        app.ui->set_text("page_character/secondary/level", 10+t%20)
-        app.ui->set_text("power/level", 10+t%20)
-        app.ui->set_text("stats_basic", t%400+100, (t/5)%100+50, f32(t%1500)/20, wc, w)
-        app.ui->set_text("stats_res", 100-t%100, 110-t%100, 120-t%100, t%100, 150-t%100)
+        ui_set_text("menu/bar_top/scrap_count", t)
+        ui_set_text("menu/pages/page_archetype/primary/level", 10+t%20)
+        ui_set_text("menu/pages/page_archetype/secondary/level", 10+t%20)
+        ui_set_text("menu/pages/page_character/~primary/level", 10+t%20)
+        ui_set_text("menu/pages/page_character/~secondary/level", 10+t%20)
+        ui_set_text("menu/pages/page_character/ring/column/stats_basic/power/level", 10+t%20)
+        ui_set_text("menu/pages/page_character/ring/column/stats_basic/stats_res", 100-t%100, 110-t%100, 120-t%100, t%100, 150-t%100)
+        ui_set_text("menu/pages/page_character/ring/column/stats_basic", t%400+100, (t/5)%100+50, f32(t%1500)/20, wc, w)
     }
 
     ui.tick(app.ui,

@@ -57,7 +57,7 @@ app_tooltip_destroy :: proc () {
 }
 
 app_tooltip_reset :: proc () -> (tooltip: ^ui.Frame) {
-    tooltip = app.ui->get("tooltip")
+    tooltip = ui_get("tooltip")
     for child in tooltip.children do if child.order == 0 do ui.hide(child)
     return
 }
@@ -215,7 +215,7 @@ app_tooltip_show :: proc (target: ^ui.Frame) {
 
 app_tooltip_hide :: proc (target: ^ui.Frame) {
     // fmt.println(#procedure, target.name, target.text)
-    tooltip := app.ui->get("tooltip")
+    tooltip := ui_get("tooltip")
     if tooltip.anchors[0].rel_frame == target {
         ui.animate(tooltip, app_tooltip_anim_disappear, .15)
     }
