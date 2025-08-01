@@ -2,78 +2,88 @@
 package player
 
 import "core:fmt"
+
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 
 import "../../partials"
 
-Map_Page :: struct {
-    root            : ^ui.Frame,
+map_page: struct {
+    root                 : ^ui.Frame,
 
-    filter_button   : ^ui.Frame,
-    legend_button   : ^ui.Frame,
-    recenter_button : ^ui.Frame,
+    filter_button        : ^ui.Frame,
+    legend_button        : ^ui.Frame,
+    recenter_button      : ^ui.Frame,
 
-    area            : ^ui.Frame,
-    area_land       : [333] struct { center: Vec2, size: Vec2 },
-    area_offset     : Vec2,
+    area                : ^ui.Frame,
+    area_land           : [333] struct { center: Vec2, size: Vec2 },
+    area_offset         : Vec2,
 
-    info_panel      : ^ui.Frame,
+    info_panel          : ^ui.Frame,
+    legend_panel        : ^ui.Frame,
+    legend_panel_opened : bool,
 }
 
 add_map_page :: proc () {
-    map_ := &screen.map_
-    _, map_.root = partials.add_screen_tab_and_page(&screen, "map", "MAP")
+    _, map_page.root = partials.add_screen_tab_and_page(&screen, "map", "MAP")
 
-    map_.filter_button = partials.add_screen_pyramid_button(&screen, "map_filter", "<icon=key_tiny/F:.7> FILTER", icon="visibility")
-    ui.set_order(map_.filter_button, -2)
+    map_page.filter_button = partials.add_screen_pyramid_button(&screen,
+        "map_filter", text="<icon=key_tiny/F:.7> FILTER", icon="visibility")
+    ui.set_order(map_page.filter_button, -2)
 
-    map_.legend_button = partials.add_screen_pyramid_button(&screen, "map_legend", "<icon=key_tiny/L:.7> LEGEND", icon="view_cozy")
-    ui.set_order(map_.legend_button, -1)
-
-    map_.recenter_button = partials.add_screen_key_button(&screen, "recenter", "<icon=key/R> Re-center")
-    map_.recenter_button.click = proc (f: ^ui.Frame) {
-        screen.map_.area_offset = 0
+    map_page.legend_button = partials.add_screen_pyramid_button(&screen,
+        name="map_legend", text="<icon=key_tiny/L:.7> LEGEND", icon="view_cozy")
+    ui.set_order(map_page.legend_button, -1)
+    map_page.legend_button.click = proc (f: ^ui.Frame) {
+        map_page.legend_panel_opened ~= true
+        if map_page.legend_panel_opened {
+            ui.animate(map_page.legend_panel, anim_map_legend_panel_appear, 1.333)
+        } else {
+            ui.animate(map_page.legend_panel, anim_map_legend_panel_disappear, 1.333)
+        }
     }
 
-    map_.root.show = proc (f: ^ui.Frame) {
+    map_page.recenter_button = partials.add_screen_key_button(&screen, "recenter", "<icon=key/R> Re-center")
+    map_page.recenter_button.click = proc (f: ^ui.Frame) {
+        map_page.area_offset = 0
+    }
+
+    map_page.root.show = proc (f: ^ui.Frame) {
         partials.move_screen_pyramid_buttons(&screen, .left)
-        ui.show(screen.map_.filter_button)
-        ui.show(screen.map_.legend_button)
-        ui.show(screen.map_.recenter_button)
+        ui.show(map_page.filter_button)
+        ui.show(map_page.legend_button)
+        ui.show(map_page.recenter_button)
     }
 
-    map_.root.hide = proc (f: ^ui.Frame) {
+    map_page.root.hide = proc (f: ^ui.Frame) {
         partials.move_screen_pyramid_buttons(&screen, .center)
-        ui.hide(screen.map_.filter_button)
-        ui.hide(screen.map_.legend_button)
-        ui.hide(screen.map_.recenter_button)
+        ui.hide(map_page.filter_button)
+        ui.hide(map_page.legend_button)
+        ui.hide(map_page.recenter_button)
     }
 
     add_map_area()
     add_map_info_panel()
     add_map_legend_panel()
 
-    ui.print_frame_tree(map_.root)
+    // ui.print_frame_tree(map_page.root)
 }
 
 add_map_area :: proc () {
-    map_ := &screen.map_
-
-    map_.area = ui.add_frame(map_.root, {
+    map_page.area = ui.add_frame(map_page.root, {
         name="area",
         flags={.capture},
         draw=draw_map_area,
         drag=proc (f: ^ui.Frame, info: ui.Drag_Info) {
-            screen.map_.area_offset += info.delta
+            map_page.area_offset += info.delta
         },
     },
         { point=.top_left },
         { point=.bottom_right },
     )
 
-    for &d in map_.area_land {
+    for &d in map_page.area_land {
         d = {
             center  = core.random_vec_in_rect({-2000,-2000,4000,4000}),
             size    = core.random_vec_in_rect({0,0,400,400}) + 100,
@@ -82,13 +92,12 @@ add_map_area :: proc () {
 }
 
 draw_map_area :: proc (f: ^ui.Frame) {
-    map_ := &screen.map_
     color := Color {200,160,120,255}
 
     draw.rect(f.rect, core.brightness(color, -.6))
-    offset := core.rect_center(f.rect) + map_.area_offset
+    offset := core.rect_center(f.rect) + map_page.area_offset
 
-    for d, i in map_.area_land {
+    for d, i in map_page.area_land {
         rect := core.rect_from_center(d.center, d.size)
         rect = core.rect_moved(rect, offset)
         draw.rect(rect, core.brightness(color, +.2 -.2*f32(i%4)))
@@ -96,9 +105,7 @@ draw_map_area :: proc (f: ^ui.Frame) {
 }
 
 add_map_info_panel :: proc () {
-    map_ := &screen.map_
-
-    panel := ui.add_frame(map_.root, {
+    map_page.info_panel = ui.add_frame(map_page.root, {
         flags={.pass},
         name="info_panel",
         size={420,0},
@@ -108,10 +115,10 @@ add_map_info_panel :: proc () {
         { point=.top_left, offset={60,20} },
     )
 
-    add_map_info_panel_map_area(panel)
-    add_map_info_panel_landscape(panel)
-    add_map_info_panel_resource_density(panel)
-    add_map_info_panel_collectables(panel)
+    add_map_info_panel_map_area(map_page.info_panel)
+    add_map_info_panel_landscape(map_page.info_panel)
+    add_map_info_panel_resource_density(map_page.info_panel)
+    add_map_info_panel_collectables(map_page.info_panel)
 }
 
 add_map_info_panel_map_area :: proc (parent: ^ui.Frame) {
@@ -212,11 +219,11 @@ add_map_info_panel_cell_with_icon_and_text :: proc (parent: ^ui.Frame, icon, tex
 }
 
 add_map_legend_panel :: proc () {
-    map_ := &screen.map_
     pad :: 40
 
-    panel := ui.add_frame(map_.root, {
+    map_page.legend_panel = ui.add_frame(map_page.root, {
         name="legend_panel",
+        flags={.hidden},
         size={640,0},
         text="#000b",
         draw=partials.draw_color_rect,
@@ -225,7 +232,7 @@ add_map_legend_panel :: proc () {
         { point=.bottom_right },
     )
 
-    title := ui.add_frame(panel, {
+    title := ui.add_frame(map_page.legend_panel, {
         name="title",
         text="<pad=6:0,font=text_4r,color=bg1>LEGEND",
         flags={.terse,.terse_height},
@@ -235,7 +242,7 @@ add_map_legend_panel :: proc () {
         {point=.top_right,offset={-pad,pad}},
     )
 
-    list := ui.add_frame(panel, {
+    list := ui.add_frame(map_page.legend_panel, {
         name="list",
         flags={.scissor},
         layout=ui.Flow{ dir=.down, gap=10, scroll={step=20} },
@@ -369,5 +376,38 @@ add_map_legend_panel :: proc () {
                 draw=partials.draw_text_drop_shadow,
             })
         }
+    }
+}
+
+anim_map_legend_move_distance_x :: 200
+
+anim_map_legend_panel_appear :: proc (f: ^ui.Frame) {
+    offset_x :: anim_map_legend_move_distance_x
+    switch f.anim.ratio {
+    case 0:
+        f.offset.x = offset_x
+        ui.set_opacity(f, 0)
+        ui.show(f)
+    case:
+        ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+        f.offset.x = offset_x * (1-ratio)
+        ui.set_opacity(f, ratio)
+    case 1:
+        f.offset.x = 0
+        ui.set_opacity(f, 1)
+    }
+}
+
+anim_map_legend_panel_disappear :: proc (f: ^ui.Frame) {
+    offset_x :: anim_map_legend_move_distance_x
+    switch f.anim.ratio {
+    case:
+        ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+        f.offset.x = offset_x * ratio
+        ui.set_opacity(f, 1-ratio)
+    case 1:
+        f.offset.x = 0
+        ui.set_opacity(f, 0)
+        ui.hide(f)
     }
 }

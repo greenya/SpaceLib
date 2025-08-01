@@ -8,7 +8,7 @@ import "spacelib:ui"
 import "../../data"
 import "../../partials"
 
-Journey_Page :: struct {
+journey_page: struct {
     root        : ^ui.Frame,
     tabs        : ^ui.Frame,
 
@@ -42,13 +42,12 @@ journey_page_tabs: [] struct { name, text, icon: string, add: proc (parent: ^ui.
 }
 
 add_journey_page :: proc () {
-    journey := &screen.journey
-    _, journey.root = partials.add_screen_tab_and_page(&screen, "journey", "JOURNEY")
+    _, journey_page.root = partials.add_screen_tab_and_page(&screen, "journey", "JOURNEY")
 
     tab_details := make([dynamic] partials.Category_Tab_Details, context.temp_allocator)
     for t in journey_page_tabs do append(&tab_details, partials.Category_Tab_Details { name=t.name, icon=t.icon })
 
-    journey.tabs = partials.add_category_tabs(journey.root, "tabs", items=tab_details[:],
+    journey_page.tabs = partials.add_category_tabs(journey_page.root, "tabs", items=tab_details[:],
         click=proc (f: ^ui.Frame) {
             title := ui.get(f, "../title")
             assert(f.order >= 0 && f.order < len(journey_page_tabs))
@@ -57,16 +56,16 @@ add_journey_page :: proc () {
             content := ui.get(f, "../../content")
             ui.show(content, f.name, hide_siblings=true)
 
-            ui.update(screen.journey.root)
+            ui.update(journey_page.root)
         },
     )
 
-    ui.set_order(journey.tabs, 1)
-    ui.set_anchors(journey.tabs, { point=.top_left, offset={80,70} })
+    ui.set_order(journey_page.tabs, 1)
+    ui.set_anchors(journey_page.tabs, { point=.top_left, offset={80,70} })
 
-    content := ui.add_frame(journey.root,
+    content := ui.add_frame(journey_page.root,
         { name="content" },
-        { point=.top_left, rel_frame=journey.tabs, offset={0,60} },
+        { point=.top_left, rel_frame=journey_page.tabs, offset={0,60} },
         { point=.bottom_right, offset={-80,-40} },
     )
 
@@ -74,31 +73,31 @@ add_journey_page :: proc () {
 
     // ui.print_frame_tree(journey.root, max_depth=2)
 
-    ui.click(journey.tabs, "codex")
+    ui.click(journey_page.tabs, "codex")
 }
 
 add_journey_page_story :: proc (parent: ^ui.Frame) {
-    screen.journey.story = ui.add_frame(parent,
+    journey_page.story = ui.add_frame(parent,
         { name="story" },
         { point=.top_left },
         { point=.bottom_right },
     )
 
-    partials.add_placeholder_note(screen.journey.story, "STORY SECTION GOES HERE...")
+    partials.add_placeholder_note(journey_page.story, "STORY SECTION GOES HERE...")
 }
 
 add_journey_page_contracts :: proc (parent: ^ui.Frame) {
-    screen.journey.contracts = ui.add_frame(parent,
+    journey_page.contracts = ui.add_frame(parent,
         { name="contracts" },
         { point=.top_left },
         { point=.bottom_right },
     )
 
-    partials.add_placeholder_note(screen.journey.contracts, "CONTRACTS SECTION GOES HERE...")
+    partials.add_placeholder_note(journey_page.contracts, "CONTRACTS SECTION GOES HERE...")
 }
 
 add_journey_page_codex :: proc (parent: ^ui.Frame) {
-    codex := &screen.journey.codex
+    codex := &journey_page.codex
     codex.root, codex.list, codex.details = partials.add_screen_page_body_with_list_and_details(
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
@@ -181,7 +180,7 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
 }
 
 journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
-    codex := &screen.journey.codex
+    codex := &journey_page.codex
     data_topic := data.get_codex_topic(section_id, topic_id)
     // fmt.println("data_topic", data_topic)
 
@@ -218,7 +217,7 @@ journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
-    tutorial := &screen.journey.tutorial
+    tutorial := &journey_page.tutorial
     details := &tutorial.details
     tutorial.root, tutorial.list, details.root = partials.add_screen_page_body_with_list_and_details(
         parent, "tutorial",
@@ -271,7 +270,7 @@ add_journey_page_tutorial :: proc (parent: ^ui.Frame) {
 journey_page_show_tutorial_tip :: proc (id: string) {
     tip := data.get_tutorial_tip(id)
 
-    details := screen.journey.tutorial.details
+    details := journey_page.tutorial.details
 
     // title
     ui.set_text(details.title, tip.title, shown=true)

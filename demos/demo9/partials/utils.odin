@@ -18,6 +18,7 @@ scissor_clear :: #force_inline proc () {
 frame_overdraw :: #force_inline proc (f: ^ui.Frame) {
     if !rl.IsKeyDown(.LEFT_CONTROL) do return
     draw.debug_frame(f)
-    draw.debug_frame_layout(f)
+    draw.debug_frame_scissor(f)
     draw.debug_frame_anchors(f)
+    draw.debug_frame_layout(f)
 }

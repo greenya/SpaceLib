@@ -11,15 +11,10 @@ import "../../partials"
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-@private screen: struct {
-    using screen: partials.Screen,
-
-    map_    : Map_Page,
-    journey : Journey_Page,
-}
+@private screen: partials.Screen
 
 add :: proc (parent: ^ui.Frame) {
-    screen.screen = partials.add_screen(parent, "player")
+    screen = partials.add_screen(parent, "player")
 
     partials.add_screen_pyramid_button(&screen, "social", "SOCIAL", icon="groups")
     partials.move_screen_pyramid_buttons(&screen, .center)

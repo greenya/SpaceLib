@@ -121,7 +121,8 @@ draw_hexagon_header :: proc (t: ^terse.Terse, rect: Rect, limit_x, limit_w: f32,
     c_a0 := core.alpha(c, 0)
 
     // background
-    draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, bg_color)
+    c_bg := core.alpha(bg_color, t.opacity)
+    draw.triangle_fan({ {x1,yc}, {x1,y1}, {xl,yc}, {x1,y2}, {x2,y2}, {xr,yc}, {x2,y1}, {x1,y1} }, c_bg)
 
     // top and bottom lines
     draw.line({x1,y1}, {x2,y1}, th, c)

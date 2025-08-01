@@ -65,6 +65,33 @@ debug_frame_tree :: proc (f: ^ui.Frame) {
     for child in f.children do debug_frame_tree(child)
 }
 
+debug_frame_scissor :: proc (f: ^ui.Frame) {
+    if .scissor in f.flags {
+        rect_lines(core.rect_inflated(f.rect, 4), 4, core.magenta)
+    }
+}
+
+debug_frame_anchors :: proc (f: ^ui.Frame) {
+    thick :: 3
+    size :: 6
+    color := core.alpha(_debug_frame_color(f), .333)
+
+    for a in f.anchors {
+        pos := _debug_anchor_point_pos(a.point, f.rect)
+        rel_frame := a.rel_frame != nil ? a.rel_frame : f.parent
+        rel_pos := _debug_anchor_point_pos(a.rel_point, rel_frame.rect)
+
+        if abs(pos.x-rel_pos.x) > 0.1 || abs(pos.y-rel_pos.y) > 0.1 {
+            line(rel_pos, pos, thick, color)
+            line(rel_pos + {-size/2,-size/2}, rel_pos + {size/2,size/2}, thick, color)
+            line(rel_pos + {size/2,-size/2}, rel_pos + {-size/2,size/2}, thick, color)
+        }
+
+        line(pos + {-size,-size}, pos + {size,size}, thick, color)
+        line(pos + {size,-size}, pos + {-size,size}, thick, color)
+    }
+}
+
 debug_frame_layout :: proc (f: ^ui.Frame) {
     step :: 10
     size :: 20
@@ -125,27 +152,6 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
     }
 }
 
-debug_frame_anchors :: proc (f: ^ui.Frame) {
-    thick :: 3
-    size :: 6
-    color := core.alpha(_debug_frame_color(f), .333)
-
-    for a in f.anchors {
-        pos := _debug_anchor_point_pos(a.point, f.rect)
-        rel_frame := a.rel_frame != nil ? a.rel_frame : f.parent
-        rel_pos := _debug_anchor_point_pos(a.rel_point, rel_frame.rect)
-
-        if abs(pos.x-rel_pos.x) > 0.1 || abs(pos.y-rel_pos.y) > 0.1 {
-            line(rel_pos, pos, thick, color)
-            line(rel_pos + {-size/2,-size/2}, rel_pos + {size/2,size/2}, thick, color)
-            line(rel_pos + {size/2,-size/2}, rel_pos + {-size/2,size/2}, thick, color)
-        }
-
-        line(pos + {-size,-size}, pos + {size,size}, thick, color)
-        line(pos + {size,-size}, pos + {-size,size}, thick, color)
-    }
-}
-
 debug_terse :: proc (t: ^terse.Terse) {
     rect_lines(t.rect_input, 4, {255,128,64,80})
     rect_lines(t.rect, 1, {255,0,0,160})
@@ -164,6 +170,10 @@ debug_terse :: proc (t: ^terse.Terse) {
             rect({ i_rect.x, i_rect.y-size.y, size.x+2, size.y }, groups_color)
             _debug_text(group.name, { i_rect.x+2, i_rect.y-size.y }, groups_text_color)
         }
+    }
+
+    if t.scissor != {} {
+        rect_lines(core.rect_inflated(t.scissor, 2), 2, core.aqua)
     }
 }
 
