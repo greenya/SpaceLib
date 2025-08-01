@@ -38,7 +38,8 @@ UI :: struct {
 
     // Current scissor absolute rectangle.
     // Usually not needed directly, as it is automatically applied during a child frame's `draw` callback.
-    // Useful when drawing heavy frame which is never fully visible.
+    // Useful when drawing heavy frame and need to perform scissor tests yourself so large chunks of drawing
+    // can be discarded quickly.
     //
     // This value may change between frame `draw` calls, and represents the intersection of all parent scissors,
     // defining the actual visible area on screen for the frame currently being drawn.
@@ -69,29 +70,8 @@ UI :: struct {
 
     // Usage statistics counters.
     // Automatically reset at the start of each `tick()` and updated until the end of `draw()`.
-    // Accurate values are expected only after all phases are complete, e.g., at the end of the main loop.
+    // Accurate values are expected only after all phases are complete.
     stats: Stats,
-
-    // Shortcut for `get(ui.root, ...)`
-    get: proc (ui: ^UI, path: string) -> ^Frame,
-    // Shortcut for `find(ui.root, ...)`
-    find: proc (ui: ^UI, path: string) -> ^Frame,
-    // Shortcut for `show(ui.root, ...)`
-    show: proc (ui: ^UI, path: string, hide_siblings := false),
-    // Shortcut for `hide(ui.root, ...)`
-    hide: proc (ui: ^UI, path: string),
-    // Shortcut for `click(ui.root, ...)`
-    click: proc (ui: ^UI, path: string),
-    // Shortcut for `wheel(ui.root, ...)`
-    wheel: proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool),
-    // Shortcut for `animate(ui.root, ...)`
-    animate: proc (ui: ^UI, path: string, tick: Frame_Proc, dur: f32),
-    // Shortcut for `set_name(ui.root, ...)`
-    set_name: proc (ui: ^UI, path: string, name: string),
-    // Shortcut for `set_text(ui.root, ...)`
-    set_text: proc (ui: ^UI, path: string, values: ..any, shown := false),
-    // Shortcut for `set_text_format(ui.root, ...)`
-    set_text_format: proc (ui: ^UI, path: string, text_format: string),
 }
 
 Mouse_Input :: struct {
@@ -142,17 +122,6 @@ create :: proc (
         terse_query_color_proc  = terse_query_color_proc,
         terse_draw_proc         = terse_draw_proc,
         frame_overdraw_proc     = frame_overdraw_proc,
-
-        get                     = ui_get,
-        find                    = ui_find,
-        show                    = ui_show,
-        hide                    = ui_hide,
-        click                   = ui_click,
-        wheel                   = ui_wheel,
-        animate                 = ui_animate,
-        set_name                = ui_set_name,
-        set_text                = ui_set_text,
-        set_text_format         = ui_set_text_format,
     }
 
     clock.init(&ui.clock)
@@ -335,54 +304,4 @@ pop_scissor_rect :: proc (ui: ^UI) {
         ui.scissor_rect = ui.root.rect
         if ui.phase == .draw && ui.scissor_clear_proc != nil do ui.scissor_clear_proc()
     }
-}
-
-@private
-ui_get :: #force_inline proc (ui: ^UI, path: string) -> ^Frame {
-    return get(ui.root, path)
-}
-
-@private
-ui_find :: #force_inline proc (ui: ^UI, path: string) -> ^Frame {
-    return find(ui.root, path)
-}
-
-@private
-ui_show :: #force_inline proc (ui: ^UI, path: string, hide_siblings := false) {
-    show_by_path(ui.root, path, hide_siblings=hide_siblings)
-}
-
-@private
-ui_hide :: #force_inline proc (ui: ^UI, path: string) {
-    hide_by_path(ui.root, path)
-}
-
-@private
-ui_click :: #force_inline proc (ui: ^UI, path: string) {
-    click_by_path(ui.root, path)
-}
-
-@private
-ui_wheel :: #force_inline proc (ui: ^UI, path: string, dy: f32) -> (consumed: bool) {
-    return wheel_by_path(ui.root, path, dy)
-}
-
-@private
-ui_animate :: #force_inline proc (ui: ^UI, path: string, tick: Frame_Proc, dur: f32) {
-    animate(get(ui.root, path), tick, dur)
-}
-
-@private
-ui_set_name :: #force_inline proc (ui: ^UI, path: string, name: string) {
-    set_name(get(ui.root, path), name)
-}
-
-@private
-ui_set_text :: #force_inline proc (ui: ^UI, path: string, values: ..any, shown := false) {
-    set_text(get(ui.root, path), ..values, shown=shown)
-}
-
-@private
-ui_set_text_format :: #force_inline proc (ui: ^UI, path: string, text_format: string) {
-    set_text_format(get(ui.root, path), text_format)
 }
