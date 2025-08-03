@@ -716,28 +716,6 @@ selectable :: #force_inline proc (f: ^Frame) -> bool {
 }
 
 @private
-layout_scroll :: #force_inline proc (f: ^Frame) -> ^Layout_Scroll {
-    #partial switch &l in f.layout {
-    case Flow: if l.scroll.step != 0 do return &l.scroll
-    }
-    return nil
-}
-
-@private
-layout_apply_scroll :: #force_inline proc (f: ^Frame, dy: f32, is_absolute := false) -> (consumed: bool) {
-    scroll := layout_scroll(f)
-    if scroll != nil {
-        new_offset := is_absolute ? dy : scroll.offset - dy * scroll.step
-        new_offset = clamp(new_offset, scroll.offset_min, scroll.offset_max)
-        if scroll.offset != new_offset {
-            scroll.offset = new_offset
-            return true
-        }
-    }
-    return false
-}
-
-@private
 click_radio :: proc (f: ^Frame) {
     if f.parent != nil do for child in f.parent.children do if .radio in child.flags do child.selected = false
     f.selected = true

@@ -17,6 +17,33 @@ Layout_Scroll :: struct {
     offset_max: f32,
 }
 
+Layout_Auto_Size :: enum {
+    width,
+    height,
+}
+
+@private
+layout_scroll :: #force_inline proc (f: ^Frame) -> ^Layout_Scroll {
+    #partial switch &l in f.layout {
+    case Flow: if l.scroll.step != 0 do return &l.scroll
+    }
+    return nil
+}
+
+@private
+layout_apply_scroll :: #force_inline proc (f: ^Frame, dy: f32, is_absolute := false) -> (consumed: bool) {
+    scroll := layout_scroll(f)
+    if scroll != nil {
+        new_offset := is_absolute ? dy : scroll.offset - dy * scroll.step
+        new_offset = clamp(new_offset, scroll.offset_min, scroll.offset_max)
+        if scroll.offset != new_offset {
+            scroll.offset = new_offset
+            return true
+        }
+    }
+    return false
+}
+
 @private
 layout_visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
     assert(f.layout != nil)
@@ -45,8 +72,8 @@ is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
     panic("Frame has no layout")
 }
 
-// for indexing Flow.pad and Grid.pad arrays
-@private L :: 0
-@private R :: 1
-@private T :: 2
-@private B :: 3
+// For indexing 4-float padding arrays in Flow and Grid
+@private L :: 0 // left
+@private R :: 1 // right
+@private T :: 2 // top
+@private B :: 3 // bottom

@@ -38,7 +38,7 @@ Flow :: struct {
 
     // The flow frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
-    auto_size: bit_set [Flow_Auto_Size],
+    auto_size: bit_set [Layout_Auto_Size],
 }
 
 Flow_Direction :: enum {
@@ -54,11 +54,6 @@ Flow_Alignment :: enum {
     start,
     center,
     end,
-}
-
-Flow_Auto_Size :: enum {
-    width,
-    height,
 }
 
 layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {

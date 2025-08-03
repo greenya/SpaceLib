@@ -19,7 +19,7 @@ Grid :: struct {
     size: Vec2,
 
     // Amount of children per primary direction.
-    // If not set, it will be decided from `size` (must be set) and width of the frame.
+    // If not set, it will be decided from `size` (must be set) and width/height of the frame.
     wrap: int,
 
     // Aspect ratio of a child.
@@ -36,7 +36,7 @@ Grid :: struct {
 
     // The grid frame will update its `size` after arranging its children.
     // Width and height can be marked for auto sizing separately.
-    auto_size: bit_set [Grid_Auto_Size],
+    auto_size: bit_set [Layout_Auto_Size],
 }
 
 Grid_Direction :: enum {
@@ -48,11 +48,6 @@ Grid_Direction :: enum {
     // down_left,
     // up_right,
     // up_left,
-}
-
-Grid_Auto_Size :: enum {
-    width,
-    height,
 }
 
 layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
@@ -71,12 +66,13 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     size := grid.size
     aspect := grid.aspect > 0 ? grid.aspect : 1
 
-    if wrap > 0 {
+    switch {
+    case wrap > 0:
         if size == {} {
             size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
             size.y = size.x / aspect
         }
-    } else if wrap == 0 {
+    case wrap == 0:
         switch {
         case size.x  > 0 && size.y == 0: size.y = size.x / aspect
         case size.x == 0 && size.y  > 0: size.x = size.y * aspect
@@ -86,7 +82,7 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
             w := f.rect.w - grid.pad[L] - grid.pad[R]
             wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
         }
-    } else {
+    case:
         panic("Grid.wrap cannot be negative.")
     }
 
