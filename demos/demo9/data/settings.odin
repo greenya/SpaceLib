@@ -18,22 +18,33 @@ Setting :: struct {
     title   : string,
     desc    : Text,
     control : struct {
-        appearance: enum {
-            auto,
-            button_group,
-            pins,
-            dropdown,
-            slider,
-        },
-        // for .button_group, .pins, .dropdown
+        appearance: Setting_Control_Appearance,
+        // for .button_group, .pins, .dropdown, .slider_names
         names       : [] string,
         titles      : [] string,
         default_idx : int,
-        // for .slider
-        min         : int,
-        max         : int,
-        default_val : int,
+        // for .slider_integer
+        int_min     : int,
+        int_max     : int,
+        int_default : int,
+        // for .slider_float
+        float_min       : f32,
+        float_max       : f32,
+        float_step      : f32,
+        float_default   : f32,
+        // for slider_integer, .slider_float
+        display_format: string,
     },
+}
+
+Setting_Control_Appearance :: enum {
+    auto,
+    button_group,
+    pins,
+    dropdown,
+    slider_names,
+    slider_integer,
+    slider_float,
 }
 
 @private settings: [] Setting
@@ -58,6 +69,7 @@ destroy_settings :: proc () {
         delete_text(s.desc)
         for s in s.control.names do delete(s); delete(s.control.names)
         for s in s.control.titles do delete(s); delete(s.control.titles)
+        delete(s.control.display_format)
     }
     delete(settings)
     settings = nil

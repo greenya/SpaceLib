@@ -91,22 +91,26 @@ add_setting_card :: proc (list: ^ui.Frame, name: string) {
 
 @private
 add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Setting) {
-    ic := item.control
-    ia := item.control.appearance
+    ctrl := item.control
+    appearance := item.control.appearance
 
-    if ia == .auto do switch len(ic.names) {
-    case 0      : // skip (expected)
-    case 2      : ia = .button_group
-    case 3,4,5  : ia = .pins
-    case        : ia = .dropdown
+    if appearance == .auto do switch {
+    case len(ctrl.names) == 2                           : appearance = .button_group
+    case len(ctrl.names) == 3 || len(ctrl.names) == 4   : appearance = .pins
+    case len(ctrl.names) >= 5 && len(ctrl.names) <= 9   : appearance = .slider_names
+    case len(ctrl.names) > 0                            : appearance = .dropdown
+    case ctrl.int_min != ctrl.int_max                   : appearance = .slider_integer
+    case ctrl.float_step > 0                            : appearance = .slider_float
     }
 
-    switch ia {
+    switch appearance {
     case .auto          : // skip (no control)
-    case .button_group  : partials.add_control_radio_button_group(parent, ic.names, ic.titles, ic.default_idx)
-    case .pins          : partials.add_control_radio_pins(parent, ic.names, ic.titles, ic.default_idx)
-    case .dropdown      : partials.add_control_dropdown(parent, ic.names, ic.titles, ic.default_idx)
-    case .slider        : partials.add_control_slider(parent, ic.min, ic.max, ic.default_val)
+    case .button_group  : partials.add_control_radio_button_group(parent, ctrl.names, ctrl.titles, ctrl.default_idx)
+    case .pins          : partials.add_control_radio_pins(parent, ctrl.names, ctrl.titles, ctrl.default_idx)
+    case .dropdown      : partials.add_control_dropdown(parent, ctrl.names, ctrl.titles, ctrl.default_idx)
+    case .slider_names  : fallthrough
+    case .slider_integer: fallthrough
+    case .slider_float  : add_slider(parent, item, appearance)
     }
 }
 
@@ -181,5 +185,53 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
         ui.show(details)
     } else {
         ui.hide(details)
+    }
+}
+
+@private
+add_slider :: proc (parent: ^ui.Frame, setting: data.Setting, appearance: data.Setting_Control_Appearance) {
+    ctrl := setting.control
+    #partial switch appearance {
+    case .slider_names:
+        partials.add_control_slider(parent,
+            total       = len(ctrl.names),
+            idx         = ctrl.default_idx,
+            thumb_click = proc (f: ^ui.Frame) {
+                setting := data.get_setting(ui.get(f, "../../..").name)
+                ctrl := &setting.control
+                _, slider_data := ui.actor_slider(f)
+                ui.set_text(ui.get(f, "../../value"), ctrl.titles[slider_data.idx])
+            },
+        )
+    case .slider_integer:
+        assert(ctrl.display_format != "")
+        partials.add_control_slider(parent,
+            total       = 1 + ctrl.int_max - ctrl.int_min,
+            idx         = ctrl.int_default - ctrl.int_min,
+            thumb_click = proc (f: ^ui.Frame) {
+                setting := data.get_setting(ui.get(f, "../../..").name)
+                ctrl := &setting.control
+                _, slider_data := ui.actor_slider(f)
+                value := ctrl.int_min + slider_data.idx
+                text := fmt.tprintf(ctrl.display_format, value)
+                ui.set_text(ui.get(f, "../../value"), text)
+            },
+        )
+    case .slider_float:
+        assert(ctrl.display_format != "")
+        partials.add_control_slider(parent,
+            total       = 1 + int((ctrl.float_max - ctrl.float_min)/ctrl.float_step),
+            idx         = int((ctrl.float_default - ctrl.float_min)/ctrl.float_step),
+            thumb_click = proc (f: ^ui.Frame) {
+                setting := data.get_setting(ui.get(f, "../../..").name)
+                ctrl := &setting.control
+                _, slider_data := ui.actor_slider(f)
+                value := ctrl.float_min + (f32(slider_data.idx) * ctrl.float_step)
+                text := fmt.tprintf(ctrl.display_format, value)
+                ui.set_text(ui.get(f, "../../value"), text)
+            },
+        )
+    case:
+        fmt.panicf("\"%s\" (appearance: \"%v\") is not a slider or implementation is missing", setting.id, ctrl.appearance)
     }
 }

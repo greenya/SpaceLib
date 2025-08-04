@@ -58,12 +58,26 @@
     {
         "id": "mouse_camera_sensitivity",
         "title": "MOUSE CAMERA SENSITIVITY",
-        "desc": "Adjust the sensitivity of how quickly the Character Camera moves."
+        "desc": "Adjust the sensitivity of how quickly the Character Camera moves.",
+        "control": {
+            "float_min": 0.01,
+            "float_max": 9.99,
+            "float_step": 0.01,
+            "float_default": 1.0,
+            "display_format": "%.2f"
+        }
     },
     {
         "id": "mouse_aiming_sensitivity",
         "title": "MOUSE AIMING SENSITIVITY",
-        "desc": "Adjust the sensitivity of how quickly the Character Camera moves while aiming down sight."
+        "desc": "Adjust the sensitivity of how quickly the Character Camera moves while aiming down sight.",
+        "control": {
+            "float_min": 0.01,
+            "float_max": 9.99,
+            "float_step": 0.01,
+            "float_default": 1.0,
+            "display_format": "%.2f"
+        }
     },
     {
         "id": "show_helmet",
@@ -168,10 +182,6 @@
             "appearance": "pins"
         }
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "display",
         "page_title": "DISPLAY"
@@ -179,17 +189,24 @@
     {
         "id": "gamma",
         "title": "GAMMA",
-        "desc": "Set the game screen's lightning and gamma based on your preferences."
+        "desc": "Set the game screen's lightning and gamma based on your preferences.",
+        "control": {
+            "float_min": 1.0,
+            "float_max": 3.0,
+            "float_step": 0.1,
+            "float_default": 2.2,
+            "display_format": "%.1f"
+        }
     },
     {
         "id": "field_of_view",
         "title": "FIELD OF VIEW",
         "desc": "Set the game's Field of View camera size. Higher settings will have a minor impact on the CPU and GPU.",
         "control": {
-            "appearance": "slider",
-            "min": 70,
-            "max": 110,
-            "default_val": 90
+            "int_min": 70,
+            "int_max": 110,
+            "int_default": 90,
+            "display_format": "%i"
         }
     },
     {
@@ -315,10 +332,6 @@
             "titles": [ "OFF", "ON" ]
         }
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "graphics",
         "page_title": "GRAPHICS"
@@ -583,10 +596,6 @@
             "default_idx": 1
         }
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "audio",
         "page_title": "AUDIO"
@@ -611,32 +620,68 @@
             "Set the maximum volume of the game's audio.",
             "",
             "This setting determines the maximum volume of all other audio volume settings."
-        ]
+        ],
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "music_volume_in_game",
         "title": "MUSIC VOLUME IN GAME",
-        "desc": "Set the maximum volume of the game's soundtrack."
+        "desc": "Set the maximum volume of the game's soundtrack.",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "sound_effects_volume",
         "title": "SOUND EFFECTS VOLUME",
-        "desc": "Set the maximum volume of the game's sound effects."
+        "desc": "Set the maximum volume of the game's sound effects.",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "cutscenes_volume",
         "title": "CUTSCENES VOLUME",
-        "desc": "Set the maximum volume of the game's cutscenes."
+        "desc": "Set the maximum volume of the game's cutscenes.",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "dialog_volume",
         "title": "DIALOG VOLUME",
-        "desc": "Set the maximum volume of the NPC dialogues."
+        "desc": "Set the maximum volume of the NPC dialogues.",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "radio_volume",
         "title": "RADIO VOLUME",
-        "desc": "Set the volume for the Radio."
+        "desc": "Set the volume for the Radio.",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "group_id": "voice_chat",
@@ -645,11 +690,21 @@
     {
         "id": "enable_voice_chat",
         "title": "ENABLE VOICE CHAT",
-        "desc": "Enable or disable the incoming voice chat."
+        "desc": "Enable or disable the incoming voice chat.",
+        "control": {
+            "names": [ "off", "on" ],
+            "titles": [ "OFF", "ON" ]
+        }
     },
     {
         "id": "voice_chat_volume",
-        "title": "VOICE CHAT VOLUME"
+        "title": "VOICE CHAT VOLUME",
+        "control": {
+            "int_min": 0,
+            "int_max": 100,
+            "int_default": 100,
+            "display_format": "%i%%"
+        }
     },
     {
         "id": "voice_activation_mode",
@@ -690,26 +745,14 @@
             "appearance": "dropdown"
         }
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "controls",
         "page_title": "CONTROLS"
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "keybinds",
         "page_title": "KEYBINDS"
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "accessibility",
         "page_title": "ACCESSIBILITY"
@@ -767,10 +810,6 @@
             "default_idx": 1
         }
     },
-
-// ============================================================================
-// ============================================================================
-
     {
         "page_id": "account",
         "page_title": "ACCOUNT"

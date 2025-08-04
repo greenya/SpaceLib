@@ -38,8 +38,6 @@ TODO: terse: add support for "image" command
 
 TODO: terse: investigate if text measuring of a word can be improved (performance wise) by caching font+text keys, so next time we measure same text with same font, we immediately know the size (Vec2)
 
-TODO: ui: add slider support // maybe Actor_Slider_Thumb with { min=0, max=5, current=3 }
-
 TODO: ui: Grid: support other directions
 
 TODO: ui: support multiple callbacks for some events

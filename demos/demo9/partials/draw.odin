@@ -431,6 +431,23 @@ draw_slider_track :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 }
 
+draw_slider_track_with_marks :: proc (f: ^ui.Frame) {
+    draw_slider_track(f)
+
+    assert(len(f.children) == 1)
+    _, data := ui.actor_slider(f.children[0])
+    mark_gap := f.rect.w / f32(data.total-1)
+    mark_pos := Vec2 { f.rect.x, f.rect.y+f.rect.h/2 }
+    mark_color := colors.get(.primary, brightness=-.4)
+    for i in 0..<data.total {
+        if i != data.idx {
+            mark_rect := core.rect_from_center(mark_pos, 16)
+            draw_sprite("nearby", mark_rect, tint=mark_color)
+        }
+        mark_pos.x += mark_gap
+    }
+}
+
 draw_slider_thumb :: proc (f: ^ui.Frame) {
     sp_color := colors.get(.accent, brightness=f.entered ? .3 : 0)
     draw_sprite("nearby", f.rect, tint=sp_color)

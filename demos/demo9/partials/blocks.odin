@@ -1,7 +1,5 @@
 package partials
 
-import "core:fmt"
-
 import "spacelib:ui"
 
 import "../events"
@@ -156,24 +154,21 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, cur
     ui.click(pins.children[current_idx])
 }
 
-add_control_slider :: proc (parent: ^ui.Frame, minimum, maximum, current: int) {
-    assert(current >= minimum && current <= maximum)
-    assert(minimum < maximum)
-
-    fmt.println("slider", minimum, maximum, current)
+add_control_slider :: proc (parent: ^ui.Frame, total, idx: int, thumb_click: ui.Frame_Proc) {
+    assert(total > 1 && idx >= 0 && idx < total)
 
     ui.add_frame(parent,
-        { name="value", flags={.terse,.terse_height}, text="VALUE", text_format="<wrap,bottom,font=text_4l,color=primary_d2>%s" },
+        { name="value", flags={.terse,.terse_height}, text="???", text_format="<wrap,bottom,font=text_4l,color=primary_d2>%s" },
         { point=.top_left },
         { point=.bottom_right, rel_point=.right },
     )
 
     track := ui.add_frame(parent, {
         name = "track",
-        size = {164,4},
-        draw = draw_slider_track,
+        size = {166,4},
+        draw = total <= 6 ? draw_slider_track_with_marks : draw_slider_track,
     },
-        { point=.top, rel_point=.center, offset={0,8} },
+        { point=.top, rel_point=.center, offset={0,10} },
     )
 
     thumb := ui.add_frame(track, {
@@ -181,6 +176,7 @@ add_control_slider :: proc (parent: ^ui.Frame, minimum, maximum, current: int) {
         flags   = {.capture},
         size    = 24,
         draw    = draw_slider_thumb,
+        click   = thumb_click,
     },
         { point=.center, rel_point=.left },
     )
@@ -191,11 +187,7 @@ add_control_slider :: proc (parent: ^ui.Frame, minimum, maximum, current: int) {
     prev := add_button_small_icon(parent, name="prev", icon="arrow_back", size=24)
     ui.set_anchors(prev, { point=.right, rel_point=.left, rel_frame=track, offset={-16,0} })
 
-    ui.setup_slider_actors({ len=5 }, thumb, next, prev)
-    thumb.click = proc (f: ^ui.Frame) {
-        data := ui.actor_slider_data(f)
-        fmt.println(data)
-    }
+    ui.setup_slider_actors({ total=total, idx=idx }, thumb, next, prev)
 }
 
 Category_Tab_Details :: struct {
