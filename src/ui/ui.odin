@@ -171,7 +171,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
         keep_capture := ui.captured.frame != nil
 
         #reverse for f in ui.mouse_frames {
-            if passed(f) do continue
+            if passing(f) do continue
             if keep_capture && ui.captured.frame != nil && ui.captured.frame != f do continue
 
             mouse_input_consumed = true
@@ -202,6 +202,11 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
 
                 f.captured = true
 
+                // keep entered state for all parents of the captured frame until uncaptured
+                if f.parent != nil do for i:=f.parent; i!=nil; i=i.parent {
+                    if i.entered_prev do i.entered = true
+                }
+
                 switch {
                 case lmb_pressed:
                     assert(d^ == {})
@@ -230,7 +235,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
         }
 
         if mouse.wheel_dy != 0 do #reverse for f in ui.mouse_frames {
-            if passed(f) do continue
+            if passing(f) do continue
             consumed := wheel(f, mouse.wheel_dy)
             if consumed do break
         }

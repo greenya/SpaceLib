@@ -655,7 +655,7 @@ disabled :: #force_inline proc (f: ^Frame) -> bool {
     return false
 }
 
-passed :: #force_inline proc (f: ^Frame) -> bool {
+passing :: #force_inline proc (f: ^Frame) -> bool {
     if .pass_self in f.flags do return true
     for i:=f; i!=nil; i=i.parent do if .pass in i.flags do return true
     return false
