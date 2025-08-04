@@ -18,18 +18,21 @@ Setting :: struct {
     title   : string,
     desc    : Text,
     control : struct {
-        names       : [] string,
-        titles      : [] string,
-        default_idx : int,
-        // min     : int,
-        // max     : int,
-        appearance  : enum {
+        appearance: enum {
             auto,
             button_group,
             pins,
             dropdown,
-            // slider,
+            slider,
         },
+        // for .button_group, .pins, .dropdown
+        names       : [] string,
+        titles      : [] string,
+        default_idx : int,
+        // for .slider
+        min         : int,
+        max         : int,
+        default_val : int,
     },
 }
 

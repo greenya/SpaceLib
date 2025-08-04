@@ -207,6 +207,7 @@ Frame :: struct {
     opacity: f32,
 
     // Actor state.
+    // More details in `setup_xxx_actors()` procedures.
     actor: Actor,
 
     rect_status: enum {

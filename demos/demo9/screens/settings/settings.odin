@@ -105,7 +105,8 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Setting) {
     case .auto          : // skip (no control)
     case .button_group  : partials.add_control_radio_button_group(parent, ic.names, ic.titles, ic.default_idx)
     case .pins          : partials.add_control_radio_pins(parent, ic.names, ic.titles, ic.default_idx)
-    case .dropdown      : partials.add_control_radio_dropdown(parent, ic.names, ic.titles, ic.default_idx)
+    case .dropdown      : partials.add_control_dropdown(parent, ic.names, ic.titles, ic.default_idx)
+    case .slider        : partials.add_control_slider(parent, ic.min, ic.max, ic.default_val)
     }
 }
 

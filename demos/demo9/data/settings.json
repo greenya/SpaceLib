@@ -184,7 +184,13 @@
     {
         "id": "field_of_view",
         "title": "FIELD OF VIEW",
-        "desc": "Set the game's Field of View camera size. Higher settings will have a minor impact on the CPU and GPU."
+        "desc": "Set the game's Field of View camera size. Higher settings will have a minor impact on the CPU and GPU.",
+        "control": {
+            "appearance": "slider",
+            "min": 70,
+            "max": 110,
+            "default_val": 90
+        }
     },
     {
         "id": "motion_blur",

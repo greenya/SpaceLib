@@ -425,3 +425,13 @@ draw_info_panel_rect :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, {0,0,0,50})
     draw.rect(core.rect_inflated(f.rect, -6), {0,0,0,120})
 }
+
+draw_slider_track :: proc (f: ^ui.Frame) {
+    bg_color := colors.get(.primary, alpha=.2)
+    draw.rect(f.rect, bg_color)
+}
+
+draw_slider_thumb :: proc (f: ^ui.Frame) {
+    sp_color := colors.get(.accent, brightness=f.entered ? .3 : 0)
+    draw_sprite("nearby", f.rect, tint=sp_color)
+}

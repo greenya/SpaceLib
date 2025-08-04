@@ -1,5 +1,7 @@
 package partials
 
+import "core:fmt"
+
 import "spacelib:ui"
 
 import "../events"
@@ -11,6 +13,15 @@ add_button :: proc (parent: ^ui.Frame, name, text: string, flags: bit_set [ui.Fl
         text_format = "<pad=12:6,font=text_4l,color=primary>%s",
         flags       = flags | {.capture,.terse,.terse_size},
         draw        = draw_button,
+    })
+}
+
+add_button_small_icon :: proc (parent: ^ui.Frame, name, icon: string, size: f32) -> ^ui.Frame {
+    return ui.add_frame(parent, {
+        name    = name,
+        text    = icon,
+        size    = size,
+        draw    = draw_button_small_icon,
     })
 }
 
@@ -46,12 +57,40 @@ add_scrollbar :: proc (target: ^ui.Frame) -> (track, thumb: ^ui.Frame) {
     return
 }
 
-add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] string, default_idx := 0) {
+add_control_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string, current_idx := 0) {
     assert(len(names) > 0 )
-    assert(len(names) > default_idx)
+    assert(len(names) > current_idx)
     assert(len(names) == len(titles))
 
-    parent.layout = ui.Flow { dir=.right_center, size={120,40}, align=.center }
+    arrow_w :: 20
+
+    button := ui.add_frame(parent, {
+        name    = "button",
+        flags   = {.check},
+        draw    = draw_button_dropdown_button,
+        click   = proc (f: ^ui.Frame) {
+            if f.selected   do events.open_dropdown({ target=f })
+            else            do events.close_dropdown({ target=f })
+        },
+    }, { point=.top_left, offset=20 }, { point=.bottom_right, offset=-20 })
+
+    selected := ui.add_frame(button, {
+        flags       = {.pass_self,.terse,.terse_height},
+        text_format = "<wrap,left,font=text_4l,color=primary_d2>%s",
+    }, { point=.left, offset={15,0} }, { point=.right, offset={-20-arrow_w,0} })
+
+    ui.set_name(selected, names[current_idx])
+    ui.set_text(selected, titles[current_idx])
+
+    events.set_dropdown_data({ target=button, selected=selected, names=names, titles=titles })
+}
+
+add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] string, current_idx := 0) {
+    assert(len(names) > 0 )
+    assert(len(names) > current_idx)
+    assert(len(names) == len(titles))
+
+    parent.layout = ui.Flow { dir=.right_center, size={124,40}, align=.center }
 
     for name, i in names {
         ui.add_frame(parent, {
@@ -62,12 +101,12 @@ add_control_radio_button_group :: proc (parent: ^ui.Frame, names, titles: [] str
         })
     }
 
-    ui.click(parent.children[default_idx])
+    ui.click(parent.children[current_idx])
 }
 
-add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, default_idx := 0) {
+add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, current_idx := 0) {
     assert(len(names) > 0 )
-    assert(len(names) > default_idx)
+    assert(len(names) > current_idx)
     assert(len(names) == len(titles))
 
     ui.add_frame(parent,
@@ -102,51 +141,61 @@ add_control_radio_pins :: proc (parent: ^ui.Frame, names, titles: [] string, def
 
     nav_offset_y :: pin_pad + pin_h/2
 
-    ui.add_frame(parent, {
-        name    = "nav_next",
-        text    = "arrow_forward",
-        size    = 24,
-        draw    = draw_button_radio_pin_nav,
-        click   = proc (f: ^ui.Frame) { ui.select_next_child(ui.get(f.parent, "pins")) },
-    }, { point=.right, rel_point=.right, offset={-20,nav_offset_y} })
+    next := add_button_small_icon(parent, name="next", icon="arrow_forward", size=24)
+    ui.set_anchors(next, { point=.right, rel_point=.right, offset={-20,nav_offset_y} })
+    next.click = proc (f: ^ui.Frame) {
+        ui.select_next_child(ui.get(f.parent, "pins"))
+    }
 
-    ui.add_frame(parent, {
-        name    = "nav_prev",
-        text    = "arrow_back",
-        size    = 24,
-        draw    = draw_button_radio_pin_nav,
-        click   = proc (f: ^ui.Frame) { ui.select_prev_child(ui.get(f.parent, "pins")) },
-    }, { point=.left, rel_point=.left, offset={20,nav_offset_y} })
+    prev := add_button_small_icon(parent, name="prev", icon="arrow_back", size=24)
+    ui.set_anchors(prev, { point=.left, rel_point=.left, offset={20,nav_offset_y} })
+    prev.click = proc (f: ^ui.Frame) {
+        ui.select_prev_child(ui.get(f.parent, "pins"))
+    }
 
-    ui.click(pins.children[default_idx])
+    ui.click(pins.children[current_idx])
 }
 
-add_control_radio_dropdown :: proc (parent: ^ui.Frame, names, titles: [] string, default_idx := 0) {
-    assert(len(names) > 0 )
-    assert(len(names) > default_idx)
-    assert(len(names) == len(titles))
+add_control_slider :: proc (parent: ^ui.Frame, minimum, maximum, current: int) {
+    assert(current >= minimum && current <= maximum)
+    assert(minimum < maximum)
 
-    arrow_w :: 20
+    fmt.println("slider", minimum, maximum, current)
 
-    button := ui.add_frame(parent, {
-        name    = "button",
-        flags   = {.check},
-        draw    = draw_button_dropdown_button,
-        click   = proc (f: ^ui.Frame) {
-            if f.selected   do events.open_dropdown({ target=f })
-            else            do events.close_dropdown({ target=f })
-        },
-    }, { point=.top_left, offset=20 }, { point=.bottom_right, offset=-20 })
+    ui.add_frame(parent,
+        { name="value", flags={.terse,.terse_height}, text="VALUE", text_format="<wrap,bottom,font=text_4l,color=primary_d2>%s" },
+        { point=.top_left },
+        { point=.bottom_right, rel_point=.right },
+    )
 
-    selected := ui.add_frame(button, {
-        flags       = {.pass_self,.terse,.terse_height},
-        text_format = "<wrap,left,font=text_4l,color=primary_d2>%s",
-    }, { point=.left, offset={15,0} }, { point=.right, offset={-20-arrow_w,0} })
+    track := ui.add_frame(parent, {
+        name = "track",
+        size = {164,4},
+        draw = draw_slider_track,
+    },
+        { point=.top, rel_point=.center, offset={0,8} },
+    )
 
-    ui.set_name(selected, names[default_idx])
-    ui.set_text(selected, titles[default_idx])
+    thumb := ui.add_frame(track, {
+        name    = "thumb",
+        flags   = {.capture},
+        size    = 24,
+        draw    = draw_slider_thumb,
+    },
+        { point=.center, rel_point=.left },
+    )
 
-    events.set_dropdown_data({ target=button, selected=selected, names=names, titles=titles })
+    next := add_button_small_icon(parent, name="next", icon="arrow_forward", size=24)
+    ui.set_anchors(next, { point=.left, rel_point=.right, rel_frame=track, offset={16,0} })
+
+    prev := add_button_small_icon(parent, name="prev", icon="arrow_back", size=24)
+    ui.set_anchors(prev, { point=.right, rel_point=.left, rel_frame=track, offset={-16,0} })
+
+    ui.setup_slider_actors({ len=5 }, thumb, next, prev)
+    thumb.click = proc (f: ^ui.Frame) {
+        data := ui.actor_slider_data(f)
+        fmt.println(data)
+    }
 }
 
 Category_Tab_Details :: struct {

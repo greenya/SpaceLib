@@ -95,8 +95,10 @@ draw_button_radio_pin :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 1, br_color)
 }
 
-draw_button_radio_pin_nav :: proc (f: ^ui.Frame) {
-    tx_color := colors.get(.primary, brightness=f.entered ? .3 : -.3)
+draw_button_small_icon :: proc (f: ^ui.Frame) {
+    tx_color := .disabled in f.flags\
+        ? colors.get(.primary, brightness=-.3, alpha=.3)\
+        : colors.get(.primary, brightness=f.entered ? .3 : -.3)
     draw_sprite(f.text, f.rect, tint=tx_color)
 }
 
