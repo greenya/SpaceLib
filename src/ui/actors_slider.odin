@@ -10,7 +10,7 @@ Actor_Slider_Data :: struct {
     // Direction:
     // - `false` -- horizontally from left to right: `0 >>> total-1`
     // - `true` -- vertically from bottom to top: `0 ^^^ total-1`
-    is_vertical: bool,
+    vertical: bool,
 }
 
 Actor_Slider_Thumb  :: struct { using data: Actor_Slider_Data, next, prev: ^Frame }
@@ -53,7 +53,7 @@ set_actor_slider_idx :: proc (f: ^Frame, new_idx: int) {
     data.idx = clamp(new_idx, 0, data.total-1)
     idx_ratio := f32(data.idx) / f32(data.total-1)
 
-    if data.is_vertical {
+    if data.vertical {
         track_space := thumb.parent.rect.h
         thumb.anchors[0].offset.y = track_space * (1-idx_ratio)
     } else {
@@ -82,7 +82,7 @@ drag_actor_slider_thumb :: proc (f: ^Frame, info: Drag_Info) {
     idx_ratio: f32
 
     mouse_pos := f.ui.mouse.pos
-    if data.is_vertical {
+    if data.vertical {
         track_space := track_rect.h
         point_space := track_space / f32(data.total-1)
         idx_ratio = 1 - core.clamp_ratio(mouse_pos.y-point_space/2, track_rect.y, track_rect.y+track_space)

@@ -672,7 +672,7 @@ find :: proc (parent: ^Frame, path: string) -> ^Frame {
 
 get :: proc (parent: ^Frame, path: string) -> ^Frame {
     target := find(parent, path)
-    fmt.ensuref(target != nil, "Path \"%s\" not found, use find() in case its expected", path)
+    fmt.ensuref(target != nil, "Path \"%s\" not found, use find() in case it is expected", path)
     return target
 }
 
