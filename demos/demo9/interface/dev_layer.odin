@@ -9,6 +9,7 @@ import "spacelib:core"
 import "spacelib:ui"
 import "spacelib:raylib/draw"
 
+import "../colors"
 import "../fonts"
 import "../partials"
 import "../sprites"
@@ -36,6 +37,9 @@ dev: struct {
 
     ui_stats_buffer     : [200] ui.Stats,
     ui_stats_buffer_idx : int,
+
+    color_list  : ^ui.Frame,
+    color_ed    : ^ui.Frame,
 }
 
 Dev_Window_Mode :: enum { invisible, visible, aside }
@@ -60,15 +64,17 @@ add_dev_layer :: proc (order: int) {
     add_dev_window()
     add_dev_stat_perf()
     add_dev_stat_clock()
+    add_dev_stat_colors()
     add_dev_stat_fonts()
     add_dev_stat_texture_atlas()
 
-    // add order so removing dev.monitor and adding it back will place it correctly
+    // add order to every child in dev.content flow so removing dev.monitor and adding it back
+    // will place it at the same spot
     for child, i in dev.content.children do child.order = i
 
     add_dev_split_mode_layer()
 
-    // name root frame debug display
+    // name root frame for debug display
     ui.set_name(ui_.root, "root")
 }
 
@@ -128,7 +134,7 @@ add_dev_window :: proc () {
     dev.content = ui.add_frame(dev.window, {
         name="content",
         flags={.scissor},
-        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={10,10,0,0}, gap=10 },
+        layout=ui.Flow{ dir=.down, scroll={step=20}, pad={10,10,0,10}, gap=10 },
     },
         { point=.top_left, rel_point=.bottom_left, rel_frame=header },
         { point=.bottom_right },
@@ -318,17 +324,141 @@ add_dev_stat_clock :: proc () {
     })
 }
 
+color_slider_thumb_size :: Vec2 { 60, 25 }
+
+add_dev_stat_colors :: proc () {
+    add_dev_stat_header(dev.content, "Colors")
+
+    dev.color_list = add_dev_stat_list_grid(dev.content, cell_size={120,30})
+    for id in colors.ID {
+        text := fmt.tprint(id)
+        button := add_dev_stat_button(dev.color_list, text, click=proc (f: ^ui.Frame) {
+            color := colors.get_by_name(f.name)
+
+            red_thumb, _ := ui.actor_slider(ui.get(dev.color_ed, "red/thumb"))
+            ui.set_actor_slider_idx(red_thumb, int(color.r), trigger_thumb_click=false)
+
+            green_thumb, _ := ui.actor_slider(ui.get(dev.color_ed, "green/thumb"))
+            ui.set_actor_slider_idx(green_thumb, int(color.g), trigger_thumb_click=false)
+
+            blue_thumb, _ := ui.actor_slider(ui.get(dev.color_ed, "blue/thumb"))
+            ui.set_actor_slider_idx(blue_thumb, int(color.b))
+        })
+        button.flags += {.radio}
+        ui.set_name(button, text)
+    }
+
+    dev.color_ed = ui.add_frame(dev.content, { name="color_ed", size={0,100} })
+    preview := ui.add_frame(dev.color_ed, {
+        name="preview",
+        size_aspect=1,
+        draw=proc (f: ^ui.Frame) {
+            draw.rect(f.rect, current_color())
+        },
+    },
+        { point=.top_left },
+        { point=.bottom_left },
+    )
+
+    thumb_size :: color_slider_thumb_size
+    line_step_y :: thumb_size.y + 4
+
+    red := add_dev_stat_color_component_slider(dev.color_ed, "red", "#f64", proc (f: ^ui.Frame) { update_color() })
+    ui.set_anchors(red,
+        { point=.left, rel_point=.right, rel_frame=preview, offset={10,-line_step_y} },
+        { point=.right, rel_point=.right, offset={0,-line_step_y} },
+    )
+
+    green := add_dev_stat_color_component_slider(dev.color_ed, "green", "#4f6", proc (f: ^ui.Frame) { update_color() })
+    ui.set_anchors(green,
+        { point=.left, rel_point=.right, rel_frame=preview, offset={10,0} },
+        { point=.right, rel_point=.right },
+    )
+
+    blue := add_dev_stat_color_component_slider(dev.color_ed, "blue", "#68f", proc (f: ^ui.Frame) { update_color() })
+    ui.set_anchors(blue,
+        { point=.left, rel_point=.right, rel_frame=preview, offset={10,line_step_y} },
+        { point=.right, rel_point=.right, offset={0,line_step_y} },
+    )
+
+    ui.click(dev.color_list, "primary")
+
+    current_color :: proc () -> core.Color {
+        _, r := ui.actor_slider(ui.get(dev.color_ed, "red/thumb"))
+        _, g := ui.actor_slider(ui.get(dev.color_ed, "green/thumb"))
+        _, b := ui.actor_slider(ui.get(dev.color_ed, "blue/thumb"))
+        return { u8(r.idx), u8(g.idx), u8(b.idx), 255 }
+    }
+
+    update_color :: proc () {
+        button := ui.first_selected_child(dev.color_list)
+        if button == nil do return
+
+        name := button.name
+        new_color := current_color()
+        old_color := colors.get_by_name(name)
+        if new_color != old_color {
+            colors.set_by_name(name, new_color)
+            ui.reset_terse(ui_)
+            ui.update(ui_.root)
+        }
+    }
+}
+
+add_dev_stat_color_component_slider :: proc (parent: ^ui.Frame, name, text: string, thumb_click: ui.Frame_Proc) -> ^ui.Frame {
+    thumb_size :: color_slider_thumb_size
+
+    track := ui.add_frame(dev.color_ed, {
+        name=name,
+        text=text,
+        size={0,25},
+        draw=proc (f: ^ui.Frame) {
+            draw.rect(f.rect, core.gray3)
+
+            _, data := ui.actor_slider(f.children[0])
+            color := core.color_from_hex(f.text)
+            color = core.brightness(color, -.4)
+            scale_x := f32(data.idx) / f32(data.total-1)
+            draw.rect(core.rect_scaled_top_left(f.rect, {scale_x,1}), color)
+        },
+    })
+
+    thumb := ui.add_frame(track, {
+        name="thumb",
+        flags={.capture},
+        size=thumb_size,
+        click=thumb_click,
+        draw=proc (f: ^ui.Frame) {
+            bg_color := core.color_from_hex(f.parent.text)
+            draw.rect(f.rect, bg_color)
+
+            ln_color := core.brightness(bg_color, .3)
+            draw.rect_lines(f.rect, 1, ln_color)
+
+            _, data := ui.actor_slider(f)
+            text := fmt.tprintf("%i%%", int((100*f32(data.idx))/f32(data.total-1)))
+            draw.text_center(text, core.rect_center(f.rect), fonts.get(.default), core.gray1)
+        },
+    },
+        { point=.left, rel_point=.left },
+    )
+
+    ui.setup_slider_actors({ total=256 }, thumb)
+
+    return track
+}
+
 add_dev_stat_fonts :: proc () {
     add_dev_stat_header(dev.content, "Fonts")
 
     add_dev_stat_text(dev.content, "Scale:")
     list := add_dev_stat_list_grid(dev.content)
 
-                add_dev_stat_button(list, "x0.8", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(.8) })
-                add_dev_stat_button(list, "x0.9", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(.9) })
-    selected := add_dev_stat_button(list, "x1", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1) })
-                add_dev_stat_button(list, "x1.1", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1.1) })
-                add_dev_stat_button(list, "x1.2", click=proc (f: ^ui.Frame) { dev_set_fonts_scale(1.2) })
+                add_dev_stat_button(list, "x0.8", click=proc (f: ^ui.Frame) { scale_fonts(.8) })
+                add_dev_stat_button(list, "x0.9", click=proc (f: ^ui.Frame) { scale_fonts(.9) })
+    selected := add_dev_stat_button(list, "x1"  , click=proc (f: ^ui.Frame) { scale_fonts(1) })
+                add_dev_stat_button(list, "x1.1", click=proc (f: ^ui.Frame) { scale_fonts(1.1) })
+                add_dev_stat_button(list, "x1.2", click=proc (f: ^ui.Frame) { scale_fonts(1.2) })
 
     for child in list.children do child.flags += {.radio}
     selected.selected = true
@@ -338,6 +468,13 @@ add_dev_stat_fonts :: proc () {
             flags={.terse,.terse_height},
             text=fmt.tprintf("<left,wrap,color=#eee>%s<tab=120,font=%s>Hellope!", id, id),
         })
+    }
+
+    scale_fonts :: proc (scale: f32) {
+        fonts.destroy()
+        fonts.create(scale)
+        ui.reset_terse(ui_)
+        ui.update(ui_.root)
     }
 }
 
@@ -387,7 +524,7 @@ add_dev_stat_text :: proc (parent: ^ui.Frame, text: string) -> ^ui.Frame {
 add_dev_stat_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}) -> ^ui.Frame {
     return ui.add_frame(parent, {
         layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size={.height} },
-        draw=proc (f: ^ui.Frame) { draw.rect(core.rect_bar_center_horizontal(f.rect, 6), core.gray3) },
+        draw=proc (f: ^ui.Frame) { draw.rect_gradient_horizontal(f.rect, core.gray3, core.gray2) },
     })
 }
 
@@ -398,17 +535,10 @@ add_dev_stat_button :: proc (parent: ^ui.Frame, text: string, click: ui.Frame_Pr
         click=click,
         draw=proc (f: ^ui.Frame) {
             if f.selected                   do draw.rect(f.rect, core.gray7)
-            else          do if f.entered   do draw.rect(f.rect, core.gray3)
+            else          do if f.entered   do draw.rect(f.rect, core.gray4)
             partials.draw_terse(f, color=f.selected?core.gray1:core.gray7)
         },
     })
-}
-
-dev_set_fonts_scale :: proc (scale: f32) {
-    fonts.destroy()
-    fonts.create(scale)
-    ui.reset_terse(ui_)
-    ui.update(ui_.root)
 }
 
 dev_last_stats_buffer :: proc () -> ^ui.Stats {

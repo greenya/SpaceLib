@@ -103,6 +103,12 @@ set :: proc (id: ID, color: Color) {
     }
 }
 
+set_by_name :: proc (name: string, color: Color) {
+    id, ok := reflect.enum_from_name(ID, name)
+    assert(ok)
+    set(id, color)
+}
+
 @private
 set_color_var :: #force_inline proc (name: string, color: Color) {
     name := name
