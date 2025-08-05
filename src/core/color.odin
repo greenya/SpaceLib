@@ -71,18 +71,20 @@ color_from_hex :: proc (text: string) -> Color {
     }
 }
 
-// Returns: #rrggbbaa or #rrggbb (when alpha is 0xff)
+// Returns: #rrggbbaa or #rrggbb when alpha is 0xff
 color_to_hex :: proc (c: Color, allocator := context.allocator) -> string {
     if c.a != 0xff  do return fmt.aprintf("#%02x%02x%02x%02x", c.r, c.g, c.b, c.a, allocator=allocator)
     else            do return fmt.aprintf("#%02x%02x%02x", c.r, c.g, c.b, allocator=allocator)
 }
 
+// `ratio`: multiplier for current alpha, e.g. `0.0` (fully transparent) -> `1.0` (unchanged)
 alpha :: #force_inline proc (c: Color, ratio: f32) -> Color {
     c := c
     c.a = u8(f32(c.a)*ratio)
     return c
 }
 
+// `factor`: `-1.0` (black) -> `0.0` (unchanged) -> `+1.0` (white)
 brightness :: #force_inline proc (c: Color, factor: f32) -> Color {
     r, g, b := f32(c.r), f32(c.g), f32(c.b)
     if factor > 0 {
@@ -100,6 +102,21 @@ brightness :: #force_inline proc (c: Color, factor: f32) -> Color {
             u8(b*factor_plus_1),
             c.a,
         }
+    }
+}
+
+// `factor`: `-1.0` (grayscale) -> `0.0` (unchanged) -> `+1.0` (saturated)
+saturation :: #force_inline proc (c: Color, factor: f32) -> Color {
+    r, g, b := f32(c.r)/255, f32(c.g)/255, f32(c.b)/255
+    gray := 0.299*r + 0.587*g + 0.114*b // https://en.wikipedia.org/wiki/Luma_(video)
+    r += (r - gray) * factor
+    g += (g - gray) * factor
+    b += (b - gray) * factor
+    return Color {
+        u8(255 * clamp(r, 0, 1)),
+        u8(255 * clamp(g, 0, 1)),
+        u8(255 * clamp(b, 0, 1)),
+        c.a,
     }
 }
 
