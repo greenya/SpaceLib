@@ -100,11 +100,10 @@ TODO: [?] core: maybe consider changing Color to be 4 floats instead 4 bytes
 
     we are doing a lot of alpha and brightness tweaking and every time we convert 1-3 values to f32 and back to u8
 
-TODO: [?] ui: add support for cancelable animations, e.g. ui.cancel_animation(f), which should set ratio to -1, tick the animation and remove it
+TODO: [?] ui: slider actor: add track click handling
 
-TODO: [?] ui: add "wait=f32(0)" arg to ui.animate(),
-    add Frame.anim.state (enum: none, waiting, animating)
-    it should do: waiting (if wait>0) -> animating (for dt) -> ratio=0 -> ... ratio=1 -> none
+    maybe make it optional with some data.flag; clicking should set thumb to most close valid position;
+    [?] if added, i guess scrollbar also needs it [?]
 
 TODO: [?] ui: add support for automatic child frames generation for each text_terse.groups item
 
@@ -116,10 +115,6 @@ TODO: [?] ui: add support for automatic child frames generation for each text_te
 TODO: [?] ui: drag-n-drop frame info
 
     currently the dragged frame is always the one who has captured mouse; this means that no other frames receive any enter/leave events; now considered a scenario where we want to create an inventory with ability to drag-n-drop items. The item that got drag is fine, as it receives continuous drag callback; now, how can user get item below the dragged item, to highlight it or perform drop operation when drag is finished. at the moment, there is no other way (i don't see) as manually tinker with ui.mouse_frames list; but it would be nice to be able to express that some frame are drop targets;
-
-    ideas:
-    - add callback drop/drag_beat/drag_target/drop_target... something like that (?)
-    - so the frame can be notified about other's drag activity
 
     - maybe we should just extend Drag_Info, so it has current hovering frame, and the drag callback can decide what to do with it. This seems better and in one place (the dragged frame has all logic; again, the drag callback will be the same for all inventory slots in most cases, so no issues there).
 

@@ -8,7 +8,8 @@ Actor_Scrollbar_Next    :: struct { content: ^Frame }
 Actor_Scrollbar_Prev    :: struct { content: ^Frame }
 
 // Setup frames for acting as a scrollbar.
-// - `content` should be a scrollable frame; use `content.wheel` to track scroll value changes.
+// - `content` should be a scrollable frame.
+// - use `content.wheel` to track scroll value changes.
 // - `thumb` if used, should have `.capture` and be a child of a "track" frame, with single anchor,
 // its offset is used to position the `thumb`.
 // - `next` and `prev` if used, will act as clickable next/prev "arrows".
@@ -40,11 +41,11 @@ drag_actor_scrollbar_thumb :: proc (f: ^Frame, info: Drag_Info) {
 
     if is_layout_dir_vertical(actor.content) {
         space := track_rect.h - f.rect.h
-        ratio = core.clamp_ratio(mouse_pos.y-info.start_offset.y, track_rect.y, track_rect.y+track_rect.h-f.rect.h)
+        ratio = core.clamp_ratio(mouse_pos.y-info.start_offset.y, track_rect.y, track_rect.y+space)
         f.anchors[0].offset.y = space * ratio
     } else {
         space := track_rect.w - f.rect.w
-        ratio = core.clamp_ratio(mouse_pos.x-info.start_offset.x, track_rect.x, track_rect.x+track_rect.w-f.rect.w)
+        ratio = core.clamp_ratio(mouse_pos.x-info.start_offset.x, track_rect.x, track_rect.x+space)
         f.anchors[0].offset.x = space * ratio
     }
 

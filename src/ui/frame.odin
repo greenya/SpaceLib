@@ -841,5 +841,5 @@ update_rect :: proc (f: ^Frame) {
 
     if .terse in f.flags do update_terse(f)
 
-    if f.actor != nil do wheel_actor(f)
+    if f.actor != nil do update_actor(f)
 }

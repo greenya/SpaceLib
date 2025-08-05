@@ -12,6 +12,14 @@ Actor :: union {
 }
 
 @private
+update_actor :: proc (f: ^Frame) {
+    #partial switch _ in f.actor {
+    case Actor_Scrollbar_Content: wheel_actor_scrollbar_content(f)
+    case Actor_Slider_Thumb     : update_actor_slider(f)
+    }
+}
+
+@private
 click_actor :: proc (f: ^Frame) {
     #partial switch a in f.actor {
     case Actor_Scrollbar_Next: wheel(a.content, -1)
