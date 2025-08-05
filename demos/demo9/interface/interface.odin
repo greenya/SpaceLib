@@ -10,6 +10,8 @@ import "../colors"
 import "../fonts"
 import "../partials"
 
+import "dev"
+
 @private ui_: ^ui.UI
 
 get_ui :: #force_inline proc () -> ^ui.UI {
@@ -45,7 +47,7 @@ create :: proc () {
     add_dropdowns_layer(order=3)
     // add_tooltips_layer(order=4)
     // add_notifications_layer(order=9)
-    add_dev_layer(order=99)
+    dev.add_layer(ui_, order=99)
 }
 
 destroy :: proc () {
@@ -68,6 +70,5 @@ tick :: proc () {
 
 draw :: proc () {
     ui.draw(ui_)
-    dev_draw_ended()
-    dev_draw_frame_list_under_mouse()
+    dev.draw_ended()
 }
