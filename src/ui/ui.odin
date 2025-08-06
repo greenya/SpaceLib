@@ -104,6 +104,7 @@ Scissor_Set_Proc    :: proc (r: Rect)
 Scissor_Clear_Proc  :: proc ()
 
 create :: proc (
+    root_rect               : Rect = {},
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_query_font_proc   : terse.Query_Font_Proc = nil,
@@ -112,9 +113,11 @@ create :: proc (
     frame_overdraw_proc     : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)
-
     ui^ = {
-        root                    = add_frame(nil, { flags={.pass_self} }),
+        root = add_frame(nil, {
+            flags   = { .pass_self },
+            rect    = root_rect,
+        }),
 
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
@@ -124,9 +127,10 @@ create :: proc (
         frame_overdraw_proc     = frame_overdraw_proc,
     }
 
+    ui.root.ui = ui
+
     clock.init(&ui.clock)
 
-    ui.root.ui = ui
     return ui
 }
 
