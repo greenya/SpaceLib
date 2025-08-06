@@ -44,14 +44,18 @@ create :: proc (scale := f32(1)) {
     assert(names == nil)
     names = core.map_enum_names_to_values(ID)
 
+    kanit_light_data    := #load("Kanit-Light.ttf")
+    kanit_regular_data  := #load("Kanit-Regular.ttf")
+    kanit_medium_data   := #load("Kanit-Medium.ttf")
+
     assert(fonts == {})
     for id in ID do switch id {
     case .default: fonts[id] = create_font_from_default(scale=2)
-    case .text_4l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_4r: fonts[id] = create_font_from_data(#load("Kanit-Regular.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_4m: fonts[id] = create_font_from_data(#load("Kanit-Medium.ttf"), height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_6l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=46*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
-    case .text_8l: fonts[id] = create_font_from_data(#load("Kanit-Light.ttf"), height=82*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4l: fonts[id] = create_font_from_data(kanit_light_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4r: fonts[id] = create_font_from_data(kanit_regular_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_4m: fonts[id] = create_font_from_data(kanit_medium_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_6l: fonts[id] = create_font_from_data(kanit_light_data, height=46*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_8l: fonts[id] = create_font_from_data(kanit_light_data, height=82*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     }
 }
 
