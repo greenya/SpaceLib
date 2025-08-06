@@ -29,12 +29,6 @@ Epsilon<tab=200>5,000<tab=400>N/A
 <left>                      All leading spaces are trimmed.
 <tab=200>                   Use tab=X to move cursor to X. Wrapped lines will continue last tab X. This line uses "tab=200".
 
-<font=text_6l>Color, Alpha, Brightness</>
-
-<color=#f00>                We </,color=#0f0> can </,color=#00f> change </,color=#ff0> colors</>.
-<alpha=.5,color=#f00>       We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> alpha</,alpha=1>.
-<brightness=.5,color=#f00>  We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> brightness</,brightness=0>.
-
 <font=text_6l>Icons</>
 
 We can use icons inline, for example: <icon=contract> Contract Icon and <icon=settings> Settings Icon. Terse package doesn't draw anything, it only calculates rect for the icon, the drawing is done by user code after terse object is created. Default icon size is taken from the current font height and <font=text_6l><icon=mail> Mail Icon</> is automatically larger. We also can provide additional icon size multipliers, for example:
@@ -42,6 +36,34 @@ We can use icons inline, for example: <icon=contract> Contract Icon and <icon=se
 - <icon=mail:0.5> Mail Icon x0.5
 - <icon=mail:2:1> Mail Icon x2 by width only
 - <color=accent,icon=mail> Mail Icon</> colored with the text
+
+<font=text_6l>Named Colors with Alpha, Light, Dark levels</>
+
+<color=primary_a1>primary_a1</> <tab=150,color=primary_l9>primary_l9</> <tab=300,color=accent_l9>accent_l9</> <tab=450,color=accent_a1>accent_a1</>
+<color=primary_a2>primary_a2</> <tab=150,color=primary_l8>primary_l8</> <tab=300,color=accent_l8>accent_l8</> <tab=450,color=accent_a2>accent_a2</>
+<color=primary_a3>primary_a3</> <tab=150,color=primary_l7>primary_l7</> <tab=300,color=accent_l7>accent_l7</> <tab=450,color=accent_a3>accent_a3</>
+<color=primary_a4>primary_a4</> <tab=150,color=primary_l6>primary_l6</> <tab=300,color=accent_l6>accent_l6</> <tab=450,color=accent_a4>accent_a4</>
+<color=primary_a5>primary_a5</> <tab=150,color=primary_l5>primary_l5</> <tab=300,color=accent_l5>accent_l5</> <tab=450,color=accent_a5>accent_a5</>
+<color=primary_a6>primary_a6</> <tab=150,color=primary_l4>primary_l4</> <tab=300,color=accent_l4>accent_l4</> <tab=450,color=accent_a6>accent_a6</>
+<color=primary_a7>primary_a7</> <tab=150,color=primary_l3>primary_l3</> <tab=300,color=accent_l3>accent_l3</> <tab=450,color=accent_a7>accent_a7</>
+<color=primary_a8>primary_a8</> <tab=150,color=primary_l2>primary_l2</> <tab=300,color=accent_l2>accent_l2</> <tab=450,color=accent_a8>accent_a8</>
+<color=primary_a9>primary_a9</> <tab=150,color=primary_l1>primary_l1</> <tab=300,color=accent_l1>accent_l1</> <tab=450,color=accent_a9>accent_a9</>
+<font=text_4m>                  <tab=150,color=primary>primary</>       <tab=300,color=accent>accent</,/font>
+                                <tab=150,color=primary_d1>primary_d1</> <tab=300,color=accent_d1>accent_d1</>
+                                <tab=150,color=primary_d2>primary_d2</> <tab=300,color=accent_d2>accent_d2</>
+                                <tab=150,color=primary_d3>primary_d3</> <tab=300,color=accent_d3>accent_d3</>
+                                <tab=150,color=primary_d4>primary_d4</> <tab=300,color=accent_d4>accent_d4</>
+                                <tab=150,color=primary_d5>primary_d5</> <tab=300,color=accent_d5>accent_d5</>
+                                <tab=150,color=primary_d6>primary_d6</> <tab=300,color=accent_d6>accent_d6</>
+                                <tab=150,color=primary_d7>primary_d7</> <tab=300,color=accent_d7>accent_d7</>
+                                <tab=150,color=primary_d8>primary_d8</> <tab=300,color=accent_d8>accent_d8</>
+                                <tab=150,color=primary_d9>primary_d9</> <tab=300,color=accent_d9>accent_d9</>
+
+<font=text_6l>Direct Colors, Alpha, Brightness</>
+
+<color=#f00>                We </,color=#0f0> can </,color=#00f> change </,color=#ff0> colors</>.
+<alpha=.5,color=#f00>       We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> alpha</,alpha=1>.
+<brightness=.5,color=#f00>  We </,color=#0f0> can </,color=#00f> tweak </,color=#ff0> brightness</,brightness=0>.
 
 <font=text_6l>Line Gap</>
 
