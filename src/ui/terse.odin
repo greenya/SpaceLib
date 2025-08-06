@@ -1,33 +1,40 @@
 package spacelib_ui
 
-import "../core"
 import "../terse"
 
 @private
 update_terse :: proc (f: ^Frame) {
-    should_rebuild :=
-        f.terse == nil ||
-        (f.terse != nil && !core.rect_equal_approx(f.terse.rect_input, f.rect, e=.5))
-
-    if !should_rebuild do return
-
     assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
     assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
 
-    scroll_offset_delta: Vec2
+    action: enum { none, offset, rebuild }
+    offset: Vec2
+
+    tol :: .1
 
     if f.terse != nil {
-        rect_size_changed :=
-            abs(f.rect.w-f.terse.rect_input.w) > .1 ||
-            abs(f.rect.h-f.terse.rect_input.h) > .1
-        if !rect_size_changed {
-            scroll_offset_delta = { f.rect.x-f.terse.rect_input.x, f.rect.y-f.terse.rect_input.y }
+        tri := &f.terse.rect_input
+        size_equal := abs(f.rect.w-tri.w) < tol && abs(f.rect.h-tri.h) < tol
+        if size_equal {
+            offset = { f.rect.x-tri.x, f.rect.y-tri.y }
+            if abs(offset.x) > tol || abs(offset.y) > tol {
+                action = .offset
+            }
+        } else {
+            action = .rebuild
         }
+    } else {
+        action = .rebuild
     }
 
-    if !core.vec_zero_approx(scroll_offset_delta, e=.5) {
-        terse.apply_offset(f.terse, scroll_offset_delta)
-    } else {
+    switch action {
+    case .none:
+        return
+
+    case .offset:
+        terse.apply_offset(f.terse, offset)
+
+    case .rebuild:
         terse.destroy(f.terse)
         f.terse = terse.create(
             f.text,
@@ -35,15 +42,16 @@ update_terse :: proc (f: ^Frame) {
             f.ui.terse_query_font_proc,
             f.ui.terse_query_color_proc,
         )
+
         if .terse_shrink in f.flags do terse.shrink_terse(f.terse)
-    }
 
-    if f.flags & {.terse_size,.terse_width} != {} {
-        f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w
-    }
+        if f.flags & {.terse_size,.terse_width} != {} {
+            f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w
+        }
 
-    if f.flags & {.terse_size,.terse_height} != {} {
-        f.size.y = f.size_min.y>0 ? max(f.size_min.y, f.terse.rect.h) : f.terse.rect.h
+        if f.flags & {.terse_size,.terse_height} != {} {
+            f.size.y = f.size_min.y>0 ? max(f.size_min.y, f.terse.rect.h) : f.terse.rect.h
+        }
     }
 }
 
