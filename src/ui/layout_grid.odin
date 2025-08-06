@@ -71,6 +71,11 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         if size == {} {
             size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
             size.y = size.x / aspect
+        } else {
+            switch grid.dir {
+            case .right_down, .left_down:
+                if size.x == 0 do size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
+            }
         }
     case wrap == 0:
         switch {
