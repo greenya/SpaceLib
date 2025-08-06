@@ -319,6 +319,9 @@ add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> 
         set_text_format(f, text_format)
     }
 
+    f.rect_status = .update_needed
+    update_rect(f)
+
     return f
 }
 
