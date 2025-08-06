@@ -11,6 +11,7 @@ import "spacelib:ui"
 import "spacelib:raylib/draw"
 
 import "../../colors"
+import "../../events"
 import "../../fonts"
 import "../../partials"
 import "../../sprites"
@@ -40,6 +41,8 @@ dev: struct {
 
     game_window         : ^ui.Frame,
     game_window_content : ^ui.Frame,
+
+    skip_curtain_anim: bool,
 }
 
 dev_window_min_size :: [2] f32 { 380, 230 }
@@ -67,13 +70,13 @@ add_dev_layer :: proc (order: int) {
 }
 
 add_dev_game_window :: proc () {
-    dev.game_window = add_window("Game UI", empty_background=true)
+    dev.game_window = add_window("game", "Game UI", empty_background=true)
     dev.game_window.rect = {20,20,800,600}
     dev.game_window_content = ui.get(dev.game_window, "content")
 }
 
 add_dev_window :: proc () {
-    dev.window = add_window("Tools")
+    dev.window = add_window("tools", "Tools")
 
     header := ui.get(dev.window, "header")
 
@@ -107,6 +110,7 @@ add_dev_window :: proc () {
     track.anchors[1].offset = 0
 
     add_dev_stat_perf()
+    add_dev_stat_frames()
     add_dev_stat_clock()
     add_dev_stat_colors()
     add_dev_stat_fonts()
@@ -136,26 +140,6 @@ add_dev_stat_perf :: proc () {
         add_text(dev.window_content, "Borderless")
         list := add_list_grid(dev.window_content, {100,30})
         add_button(list, "Toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
-    }
-
-    {
-        label := add_text(dev.window_content, "")
-        ui.set_text_format(label, "<left,wrap,color=#eee>Drawn: %i of %i\nMouse cursor frame stack")
-        label.tick = proc (f: ^ui.Frame) {
-            stats := last_stats_buffer()
-            ui.set_text(f, stats.frames_drawn, stats.frames_total)
-        }
-
-        list := add_list_grid(dev.window_content, {100,30})
-        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { dev.frames_under_mouse_drawing ~= true })
-        toggle.flags += {.check}
-    }
-
-    {
-        add_text(dev.window_content, "Game UI to Window")
-        list := add_list_grid(dev.window_content, {100,30})
-        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { toggle_game_window() })
-        toggle.flags += {.check}
     }
 }
 
@@ -257,6 +241,71 @@ add_dev_stat_perf_monitor :: proc () {
         cursor.y -= 20
         tick_time_text := fmt.tprintf("tick: %v", stats.tick_time)
         draw.text(tick_time_text, cursor, fonts.get(.default), core.magenta)
+    }
+}
+
+add_dev_stat_frames :: proc () {
+    add_header(dev.window_content, "Frames")
+
+    {
+        label := add_text(dev.window_content, "")
+        ui.set_text_format(label, "<left,wrap,color=#eee>Drawn: %i of %i\nMouse cursor frame stack")
+        label.tick = proc (f: ^ui.Frame) {
+            stats := last_stats_buffer()
+            ui.set_text(f, stats.frames_drawn, stats.frames_total)
+        }
+
+        list := add_list_grid(dev.window_content, {100,30})
+        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { dev.frames_under_mouse_drawing ~= true })
+        toggle.flags += {.check}
+    }
+
+    {
+        add_text(dev.window_content, "Game UI to Window")
+        list := add_list_grid(dev.window_content, {100,30})
+        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { toggle_game_window() })
+        toggle.flags += {.check}
+    }
+
+    {
+        add_text(dev.window_content, "Open Game Screen/Tab")
+        list := add_list_grid(dev.window_content, {0,30}, wrap=1)
+
+        toggle := add_button(list, "[ Skip Curtain Animation ]", click=proc (f: ^ui.Frame) { dev.skip_curtain_anim ~= true })
+        toggle.flags += {.check}
+
+        for i in ([] struct { text: string, click: ui.Frame_Proc } {
+            { text="Open Home"              , click=proc (f: ^ui.Frame) { open("home") } },
+            { text="Open Player"            , click=proc (f: ^ui.Frame) { open("player") } },
+            { text="Open Player/Map"        , click=proc (f: ^ui.Frame) { open("player", "map") } },
+            { text="Open Player/Journey"    , click=proc (f: ^ui.Frame) { open("player", "journey") } },
+            { text="Open Settings"          , click=proc (f: ^ui.Frame) { open("settings") } },
+            { text="Open Settings/Display"  , click=proc (f: ^ui.Frame) { open("settings", "display") } },
+            { text="Open Settings/Graphics" , click=proc (f: ^ui.Frame) { open("settings", "graphics") } },
+            { text="Open Credits"           , click=proc (f: ^ui.Frame) { open("credits") } },
+        }) {
+            add_button(list, i.text, click=i.click)
+        }
+
+        open :: proc (screen_name: string, tab_name := "") {
+            events.open_screen({ screen_name=screen_name, tab_name=tab_name, skip_anim=dev.skip_curtain_anim })
+        }
+    }
+
+    {
+        add_text(dev.window_content, "Start Conversation")
+        list := add_list_grid(dev.window_content, {0,30}, wrap=1)
+
+        for i in ([] struct { text: string, click: ui.Frame_Proc } {
+            { text="Talk to Tyg Rolsum"         , click=proc (f: ^ui.Frame) { start("tyg_rolsum") } },
+            { text="Talk to Ornithopter Pilot"  , click=proc (f: ^ui.Frame) { start("ornithopter_pilot") } },
+        }) {
+            add_button(list, i.text, click=i.click)
+        }
+
+        start :: proc (conversation_id: string) {
+            events.start_conversation({ conversation_id=conversation_id, chat_id="welcome" })
+        }
     }
 }
 

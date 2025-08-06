@@ -91,6 +91,8 @@ start_conversation_listener :: proc (args: events.Args) {
         ui.set_text(reply, text, shown=true)
     }
 
+    ui.update(screen.root)
+
     screen.current_talk = args
 }
 

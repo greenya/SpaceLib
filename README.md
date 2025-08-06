@@ -14,6 +14,25 @@
 
 ## TODOs
 
+TODO: terse: make line alignment to be stack-based (open and close) OR at least change line alignment when actual word is added
+
+    the problem at the moment is that using "left", "right" or "center" immediately sets current line alignment;
+    consider following formatting:
+
+        Some text goes left aligned
+        <center> -- this is already a new line
+        centered text
+        <left> -- another new line
+        Left aligned text continues
+
+    To have no line skips we need to write:
+
+        Some text goes left aligned
+        <center>centered text
+        <left>Left aligned text continues
+
+    Ugly and stupid :)
+
 TODO: core: add support for HSL color format
 
     https://www.youtube.com/watch?v=vvPklRN0Tco

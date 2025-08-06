@@ -9,9 +9,9 @@ import "spacelib:raylib/draw"
 
 import "../../partials"
 
-add_window :: proc (title: string, empty_background := false) -> ^ui.Frame {
+add_window :: proc (name, title: string, empty_background := false) -> ^ui.Frame {
     window := ui.add_frame(dev.layer, {
-        name="window",
+        name=name,
         flags={.hidden,.block_wheel},
         rect={10,10,dev_window_min_size.x,dev_window_min_size.y},
         draw=empty_background ? draw_empty_background : draw_normal_background,
@@ -94,9 +94,9 @@ add_text :: proc (parent: ^ui.Frame, text: string) -> ^ui.Frame {
     })
 }
 
-add_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}) -> ^ui.Frame {
+add_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}, wrap := 0) -> ^ui.Frame {
     return ui.add_frame(parent, {
-        layout=ui.Grid{ dir=.right_down, size=cell_size, auto_size={.height} },
+        layout=ui.Grid{ dir=.right_down, size=cell_size, wrap=wrap, auto_size={.height} },
         draw=proc (f: ^ui.Frame) { draw.rect_gradient_horizontal(f.rect, core.gray3, core.gray2) },
     })
 }
