@@ -1,8 +1,8 @@
 package interface
 
-import rl "vendor:raylib"
-
 import "spacelib:core"
+import "spacelib:raylib/draw"
+import "spacelib:raylib/env"
 import "spacelib:terse"
 import "spacelib:ui"
 
@@ -28,6 +28,7 @@ create :: proc () {
     assert(ui_ == nil)
 
     ui_ = ui.create(
+        root_rect = core.rect_from_size(env.window_size()),
         terse_query_font_proc = #force_inline proc (name: string) -> ^terse.Font {
             return &fonts.get_by_name(name).font_tr
         },
@@ -37,9 +38,19 @@ create :: proc () {
         terse_draw_proc = #force_inline proc (f: ^ui.Frame) {
             partials.draw_terse(f)
         },
-        frame_overdraw_proc = partials.frame_overdraw,
-        scissor_set_proc    = partials.scissor_set,
-        scissor_clear_proc  = partials.scissor_clear,
+        scissor_set_proc = #force_inline proc (r: core.Rect) {
+            if !env.key_down(.LEFT_CONTROL) do env.scissor_set(r)
+        },
+        scissor_clear_proc = #force_inline proc () {
+            if !env.key_down(.LEFT_CONTROL) do env.scissor_clear()
+        },
+        frame_overdraw_proc = #force_inline proc (f: ^ui.Frame) {
+            if !env.key_down(.LEFT_CONTROL) do return
+            draw.debug_frame(f)
+            draw.debug_frame_scissor(f)
+            draw.debug_frame_anchors(f)
+            draw.debug_frame_layout(f)
+        },
     )
 
     add_screens_layer(order=1, curtain_order=8)
@@ -59,11 +70,11 @@ destroy :: proc () {
 
 tick :: proc () {
     ui.tick(ui_,
-        root_rect   = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
+        root_rect   = core.rect_from_size(env.window_size()),
         mouse       = {
-            pos         = rl.GetMousePosition(),
-            wheel_dy    = rl.GetMouseWheelMove(),
-            lmb_down    = rl.IsMouseButtonDown(.LEFT),
+            pos         = env.mouse_pos(),
+            wheel_dy    = env.mouse_wheel_dy(),
+            lmb_down    = env.mouse_button_down(.LEFT),
         },
     )
 }

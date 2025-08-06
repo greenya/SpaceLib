@@ -353,7 +353,7 @@ create :: proc (
     first_line := slice.first_ptr(terse.lines[:])
     if first_line != nil {
         terse.rect = first_line.rect
-        for line in terse.lines[1:] do core.rect_add_rect(&terse.rect, line.rect)
+        for line in terse.lines[1:] do core.rect_grow(&terse.rect, line.rect)
         terse.rect = core.rect_inflated(terse.rect, terse.pad)
     }
 
@@ -364,7 +364,7 @@ create :: proc (
             if w.line_idx != prev_line_idx {
                 append(&group.rects, w.rect)
             } else {
-                core.rect_add_rect(slice.last_ptr(group.rects[:]), w.rect)
+                core.rect_grow(slice.last_ptr(group.rects[:]), w.rect)
             }
             prev_line_idx = w.line_idx
         }

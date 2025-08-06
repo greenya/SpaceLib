@@ -2,36 +2,36 @@ package spacelib_raylib_draw
 
 import rl "vendor:raylib"
 
-line :: #force_inline proc (start, end: Vec2, thick: f32, color: Color) {
+line :: proc (start, end: Vec2, thick: f32, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawLineEx(start, end, thick, color_rl)
 }
 
-rect :: #force_inline proc (rect: Rect, color: Color) {
+rect :: proc (rect: Rect, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     color_rl := rl.Color(color)
     rl.DrawRectangleRec(rect_rl, color_rl)
 }
 
-rect_lines :: #force_inline proc (rect: Rect, thick: f32, color: Color) {
+rect_lines :: proc (rect: Rect, thick: f32, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     color_rl := rl.Color(color)
     rl.DrawRectangleLinesEx(rect_rl, thick, color_rl)
 }
 
-rect_rounded :: #force_inline proc (rect: Rect, roundness_ratio: f32, segments: int, color: Color) {
+rect_rounded :: proc (rect: Rect, roundness_ratio: f32, segments: int, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     color_rl := rl.Color(color)
     rl.DrawRectangleRounded(rect_rl, roundness_ratio, i32(segments), color_rl)
 }
 
-rect_rounded_lines :: #force_inline proc (rect: Rect, roundness_ratio: f32, segments: int, thick: f32, color: Color) {
+rect_rounded_lines :: proc (rect: Rect, roundness_ratio: f32, segments: int, thick: f32, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     color_rl := rl.Color(color)
     rl.DrawRectangleRoundedLinesEx(rect_rl, roundness_ratio, i32(segments), thick, color_rl)
 }
 
-rect_gradient :: #force_inline proc (rect: Rect, top_left, top_right, bottom_left, bottom_right: Color) {
+rect_gradient :: proc (rect: Rect, top_left, top_right, bottom_left, bottom_right: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     top_left_rl := rl.Color(top_left)
     top_right_rl := rl.Color(top_right)
@@ -43,22 +43,22 @@ rect_gradient :: #force_inline proc (rect: Rect, top_left, top_right, bottom_lef
     rl.DrawRectangleGradientEx(rect_rl, top_left_rl, bottom_left_rl, bottom_right_rl, top_right_rl)
 }
 
-rect_gradient_vertical :: #force_inline proc (rect: Rect, top, bottom: Color) {
+rect_gradient_vertical :: proc (rect: Rect, top, bottom: Color) {
     rect_gradient(rect, top, top, bottom, bottom)
 }
 
-rect_gradient_horizontal :: #force_inline proc (rect: Rect, left, right: Color) {
+rect_gradient_horizontal :: proc (rect: Rect, left, right: Color) {
     rect_gradient(rect, left, right, left, right)
 }
 
-diamond :: #force_inline proc (rect: Rect, color: Color) {
+diamond :: proc (rect: Rect, color: Color) {
     c := Vec2 { rect.x+rect.w/2, rect.y+rect.h/2 }
     rect_x2 := rect.x + rect.w
     rect_y2 := rect.y + rect.h
     triangle_fan({ c, {c.x,rect.y}, {rect.x,c.y}, {c.x,rect_y2}, {rect_x2,c.y}, {c.x,rect.y} }, color)
 }
 
-diamond_lines :: #force_inline proc (rect: Rect, thick: f32, color: Color) {
+diamond_lines :: proc (rect: Rect, thick: f32, color: Color) {
     c := Vec2 { rect.x+rect.w/2, rect.y+rect.h/2 }
     rect_x2 := rect.x + rect.w
     rect_y2 := rect.y + rect.h
@@ -82,36 +82,36 @@ diamond_lines :: #force_inline proc (rect: Rect, thick: f32, color: Color) {
     }
 }
 
-circle :: #force_inline proc (center: Vec2, radius: f32, color: Color) {
+circle :: proc (center: Vec2, radius: f32, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawCircleV(center, radius, color_rl)
 }
 
-circle_gradient :: #force_inline proc (center: Vec2, radius: f32, inner_color, outer_color: Color) {
+circle_gradient :: proc (center: Vec2, radius: f32, inner_color, outer_color: Color) {
     inner_color_rl := rl.Color(inner_color)
     outer_color_rl := rl.Color(outer_color)
     rl.DrawCircleGradient(i32(center.x), i32(center.y), radius, inner_color_rl, outer_color_rl)
 }
 
-ring :: #force_inline proc (center: Vec2, inner_radius, outer_radius, start_angle, end_angle: f32, segments: int, color: Color) {
+ring :: proc (center: Vec2, inner_radius, outer_radius, start_angle, end_angle: f32, segments: int, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawRing(center, inner_radius, outer_radius, start_angle, end_angle, i32(segments), color_rl)
 }
 
 // counter-clockwise order
-triangle :: #force_inline proc (v1, v2, v3: Vec2, color: Color) {
+triangle :: proc (v1, v2, v3: Vec2, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawTriangle(v1, v2, v3, color_rl)
 }
 
 // counter-clockwise order; first point is the center
-triangle_fan :: #force_inline proc (points: [] Vec2, color: Color) {
+triangle_fan :: proc (points: [] Vec2, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawTriangleFan(raw_data(points), i32(len(points)), color_rl)
 }
 
 // counter-clockwise order
-triangle_strip :: #force_inline proc (points: [] Vec2, color: Color) {
+triangle_strip :: proc (points: [] Vec2, color: Color) {
     color_rl := rl.Color(color)
     rl.DrawTriangleStrip(raw_data(points), i32(len(points)), color_rl)
 }

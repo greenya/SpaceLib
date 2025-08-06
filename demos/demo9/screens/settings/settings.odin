@@ -188,6 +188,7 @@ set_details_column_content_from_card :: proc (card: ^ui.Frame) {
         ui.set_text(ui.get(details, "content/text"), item_desc)
         ui.scroll_abs(ui.get(details, "content"), 0)
         ui.show(details)
+        ui.update(details)
     } else {
         ui.hide(details)
     }

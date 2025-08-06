@@ -200,7 +200,7 @@ flow_content_size :: proc (f: ^Frame, vis_children: [] ^Frame) -> (full_content_
     if len(vis_children) == 0 do return
 
     full_rect := vis_children[0].rect
-    for child in vis_children[1:] do core.rect_add_rect(&full_rect, child.rect)
+    for child in vis_children[1:] do core.rect_grow(&full_rect, child.rect)
     full_content_size = {
         full_rect.w + flow.pad[L] + flow.pad[R],
         full_rect.h + flow.pad[T] + flow.pad[B],
