@@ -249,8 +249,12 @@ add_screen_page_body_with_list_and_details :: proc (parent: ^ui.Frame, name: str
         { point=.bottom_right },
     )
 
-    list = ui.add_frame(body,
-        { name="list", flags={.scissor}, layout=ui.Flow{ dir=.down,gap=10,scroll={step=30} } },
+    list = ui.add_frame(body, {
+        name        = "list",
+        flags       = {.scissor},
+        layout      = ui.Flow{ dir=.down,gap=10,scroll={step=30} },
+        draw_after  = draw_after_flow_scrolled_vertical_gradients,
+    },
         { point=.top_left },
         { point=.bottom_right, rel_point=.bottom, offset={-40,0} },
     )

@@ -355,8 +355,9 @@ draw_codex_section_item :: proc (f: ^ui.Frame) {
     draw_terse(f, drop_shadow=true)
 }
 
-draw_after_codex_section_item :: proc (f: ^ui.Frame) {
+draw_after_flow_scrolled_vertical_gradients :: proc (f: ^ui.Frame) {
     flow := ui.layout_flow(f)
+    assert(flow != nil)
 
     top_scrolled_h := min(60, flow.scroll.offset - flow.scroll.offset_min)
     if top_scrolled_h > 0 {

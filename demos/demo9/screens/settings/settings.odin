@@ -118,8 +118,13 @@ add_setting_card_control :: proc (parent: ^ui.Frame, item: data.Setting) {
 add_list_column :: proc (page: ^ui.Frame) -> ^ui.Frame {
     pad :: partials.screen_pad
 
-    list := ui.add_frame(page,
-        { name="list", size={560,0}, layout=ui.Flow{ dir=.down,size={0,80},pad=1,gap=15,scroll={step=30} }, flags={.scissor} },
+    list := ui.add_frame(page, {
+        name="list",
+        size={560,0},
+        layout=ui.Flow{ dir=.down,size={0,80},pad=1,gap=15,scroll={step=30} },
+        flags={.scissor},
+        draw_after=partials.draw_after_flow_scrolled_vertical_gradients,
+    },
         { point=.top_left, offset={1.5*pad,2*pad} },
         { point=.bottom_left, offset={1.5*pad,-2*pad} },
     )

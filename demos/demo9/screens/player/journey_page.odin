@@ -102,8 +102,6 @@ add_journey_page_codex :: proc (parent: ^ui.Frame) {
         parent, "codex", with_details_header=true, details_header_icon="auto_stories",
     )
 
-    codex.list.draw_after = partials.draw_after_codex_section_item
-
     for data_section in data.codex {
         section := ui.add_frame(codex.list, {
             name        = data_section.id,
