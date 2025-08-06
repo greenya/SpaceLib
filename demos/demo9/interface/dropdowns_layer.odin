@@ -98,38 +98,29 @@ open_dropdown_listener :: proc (args: events.Args) {
         { point=.top_right, rel_point=.bottom_right, rel_frame=target },
     )
 
-    ui.update(dropdowns.layer, repeat=2)
+    ui.update(dropdowns.layer, include_hidden=true, repeat=2)
     if debug do fmt.println("[1] rect", dropdown.rect)
 
-    can_fit_down := target.rect.y+target.rect.h+dropdown.rect.h < ui_.root.rect.y+ui_.root.rect.h
+    screen_rect := screens.layer.rect
+    can_fit_down := target.rect.y+target.rect.h+dropdown.rect.h < screen_rect.y+screen_rect.h
     if !can_fit_down {
         if debug do fmt.println("reposition to the top")
         ui.set_anchors(dropdown,
             { point=.bottom_left, rel_point=.top_left, rel_frame=target },
             { point=.bottom_right, rel_point=.top_right, rel_frame=target },
         )
-        ui.update(dropdowns.layer)
+        ui.update(dropdowns.layer, include_hidden=true)
         if debug do fmt.println("[2] rect", dropdown.rect)
 
-        // scroll bar experiments {{{
-        // offscreen_top_amount := -dropdown.rect.y
-        // if offscreen_top_amount > 0 {
-        //     dropdown.size.y = dropdown.rect.h - offscreen_top_amount
-        //     dropdown.layout.auto_size = .none
-        //     dropdown.layout.scroll.step = 10
-        //     dropdown.flags += { .scissor }
-        //     ui.update(dropdowns_layer)
-        // }
-        // }}}
+        // scrolling dropdown would be nice, but for now
+        // we just offset dropdown down, ugly and easy
 
-        // for now just offset dropdown down, ugly and easy
-
-        offscreen_top_amount := -dropdown.rect.y
+        offscreen_top_amount := screen_rect.y-dropdown.rect.y
         if offscreen_top_amount > 0 {
             if debug do fmt.println("offscreen_top_amount", offscreen_top_amount)
             dropdown.anchors[0].offset.y += offscreen_top_amount
             dropdown.anchors[1].offset.y += offscreen_top_amount
-            ui.update(dropdowns.layer)
+            ui.update(dropdowns.layer, include_hidden=true)
             if debug do fmt.println("[3] rect", dropdown.rect)
         }
     }
@@ -148,7 +139,7 @@ open_dropdown_listener :: proc (args: events.Args) {
     if dropdown_w_extra > 0 {
         if debug do fmt.println("dropdown_w_extra", dropdown_w_extra)
         dropdown.anchors[1].offset.x = dropdown_w_extra
-        ui.update(dropdowns.layer)
+        ui.update(dropdowns.layer, include_hidden=true)
         if debug do fmt.println("[4] rect", dropdown.rect)
     }
 

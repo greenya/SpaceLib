@@ -263,5 +263,5 @@ app_tooltip_update_anchor :: proc (f: ^ui.Frame) {
         }
     }
 
-    ui.update(f)
+    ui.update(f, include_hidden=true)
 }

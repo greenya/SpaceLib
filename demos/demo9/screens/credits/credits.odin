@@ -20,8 +20,8 @@ import "../../partials"
     view_source_enabled : bool,
 
     lorem_content       : ^ui.Frame,
+    lorem_content_text  : ^ui.Frame,
     lorem_info          : ^ui.Frame,
-    lorem_info_target   : ^terse.Terse,
     lorem_offset_target : f32, // -1 for no target
 }
 
@@ -109,6 +109,7 @@ add_lorem_ipsum_page :: proc () {
     _, page := partials.add_screen_tab_and_page(&screen, "lorem_ipsum", "LOREM IPSUM")
 
     screen.lorem_content = add_content(page, data.lorem_ipsum_text)
+    screen.lorem_content_text = ui.get(screen.lorem_content, "text")
 
     screen.lorem_info = ui.add_frame(page, {
         name    = "info",
@@ -125,10 +126,8 @@ add_lorem_ipsum_page :: proc () {
         flags       = {.terse,.terse_height},
         text_format = "<wrap,left,font=text_4l,color=primary_d2>%s",
         tick        = proc (f: ^ui.Frame) {
-            tr := ui.get(screen.lorem_content, "text").terse
-            if screen.lorem_info_target != tr {
-                // update stats on terse update
-                screen.lorem_info_target = tr
+            tr := screen.lorem_content_text.terse
+            if tr != nil {
                 ui.set_text(f, fmt.tprintf(
                     "File:<tab=80>%M\n" +
                     "<gap=.4>Terse:<tab=80>%M\n" +

@@ -676,10 +676,10 @@ get :: proc (parent: ^Frame, path: string) -> ^Frame {
     return target
 }
 
-update :: proc (f: ^Frame, repeat := 1) {
+update :: proc (f: ^Frame, include_hidden := false, repeat := 1) {
     for _ in 0..<repeat {
-        mark_rect_for_update_frame_tree(f)
-        update_rect_frame_tree(f)
+        mark_rect_for_update_frame_tree(f, include_hidden)
+        update_rect_frame_tree(f, include_hidden)
     }
 }
 
@@ -738,15 +738,19 @@ sort_children :: #force_inline proc (parent: ^Frame) {
 }
 
 @private
-mark_rect_for_update_frame_tree :: proc (f: ^Frame) {
-    f.rect_status = .update_needed
-    for child in f.children do mark_rect_for_update_frame_tree(child)
+mark_rect_for_update_frame_tree :: proc (f: ^Frame, include_hidden: bool) {
+    if include_hidden || .hidden not_in f.flags {
+        f.rect_status = .update_needed
+        for child in f.children do mark_rect_for_update_frame_tree(child, include_hidden)
+    }
 }
 
 @private
-update_rect_frame_tree :: proc (f: ^Frame) {
-    update_rect(f)
-    for child in f.children do update_rect_frame_tree(child)
+update_rect_frame_tree :: proc (f: ^Frame, include_hidden: bool) {
+    if include_hidden || .hidden not_in f.flags {
+        update_rect(f)
+        for child in f.children do update_rect_frame_tree(child, include_hidden)
+    }
 }
 
 @private

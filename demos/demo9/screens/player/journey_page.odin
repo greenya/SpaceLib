@@ -213,7 +213,7 @@ journey_page_show_codex_topic :: proc (section_id, topic_id: string) {
         ui.show(line)
     }
 
-    ui.update(codex.details)
+    ui.update(codex.root)
 }
 
 add_journey_page_tutorial :: proc (parent: ^ui.Frame) {

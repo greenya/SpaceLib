@@ -186,7 +186,7 @@ add_dev_stat_perf_monitor :: proc () {
             dev.monitor_floating ~= true
             if dev.monitor_floating {
                 ui.set_parent(dev.monitor, dev.layer)
-                dev.monitor.rect = core.rect_moved(dev.monitor.rect, {-30,0})
+                dev.monitor.rect = core.rect_moved(dev.monitor.rect, {0,-70})
             } else {
                 ui.set_parent(dev.monitor, dev.window_content)
             }
