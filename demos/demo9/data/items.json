@@ -1,0 +1,346 @@
+[
+    {
+        "id": "spark_sword",
+        "name": "Spark-sword",
+        "desc": [
+            "During the Butlerian Jihad, pulse-swords were used to cut through the thinking machines and damage their electronics with pulses of deadly electricity. It is said that the secret of their making was lost during the ensuing centuries.",
+            "",
+            "This <color=unique>Unique</> blade gives a small jolt of electrical energy to the palms when parrying an enemy -- offering a small stamina boost. A far cry from the legendary swords of the Butlerian Jihad."
+        ],
+        "tag_list": [ "long_blades", "slot_weapon" ],
+        "origin": "unique",
+        "tier": 4,
+        "weight": 1,
+        "stats_weapon_melee": {
+            "damage_type": "blade",
+            "damage_per_hit": 76.5,
+            "attack_speed": 105
+        }
+    },
+    {
+        "id": "long_shot",
+        "name": "Long Shot",
+        "desc": "This <color=unique>Unique</> rifle was named for an assassin who was paid a huge sum by the Atreides to take down the Beast Rabban. Witnesses say that the shot was perfect -- lodging a poison dart deep into Rabban's neck -- and that he laughed and pulled it out while his bodyguard",
+        "tag_list": [ "rifles", "slot_weapon" ],
+        "origin": "unique",
+        "tier": 4,
+        "weight": 2,
+        "stats_weapon_ranged": {
+            "damage_type": "heavy_dart",
+            "fire_mode": "semi_automatic",
+            "damage_per_shot": 209.3,
+            "rate_of_fire": 77,
+            "clip_size": 2,
+            "reload_speed": 2,
+            "effective_range": 75,
+            "accuracy": 0.15,
+            "stability": 9.8
+        }
+    },
+    {
+        "id": "way_of_the_wanderer",
+        "name": "Way of the Wanderer",
+        "desc": "This <color=unique>Unique</> Maula pistol has a modified spring mechanism that automatically reloads darts without releasing trigger pressure. Integrating the modifications from Count Hasimir Fenring. this newer design also accommodates better materials for longer durability.",
+        "tag_list": [ "sidearms", "slot_weapon" ],
+        "origin": "unique",
+        "tier": 2,
+        "weight": 1,
+        "stats_weapon_ranged": {
+            "damage_type": "light_dart",
+            "fire_mode": "automatic",
+            "damage_per_shot": 13.6,
+            "rate_of_fire": 363,
+            "clip_size": 24,
+            "reload_speed": 1.2,
+            "effective_range": 38,
+            "accuracy": 0.4,
+            "stability": 3.1
+        }
+    },
+    {
+        "id": "heavy_darts",
+        "name": "Heavy Darts",
+        "desc": "For use in larger and more powerful weapons, Heavy Darts are standard ammunition and can pierce certain types of armor.",
+        "tag_list": [ "ammunition" ],
+        "tier": 2,
+        "weight": 0.05
+    },
+    {
+        "id": "welding_wire",
+        "name": "Welding Wire",
+        "disc": "Welding material is required when using the welding torch to repair vehicle parts. Crafted from salvaged metal parts.",
+        "tag_list": [ "ammunition" ],
+        "tier": 1,
+        "weight": 0.1
+    },
+    {
+        "id": "the_jackals_blindfold",
+        "name": "The Jackal's Blindfold",
+        "desc": "A <color=special>Special</> light-weight armor with additional poison mitigation.",
+        "tag_list": [ "light_armor", "slot_head" ],
+        "origin": "special",
+        "weight": 1,
+        "stats_garment": {
+            "armor_value": 130,
+            "blade_mitigation": 8,
+            "poison_mitigation": 15,
+            "heat_protection": 0.7
+        }
+    },
+    {
+        "id": "batigh_stillsuit_garment",
+        "name": "Batigh Stillsuit Garment",
+        "desc": "A stillsuit manufacturer from Carthag once visited Kynes the Planetologist to enlist his aid in designing a better stillsuit. This <color=unique>Unique</> stillsuit was the result, and Kynes insisted that the manufacturer name it the Batigh, which the manufacturer proudly did.",
+        "tag_list": [ "stillsuits", "slot_body" ],
+        "origin": "unique",
+        "tier": 5,
+        "weight": 4,
+        "stats_garment": {
+            "armor_value": 184,
+            "hydration_capture": 2,
+            "heat_protection": 1.2,
+            "catchpocket_size": 500
+        }
+    },
+    {
+        "id": "mercenary_stillsuit_gloves",
+        "name": "Mercenary Stillsuit Gloves",
+        "desc": "Designed by <color=fremen>Fremen</>, these stillsuit gloves utilize duraluminum fittings to help withstand many expeditions.",
+        "tag_list": [ "stillsuits", "slot_hands" ],
+        "origin": "fremen",
+        "tier": 5,
+        "weight": 1,
+        "stats_garment": {
+            "armor_value": 46,
+            "heat_protection": 1.2
+        }
+    },
+    {
+        "id": "talab_softstep_boots",
+        "name": "Ta'lab Softstep Boots",
+        "desc": "Found abandoned throughout the former territories of the Fremen, these <color=unique>Unique</> boots are made of a strange type of soft leather. Each step in these boots seems to melt into the sand, reducing the vibrations that attract the worm. This particular set is based on a design found in the long-abandoned Sietch Ta'lab.",
+        "tag_list": [ "light_armor", "slot_feet" ],
+        "origin": "unique",
+        "tier": 3,
+        "weight": 1,
+        "stats_garment": {
+            "armor_value": 71,
+            "dash_stamina_cost": -3,
+            "worm_threat": -45,
+            "blade_mitigation": 6,
+            "heat_protection": 0.4
+        }
+    },
+    {
+        "id": "paranoid_holtzman_shield",
+        "name": "Paranoid Holtzman Shield",
+        "desc": "A <color=special>Special</> Holtzman Shield with increased durability, obtained from defeating the Paranoid assassination target.",
+        "tag_list": [ "utility_tools", "slot_shield" ],
+        "origin": "special",
+        "weight": 0.2,
+        "stats_shield": {
+            "worm_attraction_intensity": "extreme",
+            "shield_refresh_time": 0.6,
+            "power_drain_percent": 104
+        }
+    },
+    {
+        "id": "passive_suspensor_belt",
+        "name": "Passive Suspensor Belt",
+        "desc": "Protects user from taking damage from falling. Automatically kicks on at damaging speeds and will persist as long as the user has power. <color=imperial>Old Imperial</> origin.",
+        "tag_list": [ "utility_tools", "slot_belt" ],
+        "origin": "imperial",
+        "tier": 1,
+        "weight": 0.2,
+        "stats_belt": {
+            "worm_attraction_intensity": "extreme",
+            "power_drain": 14
+        }
+    },
+    {
+        "id": "young_sparky_mk5",
+        "name": "Young Sparky Mk5",
+        "desc": "Sim found that if he crossed the wires in his power pack just so, he could create a <color=unique>Unique</> power pack that recharged quickly - but with a slightly reduced power pool. Sim's power pack became known as 'old sparky' for its constant discharge of electrical sparks - but his technique was copied widely by those who value speed over duration.",
+        "tag_list": [ "utility_tools", "slot_power" ],
+        "tier": 5,
+        "weight": 0.1,
+        "stats_power": {
+            "regen_per_second": 55,
+            "power_pool": 500
+        }
+    },
+    {
+        "id": "personal_light",
+        "name": "Personal Light",
+        "desc": "A Personal Light for exploration. This model has a toggle feature which allows it to be manually switched on and off.",
+        "tag_list": [ "utility_tools", "slot_light" ],
+        "tier": 3,
+        "weight": 0.2
+    },
+    {
+        "id": "healkit",
+        "name": "Healkit",
+        "desc": "A standardized pack of cleansing agents, dermastraps and chemical stimulants, widely used to keep injured troops on their feet and in the fight.",
+        "tag_list": [ "consumables" ],
+        "weight": 1,
+        "stats_healkit": {
+            "health_restoration_over_time": 25,
+            "instant_health_restoration": 25
+        }
+    },
+    {
+        "id": "construction_tool",
+        "name": "Construction Tool",
+        "desc": "A Solido Construction Projector. Use this device to build, move, repair or demolish structures. It can only be used on land claimed using a Sub-fief console.",
+        "tag_list": [ "building_tools" ],
+        "weight": 2
+    },
+    {
+        "id": "welding_torch_mk5",
+        "name": "Welding Torch Mk5",
+        "desc": "A welding torch with high-quality repair capabilities in terms of durability and longevity. Welding Wire is required for repairs. It can also be used to assemble or disassemble vehicles.",
+        "tag_list": [ "utility_tools" ],
+        "origin": "imperial",
+        "weight": 1,
+        "stats_welding_torch": {
+            "range": "long",
+            "repair_quality": 90,
+            "repair_speed": 312.5,
+            "detach_speed": 85,
+            "power_consumption_per_second": 68.8
+        }
+    },
+    {
+        "id": "industrial_cutteray_mk4",
+        "name": "Industrial Cutteray Mk4",
+        "desc": "Cutteray capable of mining jasmium crystals, which are a necessity to refine duraluminum. Depletes power from a Power Pack. Fabricated from <color=fremen>Fremen</> parts.",
+        "tag_list": [ "gathering_tools" ],
+        "origin": "fremen",
+        "tier": 4,
+        "weight": 5,
+        "stats_cutteray": {
+            "power_consumption_per_second": 74.9
+        }
+    },
+    {
+        "id": "compact_compactor_mk5",
+        "name": "Compact Compactor Mk5",
+        "desc": "The makers of this <color=unique>Unique</> static compactor prioritized reducing size, power draw, and most importantly worm attention.",
+        "tag_list": [ "gathering_tools" ],
+        "origin": "unique",
+        "tier": 5,
+        "weight": 1,
+        "stats_compactor": {
+            "gather_rate": "high",
+            "power_consumption": 70,
+            "worm_attraction_intensity": "medium"
+        }
+    },
+    {
+        "id": "vehicle_backup_tool",
+        "name": "Vehicle Backup Tool",
+        "desc": "Use it to store and restore your Sandbike or Scout Ornithopter.",
+        "tag_list": [ "utility_tools" ],
+        "origin": "imperial",
+        "weight": 2
+    },
+    {
+        "id": "hajra_literjon_mk1",
+        "name": "Hajra Literjon Mk1",
+        "desc": "A <color=unique>Unique</> water container created by the Fremen for those going on a journey of seeking. Often carried by wali on their Trial of Aql, the contents were donated from the entire sietch as a sacrifice for good luck. Stores more water than ordinary literjons.",
+        "tag_list": [ "hydration_tools" ],
+        "origin": "unique",
+        "tier": 1,
+        "weight": 2,
+        "stats_literjon": {
+            "container_capacity": 1500
+        }
+    },
+    {
+        "id": "double_sealed_stilltent",
+        "name": "Double-sealed Stilltent",
+        "desc": "A <color=unique>Unique</> creation. This stilltent utilizes extra seals in order to trap more moisture over time.",
+        "tag_list": [ "deployables" ],
+        "origin": "unique",
+        "tier": 5,
+        "weight": 2.5,
+        "stats_stilltent": {
+            "water_gather_rate": 0.2
+        }
+    },
+    {
+        "id": "binoculars",
+        "name": "Binoculars",
+        "desc": "Used to view and mark objects at a far distance. The binoculars are linked to the paracompass, thus allowing markers placed using the binoculars to be pinpointed using the compass.",
+        "tag_list": [ "exploration" ],
+        "weight": 0.2
+    },
+    {
+        "id": "mechanical_parts",
+        "name": "Mechanical Parts",
+        "desc": "A fabrication component used in firearms. Found in <color=house>Great House</> ruins, such as Shipwrecks.",
+        "tag_list": [ "components" ],
+        "tier": 1,
+        "weight": 0.1
+    },
+    {
+        "id": "hydraulic_piston",
+        "name": "Hydraulic Piston",
+        "desc": "A component used to craft vehicle engines. The Great Houses have a stranglehold on this type of component on Arrakis and any who possess them must have forcibly wrested them from their control.",
+        "tag_list": [ "components" ],
+        "tier": 5,
+        "weight": 0.1
+    },
+    {
+        "id": "military_power_regulator",
+        "name": "Military Power Regulator",
+        "desc": "A component used to craft vehicle power units. The Great Houses have a stranglehold on this type of component on Arrakis and any who possess them must have forcibly wrested them from their control.",
+        "tag_list": [ "components" ],
+        "tier": 5,
+        "weight": 0.1
+    },
+    {
+        "id": "opafire_gem",
+        "name": "Opafire Gem",
+        "desc": "One of the rare opaline jewels of Hagal. They shimmer with a captivating blend of fiery reds and cool iridescent hues.",
+        "tag_list": [ "components" ],
+        "tier": 6,
+        "weight": 0.1
+    },
+    {
+        "id": "medium_sized_vehicle_fuel_cell",
+        "name": "Medium Sized Vehicle Fuel Cell",
+        "desc": "Vehicle Fuel Cell with average capacity. Refined from Fuel Cells at a Chemical Refinery. Used to power vehicles.",
+        "tag_list": [ "fuel" ],
+        "tier": 3,
+        "weight": 3.3
+    },
+    {
+        "id": "plant_fiber",
+        "name": "Plant Fiber",
+        "desc": "Resource that can be picked everywhere in the world where there is solid land for it to take root. Woven to fibers used in armor and bandages.",
+        "tag_list": [ "raw_resources" ],
+        "weight": 0.1
+    },
+    {
+        "id": "salvaged_metal",
+        "name": "Salvaged Metal",
+        "desc": "This metal has been salvaged from wreckage left on Arrakis. Can be recovered with a Cutteray. Used for crafting rudimentary metal items.",
+        "tag_list": [ "raw_resources" ],
+        "weight": 0.15
+    },
+    {
+        "id": "spice_melange",
+        "name": "Spice Melange",
+        "desc": "Made from Spice Sand at a Spice Refinery. The most sought-after resource in the universe. Enables intergalactic travel and extends life. Addictive. Withdrawal leads to death.",
+        "tag_list": [ "refined_resources" ],
+        "tier": 3,
+        "weight": 3.2
+    },
+    {
+        "id": "solari",
+        "name": "Solari",
+        "desc": "Solaris are the currency of the Imperium. Use it to buy goods from vendors. Upon defeat you will drop your Solaris, so be sure to visit a banker in villages to deposit them for safekeeping.",
+        "tag_list": [ "solaris" ]
+    }
+]

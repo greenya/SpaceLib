@@ -14,6 +14,11 @@ ID :: enum {
     primary,
     accent,
     progress,
+    imperial,
+    house,
+    fremen,
+    unique,
+    special,
 }
 
 Tag :: enum {
@@ -36,11 +41,16 @@ create :: proc () {
     for id in ID do switch id {
     case .default   : set(id, core.red)
     case .bg0       : set(id, core.black)
-    case .bg1       : set(id, core.color_from_hex("#151515"))
+    case .bg1       : set(id, core.color_from_hex("#111"))
     case .bg2       : set(id, core.color_from_hex("#223"))
     case .primary   : set(id, core.color_from_hex("#fd9"))
     case .accent    : set(id, core.color_from_hex("#f9f"))
     case .progress  : set(id, core.color_from_hex("#2cc"))
+    case .imperial  : set(id, core.color_from_hex("#58b"))
+    case .house     : set(id, core.color_from_hex("#ac6"))
+    case .fremen    : set(id, core.color_from_hex("#d73"))
+    case .unique    : set(id, core.color_from_hex("#435"))
+    case .special   : set(id, core.color_from_hex("#042"))
     }
 }
 
