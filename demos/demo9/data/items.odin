@@ -4,15 +4,16 @@ import "core:encoding/json"
 import "core:fmt"
 
 Item :: struct {
-    id              : string,
-    name            : string,
-    desc            : Text,
-    tag_list        : [] Item_Tag `fmt:"-"`,
-    origin          : Item_Origin,
-    tier            : int,
-    weight          : f32,
-    icon            : string,
-    image           : string,
+    id          : string,
+    name        : string,
+    desc        : Text,
+    tag_list    : [] Item_Tag `fmt:"-"`,
+    origin      : Item_Origin,
+    tier        : int,
+    volume      : f32,
+    stack       : int,
+    icon        : string,
+    image       : string,
 
     stats_belt          : Item_Stats_Belt           `fmt:"-"`,
     stats_compactor     : Item_Stats_Compactor      `fmt:"-"`,
@@ -219,6 +220,9 @@ create_items :: proc () {
     err := json.unmarshal_any(#load("items.json"), &items)
     fmt.ensuref(err == nil, "Failed to load items.json: %v", err)
 
+    // set "stack" to be 1 in case it is unset
+    for &i in items do if i.stack == 0 do i.stack = 1
+
     // init "tags" bit set
     for &i in items do for &t in i.tag_list do i.tags += { t }
 
@@ -252,4 +256,10 @@ destroy_items :: proc () {
     }
     delete(items)
     items = nil
+}
+
+get_item :: proc (id: string) -> ^Item {
+    assert(id != "")
+    for &i in items do if i.id == id do return &i
+    fmt.panicf("Item \"%s\" was not found", id)
 }

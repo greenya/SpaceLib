@@ -122,7 +122,7 @@ add_map_info_panel :: proc () {
 }
 
 add_map_info_panel_map_area :: proc (parent: ^ui.Frame) {
-    partials.add_panel_section_header(parent, "MAP AREA", icon="distance")
+    partials.add_panel_header(parent, "MAP AREA", icon="distance")
 
     details := ui.add_frame(parent, {
         name="details",
@@ -137,11 +137,11 @@ add_map_info_panel_map_area :: proc (parent: ^ui.Frame) {
         draw=partials.draw_text_drop_shadow,
     })
 
-    partials.add_panel_progress_bar(details, title="AREA COMPLETION", progress_ratio=.97)
+    partials.add_progress_bar(details, title="AREA COMPLETION", progress_ratio=.97)
 }
 
 add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
-    partials.add_panel_section_header(parent, "LANDSCAPE", icon="landscape")
+    partials.add_panel_header(parent, "LANDSCAPE", icon="landscape")
 
     details := add_map_info_panel_grid(parent)
     for i in ([] struct { icon, text: string } {
@@ -157,7 +157,7 @@ add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
 }
 
 add_map_info_panel_resource_density :: proc (parent: ^ui.Frame) {
-    partials.add_panel_section_header(parent, "RESOURCE DENSITY", icon="lens_blur")
+    partials.add_panel_header(parent, "RESOURCE DENSITY", icon="lens_blur")
 
     for rank in ([] struct { icon: string, list: [] string } {
         { icon="stat_3", list={ "cannabis", "spa", "hive", "database", "water_drop" } },
@@ -196,7 +196,7 @@ add_map_info_panel_resource_density :: proc (parent: ^ui.Frame) {
 }
 
 add_map_info_panel_collectables :: proc (parent: ^ui.Frame) {
-    partials.add_panel_section_header(parent, "COLLECTABLES", icon="package_2")
+    partials.add_panel_header(parent, "COLLECTABLES", icon="package_2")
 
     details := add_map_info_panel_grid(parent)
     add_map_info_panel_cell_with_icon_and_text(details, "cookie", "6/6")

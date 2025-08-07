@@ -25,7 +25,7 @@ add :: proc (parent: ^ui.Frame) {
     }
 
     add_map_page()
-    add_inventory_page()
+    add_inv_page()
     add_crafting_page()
     add_research_page()
     add_skills_page()
@@ -33,12 +33,6 @@ add :: proc (parent: ^ui.Frame) {
     add_customization_page()
 
     ui.click(screen.tabs, "inventory")
-}
-
-@private
-add_inventory_page :: proc () {
-    _, page := partials.add_screen_tab_and_page(&screen, "inventory", "INVENTORY")
-    partials.add_placeholder_note(page, "INVENTORY PAGE GOES HERE...")
 }
 
 @private

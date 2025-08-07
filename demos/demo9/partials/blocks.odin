@@ -264,12 +264,12 @@ add_category_tabs :: proc (parent: ^ui.Frame, name: string, items: [] Category_T
     return tabs
 }
 
-add_panel_section_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
+add_panel_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
     row := ui.add_frame(parent, {
-        name="section_header",
+        name="header",
         size={0,40},
         text="#0008",
-        draw=draw_color_rect,
+        draw=draw_color_rect_with_primary_border,
         layout=ui.Flow{ dir=.right, pad=2, align=.center },
     })
 
@@ -291,13 +291,13 @@ add_panel_section_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.
     return row
 }
 
-add_panel_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32) -> ^ui.Frame {
-    col := ui.add_frame(parent, {
+add_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32) -> ^ui.Frame {
+    progress_bar := ui.add_frame(parent, {
         name="progress_bar",
         layout=ui.Flow{ dir=.down, auto_size={.height} },
     })
 
-    title := ui.add_frame(col, {
+    title := ui.add_frame(progress_bar, {
         name="title",
         flags={.terse,.terse_height},
         text=title,
@@ -305,7 +305,7 @@ add_panel_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio
         draw=draw_text_drop_shadow,
     })
 
-    text := ui.add_frame(col, {
+    text := ui.add_frame(progress_bar, {
         name="text",
         flags={.terse,.terse_size},
         text_format="<left,font=text_4m,color=primary>%i%%",
@@ -316,7 +316,7 @@ add_panel_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio
 
     ui.set_text(text, int(progress_ratio*100))
 
-    bar := ui.add_frame(col, {
+    bar := ui.add_frame(progress_bar, {
         name="bar",
         size={0,10},
         layout=ui.Flow{ dir=.right },
@@ -331,5 +331,24 @@ add_panel_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio
         draw=draw_color_rect,
     })
 
-    return col
+    return progress_bar
+}
+
+add_chevron_label :: proc (parent: ^ui.Frame, name, icon: string, text := "") -> ^ui.Frame {
+    label := ui.add_frame(parent, {
+        name=name,
+        text=icon,
+        size={130,30},
+        draw=draw_chevron_label_rect,
+    })
+
+    ui.add_frame(label, {
+        name="text",
+        flags={.terse},
+    },
+        { point=.top_left, offset={40,0} },
+        { point=.bottom_right },
+    )
+
+    return label
 }

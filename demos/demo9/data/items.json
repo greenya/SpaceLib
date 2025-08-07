@@ -10,7 +10,7 @@
         "tag_list": [ "long_blades", "slot_weapon" ],
         "origin": "unique",
         "tier": 4,
-        "weight": 1,
+        "volume": 1,
         "stats_weapon_melee": {
             "damage_type": "blade",
             "damage_per_hit": 76.5,
@@ -24,7 +24,7 @@
         "tag_list": [ "rifles", "slot_weapon" ],
         "origin": "unique",
         "tier": 4,
-        "weight": 2,
+        "volume": 2,
         "stats_weapon_ranged": {
             "damage_type": "heavy_dart",
             "fire_mode": "semi_automatic",
@@ -44,7 +44,7 @@
         "tag_list": [ "sidearms", "slot_weapon" ],
         "origin": "unique",
         "tier": 2,
-        "weight": 1,
+        "volume": 1,
         "stats_weapon_ranged": {
             "damage_type": "light_dart",
             "fire_mode": "automatic",
@@ -63,7 +63,8 @@
         "desc": "For use in larger and more powerful weapons, Heavy Darts are standard ammunition and can pierce certain types of armor.",
         "tag_list": [ "ammunition" ],
         "tier": 2,
-        "weight": 0.05
+        "volume": 0.005,
+        "stack": 1000
     },
     {
         "id": "welding_wire",
@@ -71,7 +72,8 @@
         "disc": "Welding material is required when using the welding torch to repair vehicle parts. Crafted from salvaged metal parts.",
         "tag_list": [ "ammunition" ],
         "tier": 1,
-        "weight": 0.1
+        "volume": 0.01,
+        "stack": 500
     },
     {
         "id": "the_jackals_blindfold",
@@ -79,7 +81,7 @@
         "desc": "A <color=special>Special</> light-weight armor with additional poison mitigation.",
         "tag_list": [ "light_armor", "slot_head" ],
         "origin": "special",
-        "weight": 1,
+        "volume": 1,
         "stats_garment": {
             "armor_value": 130,
             "blade_mitigation": 8,
@@ -94,7 +96,7 @@
         "tag_list": [ "stillsuits", "slot_body" ],
         "origin": "unique",
         "tier": 5,
-        "weight": 4,
+        "volume": 4,
         "stats_garment": {
             "armor_value": 184,
             "hydration_capture": 2,
@@ -109,7 +111,7 @@
         "tag_list": [ "stillsuits", "slot_hands" ],
         "origin": "fremen",
         "tier": 5,
-        "weight": 1,
+        "volume": 1,
         "stats_garment": {
             "armor_value": 46,
             "heat_protection": 1.2
@@ -122,7 +124,7 @@
         "tag_list": [ "light_armor", "slot_feet" ],
         "origin": "unique",
         "tier": 3,
-        "weight": 1,
+        "volume": 1,
         "stats_garment": {
             "armor_value": 71,
             "dash_stamina_cost": -3,
@@ -137,7 +139,7 @@
         "desc": "A <color=special>Special</> Holtzman Shield with increased durability, obtained from defeating the Paranoid assassination target.",
         "tag_list": [ "utility_tools", "slot_shield" ],
         "origin": "special",
-        "weight": 0.2,
+        "volume": 0.2,
         "stats_shield": {
             "worm_attraction_intensity": "extreme",
             "shield_refresh_time": 0.6,
@@ -151,7 +153,7 @@
         "tag_list": [ "utility_tools", "slot_belt" ],
         "origin": "imperial",
         "tier": 1,
-        "weight": 0.2,
+        "volume": 0.2,
         "stats_belt": {
             "worm_attraction_intensity": "extreme",
             "power_drain": 14
@@ -163,7 +165,7 @@
         "desc": "Sim found that if he crossed the wires in his power pack just so, he could create a <color=unique>Unique</> power pack that recharged quickly - but with a slightly reduced power pool. Sim's power pack became known as 'old sparky' for its constant discharge of electrical sparks - but his technique was copied widely by those who value speed over duration.",
         "tag_list": [ "utility_tools", "slot_power" ],
         "tier": 5,
-        "weight": 0.1,
+        "volume": 0.1,
         "stats_power": {
             "regen_per_second": 55,
             "power_pool": 500
@@ -175,14 +177,15 @@
         "desc": "A Personal Light for exploration. This model has a toggle feature which allows it to be manually switched on and off.",
         "tag_list": [ "utility_tools", "slot_light" ],
         "tier": 3,
-        "weight": 0.2
+        "volume": 0.2
     },
     {
         "id": "healkit",
         "name": "Healkit",
         "desc": "A standardized pack of cleansing agents, dermastraps and chemical stimulants, widely used to keep injured troops on their feet and in the fight.",
         "tag_list": [ "consumables" ],
-        "weight": 1,
+        "volume": 1,
+        "stack": 20,
         "stats_healkit": {
             "health_restoration_over_time": 25,
             "instant_health_restoration": 25
@@ -193,7 +196,7 @@
         "name": "Construction Tool",
         "desc": "A Solido Construction Projector. Use this device to build, move, repair or demolish structures. It can only be used on land claimed using a Sub-fief console.",
         "tag_list": [ "building_tools" ],
-        "weight": 2
+        "volume": 2
     },
     {
         "id": "welding_torch_mk5",
@@ -201,7 +204,7 @@
         "desc": "A welding torch with high-quality repair capabilities in terms of durability and longevity. Welding Wire is required for repairs. It can also be used to assemble or disassemble vehicles.",
         "tag_list": [ "utility_tools" ],
         "origin": "imperial",
-        "weight": 1,
+        "volume": 1,
         "stats_welding_torch": {
             "range": "long",
             "repair_quality": 90,
@@ -217,7 +220,7 @@
         "tag_list": [ "gathering_tools" ],
         "origin": "fremen",
         "tier": 4,
-        "weight": 5,
+        "volume": 5,
         "stats_cutteray": {
             "power_consumption_per_second": 74.9
         }
@@ -229,7 +232,7 @@
         "tag_list": [ "gathering_tools" ],
         "origin": "unique",
         "tier": 5,
-        "weight": 1,
+        "volume": 1,
         "stats_compactor": {
             "gather_rate": "high",
             "power_consumption": 70,
@@ -242,7 +245,7 @@
         "desc": "Use it to store and restore your Sandbike or Scout Ornithopter.",
         "tag_list": [ "utility_tools" ],
         "origin": "imperial",
-        "weight": 2
+        "volume": 2
     },
     {
         "id": "hajra_literjon_mk1",
@@ -251,7 +254,7 @@
         "tag_list": [ "hydration_tools" ],
         "origin": "unique",
         "tier": 1,
-        "weight": 2,
+        "volume": 2,
         "stats_literjon": {
             "container_capacity": 1500
         }
@@ -263,7 +266,7 @@
         "tag_list": [ "deployables" ],
         "origin": "unique",
         "tier": 5,
-        "weight": 2.5,
+        "volume": 2.5,
         "stats_stilltent": {
             "water_gather_rate": 0.2
         }
@@ -273,7 +276,7 @@
         "name": "Binoculars",
         "desc": "Used to view and mark objects at a far distance. The binoculars are linked to the paracompass, thus allowing markers placed using the binoculars to be pinpointed using the compass.",
         "tag_list": [ "exploration" ],
-        "weight": 0.2
+        "volume": 0.2
     },
     {
         "id": "mechanical_parts",
@@ -281,7 +284,7 @@
         "desc": "A fabrication component used in firearms. Found in <color=house>Great House</> ruins, such as Shipwrecks.",
         "tag_list": [ "components" ],
         "tier": 1,
-        "weight": 0.1
+        "volume": 0.1
     },
     {
         "id": "hydraulic_piston",
@@ -289,7 +292,7 @@
         "desc": "A component used to craft vehicle engines. The Great Houses have a stranglehold on this type of component on Arrakis and any who possess them must have forcibly wrested them from their control.",
         "tag_list": [ "components" ],
         "tier": 5,
-        "weight": 0.1
+        "volume": 0.1
     },
     {
         "id": "military_power_regulator",
@@ -297,7 +300,7 @@
         "desc": "A component used to craft vehicle power units. The Great Houses have a stranglehold on this type of component on Arrakis and any who possess them must have forcibly wrested them from their control.",
         "tag_list": [ "components" ],
         "tier": 5,
-        "weight": 0.1
+        "volume": 0.1
     },
     {
         "id": "opafire_gem",
@@ -305,7 +308,7 @@
         "desc": "One of the rare opaline jewels of Hagal. They shimmer with a captivating blend of fiery reds and cool iridescent hues.",
         "tag_list": [ "components" ],
         "tier": 6,
-        "weight": 0.1
+        "volume": 0.1
     },
     {
         "id": "medium_sized_vehicle_fuel_cell",
@@ -313,21 +316,21 @@
         "desc": "Vehicle Fuel Cell with average capacity. Refined from Fuel Cells at a Chemical Refinery. Used to power vehicles.",
         "tag_list": [ "fuel" ],
         "tier": 3,
-        "weight": 3.3
+        "volume": 3.3
     },
     {
         "id": "plant_fiber",
         "name": "Plant Fiber",
         "desc": "Resource that can be picked everywhere in the world where there is solid land for it to take root. Woven to fibers used in armor and bandages.",
         "tag_list": [ "raw_resources" ],
-        "weight": 0.1
+        "volume": 0.1
     },
     {
         "id": "salvaged_metal",
         "name": "Salvaged Metal",
         "desc": "This metal has been salvaged from wreckage left on Arrakis. Can be recovered with a Cutteray. Used for crafting rudimentary metal items.",
         "tag_list": [ "raw_resources" ],
-        "weight": 0.15
+        "volume": 0.15
     },
     {
         "id": "spice_melange",
@@ -335,12 +338,13 @@
         "desc": "Made from Spice Sand at a Spice Refinery. The most sought-after resource in the universe. Enables intergalactic travel and extends life. Addictive. Withdrawal leads to death.",
         "tag_list": [ "refined_resources" ],
         "tier": 3,
-        "weight": 3.2
+        "volume": 3.2
     },
     {
         "id": "solari",
         "name": "Solari",
         "desc": "Solaris are the currency of the Imperium. Use it to buy goods from vendors. Upon defeat you will drop your Solaris, so be sure to visit a banker in villages to deposit them for safekeeping.",
-        "tag_list": [ "solaris" ]
+        "tag_list": [ "solaris" ],
+        "stack": 50000
     }
 ]

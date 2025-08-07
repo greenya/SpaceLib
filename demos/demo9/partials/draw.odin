@@ -151,6 +151,12 @@ draw_color_rect :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, color)
 }
 
+draw_color_rect_with_primary_border :: proc (f: ^ui.Frame) {
+    color := colors.get_by_name(f.text, alpha=f.opacity)
+    draw.rect(f.rect, color)
+    draw.rect_lines(f.rect, 1, colors.get(.primary, alpha=f.opacity*0.5))
+}
+
 draw_image_placeholder :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(core.gray1, f.opacity)
     draw.rect(f.rect, bg_color)
@@ -181,7 +187,7 @@ draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
 }
 
 draw_hexagon_rect_fill_hangout_self_rect :: proc (f: ^ui.Frame) {
-    color := colors.get(.primary, brightness=-.2)
+    color := colors.get(.primary, brightness=-.3)
     draw_hexagon_header(f,
         rect        = f.terse.rect,
         limit_x     = f.rect.x,
@@ -340,7 +346,7 @@ draw_tutorial_item :: proc (f: ^ui.Frame) {
 }
 
 draw_label_box :: proc (f: ^ui.Frame) {
-    draw.rect(f.rect, colors.get(.primary, brightness=-.2))
+    draw.rect(f.rect, colors.get(.primary, brightness=-.3))
     draw_terse(f, color=colors.get(.bg0))
 }
 
@@ -402,16 +408,16 @@ draw_icon_diamond_primary :: proc (f: ^ui.Frame) {
 draw_icon_primary_with_shadow :: proc (f: ^ui.Frame) {
     sh_rect := core.rect_moved(f.rect, {f.rect.w/20,f.rect.h/20})
     draw_sprite(f.text, sh_rect, tint=colors.get(.bg1))
-    draw_sprite(f.text, f.rect, tint=colors.get(.primary, brightness=-.2))
+    draw_sprite(f.text, f.rect, tint=colors.get(.primary, brightness=-.3))
 }
 
 draw_icon_box_fill_primary :: proc (f: ^ui.Frame) {
-    draw.rect(f.rect, colors.get(.primary, brightness=-.2))
+    draw.rect(f.rect, colors.get(.primary, brightness=-.3))
     draw_sprite(f.text, core.rect_inflated(f.rect, -f.rect.w/10), tint=colors.get(.bg1))
 }
 
 draw_icon_diamond_fill_primary :: proc (f: ^ui.Frame) {
-    draw.diamond(f.rect, colors.get(.primary, brightness=-.2))
+    draw.diamond(f.rect, colors.get(.primary, brightness=-.3))
     draw_sprite(f.text, core.rect_inflated(f.rect, -f.rect.w/5), tint=colors.get(.bg1))
 }
 
@@ -452,4 +458,31 @@ draw_slider_track_with_marks :: proc (f: ^ui.Frame) {
 draw_slider_thumb :: proc (f: ^ui.Frame) {
     sp_color := colors.get(.accent, brightness=f.entered ? .3 : 0)
     draw_sprite("nearby", f.rect, tint=sp_color)
+}
+
+draw_chevron_label_rect :: proc (f: ^ui.Frame) {
+    sp_bg_color := colors.get(.primary, brightness=-.3)
+    sp_bg_rect := core.rect_bar_left(f.rect, f.rect.h*.9)
+    draw.rect(sp_bg_rect, sp_bg_color)
+
+    draw.triangle(
+        core.rect_top_right(sp_bg_rect),
+        core.rect_bottom_right(sp_bg_rect),
+        core.rect_right(sp_bg_rect) + {sp_bg_rect.h/2,0},
+        sp_bg_color,
+    )
+
+    sp_color := colors.get(.bg1)
+    sp_rect := core.rect_scaled(core.rect_bar_left(f.rect, f.rect.h), .8)
+    draw_sprite(f.text, sp_rect, tint=sp_color)
+
+    draw.rect_lines(f.rect, 1, colors.get(.primary, alpha=f.opacity*0.5))
+}
+
+draw_container_slot :: proc (f: ^ui.Frame) {
+    br_color := colors.get(.primary, alpha=.2)
+    draw.rect_lines(f.rect, 1, br_color)
+
+    empty_sp_rect := core.rect_scaled(f.rect, .65)
+    draw_sprite("add", empty_sp_rect, tint=br_color)
 }

@@ -47,9 +47,10 @@ app_startup :: proc () {
     // events.open_screen({ screen_name="credits" })
     // events.start_conversation({ conversation_id="tyg_rolsum", chat_id="welcome" })
     // events.start_conversation({ conversation_id="ornithopter_pilot", chat_id="welcome" })
-    events.open_screen({ screen_name="settings", tab_name="display" })
+    // events.open_screen({ screen_name="settings", tab_name="display" })
     // events.open_screen({ screen_name="player", tab_name="journey" })
     // events.open_screen({ screen_name="player", tab_name="map" })
+    events.open_screen({ screen_name="player", tab_name="inventory" })
 }
 
 app_shutdown :: proc () {
