@@ -14,7 +14,7 @@ Grid :: struct {
     dir: Grid_Direction,
 
     // Size of each child.
-    // If not set, it will be decided from `wrap`, `ratio` and width of the frame.
+    // If not set, it will be decided from `wrap`, `aspect` and width of the frame.
     // Can be partially set, e.g. width or height only.
     size: Vec2,
 
@@ -24,7 +24,7 @@ Grid :: struct {
 
     // Aspect ratio of a child.
     // Used only when width or height is left for calculation.
-    // For example: size={100,0}, ratio=.7; or wrap=5, ratio=1.2.
+    // For example: size={100,0}, aspect=.7; or wrap=5, aspect=1.2.
     // Square (`1`) is assumed when this value is not set (`0`).
     aspect: f32,
 
