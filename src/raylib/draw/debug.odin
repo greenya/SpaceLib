@@ -199,7 +199,7 @@ _debug_text :: proc (str: string, pos: Vec2, tint: Color) {
 @private
 _debug_text_right :: proc (str: string, pos: Vec2, tint: Color) {
     font := rl.GetFontDefault()
-    text_right(str, pos, font, 10, 1, tint)
+    text_aligned(str, pos, {1,0}, font, 10, 1, tint)
 }
 
 @private
