@@ -22,12 +22,12 @@ draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
 
 draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Color) {
     font_tr := &app.res.fonts[font_name].font_tr
-    draw.text_center(text, core.rect_center(rect), font_tr, color)
+    draw.text_aligned(text, core.rect_center(rect), .5, font_tr, color)
 }
 
 draw_text_right :: proc (text: string, pos: Vec2, font_name: string, color: Color) {
     font_tr := &app.res.fonts[font_name].font_tr
-    draw.text_right(text, pos, font_tr, color)
+    draw.text_aligned(text, pos, {1,0}, font_tr, color)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {

@@ -133,7 +133,7 @@ click_toggle_popup :: proc (f: ^ui.Frame) {
 draw_label :: proc (f: ^ui.Frame) {
     font := app.res.fonts["heavy"]
     tx_color := core.alpha({255,255,255,255}, f.opacity)
-    draw.text_center(f.text, core.rect_center(f.rect)+{0,8}, font, tx_color)
+    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
 }
 
 draw_button :: proc (f: ^ui.Frame) {
@@ -149,7 +149,7 @@ draw_button :: proc (f: ^ui.Frame) {
 
     draw.rect(rect1, bg_color)
     draw.rect_lines(rect1, 4, core.brightness(bg_color, f.entered ? .6 : .3))
-    draw.text_center(f.text, core.rect_center(rect1)+{0,4}, font, tx_color)
+    draw.text_aligned(f.text, core.rect_center(rect1)+{0,4}, .5, font, tx_color)
 }
 
 draw_panel :: proc (f: ^ui.Frame) {
@@ -165,7 +165,7 @@ draw_panel_header :: proc (f: ^ui.Frame) {
     ln_color := core.alpha(core.brightness({140,180,220,255}, .4), f.opacity)
 
     draw.rect(core.rect_bar_bottom(core.rect_inflated(f.rect, {-40,0}), 4), ln_color)
-    draw.text_center(f.text, core.rect_center(f.rect)+{0,8}, font, tx_color)
+    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
 }
 
 draw_slot :: proc (f: ^ui.Frame) {
@@ -177,11 +177,11 @@ draw_slot :: proc (f: ^ui.Frame) {
         if f.anim.tick == nil {
             font2 := app.res.fonts["default"]
             sub_text := fmt.tprintf("Hello, %s!", f.text)
-            draw.text_center(sub_text, core.rect_center(f.rect)+{0,46}, font2, tx_color)
+            draw.text_aligned(sub_text, core.rect_center(f.rect)+{0,46}, .5, font2, tx_color)
         }
     }
 
-    draw.text_center(f.text, core.rect_center(f.rect)+{0,6}, font, tx_color)
+    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,6}, .5, font, tx_color)
 }
 
 anim_show_slide_up :: proc (f: ^ui.Frame) {

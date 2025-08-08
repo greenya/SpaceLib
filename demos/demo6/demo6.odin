@@ -68,8 +68,8 @@ main :: proc () {
                 rect = core.rect_moved(rect, { 0,rect.h*f32(i) })
                 draw.rect(rect, color)
                 text_pos := core.rect_center(rect)
-                draw.text_center(name, text_pos+{1,1}   , font, Color {0,0,0,128})
-                draw.text_center(name, text_pos         , font, Color {255,255,255,255})
+                draw.text_aligned(name, text_pos+{1,1}, .5, font, Color {0,0,0,128})
+                draw.text_aligned(name, text_pos      , .5, font, Color {255,255,255,255})
             }
         }
 
