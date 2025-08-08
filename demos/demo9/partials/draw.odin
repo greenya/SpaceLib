@@ -493,34 +493,40 @@ draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
     draw.rect_gradient_vertical(rect, t, b)
 }
 
-draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_schema: enum { water, blood }) {
-    color_empty: Color = color_schema == .water ? { 33,44,66,255 } : { 55,44,33,255 }
-    color_filled: Color = color_schema == .water ? { 88,166,199,255 } : { 222,66,66,255 }
+draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID) {
     sip_amount :: 250
-
     sip_gap := rect.h / 2
     sips := int(maximum) / sip_amount
     sip_w := (rect.w - (f32(sips)-1)*sip_gap) / f32(sips)
     sip_rect := Rect { rect.x, rect.y, sip_w, rect.h }
     value_i := int(value) / sip_amount
 
+    empty_color := colors.get(color_id, alpha=.2)
+    filled_color := colors.get(color_id)
+
     for i in 0..<sips {
-        color := i < value_i ? color_filled : color_empty
+        color := i < value_i ? filled_color : empty_color
         draw.rect(sip_rect, color)
 
         if i == value_i {
             sip_part := value - f32(i)*sip_amount
             sip_part_ratio := sip_part / sip_amount
             sip_part_rect := core.rect_scaled_top_left(sip_rect, {sip_part_ratio,1})
-            draw.rect(sip_part_rect, color_filled)
+            draw.rect(sip_part_rect, filled_color)
         }
 
         sip_rect.x += sip_gap + sip_w
     }
 }
 
-draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_schema: enum { fuel, durability }) {
-    // todo: add some code
+draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID) {
+    empty_color := colors.get(color_id, alpha=.2)
+    draw.rect(rect, empty_color)
+
+    filled_ratio := core.clamp_ratio(value, 0, maximum)
+    filled_rect := core.rect_scaled_top_left(rect, {filled_ratio,1})
+    filled_color := colors.get(color_id)
+    draw.rect(filled_rect, filled_color)
 }
 
 draw_container_slot :: proc (f: ^ui.Frame) {
@@ -535,28 +541,27 @@ draw_container_slot :: proc (f: ^ui.Frame) {
         draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
         draw_sprite(icon, icon_rect)
 
-        switch {
-        case slot.count > 1:
-            text := fmt.tprint(slot.count)
-            text_pos := core.rect_bottom_right(f.rect) - {8,2}
-            text_font := fonts.get(.text_4r)
-            draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg1))
-            draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
-
-        case data.item_water_capacity(slot.item^) > 0:
-            bar_h :: 4
-            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
-            draw_rect_progress_bar_with_sips(r, slot.water, data.item_water_capacity(slot.item^), .water)
-
-        case data.item_blood_capacity(slot.item^) > 0:
-            bar_h :: 4
-            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
-            draw_rect_progress_bar_with_sips(r, slot.blood, data.item_blood_capacity(slot.item^), .blood)
-
-        case data.item_fuel_capacity(slot.item^) > 0:
-            bar_h :: 4
-            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
-            draw_rect_progress_bar(r, slot.fuel, data.item_fuel_capacity(slot.item^), .fuel)
+        if slot.item.stack > 1 {
+            // stackable item -- show only number in the stack, and only if it is greater than 1
+            if slot.count > 1 {
+                text := fmt.tprint(slot.count)
+                text_pos := core.rect_bottom_right(f.rect) - {8,2}
+                text_font := fonts.get(.text_4r)
+                draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6))
+                draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
+            }
+        } else {
+            // non-stackable item -- show details like durability, water, blood, fuel
+            liquid_type := slot.item.liquid_container.type
+            #partial switch liquid_type {
+            case .water, .blood:
+                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), 4)
+                color: colors.ID = liquid_type == .water ? .water : .blood
+                draw_rect_progress_bar_with_sips(rect, slot.liquid.amount, slot.item.liquid_container.capacity, color)
+            case .fuel:
+                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), 4)
+                draw_rect_progress_bar(rect, slot.liquid.amount, slot.item.liquid_container.capacity, .water)
+            }
         }
     } else {
         empty_sp_rect := core.rect_scaled(f.rect, .65)

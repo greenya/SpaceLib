@@ -99,11 +99,14 @@
         "origin": "unique",
         "tier": 5,
         "volume": 4,
+        "liquid_container": {
+            "type": "water",
+            "capacity": 500
+        },
         "stats_garment": {
             "armor_value": 184,
             "hydration_capture": 2,
-            "heat_protection": 1.2,
-            "catchpocket_size": 500
+            "heat_protection": 1.2
         }
     },
     {
@@ -168,7 +171,7 @@
         "tag_list": [ "utility_tools", "slot_power" ],
         "tier": 5,
         "volume": 0.1,
-        "stats_power": {
+        "stats_power_pack": {
             "regen_per_second": 55,
             "power_pool": 500
         }
@@ -257,8 +260,9 @@
         "origin": "unique",
         "tier": 1,
         "volume": 2,
-        "stats_literjon": {
-            "container_capacity": 1500
+        "liquid_container": {
+            "type": "water",
+            "capacity": 1500
         },
         "icon": "cannister"
     },
@@ -270,8 +274,9 @@
         "origin": "fremen",
         "tier": 1,
         "volume": 4,
-        "stats_blood_sack": {
-            "container_capacity": 2000
+        "liquid_container": {
+            "type": "blood",
+            "capacity": 2000
         },
         "icon": "magic-potion"
     },
@@ -334,8 +339,9 @@
         "tag_list": [ "fuel" ],
         "tier": 3,
         "volume": 3.3,
-        "stats_fuel_cell": {
-            "container_capacity": 2500
+        "liquid_container": {
+            "type": "fuel",
+            "capacity": 2500
         },
         "icon": "oil-drum"
     },
@@ -344,14 +350,18 @@
         "name": "Plant Fiber",
         "desc": "Resource that can be picked everywhere in the world where there is solid land for it to take root. Woven to fibers used in armor and bandages.",
         "tag_list": [ "raw_resources" ],
-        "volume": 0.1
+        "volume": 0.1,
+        "stack": 500,
+        "icon": "vanilla-flower"
     },
     {
         "id": "salvaged_metal",
         "name": "Salvaged Metal",
         "desc": "This metal has been salvaged from wreckage left on Arrakis. Can be recovered with a Cutteray. Used for crafting rudimentary metal items.",
         "tag_list": [ "raw_resources" ],
-        "volume": 0.15
+        "volume": 0.15,
+        "stack": 500,
+        "icon": "oyster"
     },
     {
         "id": "spice_melange",

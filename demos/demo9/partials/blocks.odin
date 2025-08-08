@@ -327,7 +327,7 @@ add_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32)
     ui.add_frame(bar, {
         name="fill",
         size_ratio={.001+progress_ratio,0},
-        text="progress",
+        text="water",
         draw=draw_color_rect,
     })
 

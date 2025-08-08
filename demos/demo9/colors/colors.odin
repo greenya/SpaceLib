@@ -13,7 +13,8 @@ ID :: enum {
     bg2,
     primary,
     accent,
-    progress,
+    water,
+    blood,
     imperial,
     house,
     fremen,
@@ -45,7 +46,8 @@ create :: proc () {
     case .bg2       : set(id, core.color_from_hex("#223"))
     case .primary   : set(id, core.color_from_hex("#fd9"))
     case .accent    : set(id, core.color_from_hex("#f9f"))
-    case .progress  : set(id, core.color_from_hex("#2cc"))
+    case .water     : set(id, core.color_from_hex("#5ac"))
+    case .blood     : set(id, core.color_from_hex("#d44"))
     case .imperial  : set(id, core.color_from_hex("#58b"))
     case .house     : set(id, core.color_from_hex("#ac6"))
     case .fremen    : set(id, core.color_from_hex("#d73"))
