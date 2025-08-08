@@ -11,6 +11,7 @@
         "origin": "unique",
         "tier": 4,
         "volume": 1,
+        "durability": 100,
         "stats_weapon_melee": {
             "damage_type": "blade",
             "damage_per_hit": 76.5,
@@ -25,6 +26,7 @@
         "origin": "unique",
         "tier": 4,
         "volume": 2,
+        "durability": 100,
         "stats_weapon_ranged": {
             "damage_type": "heavy_dart",
             "fire_mode": "semi_automatic",
@@ -45,6 +47,7 @@
         "origin": "unique",
         "tier": 2,
         "volume": 1,
+        "durability": 100,
         "stats_weapon_ranged": {
             "damage_type": "light_dart",
             "fire_mode": "automatic",
@@ -84,6 +87,7 @@
         "tag_list": [ "light_armor", "slot_head" ],
         "origin": "special",
         "volume": 1,
+        "durability": 100,
         "stats_garment": {
             "armor_value": 130,
             "blade_mitigation": 8,
@@ -99,6 +103,7 @@
         "origin": "unique",
         "tier": 5,
         "volume": 4,
+        "durability": 100,
         "liquid_container": {
             "type": "water",
             "capacity": 500
@@ -117,6 +122,7 @@
         "origin": "fremen",
         "tier": 5,
         "volume": 1,
+        "durability": 100,
         "stats_garment": {
             "armor_value": 46,
             "heat_protection": 1.2
@@ -130,6 +136,7 @@
         "origin": "unique",
         "tier": 3,
         "volume": 1,
+        "durability": 100,
         "stats_garment": {
             "armor_value": 71,
             "dash_stamina_cost": -3,
@@ -145,6 +152,7 @@
         "tag_list": [ "utility_tools", "slot_shield" ],
         "origin": "special",
         "volume": 0.2,
+        "durability": 100,
         "stats_shield": {
             "worm_attraction_intensity": "extreme",
             "shield_refresh_time": 0.6,
@@ -159,6 +167,7 @@
         "origin": "imperial",
         "tier": 1,
         "volume": 0.2,
+        "durability": 100,
         "stats_belt": {
             "worm_attraction_intensity": "extreme",
             "power_drain": 14
@@ -171,6 +180,7 @@
         "tag_list": [ "utility_tools", "slot_power" ],
         "tier": 5,
         "volume": 0.1,
+        "durability": 100,
         "stats_power_pack": {
             "regen_per_second": 55,
             "power_pool": 500
@@ -182,7 +192,8 @@
         "desc": "A Personal Light for exploration. This model has a toggle feature which allows it to be manually switched on and off.",
         "tag_list": [ "utility_tools", "slot_light" ],
         "tier": 3,
-        "volume": 0.2
+        "volume": 0.2,
+        "durability": 1000
     },
     {
         "id": "healkit",
@@ -210,6 +221,7 @@
         "tag_list": [ "utility_tools" ],
         "origin": "imperial",
         "volume": 1,
+        "durability": 100,
         "stats_welding_torch": {
             "range": "long",
             "repair_quality": 90,
@@ -226,6 +238,7 @@
         "origin": "fremen",
         "tier": 4,
         "volume": 5,
+        "durability": 100,
         "stats_cutteray": {
             "power_consumption_per_second": 74.9
         }
@@ -238,6 +251,7 @@
         "origin": "unique",
         "tier": 5,
         "volume": 1,
+        "durability": 100,
         "stats_compactor": {
             "gather_rate": "high",
             "power_consumption": 70,
@@ -260,6 +274,7 @@
         "origin": "unique",
         "tier": 1,
         "volume": 2,
+        "durability": 100,
         "liquid_container": {
             "type": "water",
             "capacity": 1500
@@ -274,6 +289,7 @@
         "origin": "fremen",
         "tier": 1,
         "volume": 4,
+        "durability": 100,
         "liquid_container": {
             "type": "blood",
             "capacity": 2000
@@ -288,6 +304,7 @@
         "origin": "unique",
         "tier": 5,
         "volume": 2.5,
+        "durability": 100,
         "stats_stilltent": {
             "water_gather_rate": 0.2
         },

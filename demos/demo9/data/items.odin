@@ -11,6 +11,7 @@ Item :: struct {
     origin          : Item_Origin,
     tier            : int,
     volume          : f32,
+    durability      : f32,
     stack           : int,
     liquid_container: Item_Liquid_Container,
     icon            : string,

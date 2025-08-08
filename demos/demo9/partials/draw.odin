@@ -480,6 +480,70 @@ draw_chevron_label_rect :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 1, colors.get(.primary, alpha=f.opacity*0.5))
 }
 
+draw_container_slot :: proc (f: ^ui.Frame) {
+    assert(f.user_ptr != nil)
+    slot := cast (^data.Container_Slot) f.user_ptr
+
+    if slot.item != nil {
+        draw_item_origin_rect(f.rect, slot.item.origin)
+
+        icon := slot.item.icon != "" ? slot.item.icon : "question_mark"
+        icon_rect := core.rect_scaled(f.rect, .8)
+        draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
+        draw_sprite(icon, icon_rect)
+
+        if slot.item.stack == 1 { // non-stackable item -- show details like durability and liquid level
+            bar_h :: 4
+            bar_offset_y := f32(0)
+
+            if slot.item.durability > 0 {
+                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
+                draw_rect_progress_bar_durability(rect,
+                    value           = slot.durability.value,
+                    unrepairable    = slot.durability.unrepairable,
+                    maximum         = slot.item.durability,
+                )
+                bar_offset_y -= bar_h
+            }
+
+            liquid_type := slot.item.liquid_container.type
+            if liquid_type != .none {
+                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
+                rect.y += bar_offset_y
+                #partial switch liquid_type {
+                case .water, .blood:
+                    draw_rect_progress_bar_with_sips(rect,
+                        value       = slot.liquid_amount,
+                        maximum     = slot.item.liquid_container.capacity,
+                        color_id    = liquid_type == .water ? .water : .blood,
+                    )
+                case .fuel:
+                    draw_rect_progress_bar(rect,
+                        value       = slot.liquid_amount,
+                        maximum     = slot.item.liquid_container.capacity,
+                        color_id    = .water,
+                    )
+                }
+            }
+        } else { // stackable item -- show only number in the stack, and only if it is greater than 1
+            if slot.count > 1 {
+                text := fmt.tprint(slot.count)
+                text_pos := core.rect_bottom_right(f.rect) - {8,2}
+                text_font := fonts.get(.text_4r)
+                draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6))
+                draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
+            }
+        }
+    } else {
+        empty_sp_rect := core.rect_scaled(f.rect, .65)
+        empty_sp_color := colors.get(.primary, alpha=.1)
+        draw_sprite("add", empty_sp_rect, tint=empty_sp_color)
+    }
+
+    br_color := colors.get(.primary, alpha=.2)
+    draw.rect_lines(f.rect, 1, br_color)
+}
+
 draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
     t, b: Color
     switch origin {
@@ -520,7 +584,7 @@ draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color
 }
 
 draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID) {
-    empty_color := colors.get(color_id, alpha=.2)
+    empty_color := colors.get(color_id, brightness=-.8)
     draw.rect(rect, empty_color)
 
     filled_ratio := core.clamp_ratio(value, 0, maximum)
@@ -529,46 +593,12 @@ draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_id: color
     draw.rect(filled_rect, filled_color)
 }
 
-draw_container_slot :: proc (f: ^ui.Frame) {
-    assert(f.user_ptr != nil)
-    slot := cast (^data.Container_Slot) f.user_ptr
-
-    if slot.item != nil {
-        draw_item_origin_rect(f.rect, slot.item.origin)
-
-        icon := slot.item.icon != "" ? slot.item.icon : "question_mark"
-        icon_rect := core.rect_scaled(f.rect, .8)
-        draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
-        draw_sprite(icon, icon_rect)
-
-        if slot.item.stack > 1 {
-            // stackable item -- show only number in the stack, and only if it is greater than 1
-            if slot.count > 1 {
-                text := fmt.tprint(slot.count)
-                text_pos := core.rect_bottom_right(f.rect) - {8,2}
-                text_font := fonts.get(.text_4r)
-                draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6))
-                draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
-            }
-        } else {
-            // non-stackable item -- show details like durability, water, blood, fuel
-            liquid_type := slot.item.liquid_container.type
-            #partial switch liquid_type {
-            case .water, .blood:
-                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), 4)
-                color: colors.ID = liquid_type == .water ? .water : .blood
-                draw_rect_progress_bar_with_sips(rect, slot.liquid.amount, slot.item.liquid_container.capacity, color)
-            case .fuel:
-                rect := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), 4)
-                draw_rect_progress_bar(rect, slot.liquid.amount, slot.item.liquid_container.capacity, .water)
-            }
-        }
-    } else {
-        empty_sp_rect := core.rect_scaled(f.rect, .65)
-        empty_sp_color := colors.get(.primary, alpha=.1)
-        draw_sprite("add", empty_sp_rect, tint=empty_sp_color)
+draw_rect_progress_bar_durability :: proc (rect: Rect, value, unrepairable, maximum: f32) {
+    draw_rect_progress_bar(rect, value, maximum, .primary)
+    if unrepairable > 0 {
+        unrepairable_ratio := core.clamp_ratio(unrepairable, 0, maximum)
+        unrepairable_rect := core.rect_scaled_top_right(rect, {unrepairable_ratio,1})
+        unrepairable_color := colors.get(.unrepairable)
+        draw.rect(unrepairable_rect, unrepairable_color)
     }
-
-    br_color := colors.get(.primary, alpha=.2)
-    draw.rect_lines(f.rect, 1, br_color)
 }

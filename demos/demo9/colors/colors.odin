@@ -15,6 +15,7 @@ ID :: enum {
     accent,
     water,
     blood,
+    unrepairable,
     imperial,
     house,
     fremen,
@@ -40,19 +41,20 @@ create :: proc () {
     assert(color_vars == nil)
 
     for id in ID do switch id {
-    case .default   : set(id, core.red)
-    case .bg0       : set(id, core.black)
-    case .bg1       : set(id, core.color_from_hex("#111"))
-    case .bg2       : set(id, core.color_from_hex("#223"))
-    case .primary   : set(id, core.color_from_hex("#fd9"))
-    case .accent    : set(id, core.color_from_hex("#f9f"))
-    case .water     : set(id, core.color_from_hex("#5ac"))
-    case .blood     : set(id, core.color_from_hex("#d44"))
-    case .imperial  : set(id, core.color_from_hex("#58b"))
-    case .house     : set(id, core.color_from_hex("#ac6"))
-    case .fremen    : set(id, core.color_from_hex("#d73"))
-    case .unique    : set(id, core.color_from_hex("#435"))
-    case .special   : set(id, core.color_from_hex("#042"))
+    case .default       : set(id, core.red)
+    case .bg0           : set(id, core.black)
+    case .bg1           : set(id, core.color_from_hex("#111"))
+    case .bg2           : set(id, core.color_from_hex("#223"))
+    case .primary       : set(id, core.color_from_hex("#fd9"))
+    case .accent        : set(id, core.color_from_hex("#f9f"))
+    case .water         : set(id, core.color_from_hex("#5ac"))
+    case .blood         : set(id, core.color_from_hex("#d44"))
+    case .unrepairable  : set(id, core.color_from_hex("#911"))
+    case .imperial      : set(id, core.color_from_hex("#58b"))
+    case .house         : set(id, core.color_from_hex("#ac6"))
+    case .fremen        : set(id, core.color_from_hex("#d73"))
+    case .unique        : set(id, core.color_from_hex("#435"))
+    case .special       : set(id, core.color_from_hex("#042"))
     }
 }
 

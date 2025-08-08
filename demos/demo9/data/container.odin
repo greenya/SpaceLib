@@ -8,10 +8,10 @@ Container :: struct {
 }
 
 Container_Slot :: struct {
-    item        : ^Item,
-    durability  : struct { value, unrepairable: f32 },
-    liquid      : struct { amount: f32 },
-    count       : int,
+    item            : ^Item,
+    durability      : struct { value, unrepairable: f32 },
+    liquid_amount   : f32,
+    count           : int,
 }
 
 create_container :: proc (slot_count: int, max_volume: f32) -> ^Container {
@@ -47,10 +47,17 @@ container_set_slot :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
         slot.item.id, slot.item.stack, slot.count,
     )
 
-    if slot.liquid.amount > 0 {
+    if slot.item.durability > 0 {
+        ensure(slot.durability.value + slot.durability.unrepairable <= slot.item.durability, "Item durability overflow")
+    } else {
+        ensure(slot.durability == {}, "Item is indestructible")
+    }
+
+    if slot.item.liquid_container.type != .none {
         ensure(slot.item.stack == 1, "Liquid amount can only be set for non-stackable items")
-        ensure(slot.item.liquid_container.type != .none, "Item is not a liquid container")
-        ensure(slot.liquid.amount <= slot.item.liquid_container.capacity, "Item liquid container capacity overflow")
+        ensure(slot.liquid_amount <= slot.item.liquid_container.capacity, "Item liquid container capacity overflow")
+    } else {
+        ensure(slot.liquid_amount == 0, "Item is not a liquid container")
     }
 
     slot_volume := slot.item.volume * f32(slot.count)
@@ -61,7 +68,7 @@ container_set_slot :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
     if slot_idx == -1 {
         slot_idx = container_first_empty_slot_idx(con^)
     } else {
-        ensure(container_slot_is_empty(con^, slot_idx))
+        ensure(con.slots[slot_idx].item == nil)
     }
 
     con.slots[slot_idx] = slot
@@ -84,11 +91,6 @@ container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, 
 container_first_empty_slot_idx :: proc (con: Container) -> int {
     for s, i in con.slots do if s.item == nil do return i
     panic("Container has no empty slots")
-}
-
-container_slot_is_empty :: proc (con: Container, slot_idx: int) -> bool {
-    assert(slot_idx >= 0 && slot_idx < len(con.slots))
-    return con.slots[slot_idx].item == nil
 }
 
 container_item_count :: proc (con: Container, item_id: string) -> (total: int) {
