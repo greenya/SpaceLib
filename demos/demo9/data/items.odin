@@ -16,8 +16,10 @@ Item :: struct {
     image       : string,
 
     stats_belt          : Item_Stats_Belt           `fmt:"-"`,
+    stats_blood_sack    : Item_Stats_Blood_Sack     `fmt:"-"`,
     stats_compactor     : Item_Stats_Compactor      `fmt:"-"`,
     stats_cutteray      : Item_Stats_Cutteray       `fmt:"-"`,
+    stats_fuel_cell     : Item_Stats_Fuel_Cell      `fmt:"-"`,
     stats_garment       : Item_Stats_Garment        `fmt:"-"`,
     stats_healkit       : Item_Stats_Healkit        `fmt:"-"`,
     stats_literjon      : Item_Stats_Literjon       `fmt:"-"`,
@@ -118,8 +120,10 @@ Item_Origin :: enum {
 
 Item_Stats :: union {
     Item_Stats_Belt,
+    Item_Stats_Blood_Sack,
     Item_Stats_Compactor,
     Item_Stats_Cutteray,
+    Item_Stats_Fuel_Cell,
     Item_Stats_Garment,
     Item_Stats_Healkit,
     Item_Stats_Literjon,
@@ -136,6 +140,10 @@ Item_Stats_Belt :: struct {
     power_drain                 : f32,
 }
 
+Item_Stats_Blood_Sack :: struct {
+    container_capacity: f32,
+}
+
 Item_Stats_Compactor :: struct {
     gather_rate                 : enum { high },
     power_consumption           : f32,
@@ -144,6 +152,10 @@ Item_Stats_Compactor :: struct {
 
 Item_Stats_Cutteray :: struct {
     power_consumption_per_second: f32,
+}
+
+Item_Stats_Fuel_Cell :: struct {
+    container_capacity: f32,
 }
 
 Item_Stats_Garment :: struct {
@@ -229,8 +241,10 @@ create_items :: proc () {
     // init "stats" union
     for &i in items do switch {
     case i.stats_belt != {}             : i.stats = i.stats_belt
+    case i.stats_blood_sack != {}       : i.stats = i.stats_blood_sack
     case i.stats_compactor != {}        : i.stats = i.stats_compactor
     case i.stats_cutteray != {}         : i.stats = i.stats_cutteray
+    case i.stats_fuel_cell != {}        : i.stats = i.stats_fuel_cell
     case i.stats_garment != {}          : i.stats = i.stats_garment
     case i.stats_healkit != {}          : i.stats = i.stats_healkit
     case i.stats_literjon != {}         : i.stats = i.stats_literjon
@@ -262,4 +276,26 @@ get_item :: proc (id: string) -> ^Item {
     assert(id != "")
     for &i in items do if i.id == id do return &i
     fmt.panicf("Item \"%s\" was not found", id)
+}
+
+item_water_capacity :: proc (item: Item) -> f32 {
+    #partial switch s in item.stats {
+    case Item_Stats_Garment : return s.catchpocket_size
+    case Item_Stats_Literjon: return s.container_capacity
+    }
+    return 0
+}
+
+item_blood_capacity :: proc (item: Item) -> f32 {
+    #partial switch s in item.stats {
+    case Item_Stats_Blood_Sack: return s.container_capacity
+    }
+    return 0
+}
+
+item_fuel_capacity :: proc (item: Item) -> f32 {
+    #partial switch s in item.stats {
+    case Item_Stats_Fuel_Cell: return s.container_capacity
+    }
+    return 0
 }

@@ -447,7 +447,7 @@ add_dev_stat_color_component_slider :: proc (parent: ^ui.Frame, name, text: stri
 
             _, data := ui.actor_slider(f)
             text := fmt.tprintf("%i%%", int((100*f32(data.idx))/f32(data.total-1)))
-            draw.text_center(text, core.rect_center(f.rect), fonts.get(.default), core.gray1)
+            draw.text_aligned(text, core.rect_center(f.rect), .5, fonts.get(.default), core.gray1)
         },
     },
         { point=.left, rel_point=.left },

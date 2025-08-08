@@ -10,6 +10,7 @@ import "spacelib:ui"
 import "spacelib:terse"
 
 import "../colors"
+import "../data"
 import "../fonts"
 import "../sprites"
 
@@ -18,6 +19,10 @@ _ :: fmt
 @private Vec2 :: core.Vec2
 @private Rect :: core.Rect
 @private Color :: core.Color
+
+draw_text_aligned :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Color) {
+    draw.text_aligned(text, pos, align, &font.font_tr, color)
+}
 
 draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit_align := draw.Texture_Fit_Align.center, tint := core.white) {
     sprite := sprites.get(name)
@@ -73,7 +78,7 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,
         tx_color := colors.get(.bg0, alpha=opacity)
         switch text {
         case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tint=tx_color)
-        case        : draw_text_center(text, rect, font, tx_color)
+        case        : draw_text_aligned(text, core.rect_center(rect), .5, fonts.get_by_name(font), tx_color)
         }
     }
 }
@@ -87,11 +92,6 @@ draw_icon_diamond :: proc (icon: string, rect: Rect, bg_color: Color, opacity: f
 
     sp_color := colors.get(.primary, alpha=opacity)
     draw_sprite(icon, core.rect_inflated(rect, -rect.w/4), tint=sp_color)
-}
-
-draw_text_center :: proc (text: string, rect: Rect, font: string, color: Color) {
-    font_tr := &fonts.get_by_name(font).font_tr
-    draw.text_center(text, core.rect_center(rect), font_tr, color)
 }
 
 draw_hexagon_header :: proc (f: ^ui.Frame, rect: Rect, limit_x, limit_w: f32, ln_color, bg_color: Color, drop_shadow := true, hangout := false) {
@@ -162,7 +162,7 @@ draw_image_placeholder :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 
     tx_color := core.alpha(core.gray3, f.opacity)
-    draw_text_center(f.text, f.rect, "text_4l", tx_color)
+    draw_text_aligned(f.text, core.rect_center(f.rect), .5, fonts.get(.text_4l), tx_color)
 }
 
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
@@ -280,8 +280,9 @@ draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {
 
 draw_game_title :: proc (f: ^ui.Frame) {
     color := colors.get(.primary, alpha=f.opacity*.3)
-    draw_text_center("D    U    N    E", core.rect_half_top(f.rect), "text_8l", color)
-    draw_text_center("A  W  A  K  E  N  I  N  G", core.rect_half_bottom(f.rect), "text_6l", color)
+    center := core.rect_center(f.rect)
+    draw_text_aligned("D    U    N    E", center, {.5,.75}, fonts.get(.text_8l), color)
+    draw_text_aligned("A  W  A  K  E  N  I  N  G", center, {.5,0}, fonts.get(.text_6l), color)
 }
 
 draw_scrollbar_track :: proc (f: ^ui.Frame) {
@@ -479,10 +480,90 @@ draw_chevron_label_rect :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 1, colors.get(.primary, alpha=f.opacity*0.5))
 }
 
+draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
+    t, b: Color
+    switch origin {
+    case .none      : t=colors.get(.primary, brightness=-.9)    ; b=colors.get(.primary, brightness=-.7)
+    case .imperial  : t=colors.get(.imperial, brightness=-.9)   ; b=colors.get(.imperial, brightness=-.6)
+    case .house     : t=colors.get(.house, brightness=-.9)      ; b=colors.get(.house, brightness=-.6)
+    case .fremen    : t=colors.get(.fremen, brightness=-.9)     ; b=colors.get(.fremen, brightness=-.6)
+    case .unique    : t=colors.get(.unique)                     ; b=colors.get(.unique, brightness=-.9)
+    case .special   : t=colors.get(.special)                    ; b=colors.get(.special, brightness=-.9)
+    }
+    draw.rect_gradient_vertical(rect, t, b)
+}
+
+draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_schema: enum { water, blood }) {
+    color_empty: Color = color_schema == .water ? { 33,44,66,255 } : { 55,44,33,255 }
+    color_filled: Color = color_schema == .water ? { 88,166,199,255 } : { 222,66,66,255 }
+    sip_amount :: 250
+
+    sip_gap := rect.h / 2
+    sips := int(maximum) / sip_amount
+    sip_w := (rect.w - (f32(sips)-1)*sip_gap) / f32(sips)
+    sip_rect := Rect { rect.x, rect.y, sip_w, rect.h }
+    value_i := int(value) / sip_amount
+
+    for i in 0..<sips {
+        color := i < value_i ? color_filled : color_empty
+        draw.rect(sip_rect, color)
+
+        if i == value_i {
+            sip_part := value - f32(i)*sip_amount
+            sip_part_ratio := sip_part / sip_amount
+            sip_part_rect := core.rect_scaled_top_left(sip_rect, {sip_part_ratio,1})
+            draw.rect(sip_part_rect, color_filled)
+        }
+
+        sip_rect.x += sip_gap + sip_w
+    }
+}
+
+draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_schema: enum { fuel, durability }) {
+    // todo: add some code
+}
+
 draw_container_slot :: proc (f: ^ui.Frame) {
+    assert(f.user_ptr != nil)
+    slot := cast (^data.Container_Slot) f.user_ptr
+
+    if slot.item != nil {
+        draw_item_origin_rect(f.rect, slot.item.origin)
+
+        icon := slot.item.icon != "" ? slot.item.icon : "question_mark"
+        icon_rect := core.rect_scaled(f.rect, .8)
+        draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
+        draw_sprite(icon, icon_rect)
+
+        switch {
+        case slot.count > 1:
+            text := fmt.tprint(slot.count)
+            text_pos := core.rect_bottom_right(f.rect) - {8,2}
+            text_font := fonts.get(.text_4r)
+            draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg1))
+            draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
+
+        case data.item_water_capacity(slot.item^) > 0:
+            bar_h :: 4
+            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
+            draw_rect_progress_bar_with_sips(r, slot.water, data.item_water_capacity(slot.item^), .water)
+
+        case data.item_blood_capacity(slot.item^) > 0:
+            bar_h :: 4
+            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
+            draw_rect_progress_bar_with_sips(r, slot.blood, data.item_blood_capacity(slot.item^), .blood)
+
+        case data.item_fuel_capacity(slot.item^) > 0:
+            bar_h :: 4
+            r := core.rect_bar_bottom(core.rect_inflated(f.rect, -1), bar_h)
+            draw_rect_progress_bar(r, slot.fuel, data.item_fuel_capacity(slot.item^), .fuel)
+        }
+    } else {
+        empty_sp_rect := core.rect_scaled(f.rect, .65)
+        empty_sp_color := colors.get(.primary, alpha=.1)
+        draw_sprite("add", empty_sp_rect, tint=empty_sp_color)
+    }
+
     br_color := colors.get(.primary, alpha=.2)
     draw.rect_lines(f.rect, 1, br_color)
-
-    empty_sp_rect := core.rect_scaled(f.rect, .65)
-    draw_sprite("add", empty_sp_rect, tint=br_color)
 }

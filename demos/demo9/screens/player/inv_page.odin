@@ -42,17 +42,17 @@ add_inv_backpack_panel :: proc () {
     inv_page.backpack_solaris_text = ui.add_frame(backpack_header, {
         name="solaris",
         flags={.terse},
-        text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=poker_chip> %i",
+        text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=two-coins> %i",
     },
         { point=.top_right },
         { point=.bottom_right },
     )
 
     inv_page.backpack_slots_text = ui.get(inv_page.backpack_container, "footer/slots/text")
-    ui.set_text_format(inv_page.backpack_slots_text, "<font=text_4l,color=primary_l2> %i / %i")
+    ui.set_text_format(inv_page.backpack_slots_text, "<font=text_4r,color=primary_l2> %i / %i")
 
     inv_page.backpack_volume_text = ui.get(inv_page.backpack_container, "footer/volume/text")
-    ui.set_text_format(inv_page.backpack_volume_text, "<font=text_4l,color=primary_l2> %i / %i")
+    ui.set_text_format(inv_page.backpack_volume_text, "<font=text_4r,color=primary_l2> %i / %i")
 
     inv_update_backpack_state()
 }
@@ -65,6 +65,21 @@ inv_update_backpack_state :: proc () {
     ui.set_text(inv_page.backpack_slots_text, occupied_slots, max_slots)
     ui.set_text(inv_page.backpack_volume_text, int(occupied_volume), int(max_volume))
 
-    missing_slots := max_slots - len(inv_page.backpack_slots.children)
+    bp_slots := inv_page.backpack_slots
+
+    // add missing slots
+    missing_slots := max_slots - len(bp_slots.children)
     for _ in 0..<missing_slots do partials.add_container_slot(inv_page.backpack_container)
+
+    // hide unused slots
+    for i in max_slots..<len(bp_slots.children) {
+        bp_slots.children[i].flags += {.hidden}
+        bp_slots.children[i].user_ptr = nil
+    }
+
+    // setup slots
+    for &s, i in data.player.backpack.slots {
+        bp_slots.children[i].flags -= {.hidden}
+        bp_slots.children[i].user_ptr = &s
+    }
 }

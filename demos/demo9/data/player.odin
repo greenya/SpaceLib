@@ -24,12 +24,13 @@ create_player :: proc () {
         backpack = create_container(slot_count=35, max_volume=175),
     }
 
-    container_add_item(player.backpack, { item_id="solari", count=23508 })
-    container_add_item(player.backpack, { item_id="heavy_darts", count=218 })
-    container_add_item(player.backpack, { item_id="welding_wire", count=227 })
-    container_add_item(player.backpack, { item_id="hajra_literjon_mk1" })
-    container_add_item(player.backpack, { item_id="double_sealed_stilltent" })
-    container_add_item(player.backpack, { item_id="medium_sized_vehicle_fuel_cell" })
+    container_add_item(player.backpack, { item=get_item("solari"), count=23508 })
+    container_add_item(player.backpack, { item=get_item("heavy_darts"), count=218 })
+    container_add_item(player.backpack, { item=get_item("welding_wire"), count=227 })
+    container_add_item(player.backpack, { item=get_item("hajra_literjon_mk1"), water=1077 })
+    container_add_item(player.backpack, { item=get_item("small_blood_sack"), blood=1333 })
+    container_add_item(player.backpack, { item=get_item("medium_sized_vehicle_fuel_cell"), fuel=777 })
+    container_add_item(player.backpack, { item=get_item("double_sealed_stilltent") })
 }
 
 destroy_player :: proc () {

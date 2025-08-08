@@ -64,7 +64,8 @@
         "tag_list": [ "ammunition" ],
         "tier": 2,
         "volume": 0.005,
-        "stack": 1000
+        "stack": 1000,
+        "icon": "bullets"
     },
     {
         "id": "welding_wire",
@@ -73,7 +74,8 @@
         "tag_list": [ "ammunition" ],
         "tier": 1,
         "volume": 0.01,
-        "stack": 500
+        "stack": 500,
+        "icon": "wire-coil"
     },
     {
         "id": "the_jackals_blindfold",
@@ -257,7 +259,21 @@
         "volume": 2,
         "stats_literjon": {
             "container_capacity": 1500
-        }
+        },
+        "icon": "cannister"
+    },
+    {
+        "id": "small_blood_sack",
+        "name": "Small Blood Sack",
+        "desc": "An item that can store blood collected with a Blood Extraction Tool. Deposit in a Blood Purifier to make drinkable water. Can be drunk directly to rehydrate, but max health will suffer.",
+        "tag_list": [ "hydration_tools" ],
+        "origin": "fremen",
+        "tier": 1,
+        "volume": 4,
+        "stats_blood_sack": {
+            "container_capacity": 2000
+        },
+        "icon": "magic-potion"
     },
     {
         "id": "double_sealed_stilltent",
@@ -269,7 +285,8 @@
         "volume": 2.5,
         "stats_stilltent": {
             "water_gather_rate": 0.2
-        }
+        },
+        "icon": "camping-tent"
     },
     {
         "id": "binoculars",
@@ -316,7 +333,11 @@
         "desc": "Vehicle Fuel Cell with average capacity. Refined from Fuel Cells at a Chemical Refinery. Used to power vehicles.",
         "tag_list": [ "fuel" ],
         "tier": 3,
-        "volume": 3.3
+        "volume": 3.3,
+        "stats_fuel_cell": {
+            "container_capacity": 2500
+        },
+        "icon": "oil-drum"
     },
     {
         "id": "plant_fiber",
@@ -345,6 +366,7 @@
         "name": "Solari",
         "desc": "Solaris are the currency of the Imperium. Use it to buy goods from vendors. Upon defeat you will drop your Solaris, so be sure to visit a banker in villages to deposit them for safekeeping.",
         "tag_list": [ "solaris" ],
-        "stack": 50000
+        "stack": 50000,
+        "icon": "two-coins"
     }
 ]

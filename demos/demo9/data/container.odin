@@ -8,9 +8,11 @@ Container :: struct {
 }
 
 Container_Slot :: struct {
-    item_id     : string,
+    item        : ^Item,
     count       : int,
-    liquid_level: f32,
+    water       : f32,
+    blood       : f32,
+    fuel        : f32,
     durability  : struct { current, maximum, unrepairable: f32 },
 }
 
@@ -30,6 +32,12 @@ destroy_container :: proc (con: ^Container) {
 }
 
 container_add_item :: proc (con: ^Container, slot: Container_Slot, slot_idx := -1) {
+    assert(slot.item != nil)
+
+    assert(slot.water <= item_water_capacity(slot.item^))
+    assert(slot.blood <= item_blood_capacity(slot.item^))
+    assert(slot.fuel <= item_fuel_capacity(slot.item^))
+
     // if slot.count is 0, we set it to 1 so it can be omitted (passed default/zero value);
     // and we want consistent slot.count, as if in future we want to add "split" and "stack" procs,
     // they don't need to think about extra friction with treating 0 as 1 when doing math;
@@ -40,14 +48,12 @@ container_add_item :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
     occupied_slots, max_slots, occupied_volume, max_volume := container_capacity(con^)
     assert(occupied_slots < max_slots, "Container has no empty slots")
 
-    item := get_item(slot.item_id)
-
-    fmt.assertf(slot.count <= item.stack,
-        "Item stack size overflow. Item \"%s\" has stack size %i, and slot count requested is %i",
-        item.id, item.stack, slot.count,
+    fmt.assertf(slot.count <= slot.item.stack,
+        "Item stack size overflow. Item \"%s\" has stack size %i, and slot.count requested is %i",
+        slot.item.id, slot.item.stack, slot.count,
     )
 
-    slot_volume := item.volume * f32(slot.count)
+    slot_volume := slot.item.volume * f32(slot.count)
     assert(max_volume >= occupied_volume + slot_volume, "Container has no free volume")
 
     slot_idx := slot_idx
@@ -65,10 +71,9 @@ container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, 
     max_slots = len(con.slots)
     max_volume = con.max_volume
 
-    for s in con.slots do if s.item_id != "" {
+    for s in con.slots do if s.item != nil {
         assert(s.count > 0)
-        item := get_item(s.item_id)
-        slot_volume := item.volume * f32(s.count)
+        slot_volume := s.item.volume * f32(s.count)
         occupied_volume += slot_volume
         occupied_slots += 1
     }
@@ -77,16 +82,16 @@ container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, 
 }
 
 container_first_empty_slot_idx :: proc (con: Container) -> int {
-    for s, i in con.slots do if s.item_id == "" do return i
+    for s, i in con.slots do if s.item == nil do return i
     panic("Container has no empty slots")
 }
 
 container_slot_is_empty :: proc (con: Container, slot_idx: int) -> bool {
     assert(slot_idx >= 0 && slot_idx < len(con.slots))
-    return con.slots[slot_idx].item_id == ""
+    return con.slots[slot_idx].item == nil
 }
 
 container_item_count :: proc (con: Container, item_id: string) -> (total: int) {
-    for s in con.slots do if s.item_id == item_id do total += s.count
+    for s in con.slots do if s.item != nil && s.item.id == item_id do total += s.count
     return
 }
