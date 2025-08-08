@@ -492,6 +492,16 @@ draw_container_slot :: proc (f: ^ui.Frame) {
         draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
         draw_sprite(icon, icon_rect)
 
+        if slot.item.tier > 0 {
+            text_tiers := [?] string { "", "I", "II", "III", "IV", "V", "VI" }
+            assert(slot.item.tier < len(text_tiers))
+            text := text_tiers[slot.item.tier]
+            text_pos := core.rect_top_right(f.rect) + {-8,2}
+            text_font := fonts.get(.text_4l)
+            text_color := colors.get(.primary, brightness=-.4)
+            draw_text_aligned(text, text_pos, {1,0}, text_font, text_color)
+        }
+
         if slot.item.stack == 1 { // non-stackable item -- show details like durability and liquid level
             bar_h :: 4
             bar_offset_y := f32(0)
