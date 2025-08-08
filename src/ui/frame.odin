@@ -126,6 +126,9 @@ Frame_Init :: struct {
     // Use with `.radio` flag if you want UI to set it to `true` on `click` for this frame while
     // set it to `false` for all siblings with `.radio` flag.
     selected: bool,
+
+    // User pointer.
+    user_ptr: rawptr,
 }
 
 Frame :: struct {
