@@ -42,6 +42,44 @@ rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {
     return { r.x-size.x, r.y-size.y, r.w+2*size.x, r.h+2*size.y }
 }
 
+rect_padded :: #force_inline proc (r: Rect, left, right, top, bottom: f32) -> Rect {
+    return { r.x+left, r.y+top, r.w-left-right, r.h-top-bottom }
+}
+
+rect_padded_horizontal :: #force_inline proc (r: Rect, left, right: f32) -> Rect {
+    return { r.x+left, r.y, r.w-left-right, r.h }
+}
+
+rect_padded_vertical :: #force_inline proc (r: Rect, top, bottom: f32) -> Rect {
+    return { r.x, r.y+top, r.w, r.h-top-bottom }
+}
+
+// `r` is treated as `1x1` area, where `top_left_ratio` and `bottom_right_ratio` are
+// essentially coordinates on that area (similar to texture uv coordinates);
+// examples:
+// - `0,1` -- whole rect (same input rect)
+// - `{0,.5},{.5,1}` -- bottom left quarter of the rect
+// - `.333,.667` -- middle 1/9 of the rect, if we imagine 3x3 rect
+rect_fraction :: #force_inline proc (r: Rect, top_left_ratio, bottom_right_ratio: Vec2) -> Rect {
+    dx1 := r.w * top_left_ratio.x
+    dy1 := r.h * top_left_ratio.y
+    dx2 := r.w * bottom_right_ratio.x
+    dy2 := r.h * bottom_right_ratio.y
+    return { r.x+dx1, r.y+dy1, dx2-dx1, dy2-dy1 }
+}
+
+rect_fraction_horizontal :: #force_inline proc (r: Rect, left_ratio, right_ratio: f32) -> Rect {
+    dx1 := r.w * left_ratio
+    dx2 := r.w * right_ratio
+    return { r.x+dx1, r.y, dx2-dx1, r.h }
+}
+
+rect_fraction_vertical :: #force_inline proc (r: Rect, top_ratio, bottom_ratio: f32) -> Rect {
+    dy1 := r.h * top_ratio
+    dy2 := r.h * bottom_ratio
+    return { r.x, r.y+dy1, r.w, dy2-dy1 }
+}
+
 rect_scaled :: #force_inline proc (r: Rect, scale: Vec2) -> Rect {
     w := r.w * scale.x
     h := r.h * scale.y
