@@ -2,21 +2,46 @@ package partials
 
 import "spacelib:ui"
 
-add_container :: proc (parent: ^ui.Frame, title: string) -> (container: ^ui.Frame) {
-    container = ui.add_frame(parent, {
+import "../data"
+
+Container :: struct {
+    root                : ^ui.Frame,
+
+    header              : ^ui.Frame,
+    header_icon         : ^ui.Frame,
+    header_text         : ^ui.Frame,
+
+    footer              : ^ui.Frame,
+    footer_slots_text   : ^ui.Frame,
+    footer_volume_text  : ^ui.Frame,
+
+    volume_bar          : ^ui.Frame,
+    volume_bar_arrow    : ^ui.Frame,
+    volume_ratio        : f32,
+
+    slots               : ^ui.Frame,
+}
+
+add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
+    con: Container
+
+    con.root = ui.add_frame(parent, {
         name="container",
-        size={600,720},
+        size={600,710},
         text="#0004",
         draw=draw_color_rect,
     })
 
-    header := add_panel_header(container, title, icon="inventory_2")
-    ui.set_anchors(header,
+    con.header = add_panel_header(con.root, title, icon="inventory_2")
+    ui.set_anchors(con.header,
         { point=.top_left, offset=10 },
         { point=.top_right, offset={-10,10} },
     )
 
-    footer := ui.add_frame(container, {
+    con.header_icon = ui.get(con.header, "icon")
+    con.header_text = ui.get(con.header, "text")
+
+    con.footer = ui.add_frame(con.root, {
         name="footer",
         size={0,40},
         layout=ui.Flow{ dir=.left, gap=10, align=.center },
@@ -25,33 +50,78 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> (container: ^ui.Fram
         { point=.bottom_right, offset=-10 },
     )
 
-    add_chevron_label(footer, name="volume", icon="deployed_code")
-    add_chevron_label(footer, name="slots", icon="view_cozy")
+    volume_label := add_chevron_label(con.footer, name="volume", icon="deployed_code")
+    slots_label := add_chevron_label(con.footer, name="slots", icon="view_cozy")
+
+    con.footer_volume_text = ui.get(volume_label, "text")
+    con.footer_slots_text = ui.get(slots_label, "text")
 
     // we only add this flow frame to have scroll;
     // maybe when Grid has own scroll we don't need it
-    slots := ui.add_frame(container, {
-        name="slots",
+    flow := ui.add_frame(con.root, {
+        name="flow",
         flags={.scissor},
         layout=ui.Flow{ dir=.down, scroll={step=30} },
     },
-        { point=.top_left, rel_point=.bottom_left, rel_frame=header, offset={0,15} },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=footer, offset={0,-15} },
+        { point=.top_left, rel_point=.bottom_left, rel_frame=con.header, offset={0,15} },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=con.footer, offset={0,-15} },
     )
 
-    ui.add_frame(slots, {
-        name="grid",
+    con.slots = ui.add_frame(flow, {
+        name="slots",
         layout=ui.Grid{ dir=.right_down, wrap=5, aspect=1, gap=15, auto_size={.height} },
     })
 
-    add_scrollbar(slots)
+    add_scrollbar(flow)
 
-    return
+    con.volume_bar = ui.add_frame(con.root, {
+        name="volume_bar",
+        size={16,0},
+        draw=draw_container_volume_bar,
+    },
+        { point=.top_right, rel_point=.top_left, rel_frame=flow, offset={-10,0} },
+        { point=.bottom_right, rel_point=.bottom_left, rel_frame=flow, offset={-10,0} },
+    )
+
+    con.volume_bar_arrow = ui.add_frame(con.volume_bar, {
+        name="arrow",
+        size={64,32},
+        text_format="%iv",
+        draw=draw_container_volume_bar_arrow,
+    },
+        { point=.right, rel_point=.bottom_left, offset={10,0} },
+    )
+
+    return con
 }
 
-add_container_slot :: proc (container: ^ui.Frame) {
-    ui.add_frame(ui.get(container, "slots/grid"), {
-        name="slot",
-        draw=draw_container_slot,
-    })
+set_container_state :: proc (con: ^Container, data_con: ^data.Container) {
+    occupied_slots, max_slots, occupied_volume, max_volume := data.container_capacity(data_con^)
+
+    ui.set_text(con.footer_slots_text, occupied_slots, max_slots)
+    ui.set_text(con.footer_volume_text, int(occupied_volume), int(max_volume))
+    ui.set_text(con.volume_bar_arrow, int(occupied_volume))
+
+    {
+        vol_bar_h := con.volume_bar.rect.h
+        con.volume_ratio = occupied_volume / max_volume
+        con.volume_bar.user_ptr = &con.volume_ratio
+        con.volume_bar_arrow.anchors[0].offset.y = -2 -(vol_bar_h-4) * con.volume_ratio
+    }
+
+    // add missing slots
+    missing_slots := max_slots - len(con.slots.children)
+    for _ in 0..<missing_slots do ui.add_frame(con.slots, { name="slot", draw=draw_container_slot })
+
+    // hide unused slots
+    for i in max_slots..<len(con.slots.children) {
+        con.slots.children[i].flags += {.hidden}
+        con.slots.children[i].user_ptr = nil
+    }
+
+    // setup slots
+    for &s, i in data.player.backpack.slots {
+        con.slots.children[i].flags -= {.hidden}
+        con.slots.children[i].user_ptr = &s
+    }
 }

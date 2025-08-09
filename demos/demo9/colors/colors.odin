@@ -16,6 +16,9 @@ ID :: enum {
     water,
     blood,
     unrepairable,
+    vol_low,
+    vol_med,
+    vol_high,
     imperial,
     house,
     fremen,
@@ -50,6 +53,9 @@ create :: proc () {
     case .water         : set(id, core.color_from_hex("#5ac"))
     case .blood         : set(id, core.color_from_hex("#d44"))
     case .unrepairable  : set(id, core.color_from_hex("#911"))
+    case .vol_low       : set(id, core.color_from_hex("#077"))
+    case .vol_med       : set(id, core.color_from_hex("#da4"))
+    case .vol_high      : set(id, core.color_from_hex("#d33"))
     case .imperial      : set(id, core.color_from_hex("#58b"))
     case .house         : set(id, core.color_from_hex("#ac6"))
     case .fremen        : set(id, core.color_from_hex("#d73"))

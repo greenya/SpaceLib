@@ -9,11 +9,10 @@ import "../../partials"
 inv_page: struct {
     root: ^ui.Frame,
 
-    backpack_container      : ^ui.Frame,
-    backpack_solaris_text   : ^ui.Frame,
-    backpack_slots_text     : ^ui.Frame,
-    backpack_volume_text    : ^ui.Frame,
-    backpack_slots          : ^ui.Frame,
+    backpack: struct {
+        using container : partials.Container,
+        solaris_text    : ^ui.Frame,
+    },
 }
 
 add_inv_page :: proc () {
@@ -33,13 +32,10 @@ add_inv_backpack_panel :: proc () {
         { point=.bottom_left, offset={100,0} },
     )
 
-    inv_page.backpack_container = partials.add_container(backpack, "BACKPACK")
-    ui.set_anchors(inv_page.backpack_container, { point=.center })
+    inv_page.backpack.container = partials.add_container(backpack, "BACKPACK")
+    ui.set_anchors(inv_page.backpack.root, { point=.center })
 
-    inv_page.backpack_slots = ui.get(inv_page.backpack_container, "slots/grid")
-
-    backpack_header := ui.get(inv_page.backpack_container, "header")
-    inv_page.backpack_solaris_text = ui.add_frame(backpack_header, {
+    inv_page.backpack.solaris_text = ui.add_frame(inv_page.backpack.header, {
         name="solaris",
         flags={.terse},
         text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=two-coins> %i",
@@ -48,38 +44,17 @@ add_inv_backpack_panel :: proc () {
         { point=.bottom_right },
     )
 
-    inv_page.backpack_slots_text = ui.get(inv_page.backpack_container, "footer/slots/text")
-    ui.set_text_format(inv_page.backpack_slots_text, "<font=text_4r,color=primary_l2> %i / %i")
+    ui.set_text_format(inv_page.backpack.footer_slots_text, "<font=text_4r,color=primary_l2> %i / %i")
+    ui.set_text_format(inv_page.backpack.footer_volume_text, "<font=text_4r,color=primary_l2> %i / %i")
 
-    inv_page.backpack_volume_text = ui.get(inv_page.backpack_container, "footer/volume/text")
-    ui.set_text_format(inv_page.backpack_volume_text, "<font=text_4r,color=primary_l2> %i / %i")
+    ui.update(inv_page.backpack.root)
 
     inv_update_backpack_state()
 }
 
 inv_update_backpack_state :: proc () {
+    partials.set_container_state(&inv_page.backpack, data.player.backpack)
+
     solaris := data.container_item_count(data.player.backpack^, "solari")
-    ui.set_text(inv_page.backpack_solaris_text, solaris)
-
-    occupied_slots, max_slots, occupied_volume, max_volume := data.container_capacity(data.player.backpack^)
-    ui.set_text(inv_page.backpack_slots_text, occupied_slots, max_slots)
-    ui.set_text(inv_page.backpack_volume_text, int(occupied_volume), int(max_volume))
-
-    bp_slots := inv_page.backpack_slots
-
-    // add missing slots
-    missing_slots := max_slots - len(bp_slots.children)
-    for _ in 0..<missing_slots do partials.add_container_slot(inv_page.backpack_container)
-
-    // hide unused slots
-    for i in max_slots..<len(bp_slots.children) {
-        bp_slots.children[i].flags += {.hidden}
-        bp_slots.children[i].user_ptr = nil
-    }
-
-    // setup slots
-    for &s, i in data.player.backpack.slots {
-        bp_slots.children[i].flags -= {.hidden}
-        bp_slots.children[i].user_ptr = &s
-    }
+    ui.set_text(inv_page.backpack.solaris_text, solaris)
 }

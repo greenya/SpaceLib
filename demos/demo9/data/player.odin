@@ -32,8 +32,8 @@ create_player :: proc () {
     css(player.backpack, { item=get_item("small_blood_sack"), durability={ value=77 }, liquid_amount=1333 })
     css(player.backpack, { item=get_item("medium_sized_vehicle_fuel_cell"), liquid_amount=777 })
     css(player.backpack, { item=get_item("double_sealed_stilltent"), durability={ value=100 } })
-    css(player.backpack, { item=get_item("plant_fiber"), count=355 })
-    css(player.backpack, { item=get_item("salvaged_metal"), count=88 })
+    css(player.backpack, { item=get_item("plant_fiber"), count=299 })
+    css(player.backpack, { item=get_item("salvaged_metal"), count=488 })
 }
 
 destroy_player :: proc () {

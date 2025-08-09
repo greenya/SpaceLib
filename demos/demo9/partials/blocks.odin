@@ -265,7 +265,7 @@ add_category_tabs :: proc (parent: ^ui.Frame, name: string, items: [] Category_T
 }
 
 add_panel_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
-    row := ui.add_frame(parent, {
+    header := ui.add_frame(parent, {
         name="header",
         size={0,40},
         text="#0008",
@@ -273,14 +273,14 @@ add_panel_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
         layout=ui.Flow{ dir=.right, pad=2, align=.center },
     })
 
-    ui.add_frame(row, {
+    ui.add_frame(header, {
         name="icon",
         text=icon,
         size_aspect=1,
         draw=draw_icon_box_fill_primary,
     })
 
-    ui.add_frame(row, {
+    ui.add_frame(header, {
         name="text",
         flags={.terse,.terse_size},
         text=text,
@@ -288,7 +288,7 @@ add_panel_header :: proc (parent: ^ui.Frame, text, icon: string) -> ^ui.Frame {
         draw=draw_text_drop_shadow,
     })
 
-    return row
+    return header
 }
 
 add_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32) -> ^ui.Frame {

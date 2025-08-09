@@ -612,3 +612,44 @@ draw_rect_progress_bar_durability :: proc (rect: Rect, value, unrepairable, maxi
         draw.rect(unrepairable_rect, unrepairable_color)
     }
 }
+
+draw_container_volume_bar :: proc (f: ^ui.Frame) {
+    ln_thick :: 2
+    ln_color := colors.get(.primary, brightness=-.2)
+
+    draw.rect(core.rect_bar_right(f.rect, ln_thick), ln_color)
+    draw.rect(core.rect_bar_top(f.rect, ln_thick), ln_color)
+    draw.rect(core.rect_bar_bottom(f.rect, ln_thick), ln_color)
+
+    vol_ratio: f32 = f.user_ptr != nil ? (cast (^f32) f.user_ptr)^ : 0
+
+    bar_rect := core.rect_inflated(f.rect, -2)
+    for i in ([] struct { ratio: Vec2, pad: Vec2, color: colors.ID } {
+        { ratio={0,.5}  , pad={2,0}, color=.vol_low },
+        { ratio={.5,.75}, pad={2,2}, color=.vol_med },
+        { ratio={.75,1} , pad={0,2}, color=.vol_high },
+    }) {
+        i_color := colors.get(i.color)
+        i_rect := core.rect_fraction_vertical(bar_rect, 1-i.ratio[1], 1-i.ratio[0])
+        i_rect = core.rect_padded_vertical(i_rect, i.pad[0], i.pad[1])
+
+        i_color_empty := core.alpha(i_color, .2)
+        draw.rect(i_rect, i_color_empty)
+
+        if vol_ratio >= i.ratio[1] {
+            draw.rect(i_rect, i_color)
+        } else if vol_ratio >= i.ratio[0] {
+            segment_ratio := core.clamp_ratio(vol_ratio, i.ratio[0], i.ratio[1])
+            segment_rect := core.rect_scaled_bottom_left(i_rect, {1,segment_ratio})
+            draw.rect(segment_rect, i_color)
+        }
+    }
+}
+
+draw_container_volume_bar_arrow :: proc (f: ^ui.Frame) {
+    color := colors.get(.primary, brightness=-.2)
+    draw_sprite("label_arrow_right", f.rect, tint=color)
+
+    tx_pos := core.rect_right(f.rect) - {15,0}
+    draw_text_aligned(f.text, tx_pos, {1,.5}, fonts.get(.text_4m), color)
+}
