@@ -91,3 +91,9 @@ get_conversation_chat :: proc (conversation_id, chat_id: string) -> (Conversatio
 
     fmt.panicf("Conversation \"%s\" is absent", conversation_id)
 }
+
+get_conversation_ids :: proc (allocator := context.allocator) -> [] string {
+    result := make([dynamic] string, allocator)
+    for cn in conversations do append(&result, cn.id)
+    return result[:]
+}

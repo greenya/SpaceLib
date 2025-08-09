@@ -28,13 +28,6 @@ import "../../partials"
 add :: proc (parent: ^ui.Frame) {
     screen.screen = partials.add_screen(parent, "credits")
 
-    screen.root.show = proc (f: ^ui.Frame) {
-        // reset state each time credits screen is opened
-        if screen.autoscroll_enabled do ui.click(screen.autoscroll)
-        ui.scroll_abs(ui.get(f, "pages/credits/content"), 0)
-        ui.click(screen.tabs, "credits")
-    }
-
     close := partials.add_screen_key_button(&screen, "close", "<icon=key/Esc:1.4:1> Close")
     close.click = proc (f: ^ui.Frame) {
         events.open_screen({ screen_name="home" })

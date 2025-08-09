@@ -101,8 +101,9 @@ add_list_grid :: proc (parent: ^ui.Frame, cell_size := Vec2 {72,30}, wrap := 0) 
     })
 }
 
-add_button :: proc (parent: ^ui.Frame, text: string, click: ui.Frame_Proc) -> ^ui.Frame {
+add_button :: proc (parent: ^ui.Frame, name := "", text := "", click: ui.Frame_Proc = nil) -> ^ui.Frame {
     return ui.add_frame(parent, {
+        name=name,
         flags={.terse,.terse_height},
         text=fmt.tprintf("<wrap>%s", text),
         click=click,

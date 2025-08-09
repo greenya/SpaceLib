@@ -3,6 +3,7 @@ package interface_dev
 
 import "core:fmt"
 import "core:slice"
+import "core:strings"
 import "core:time"
 import "vendor:raylib"
 
@@ -11,6 +12,7 @@ import "spacelib:ui"
 import "spacelib:raylib/draw"
 
 import "../../colors"
+import "../../data"
 import "../../events"
 import "../../fonts"
 import "../../partials"
@@ -129,17 +131,17 @@ add_dev_stat_perf :: proc () {
     {
         add_text(dev.window_content, "VSync")
         list := add_list_grid(dev.window_content)
-        on := add_button(list, "ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
+        on := add_button(list, text="ON", click=proc (f: ^ui.Frame) { raylib.SetWindowState({ .VSYNC_HINT }) })
         on.selected = true
         on.flags += {.radio}
-        off := add_button(list, "OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
+        off := add_button(list, text="OFF", click=proc (f: ^ui.Frame) { raylib.ClearWindowState({ .VSYNC_HINT }) })
         off.flags += {.radio}
     }
 
     {
         add_text(dev.window_content, "Borderless")
         list := add_list_grid(dev.window_content, {100,30})
-        add_button(list, "Toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
+        add_button(list, text="Toggle", click=proc (f: ^ui.Frame) { raylib.ToggleBorderlessWindowed() })
     }
 }
 
@@ -256,14 +258,14 @@ add_dev_stat_frames :: proc () {
         }
 
         list := add_list_grid(dev.window_content, {100,30})
-        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { dev.frames_under_mouse_drawing ~= true })
+        toggle := add_button(list, text="Toggle", click=proc (f: ^ui.Frame) { dev.frames_under_mouse_drawing ~= true })
         toggle.flags += {.check}
     }
 
     {
         add_text(dev.window_content, "Game UI to Window")
         list := add_list_grid(dev.window_content, {100,30})
-        toggle := add_button(list, "Toggle", click=proc (f: ^ui.Frame) { toggle_game_window() })
+        toggle := add_button(list, text="Toggle", click=proc (f: ^ui.Frame) { toggle_game_window() })
         toggle.flags += {.check}
     }
 
@@ -271,24 +273,22 @@ add_dev_stat_frames :: proc () {
         add_text(dev.window_content, "Open Game Screen/Tab")
         list := add_list_grid(dev.window_content, {0,30}, wrap=1)
 
-        toggle := add_button(list, "[ Skip Curtain Animation ]", click=proc (f: ^ui.Frame) { dev.skip_curtain_anim ~= true })
+        toggle := add_button(list, text="[ Skip Curtain Animation ]", click=proc (f: ^ui.Frame) { dev.skip_curtain_anim ~= true })
         toggle.flags += {.check}
 
-        for i in ([] struct { text: string, click: ui.Frame_Proc } {
-            { text="Open Home"              , click=proc (f: ^ui.Frame) { open("home") } },
-            { text="Open Player"            , click=proc (f: ^ui.Frame) { open("player") } },
-            { text="Open Player/Map"        , click=proc (f: ^ui.Frame) { open("player", "map") } },
-            { text="Open Player/Journey"    , click=proc (f: ^ui.Frame) { open("player", "journey") } },
-            { text="Open Settings"          , click=proc (f: ^ui.Frame) { open("settings") } },
-            { text="Open Settings/Display"  , click=proc (f: ^ui.Frame) { open("settings", "display") } },
-            { text="Open Settings/Graphics" , click=proc (f: ^ui.Frame) { open("settings", "graphics") } },
-            { text="Open Credits"           , click=proc (f: ^ui.Frame) { open("credits") } },
-        }) {
-            add_button(list, i.text, click=i.click)
-        }
-
-        open :: proc (screen_name: string, tab_name := "") {
-            events.open_screen({ screen_name=screen_name, tab_name=tab_name, skip_anim=dev.skip_curtain_anim })
+        for s in ui.get(ui_.root, "screens_layer").children {
+            tabs := ui.find(s, "header/tabs")
+            if tabs != nil do for t in tabs.children {
+                path := fmt.tprintf("%s/%s", s.name, t.name)
+                add_button(list,
+                    name=path,
+                    text=fmt.tprintf("<wrap,left,pad=10:0>%s", path),
+                    click=proc (f: ^ui.Frame) {
+                        parts := strings.split(f.name, "/", context.temp_allocator)
+                        events.open_screen({ screen_name=parts[0], tab_name=parts[1], skip_anim=dev.skip_curtain_anim })
+                    },
+                )
+            }
         }
     }
 
@@ -296,15 +296,14 @@ add_dev_stat_frames :: proc () {
         add_text(dev.window_content, "Start Conversation")
         list := add_list_grid(dev.window_content, {0,30}, wrap=1)
 
-        for i in ([] struct { text: string, click: ui.Frame_Proc } {
-            { text="Talk to Tyg Rolsum"         , click=proc (f: ^ui.Frame) { start("tyg_rolsum") } },
-            { text="Talk to Ornithopter Pilot"  , click=proc (f: ^ui.Frame) { start("ornithopter_pilot") } },
-        }) {
-            add_button(list, i.text, click=i.click)
-        }
-
-        start :: proc (conversation_id: string) {
-            events.start_conversation({ conversation_id=conversation_id, chat_id="welcome" })
+        for cn_id in data.get_conversation_ids(context.temp_allocator) {
+            add_button(list,
+                name=cn_id,
+                text=fmt.tprintf("<wrap,left,pad=10:0>%s", cn_id),
+                click=proc (f: ^ui.Frame) {
+                    events.start_conversation({ conversation_id=f.name, chat_id="welcome" })
+                },
+            )
         }
     }
 }
@@ -315,11 +314,11 @@ add_dev_stat_clock :: proc () {
     add_text(dev.window_content, "Time scale")
     list := add_list_grid(dev.window_content)
 
-                add_button(list, "x0.3", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = .3 })
-                add_button(list, "x0.5", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = .5 })
-    selected := add_button(list, "x1", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 1 })
-                add_button(list, "x2", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 2 })
-                add_button(list, "x3", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 3 })
+                add_button(list, text="x0.3", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = .3 })
+                add_button(list, text="x0.5", click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = .5 })
+    selected := add_button(list, text="x1"  , click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 1 })
+                add_button(list, text="x2"  , click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 2 })
+                add_button(list, text="x3"  , click=proc (f: ^ui.Frame) { f.ui.clock.time_scale = 3 })
 
     for child in list.children do child.flags += {.radio}
     selected.selected = true
@@ -342,7 +341,7 @@ add_dev_stat_colors :: proc () {
     dev.color_list = add_list_grid(dev.window_content, cell_size={120,30})
     for id in colors.ID {
         text := fmt.tprint(id)
-        button := add_button(dev.color_list, text, click=proc (f: ^ui.Frame) {
+        button := add_button(dev.color_list, text=text, click=proc (f: ^ui.Frame) {
             color := colors.get_by_name(f.name)
 
             red_thumb, _ := ui.actor_slider(ui.get(dev.color_ed, "red/thumb"))
@@ -464,11 +463,11 @@ add_dev_stat_fonts :: proc () {
     add_text(dev.window_content, "Scale")
     list := add_list_grid(dev.window_content)
 
-                add_button(list, "x0.8", click=proc (f: ^ui.Frame) { scale_fonts(.8) })
-                add_button(list, "x0.9", click=proc (f: ^ui.Frame) { scale_fonts(.9) })
-    selected := add_button(list, "x1"  , click=proc (f: ^ui.Frame) { scale_fonts(1) })
-                add_button(list, "x1.1", click=proc (f: ^ui.Frame) { scale_fonts(1.1) })
-                add_button(list, "x1.2", click=proc (f: ^ui.Frame) { scale_fonts(1.2) })
+                add_button(list, text="x0.8", click=proc (f: ^ui.Frame) { scale_fonts(.8) })
+                add_button(list, text="x0.9", click=proc (f: ^ui.Frame) { scale_fonts(.9) })
+    selected := add_button(list, text="x1"  , click=proc (f: ^ui.Frame) { scale_fonts(1) })
+                add_button(list, text="x1.1", click=proc (f: ^ui.Frame) { scale_fonts(1.1) })
+                add_button(list, text="x1.2", click=proc (f: ^ui.Frame) { scale_fonts(1.2) })
 
     for child in list.children do child.flags += {.radio}
     selected.selected = true

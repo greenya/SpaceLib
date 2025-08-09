@@ -8,11 +8,6 @@ import "data"
 import "events"
 import "fonts"
 import "interface"
-import "screens/conversation"
-import "screens/credits"
-import "screens/home"
-import "screens/player"
-import "screens/settings"
 import "sprites"
 
 app_exit_requested: bool
@@ -32,14 +27,6 @@ app_startup :: proc () {
     sprites.create()
 
     interface.create()
-    {
-        l := interface.get_screens_layer()
-        conversation.add(l)
-        credits.add(l)
-        home.add(l)
-        player.add(l)
-        settings.add(l)
-    }
 
     events.listen(.exit_app, proc (args: events.Args) { app_exit_requested=true })
 

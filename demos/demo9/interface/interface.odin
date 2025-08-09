@@ -10,19 +10,15 @@ import "../colors"
 import "../fonts"
 import "../partials"
 
+import "../screens/conversation"
+import "../screens/credits"
+import "../screens/home"
+import "../screens/player"
+import "../screens/settings"
+
 import "dev"
 
 @private ui_: ^ui.UI
-
-get_ui :: #force_inline proc () -> ^ui.UI {
-    assert(ui_ != nil)
-    return ui_
-}
-
-get_screens_layer :: #force_inline proc () -> ^ui.Frame {
-    assert(screens.layer != nil)
-    return screens.layer
-}
 
 create :: proc () {
     assert(ui_ == nil)
@@ -54,10 +50,17 @@ create :: proc () {
     )
 
     add_screens_layer(order=1, curtain_order=8)
-    add_modals_layer(order=2)
-    add_dropdowns_layer(order=3)
-    // add_tooltips_layer(order=4)
-    // add_notifications_layer(order=9)
+    // add_notifications_layer(order=2)
+    add_modals_layer(order=3)
+    add_dropdowns_layer(order=4)
+    // add_tooltips_layer(order=5)
+
+    conversation.add(screens.layer)
+    credits.add(screens.layer)
+    home.add(screens.layer)
+    player.add(screens.layer)
+    settings.add(screens.layer)
+
     dev.add_layer(ui_, order=99)
 }
 
