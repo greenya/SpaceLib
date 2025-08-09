@@ -75,10 +75,11 @@ add_window :: proc (name, title: string, empty_background := false) -> ^ui.Frame
     }
 }
 
-add_header :: proc (parent: ^ui.Frame, text: string) {
-    ui.add_frame(parent, {
+add_header :: proc (parent: ^ui.Frame, text := "") -> ^ui.Frame {
+    return ui.add_frame(parent, {
         flags={.terse,.terse_height},
-        text=fmt.tprintf("<pad=5:10,left,wrap,color=#333>%s", text),
+        text=text,
+        text_format="<pad=5:10,left,wrap,color=#333>%s",
         draw=proc (f: ^ui.Frame) {
             bg_rect := core.rect_inflated(f.rect, {15,0})
             draw.rect(bg_rect, core.gray9)

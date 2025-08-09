@@ -37,6 +37,7 @@ add :: proc (parent: ^ui.Frame) {
     add_lorem_ipsum_page()
 
     // ui.print_frame_tree(screen.root)
+    ui.click(screen.tabs, "credits")
 }
 
 @private

@@ -24,11 +24,11 @@ Sprite :: struct {
 
 get_textures :: #force_inline proc () -> [] ^rl.Texture { return textures[:] }
 
-create :: proc () {
+create :: proc (scale := f32(1), filter := rl.TextureFilter.BILINEAR) {
     assert(len(textures) == 0)
     assert(len(sprites) == 0)
 
-    gen_atlas(#load_directory("./"), filter=.BILINEAR)
+    gen_atlas(#load_directory("./"), filter=filter, sprites_scale=scale)
     // fmt.println("textures", textures)
     // fmt.println("sprites", sprites)
 }
@@ -69,6 +69,7 @@ gen_atlas :: proc (
     name_format     := "%s",
     size_limit      := [2] int { 1024, 1024 },
     sprites_gap     := 1,
+    sprites_scale   := f32(1),
     force_pot       := true,
     filter          := rl.TextureFilter.POINT,
 ) {
@@ -88,6 +89,11 @@ gen_atlas :: proc (
 
         image := env.load_image_from_bytes(file_ext, file.data)
         defer env.unload_image(image)
+
+        if sprites_scale != 1 {
+        assert(sprites_scale > 0 && sprites_scale < 1)
+            rl.ImageResize(&image, i32(f32(image.width)*sprites_scale), i32(f32(image.height)*sprites_scale))
+        }
 
         status, image_rect_on_atlas := draw_image_on_image(&cursor, &atlas, image, wrap)
         if status != .ok {

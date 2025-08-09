@@ -44,7 +44,11 @@ dev: struct {
     game_window         : ^ui.Frame,
     game_window_content : ^ui.Frame,
 
-    skip_curtain_anim: bool,
+    skip_curtain_anim   : bool,
+
+    texture_atlas_header: ^ui.Frame,
+    texture_atlas_scale : f32,
+    texture_atlas_filter: raylib.TextureFilter,
 }
 
 dev_window_min_size :: [2] f32 { 380, 230 }
@@ -488,20 +492,49 @@ add_dev_stat_fonts :: proc () {
 }
 
 add_dev_stat_texture_atlas :: proc () {
-    scale :: .25
-    tex := texture()
+    preview_scale :: .25
 
-    add_header(dev.window_content, fmt.tprintf("Texture atlas: %ix%i", tex.width, tex.height))
+    dev.texture_atlas_header = add_header(dev.window_content)
+    update_header_text()
+
+    {
+        add_text(dev.window_content, "Scale")
+        list := add_list_grid(dev.window_content)
+
+                    add_button(list, text="x0.1", click=proc (f: ^ui.Frame) { scale_atlas(.1) })
+                    add_button(list, text="x0.2", click=proc (f: ^ui.Frame) { scale_atlas(.2) })
+                    add_button(list, text="x0.3", click=proc (f: ^ui.Frame) { scale_atlas(.3) })
+                    add_button(list, text="x0.5", click=proc (f: ^ui.Frame) { scale_atlas(.5) })
+        selected := add_button(list, text="x1"  , click=proc (f: ^ui.Frame) { scale_atlas(1) })
+
+        for child in list.children do child.flags += {.radio}
+        selected.selected = true
+
+        dev.texture_atlas_scale = 1
+    }
+
+    {
+        add_text(dev.window_content, "Filter")
+        list := add_list_grid(dev.window_content)
+
+                    add_button(list, text="point"   , click=proc (f: ^ui.Frame) { filter_atlas(.POINT) })
+        selected := add_button(list, text="bilinear", click=proc (f: ^ui.Frame) { filter_atlas(.BILINEAR) })
+
+        for child in list.children do child.flags += {.radio}
+        selected.selected = true
+
+        dev.texture_atlas_filter = .BILINEAR
+    }
 
     ui.add_frame(dev.window_content, {
         tick=proc (f: ^ui.Frame) {
             tex := texture()
-            f.size = scale * { f32(tex.width), f32(tex.height) }
+            f.size = preview_scale * { f32(tex.width), f32(tex.height) }
         },
         draw=proc (f: ^ui.Frame) {
             tex := texture()
             tex_rect := Rect {0,0,f32(tex.width),f32(tex.height)}
-            tex_rect_scaled := core.rect_scaled(tex_rect, scale)
+            tex_rect_scaled := core.rect_scaled(tex_rect, preview_scale)
             dst_rect := f.rect
             dst_rect.w = tex_rect_scaled.w
             dst_rect.h = tex_rect_scaled.h
@@ -514,6 +547,21 @@ add_dev_stat_texture_atlas :: proc () {
         t := sprites.get_textures()
         assert(len(t) > 0)
         return t[0]^
+    }
+
+    update_header_text :: proc () {
+        tex := texture()
+        text := fmt.tprintf("Texture atlas: %ix%i", tex.width, tex.height)
+        ui.set_text(dev.texture_atlas_header, text)
+    }
+
+    scale_atlas :: proc (scale: f32) { dev.texture_atlas_scale=scale; regen_atlas() }
+    filter_atlas :: proc (filter: raylib.TextureFilter) { dev.texture_atlas_filter=filter; regen_atlas() }
+
+    regen_atlas :: proc () {
+        sprites.destroy()
+        sprites.create(filter=dev.texture_atlas_filter, scale=dev.texture_atlas_scale)
+        update_header_text()
     }
 }
 
