@@ -10,7 +10,7 @@ Tutorial_Tip :: struct {
     desc    : Text,
 }
 
-tutorial_tips: [] Tutorial_Tip
+/* @private */ tutorial_tips: [] Tutorial_Tip
 
 @private
 create_tutorial_tips :: proc () {

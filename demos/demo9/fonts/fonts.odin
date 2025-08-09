@@ -5,7 +5,7 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 import "spacelib:core"
-import "spacelib:raylib/measure"
+import "spacelib:raylib/text"
 import "spacelib:terse"
 
 // --------------------------------------------------------
@@ -115,7 +115,7 @@ create_font_from_rl_font :: proc (
         height          = height,
         rune_spacing    = height * rune_spacing_ratio,
         line_spacing    = height * line_spacing_ratio,
-        measure_text    = measure.text,
+        measure_text    = text.measure,
         font_rl         = font_rl,
     }
     font.font_ptr = &font.font_rl

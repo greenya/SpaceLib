@@ -2,11 +2,15 @@ package sprites
 
 import "base:runtime"
 import "core:fmt"
+import "core:slice"
 import "core:strings"
 import rl "vendor:raylib"
+
 import "spacelib:core"
+import "spacelib:raylib/env"
 
 @private Rect :: core.Rect
+@private File :: runtime.Load_Directory_File
 
 Sprite :: struct {
     name: string,
@@ -60,7 +64,7 @@ get :: #force_inline proc (name: string) -> ^Sprite {
 
 @private
 gen_atlas :: proc (
-    files           : [] runtime.Load_Directory_File,
+    files           : [] File,
     file_extensions := [] string { ".png", ".jpg", ".jpeg" },
     name_format     := "%s",
     size_limit      := [2] int { 1024, 1024 },
@@ -78,21 +82,17 @@ gen_atlas :: proc (
     new_sprites := make([dynamic] ^Sprite)
     defer delete(new_sprites)
 
-    for file in files {
+    for file in get_image_files_ordered_by_height(files, file_extensions, context.temp_allocator) {
         file_ext := core.string_suffix_from_slice(file.name, file_extensions)
-        if file_ext == "" do continue
-
         wrap := strings.contains(file.name, ".wrap.")
 
-        file_ext_cstr := strings.clone_to_cstring(file_ext, context.temp_allocator)
-        image := rl.LoadImageFromMemory(file_ext_cstr, raw_data(file.data), i32(len(file.data)))
+        image := env.load_image_from_bytes(file_ext, file.data)
+        defer env.unload_image(image)
 
         status, image_rect_on_atlas := draw_image_on_image(&cursor, &atlas, image, wrap)
         if status != .ok {
             fmt.eprintfln("[!] %s failed: Unable to fit \"%s\": %v", #procedure, file.name, status)
         }
-
-        rl.UnloadImage(image)
 
         sprite := new(Sprite)
         sprite.name = fmt.aprintf(name_format, file.name[:strings.index_byte(file.name, '.')])
@@ -120,6 +120,38 @@ gen_atlas :: proc (
         s.tex = tex
         sprites[s.name] = s
     }
+}
+
+// Takes any files and returns:
+// - only image files (filtered by file_extensions)
+// - ordered by image height (this improves arrangement of sprites on atlas... but not much to be honest :)
+@private
+get_image_files_ordered_by_height :: proc (
+    files           : [] File,
+    file_extensions : [] string,
+    allocator       := context.allocator,
+) -> [] File {
+    Info :: struct { file: File, image_height: int }
+    infos := make([dynamic] Info, context.temp_allocator)
+
+    for file in files {
+        file_ext := core.string_suffix_from_slice(file.name, file_extensions)
+        if file_ext == "" do continue
+
+        image := env.load_image_from_bytes(file_ext, file.data)
+        defer env.unload_image(image)
+
+        append(&infos, Info { file=file, image_height=int(image.height) })
+    }
+
+    slice.sort_by(infos[:], less=proc (i1, i2: Info) -> bool {
+        return i1.image_height < i2.image_height
+    })
+
+    list := make([dynamic] File, len=0, cap=len(infos), allocator=allocator)
+    for i in infos do append(&list, i.file)
+
+    return list[:]
 }
 
 @private
