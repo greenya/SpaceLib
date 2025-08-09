@@ -4,7 +4,7 @@ import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:terse"
-import "spacelib:raylib/measure"
+import "spacelib:raylib/text"
 
 // ----------------
 // ---- colors ----
@@ -152,7 +152,7 @@ assets_load :: proc () {
         file_ext := fmt.ctprintf(".%s", file.type)
         font.font_rl = rl.LoadFontFromMemory(file_ext, raw_data(file.data), i32(len(file.data)), i32(font.height), nil, 0)
         font.font_ptr = &font.font_rl
-        font.measure_text = measure.text
+        font.measure_text = text.measure
     }
 
     for &texture in textures {
