@@ -315,8 +315,10 @@ create :: proc (
 
     // apply vertical alignment
     vertical_empty_space := terse.rect.y + terse.rect.h - (last_line.rect.y + last_line.rect.h)
-    if vertical_empty_space > 0 {
-        offset_rect_y := f32(-1)
+    if vertical_empty_space > 0 || !terse.wrap {
+        // for negative empty space, we apply vertical alignment only for non-wrapping text (one-liners);
+        // for wrapping text it will be aligned to the top
+        offset_rect_y: f32
 
         switch terse.valign {
         case .top: // already aligned
@@ -324,11 +326,9 @@ create :: proc (
         case .bottom: offset_rect_y = vertical_empty_space
         }
 
-        if offset_rect_y > 0 {
-            for &line in terse.lines {
-                line.rect.y += offset_rect_y
-                for &w in line_words(terse, &line) do w.rect.y += offset_rect_y
-            }
+        if offset_rect_y != 0 do for &line in terse.lines {
+            line.rect.y += offset_rect_y
+            for &w in line_words(terse, &line) do w.rect.y += offset_rect_y
         }
     }
 
