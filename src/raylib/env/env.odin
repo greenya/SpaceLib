@@ -1,5 +1,6 @@
 package spacelib_raylib_env
 
+import "core:strings"
 import rl "vendor:raylib"
 import "../../core"
 
@@ -17,3 +18,13 @@ mouse_wheel_dy      :: rl.GetMouseWheelMove
 mouse_wheel_dxy     :: rl.GetMouseWheelMoveV
 
 key_down :: rl.IsKeyDown
+
+load_image_from_bytes :: proc (file_ext: string, bytes: [] byte) -> rl.Image {
+    return rl.LoadImageFromMemory(
+        fileType = strings.clone_to_cstring(file_ext, context.temp_allocator),
+        fileData = raw_data(bytes),
+        dataSize = i32(len(bytes)),
+    )
+}
+
+unload_image :: rl.UnloadImage

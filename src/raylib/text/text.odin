@@ -7,7 +7,7 @@ import "../../terse"
 
 @private Vec2 :: core.Vec2
 
-text :: proc (font: ^terse.Font, text: string) -> Vec2 {
+measure :: proc (font: ^terse.Font, text: string) -> Vec2 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     size := rl.MeasureTextEx((cast (^rl.Font) font.font_ptr)^, cstr, font.height, font.rune_spacing)
     return size

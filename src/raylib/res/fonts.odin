@@ -5,7 +5,7 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import "../../terse"
-import "../../raylib/measure"
+import "../../raylib/text"
 
 @private default_fonts_json_file_name :: "fonts.json"
 
@@ -48,7 +48,7 @@ load_fonts :: proc (res: ^Res, scale := f32(1), default_font_extra_scale := f32(
             height          = jf.height         * scale,
             rune_spacing    = jf.rune_spacing   * scale,
             line_spacing    = jf.line_spacing   * scale,
-            measure_text    = measure.text,
+            measure_text    = text.measure,
         }
 
         if jf.rune_spacing_ratio != 0 do font.rune_spacing = jf.rune_spacing_ratio * font.height
@@ -79,7 +79,7 @@ add_font :: proc (res: ^Res, name: string, font_rl: rl.Font, scale_factor := f32
         height          = font_height,
         rune_spacing    = font_height/10,
         font_rl         = font_rl,
-        measure_text    = measure.text,
+        measure_text    = text.measure,
     }
 
     font.font_ptr = &font.font_rl
