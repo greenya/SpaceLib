@@ -142,15 +142,18 @@ Frame :: struct {
 
     // Parent frame.
     // This value is `nil` for root and for manually detached frames.
+    // Use `set_parent()` to change this value.
     parent: ^Frame,
 
     // Child frames. Sorted according to `child.order`.
+    // Use `add_frame()` to add a child.
     children: [dynamic] ^Frame,
 
     // Anchors.
-    // Anchors calculation is using `size` and `size_aspect` to decide on final `rect`.
+    // Anchor calculation is using `size` and `size_aspect` to decide on final `rect`.
+    // Use `set_anchors()` and `clear_anchors()` to change this value.
     // Note: `parent.layout` skips anchored frames.
-    anchors: [dynamic] Anchor,
+    anchors: [] Anchor,
 
     // Terse (measured text).
     //

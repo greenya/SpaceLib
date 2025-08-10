@@ -29,18 +29,20 @@ Anchor_Point :: enum {
 }
 
 set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
-    clear_anchors(f)
-    for a in anchors {
+    delete(f.anchors)
+    f.anchors = make([] Anchor, len(anchors))
+    for a, i in anchors {
         init := a
         assert(init.point != .mouse, "Mouse anchor can only be used as rel_point.")
         if init.point == .none      do init.point = .top_left
         if init.rel_point == .none  do init.rel_point = init.point
-        append(&f.anchors, init)
+        f.anchors[i] = init
     }
 }
 
 clear_anchors :: proc (f: ^Frame) {
-    resize(&f.anchors, 0)
+    delete(f.anchors)
+    f.anchors = nil
 }
 
 @private
