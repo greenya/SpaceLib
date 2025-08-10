@@ -1,6 +1,7 @@
 package spacelib_core
 
 import "base:intrinsics"
+import "core:fmt"
 import "core:reflect"
 import "core:slice"
 import "core:strings"
@@ -50,4 +51,20 @@ extract_hrs_mins_secs_from_total_seconds :: proc (time_total_sec: f32) -> (hrs: 
     mins, total_sec     = total_sec/60, total_sec%60
     secs                = total_sec
     return
+}
+
+format_int :: proc (value: int, thousands_separator := ",", allocator := context.allocator) -> string {
+    if abs(value) < 1000 do return fmt.aprint(value, allocator=allocator)
+
+    sb := strings.builder_make(allocator)
+    if value < 0 do strings.write_byte(&sb, '-')
+
+    digits := fmt.tprint(abs(value))
+    for digit, i in digits {
+        strings.write_rune(&sb, digit)
+        i_rev := len(digits) - i + 1
+        if i_rev-2>0 && (i_rev-2)%3==0 do strings.write_string(&sb, thousands_separator)
+    }
+
+    return strings.to_string(sb)
 }

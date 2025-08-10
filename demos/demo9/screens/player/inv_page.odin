@@ -1,6 +1,7 @@
 #+private
 package player
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../../data"
@@ -38,7 +39,7 @@ add_inv_backpack_panel :: proc () {
     inv_page.backpack.solaris_text = ui.add_frame(inv_page.backpack.header, {
         name="solaris",
         flags={.terse},
-        text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=two-coins> %i",
+        text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=two-coins> %s",
     },
         { point=.top_right },
         { point=.bottom_right },
@@ -56,5 +57,6 @@ inv_update_backpack_state :: proc () {
     partials.set_container_state(&inv_page.backpack, data.player.backpack)
 
     solaris := data.container_item_count(data.player.backpack^, "solari")
-    ui.set_text(inv_page.backpack.solaris_text, solaris)
+    solaris_text := core.format_int(solaris, allocator=context.temp_allocator)
+    ui.set_text(inv_page.backpack.solaris_text, solaris_text)
 }

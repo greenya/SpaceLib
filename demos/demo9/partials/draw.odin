@@ -537,7 +537,7 @@ draw_container_slot :: proc (f: ^ui.Frame) {
             }
         } else { // stackable item -- show only number in the stack, and only if it is greater than 1
             if slot.count > 1 {
-                text := fmt.tprint(slot.count)
+                text := core.format_int(slot.count, allocator=context.temp_allocator)
                 text_pos := core.rect_bottom_right(f.rect) - {8,2}
                 text_font := fonts.get(.text_4r)
                 draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6))

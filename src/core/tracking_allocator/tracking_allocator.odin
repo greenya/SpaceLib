@@ -2,6 +2,7 @@ package spacelib_tracking_allocator
 
 import "core:fmt"
 import "core:mem"
+import "../../core"
 
 Print_Verbosity :: enum {
     full_always,
@@ -49,17 +50,20 @@ print :: proc (verbosity := Print_Verbosity.full_always, max_issues := 10, and_d
 
 @private
 print_report :: proc (max_issues: int) {
-    fmt.println("[TA] -------------- Report --------------")
-    fmt.println("[TA] Current memory allocated :", track.current_memory_allocated)
-    fmt.println("[TA] Total memory allocated   :", track.total_memory_allocated)
-    fmt.println("[TA] Total allocation count   :", track.total_allocation_count)
-    fmt.println("[TA] Total memory freed       :", track.total_memory_freed)
-    fmt.println("[TA] Total free count         :", track.total_free_count)
-    fmt.println("[TA] Peak memory allocated    :", track.peak_memory_allocated)
+    fmt_int :: proc (i: int) -> string { return core.format_int(    i , allocator=context.temp_allocator) }
+    fmt_i64 :: proc (i: i64) -> string { return core.format_int(int(i), allocator=context.temp_allocator) }
+
+    fmt.println("[TA] --------------- Report ---------------")
+    fmt.println("[TA] Current memory allocated :", fmt_i64(track.current_memory_allocated))
+    fmt.println("[TA] Peak memory allocated    :", fmt_i64(track.peak_memory_allocated))
+    fmt.println("[TA] Total memory allocated   :", fmt_i64(track.total_memory_allocated))
+    fmt.println("[TA] Total memory freed       :", fmt_i64(track.total_memory_freed))
+    fmt.println("[TA] Total allocation count   :", fmt_i64(track.total_allocation_count))
+    fmt.println("[TA] Total free count         :", fmt_i64(track.total_free_count))
 
     allocation_map_len := len(track.allocation_map)
     if allocation_map_len > 0 {
-        fmt.eprintfln("[TA] %i allocation(s) not freed:", allocation_map_len)
+        fmt.eprintfln("[TA] %s allocation(s) not freed:", fmt_int(allocation_map_len))
         i := 0; for _, entry in track.allocation_map {
             fmt.eprintfln("[TA] - %i bytes @ %v", entry.size, entry.location)
             i += 1; if i == max_issues {
@@ -81,5 +85,5 @@ print_report :: proc (max_issues: int) {
         }
     }
 
-    fmt.println("[TA] ------------------------------------")
+    fmt.println("[TA] --------------------------------------")
 }
