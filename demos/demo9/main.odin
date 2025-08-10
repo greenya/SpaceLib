@@ -1,10 +1,14 @@
 package demo9
 
+import "spacelib:core/stack_trace"
 import "spacelib:core/tracking_allocator"
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
     defer tracking_allocator.print(.minimal_unless_issues)
+
+    context.assertion_failure_proc = stack_trace.init()
+    defer stack_trace.destroy()
 
     app_startup()
 
