@@ -43,8 +43,6 @@ update_terse :: proc (f: ^Frame) {
             f.ui.terse_query_color_proc,
         )
 
-        if .terse_shrink in f.flags do terse.shrink_terse(f.terse)
-
         if f.flags & {.terse_size,.terse_width} != {} {
             f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w
         }

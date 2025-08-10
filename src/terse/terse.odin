@@ -12,17 +12,18 @@ Terse :: struct {
     pad         : Vec2,
     wrap        : bool,
     valign      : Vertical_Alignment,
-    words       : [dynamic] Word,
-    lines       : [dynamic] Line,
-    groups      : [dynamic] Group,
+    words       : [] Word,
+    lines       : [] Line,
+    groups      : [] Group,
 }
 
 Line :: struct {
     rect            : Rect,
     align           : Horizontal_Alignment,
     gap             : f32,
-    word_start_idx  : int,
-    word_count      : int,
+    words           : [] Word,
+    _word_start_idx : int,
+    _word_count     : int,
 }
 
 Word :: struct {
@@ -37,9 +38,9 @@ Word :: struct {
 
 Group :: struct {
     name            : string,
-    word_start_idx  : int,
-    word_count      : int,
-    rects           : [dynamic] Rect,
+    words           : [] Word,
+    _word_start_idx : int,
+    _word_count     : int,
 }
 
 Font :: struct {
@@ -69,6 +70,14 @@ default_align               :: Horizontal_Alignment.center
 default_font_name           :: "default"
 default_color_name          :: "default"
 
+@private
+Builder :: struct {
+    terse       : ^Terse,
+    words_arr   : [dynamic] Word,
+    lines_arr   : [dynamic] Line,
+    groups_arr  : [dynamic] Group,
+}
+
 create :: proc (
     text        : string,
     rect        : Rect,
@@ -79,19 +88,21 @@ create :: proc (
     ensure(query_font != nil)
     ensure(query_color != nil)
 
-    terse := new(Terse, allocator)
-    terse.rect = rect
-    terse.rect_input = rect
-    terse.valign = default_valign
-    terse.words.allocator = allocator
-    terse.lines.allocator = allocator
-    terse.groups.allocator = allocator
+    builder: Builder
+    builder.terse = new(Terse, allocator)
+    builder.terse.rect = rect
+    builder.terse.rect_input = rect
+    builder.terse.valign = default_valign
 
     if text == "" {
-        terse.rect.w = 0
-        terse.rect.h = 0
-        return terse
+        builder.terse.rect.w = 0
+        builder.terse.rect.h = 0
+        return builder.terse
     }
+
+    builder.words_arr.allocator = allocator
+    builder.lines_arr.allocator = allocator
+    builder.groups_arr.allocator = allocator
 
     alpha := f32(1)
     brightness := f32(0)
@@ -117,7 +128,7 @@ create :: proc (
     word_tab_width  : f32
 
     for para in strings.split(text, "\n", context.temp_allocator) {
-        line := append_line(terse, stack.top(fonts_stack))
+        line := append_line(&builder, stack.top(fonts_stack))
 
         cursor = { .text, 0 }
         for i:=0; i<len(para); i+=1 {
@@ -161,10 +172,10 @@ create :: proc (
                     case "left"     : line.align = .left
                     case "center"   : line.align = .center
                     case "right"    : line.align = .right
-                    case "wrap"     : terse.wrap = true
-                    case "top"      : terse.valign = .top
-                    case "middle"   : terse.valign = .middle
-                    case "bottom"   : terse.valign = .bottom
+                    case "wrap"     : builder.terse.wrap = true
+                    case "top"      : builder.terse.valign = .top
+                    case "middle"   : builder.terse.valign = .middle
+                    case "bottom"   : builder.terse.valign = .bottom
 
                     case "/font":
                         ensure(!stack.is_empty(fonts_stack), "Fonts stack underflow")
@@ -183,7 +194,7 @@ create :: proc (
 
                     case "nobreak":
                         ensure(!nobreak.active, "\"nobreak\" commands cannot be nested")
-                        nobreak = { true, len(terse.words)-1 }
+                        nobreak = { true, len(builder.words_arr)-1 }
                         last_opened_command = .nobreak
 
                     case "/nobreak":
@@ -208,7 +219,7 @@ create :: proc (
                                 font := query_font(command_value)
                                 ensure(font.measure_text != nil, "Font.measure_text must be set")
                                 stack.push(&fonts_stack, font)
-                                line.rect.h = line.word_count > 0 ? max(line.rect.h, font.height) : font.height
+                                line.rect.h = line._word_count > 0 ? max(line.rect.h, font.height) : font.height
                                 last_opened_command = .font
 
                             case "color":
@@ -219,7 +230,7 @@ create :: proc (
 
                             case "group":
                                 ensure(group == nil, "Groups cannot be nested")
-                                group = append_group(terse, command_value)
+                                group = append_group(&builder, command_value)
                                 last_opened_command = .group
 
                             case "icon":
@@ -229,8 +240,8 @@ create :: proc (
 
                             case "tab":
                                 word_tab_width = f32(parse_int(command_value)) // todo: use parse_f32() when it can parse any float
-                                if line.word_count > 0 {
-                                    last_word := &terse.words[line.word_start_idx + line.word_count - 1]
+                                if line._word_count > 0 {
+                                    last_word := &builder.words_arr[line._word_start_idx + line._word_count - 1]
                                     last_word_x2_local := last_word.rect.x + last_word.rect.w - line.rect.x
                                     word_tab_width -= last_word_x2_local
                                 }
@@ -241,10 +252,10 @@ create :: proc (
                                 line.gap = gap_ratio * stack.top(fonts_stack).height
 
                             case "pad":
-                                ensure(len(terse.words) == 0 && len(terse.lines) == 1, "Can apply pad only on 1st line with no words measured")
-                                terse.pad = parse_vec_int(command_value)
-                                terse.lines[0].rect = core.rect_moved(terse.lines[0].rect, terse.pad)
-                                terse.rect = core.rect_inflated(terse.rect, -terse.pad)
+                                ensure(len(builder.words_arr) == 0 && len(builder.lines_arr) == 1, "Can apply pad only on 1st line with no words measured")
+                                builder.terse.pad = parse_vec_int(command_value)
+                                builder.lines_arr[0].rect = core.rect_moved(builder.lines_arr[0].rect, builder.terse.pad)
+                                core.rect_inflate(&builder.terse.rect, -builder.terse.pad)
 
                             case:
                                 fmt.panicf("Unknown command pair \"%v\"", command)
@@ -266,15 +277,15 @@ create :: proc (
                         ? Vec2 { word_tab_width, font.height }\
                         : font->measure_text(word)
 
-                line_break_needed := line.rect.w + size.x > terse.rect.w && line.word_count > 0
-                if terse.wrap && line_break_needed {
+                line_break_needed := line.rect.w + size.x > builder.terse.rect.w && line._word_count > 0
+                if builder.terse.wrap && line_break_needed {
                     line_break_allowed := true
                     nobreak_first_word_idx := -1
 
                     if nobreak.active {
-                        if nobreak.last_breakable_word_idx != len(terse.words)-1 { // does list have words
+                        if nobreak.last_breakable_word_idx != len(builder.words_arr)-1 { // does list have words
                             first_word_idx := 1 + nobreak.last_breakable_word_idx
-                            if first_word_idx == line.word_start_idx { // start of the line? -- skip append line
+                            if first_word_idx == line._word_start_idx { // start of the line? -- skip append line
                                 line_break_allowed = false
                             } else {
                                 nobreak_first_word_idx = first_word_idx
@@ -283,19 +294,19 @@ create :: proc (
                     }
 
                     if line_break_allowed {
-                        continue_tab_width := last_line_continue_tab_width(terse)
-                        line = append_line(terse, font, nobreak_first_word_idx)
+                        continue_tab_width := last_line_continue_tab_width(builder)
+                        line = append_line(&builder, font, nobreak_first_word_idx)
                         if continue_tab_width > 0 {
-                            append_word(terse, "", {continue_tab_width,size.y}, font, {}, false, group)
+                            append_word(&builder, "", {continue_tab_width,size.y}, font, {}, false, group)
                         }
                     }
                 }
 
-                if word != " " || word_is_tab || line_has_printable_words(terse, line) { // skip " " at the start of the line
+                if word != " " || word_is_tab || line_has_printable_words(builder, line^) { // skip " " at the start of the line
                     color := stack.top(colors_stack)
                     color = core.brightness(color, brightness)
                     color = core.alpha(color, alpha)
-                    append_word(terse, word, size, font, color, word_is_icon, group)
+                    append_word(&builder, word, size, font, color, word_is_icon, group)
                 }
 
                 word = ""
@@ -307,76 +318,75 @@ create :: proc (
         }
     }
 
-    apply_last_line_gap(terse)
-    for &l in terse.lines do update_line_ending_space(terse, &l)
+    apply_last_line_gap(builder)
+    for &l in builder.lines_arr do update_line_ending_space(&builder, &l)
 
-    last_line := slice.last_ptr(terse.lines[:])
+    last_line := slice.last_ptr(builder.lines_arr[:])
     assert(last_line != nil)
 
     // apply vertical alignment
-    vertical_empty_space := terse.rect.y + terse.rect.h - (last_line.rect.y + last_line.rect.h)
-    if vertical_empty_space > 0 || !terse.wrap {
+    vertical_empty_space := builder.terse.rect.y + builder.terse.rect.h - (last_line.rect.y + last_line.rect.h)
+    if vertical_empty_space > 0 || !builder.terse.wrap {
         // for negative empty space, we apply vertical alignment only for non-wrapping text (one-liners);
         // for wrapping text it will be aligned to the top
         offset_rect_y: f32
 
-        switch terse.valign {
+        switch builder.terse.valign {
         case .top: // already aligned
         case .middle: offset_rect_y = vertical_empty_space/2
         case .bottom: offset_rect_y = vertical_empty_space
         }
 
-        if offset_rect_y != 0 do for &line in terse.lines {
+        if offset_rect_y != 0 do for &line in builder.lines_arr {
             line.rect.y += offset_rect_y
-            for &w in line_words(terse, &line) do w.rect.y += offset_rect_y
+            for &w in builder_line_words(builder, line) do w.rect.y += offset_rect_y
         }
     }
 
-    for &line in terse.lines {
+    for &line in builder.lines_arr {
         // apply horizontal alignment
         switch line.align {
         case .left: // already aligned
         case .center, .right:
-            offset_rect_x := (terse.rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
+            offset_rect_x := (builder.terse.rect.w - line.rect.w) / (line.align == .center ? 2 : 1)
             line.rect.x += offset_rect_x
-            for &w in line_words(terse, &line) do w.rect.x += offset_rect_x
+            for &w in builder_line_words(builder, line) do w.rect.x += offset_rect_x
         }
 
         // vertically center words in a line in case they have different heights
-        for &w in line_words(terse, &line) {
+        for &w in builder_line_words(builder, line) {
             space := (line.rect.h - w.rect.h)/2
             w.rect.y += space
         }
     }
 
-    // update terse.rect
-    first_line := slice.first_ptr(terse.lines[:])
+    // update full rect
+    first_line := slice.first_ptr(builder.lines_arr[:])
     if first_line != nil {
-        terse.rect = first_line.rect
-        for line in terse.lines[1:] do core.rect_grow(&terse.rect, line.rect)
-        terse.rect = core.rect_inflated(terse.rect, terse.pad)
+        builder.terse.rect = first_line.rect
+        for line in builder.lines_arr[1:] do core.rect_grow(&builder.terse.rect, line.rect)
+        core.rect_inflate(&builder.terse.rect, builder.terse.pad)
     }
 
-    // generate rects for terse.groups
-    for &group in terse.groups {
-        prev_line_idx := int(-1)
-        for &w in group_words(terse, &group) {
-            if w.line_idx != prev_line_idx {
-                append(&group.rects, w.rect)
-            } else {
-                core.rect_grow(slice.last_ptr(group.rects[:]), w.rect)
-            }
-            prev_line_idx = w.line_idx
-        }
-    }
+    // prepare slices and return the terse
 
-    return terse
+    shrink(&builder.words_arr)
+    builder.terse.words = builder.words_arr[:]
+
+    shrink(&builder.lines_arr)
+    builder.terse.lines = builder.lines_arr[:]
+    for &l in builder.terse.lines do l.words = builder_line_words(builder, l)
+
+    shrink(&builder.groups_arr)
+    builder.terse.groups = builder.groups_arr[:]
+    for &g in builder.terse.groups do g.words = builder_group_words(builder, g)
+
+    return builder.terse
 }
 
 destroy :: proc (terse: ^Terse) {
     if terse == nil do return
 
-    for group in terse.groups do delete(group.rects)
     delete(terse.groups)
     delete(terse.lines)
     delete(terse.words)
@@ -385,52 +395,52 @@ destroy :: proc (terse: ^Terse) {
 }
 
 @private
-append_line :: proc (terse: ^Terse, font: ^Font, nobreak_first_word_idx := -1) -> ^Line {
-    line_rect_y := terse.rect.y
+append_line :: proc (builder: ^Builder, font: ^Font, nobreak_first_word_idx := -1) -> ^Line {
+    line_rect_y := builder.terse.rect.y
     line_align := default_align
 
-    prev_line := slice.last_ptr(terse.lines[:])
+    prev_line := slice.last_ptr(builder.lines_arr[:])
     if prev_line != nil {
-        apply_last_line_gap(terse)
+        apply_last_line_gap(builder^)
 
         line_rect_y = prev_line.rect.y + prev_line.rect.h + font.line_spacing
         line_align = prev_line.align
 
-        update_line_width(terse, prev_line)
+        update_line_width(builder^, prev_line)
     }
 
     line := Line {
-        rect    = { terse.rect.x, line_rect_y, 0, font.height },
+        rect    = { builder.terse.rect.x, line_rect_y, 0, font.height },
         align   = line_align,
     }
 
     // move nobreak words from end of last line to start of new line
     if nobreak_first_word_idx >= 0 {
-        line.word_start_idx = nobreak_first_word_idx
-        line.word_count = len(terse.words) - line.word_start_idx
+        line._word_start_idx = nobreak_first_word_idx
+        line._word_count = len(builder.words_arr) - line._word_start_idx
         assert(prev_line != nil)
-        prev_line.word_count -= line.word_count
+        prev_line._word_count -= line._word_count
 
-        word_x_offset := -(terse.words[line.word_start_idx].rect.x - prev_line.rect.x)
+        word_x_offset := -(builder.words_arr[line._word_start_idx].rect.x - prev_line.rect.x)
         word_y_offset := line.rect.y - prev_line.rect.y
-        for &w in line_words(terse, &line) {
+        for &w in builder_line_words(builder^, line) {
             w.rect.x += word_x_offset
             w.rect.y += word_y_offset
         }
 
-        update_line_width(terse, prev_line)
-        update_line_width(terse, &line)
+        update_line_width(builder^, prev_line)
+        update_line_width(builder^, &line)
     }
 
-    append(&terse.lines, line)
-    return slice.last_ptr(terse.lines[:])
+    append(&builder.lines_arr, line)
+    return slice.last_ptr(builder.lines_arr[:])
 }
 
 @private
-update_line_width :: proc (terse: ^Terse, line: ^Line) {
-    if line.word_count > 0 {
-        last_word := &terse.words[line.word_start_idx + line.word_count - 1]
-        first_word_x1 := terse.words[line.word_start_idx].rect.x
+update_line_width :: proc (builder: Builder, line: ^Line) {
+    if line._word_count > 0 {
+        last_word := &builder.words_arr[line._word_start_idx + line._word_count - 1]
+        first_word_x1 := builder.words_arr[line._word_start_idx].rect.x
         last_word_x2 := last_word.rect.x + last_word.rect.w
         line.rect.w = last_word_x2 - first_word_x1
     } else {
@@ -439,45 +449,45 @@ update_line_width :: proc (terse: ^Terse, line: ^Line) {
 }
 
 @private
-update_line_ending_space :: proc (terse: ^Terse, line: ^Line) {
-    if line.word_count > 0 {
-        last_word := &terse.words[line.word_start_idx + line.word_count - 1]
-        if strings.ends_with(last_word.text, " ") {
-            last_word.text = last_word.text[:len(last_word.text)-1]
-            size := last_word.font->measure_text(last_word.text)
-            line.rect.w -= last_word.rect.w - size.x
-            last_word.rect.w = size.x
-        }
+update_line_ending_space :: proc (builder: ^Builder, line: ^Line) {
+    if line._word_count == 0 do return
+
+    last_word := &builder.words_arr[line._word_start_idx + line._word_count - 1]
+    if strings.ends_with(last_word.text, " ") {
+        last_word.text = last_word.text[:len(last_word.text)-1]
+        size := last_word.font->measure_text(last_word.text)
+        line.rect.w -= last_word.rect.w - size.x
+        last_word.rect.w = size.x
     }
 }
 
 @private
-apply_last_line_gap :: proc (terse: ^Terse) {
-    if len(terse.lines) < 2 do return // do not apply gap if no lines OR there is only one line
+apply_last_line_gap :: proc (builder: Builder) {
+    if len(builder.lines_arr) < 2 do return // do not apply gap if no lines OR there is only one line
 
-    line := slice.last_ptr(terse.lines[:])
+    line := slice.last_ptr(builder.lines_arr[:])
     if line.gap == 0 do return
 
     line.rect.y += line.gap
-    for &w in line_words(terse, line) do w.rect.y += line.gap
+    for &w in builder_line_words(builder, line^) do w.rect.y += line.gap
 }
 
 @private
-line_has_printable_words :: proc (terse: ^Terse, line: ^Line) -> bool {
-    for w in line_words(terse, line) {
+line_has_printable_words :: proc (builder: Builder, line: Line) -> bool {
+    for w in builder_line_words(builder, line) {
         if len(w.text) > 0 && w.text != " " do return true
     }
     return false
 }
 
 @private
-last_line_continue_tab_width :: proc (terse: ^Terse) -> f32 {
+last_line_continue_tab_width :: proc (builder: Builder) -> f32 {
     // text text text      <tab=x> text text text| <- wrap
     // <---continue_tab_width----> text...       |
 
-    if len(terse.lines) > 0 {
-        line := slice.last_ptr(terse.lines[:])
-        #reverse for w in line_words(terse, line) {
+    if len(builder.lines_arr) > 0 {
+        line := slice.last_ptr(builder.lines_arr[:])
+        #reverse for w in builder_line_words(builder, line^) {
             if w.text == "" { // TODO: this is ugly, consider adding flags to Word, so its possible to detect tab for sure
                 return w.rect.x + w.rect.w - line.rect.x
             }
@@ -487,16 +497,15 @@ last_line_continue_tab_width :: proc (terse: ^Terse) -> f32 {
 }
 
 @private
-append_group :: proc (terse: ^Terse, name: string) -> ^Group {
+append_group :: proc (builder: ^Builder, name: string) -> ^Group {
     group := Group { name=name }
-    group.rects.allocator = terse.groups.allocator
-    append(&terse.groups, group)
-    return slice.last_ptr(terse.groups[:])
+    append(&builder.groups_arr, group)
+    return slice.last_ptr(builder.groups_arr[:])
 }
 
 @private
 append_word :: proc (
-    terse   : ^Terse,
+    builder : ^Builder,
     text    : string,
     size    : Vec2,
     font    : ^Font,
@@ -504,7 +513,7 @@ append_word :: proc (
     is_icon : bool,
     group   : ^Group,
 ) {
-    line := slice.last_ptr(terse.lines[:])
+    line := slice.last_ptr(builder.lines_arr[:])
     assert(line != nil)
 
     word := Word {
@@ -514,53 +523,18 @@ append_word :: proc (
         color       = color,
         is_icon     = is_icon,
         in_group    = group != nil,
-        // idx         = len(terse.words), // len value as we are about to add this word now
-        line_idx    = len(terse.lines) - 1,
+        line_idx    = len(builder.lines_arr) - 1,
     }
 
-    append(&terse.words, word)
-    line.word_count += 1
-    if line.word_count == 1 do line.word_start_idx = len(terse.words)-1 // word.idx
+    append(&builder.words_arr, word)
+    line._word_count += 1
+    if line._word_count == 1 do line._word_start_idx = len(builder.words_arr) - 1
 
     line.rect.w += size.x
     line.rect.h = max(line.rect.h, size.y)
 
     if group != nil {
-        group.word_count += 1
-        if group.word_count == 1 do group.word_start_idx = len(terse.words)-1 // word.idx
-    }
-}
-
-@private
-parse_icon_args :: proc (text: string) -> (name: string, scale: Vec2) {
-    name = text
-    scale = {1,1}
-
-    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
-    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
-        name = text[0:pair_sep_idx]
-        scale = parse_vec(text[pair_sep_idx+1:])
-    }
-
-    return
-}
-
-@private
-parse_vec :: proc (text: string) -> Vec2 {
-    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
-    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
-        return { parse_f32(text[0:pair_sep_idx]), parse_f32(text[pair_sep_idx+1:]) }
-    } else {
-        return parse_f32(text)
-    }
-}
-
-@private
-parse_vec_int :: proc (text: string) -> Vec2 {
-    pair_sep_idx := strings.index_rune(text, default_args_separator_rune)
-    if pair_sep_idx >= 0 && pair_sep_idx <= len(text)-2 {
-        return { f32(parse_int(text[0:pair_sep_idx])), f32(parse_int(text[pair_sep_idx+1:])) }
-    } else {
-        return f32(parse_int(text))
+        group._word_count += 1
+        if group._word_count == 1 do group._word_start_idx = len(builder.words_arr) - 1
     }
 }

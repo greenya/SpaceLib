@@ -34,8 +34,20 @@ rect_bar_right              :: #force_inline proc (r: Rect, thick: f32) -> Rect 
 rect_bar_center_horizontal  :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y+(r.h-thick)/2, r.w, thick } }
 rect_bar_center_vertical    :: #force_inline proc (r: Rect, thick: f32) -> Rect { return { r.x+(r.w-thick)/2, r.y, thick, r.h } }
 
+rect_move :: #force_inline proc (r: ^Rect, v: Vec2) {
+    r.x += v.x
+    r.y += v.y
+}
+
 rect_moved :: #force_inline proc (r: Rect, v: Vec2) -> Rect {
     return { r.x+v.x, r.y+v.y, r.w, r.h }
+}
+
+rect_inflate :: #force_inline proc (r: ^Rect, size: Vec2) {
+    r.x -= size.x
+    r.y -= size.y
+    r.w += 2*size.x
+    r.h += 2*size.y
 }
 
 rect_inflated :: #force_inline proc (r: Rect, size: Vec2) -> Rect {

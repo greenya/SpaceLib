@@ -7,7 +7,6 @@ import "vendor:raylib"
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
-import "spacelib:terse"
 
 import "../colors"
 import "../data"
@@ -43,7 +42,7 @@ draw_terse :: proc (f: ^ui.Frame, color: Color = {}, offset := Vec2 {}, drop_sha
     for &line in f.terse.lines {
         if !core.rects_intersect(line.rect, f.ui.scissor_rect) do continue
 
-        for word in terse.line_words(f.terse, &line) {
+        for word in line.words {
             rect := offset != {} ? core.rect_moved(word.rect, offset) : word.rect
             if !core.rects_intersect(rect, f.ui.scissor_rect) do continue
 

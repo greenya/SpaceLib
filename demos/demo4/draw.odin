@@ -85,10 +85,10 @@ draw_ui_checkbox :: proc (f: ^ui.Frame) {
     draw_terse(f, text_color, offset)
 
     assert(len(f.terse.groups) == 1)
-    assert(len(f.terse.groups[0].rects) == 1)
+    assert(len(f.terse.groups[0].words) == 1)
     assert(f.terse.groups[0].name == "tick")
 
-    tick_rect := core.rect_moved(f.terse.groups[0].rects[0], offset)
+    tick_rect := core.rect_moved(f.terse.groups[0].words[0].rect, offset)
     if f.selected do draw_sprite(.icon_check, tick_rect, colors[.c6].val)
 }
 

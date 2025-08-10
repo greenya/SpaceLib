@@ -267,9 +267,6 @@ Flag :: enum {
     // The frame's `terse.rect` is used for mouse hit test instead of `rect`.
     // This flag can be used only with `.terse` flag.
     terse_hit_rect,
-    // After the frame's `terse` is regenerated, `terse.shrink_terse()` will also be called.
-    // This flag can be used only with `.terse` flag.
-    terse_shrink,
 }
 
 Animation :: struct {

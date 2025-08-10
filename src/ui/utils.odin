@@ -9,7 +9,7 @@ import "../core"
 
 print_frame_tree :: proc (
     f           : ^Frame,
-    skip_flags  := bit_set [Flag] { .terse_size, .terse_height, .terse_width, .terse_hit_rect, .terse_shrink },
+    skip_flags  := bit_set [Flag] { .terse_size, .terse_height, .terse_width, .terse_hit_rect },
     max_depth   := 20,
     _depth      := 0,
 ) {

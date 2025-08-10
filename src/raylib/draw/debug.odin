@@ -163,7 +163,7 @@ debug_terse :: proc (t: ^terse.Terse) {
     group_color         :: core.magenta
     group_name_color    :: core.black
 
-    for group in t.groups do for i_rect, i in group.rects {
+    for group in t.groups do for i_rect, i in terse.group_rects(group, context.temp_allocator) {
         rect_lines(i_rect, 3, group_color)
         if i == 0 {
             font := rl.GetFontDefault()

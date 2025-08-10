@@ -32,6 +32,7 @@ app_startup :: proc () {
 
     // events.open_screen({ screen_name="home" })
     // events.open_screen({ screen_name="credits" })
+    // events.open_screen({ screen_name="credits", tab_name="lorem_ipsum" })
     // events.start_conversation({ conversation_id="tyg_rolsum", chat_id="welcome" })
     // events.start_conversation({ conversation_id="ornithopter_pilot", chat_id="welcome" })
     // events.open_screen({ screen_name="settings", tab_name="display" })

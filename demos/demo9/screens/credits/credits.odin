@@ -169,8 +169,8 @@ add_lorem_ipsum_page :: proc () {
     // we don't expect group list to change,
     // only group positions will change when content gets scrolled or resized
     tr := ui.get(screen.lorem_content, "text").terse
-    for _, i in tr.groups {
-        text := terse.text_of_group(tr, i, context.temp_allocator)
+    for g, i in tr.groups {
+        text := terse.group_text(g, context.temp_allocator)
         ui.add_frame(nav_list, {
             name    = "nav",
             flags   = {.terse,.terse_height},
@@ -184,11 +184,11 @@ add_lorem_ipsum_page :: proc () {
                 lorem_terse := lorem_text.terse
                 group_idx := ui.index(f)
                 group := &lorem_terse.groups[group_idx]
-                assert(len(group.rects) > 0)
+                assert(len(group.words) > 0)
 
                 flow := ui.layout_flow(screen.lorem_content)
                 screen.lorem_offset_target = clamp(
-                    group.rects[0].y - lorem_terse.rect.y - 10,
+                    group.words[0].rect.y - lorem_terse.rect.y - 10,
                     flow.scroll.offset_min,
                     flow.scroll.offset_max,
                 )

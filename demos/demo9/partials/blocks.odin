@@ -26,7 +26,7 @@ add_button_small_icon :: proc (parent: ^ui.Frame, name, icon: string, size: f32)
 add_text_and_scrollbar :: proc (target: ^ui.Frame) -> (text, track, thumb: ^ui.Frame) {
     text = ui.add_frame(target, {
         name="text",
-        flags={.terse,.terse_height,.terse_shrink},
+        flags={.terse,.terse_height},
         text_format="<wrap,left,font=text_4l,color=primary>%s",
     })
 
