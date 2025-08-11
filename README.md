@@ -132,14 +132,6 @@ TODO: [?] ui: add support for automatic child frames generation for each text_te
     - the idea is to be able to have enter/leave/click for any group in terse
     - maybe we need to add Frame.draw/enter/leave/click_terse_group for handling events for those dynamic children
 
-TODO: [?] ui: drag-n-drop frame info
-
-    currently the dragged frame is always the one who has captured mouse; this means that no other frames receive any enter/leave events; now considered a scenario where we want to create an inventory with ability to drag-n-drop items. The item that got drag is fine, as it receives continuous drag callback; now, how can user get item below the dragged item, to highlight it or perform drop operation when drag is finished. at the moment, there is no other way (i don't see) as manually tinker with ui.mouse_frames list; but it would be nice to be able to express that some frame are drop targets;
-
-    - maybe we should just extend Drag_Info, so it has current hovering frame, and the drag callback can decide what to do with it. This seems better and in one place (the dragged frame has all logic; again, the drag callback will be the same for all inventory slots in most cases, so no issues there).
-
-    - very nice if we could have a way for a group of frames to highlight itself as indication for a user that they are valid targets (like dragging a weapon from inventory, could highlight weapon slots on the character as valid targets); this is probably has nothing to do with drag-target, as the drag handler of the frame who is doing the drag, can ask those frames to highlight itself at phase==.start and ask to disable such highlight at the phase==.end of the drag.
-
 TODO: [?] ui: maybe add support for logic resolution 1280x720
 
     maybe we don't need it, as its possible to do following:

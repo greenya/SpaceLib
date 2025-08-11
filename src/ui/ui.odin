@@ -229,7 +229,13 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
                 d.delta = new_total_offset - d.total_offset
                 d.total_offset = new_total_offset
 
-                drag(f, d^)
+                d.target = nil
+                #reverse for k in ui.mouse_frames do if k != f && !passing(k) {
+                    d.target = k
+                    break
+                }
+
+                drag(ui.captured.frame, ui.captured.drag)
             }
 
             if lmb_released || !keep_capture {

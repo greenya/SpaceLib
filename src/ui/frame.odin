@@ -282,6 +282,8 @@ Animation :: struct {
 Drag_Info :: struct {
     // Phase of the drag operation.
     phase: enum { start, dragging, end },
+    // The first visible and non-passing frame under the mouse cursor, excluding the one being dragged.
+    target: ^Frame,
     // Absolute mouse position when the drag started.
     start_mouse_pos: Vec2,
     // Local position within the frame where the drag started.
