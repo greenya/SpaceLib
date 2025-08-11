@@ -58,15 +58,19 @@ open_dropdown_listener :: proc (args: events.Args) {
     assert(target in dropdowns.data)
 
     data := dropdowns.data[target]
-    // fmt.printfln("open dropdown: target=%s, selected=%s, names=%v, titles=%v", target.name, selected.name, names, titles)
+    dropdown := dropdowns.dropdown
 
-    dropdown := ui.get(dropdowns.layer, "dropdown")
+    debug :: false
+    if debug do fmt.println("---------------------------")
+    if debug do fmt.printfln("open dropdown: target=%s, selected=%s, names=%v, titles=%v", target.name, data.selected.name, data.names, data.titles)
 
-    // add items if needed
-    for i:=len(dropdown.children); i<len(data.names); i+=1 {
+    assert(len(dropdown.children) == 0)
+    for name, i in data.names {
         ui.add_frame(dropdown, {
-            text_format = "<pad=15:0,left,font=text_4l,color=primary_d2>%s",
+            name        = name,
+            text        = fmt.tprintf("<pad=15:0,left,font=text_4l,color=primary_d2>%s", data.titles[i]),
             flags       = {.radio,.terse,.terse_height},
+            selected    = name == data.selected.name,
             draw        = partials.draw_button_dropdown_item,
             click       = proc (f: ^ui.Frame) {
                 data    := dropdowns.data[dropdowns.target]
@@ -77,20 +81,6 @@ open_dropdown_listener :: proc (args: events.Args) {
             },
         })
     }
-
-    // setup items
-    for child, i in dropdown.children {
-        if i < len(data.names) {
-            ui.set_name(child, data.names[i])
-            ui.set_text(child, data.titles[i], shown=true)
-            child.selected = data.selected.name == data.names[i]
-        } else {
-            ui.hide(child)
-        }
-    }
-
-    debug :: false
-    if debug do fmt.println("---------------------------")
 
     // anchor dropdown to the bottom of the target
     ui.set_anchors(dropdown,
@@ -186,5 +176,6 @@ anim_dropdown_disappear :: proc (f: ^ui.Frame) {
         f.flags -= {.pass}
         f.offset = 0
         ui.hide(dropdowns.layer)
+        ui.destroy_frame_children(dropdowns.dropdown)
     }
 }

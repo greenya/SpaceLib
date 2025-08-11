@@ -129,6 +129,9 @@ Frame_Init :: struct {
 
     // User pointer.
     user_ptr: rawptr,
+
+    // User index.
+    user_idx: int,
 }
 
 Frame :: struct {
@@ -687,6 +690,16 @@ update :: proc (f: ^Frame, include_hidden := false, repeat := 1) {
         mark_rect_for_update_frame_tree(f, include_hidden)
         update_rect_frame_tree(f, include_hidden)
     }
+}
+
+destroy_frame :: proc (f: ^Frame) {
+    set_parent(f, nil)
+    destroy_frame_tree(f)
+}
+
+destroy_frame_children :: proc (f: ^Frame) {
+    for child in f.children do destroy_frame_tree(child)
+    clear(&f.children)
 }
 
 @private
