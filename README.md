@@ -3,6 +3,7 @@
     /core                       - core types and utilities
         /clock                  - clock with time scale support
         /stack                  - fixed size stack
+        /stack_trace            - debug stack trace
         /timed_scope            - evaluate scope execution time
         /tracking_allocator     - memory allocation tracker
     /events                     - [planned] [maybe] event bus

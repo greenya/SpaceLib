@@ -30,6 +30,7 @@ Anchor_Point :: enum {
 
 set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
     delete(f.anchors)
+
     f.anchors = make([] Anchor, len(anchors))
     for a, i in anchors {
         init := a
@@ -38,6 +39,8 @@ set_anchors :: proc (f: ^Frame, anchors: ..Anchor) {
         if init.rel_point == .none  do init.rel_point = init.point
         f.anchors[i] = init
     }
+
+    update(f)
 }
 
 clear_anchors :: proc (f: ^Frame) {
