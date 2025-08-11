@@ -334,21 +334,22 @@ add_progress_bar :: proc (parent: ^ui.Frame, title: string, progress_ratio: f32)
     return progress_bar
 }
 
-add_chevron_label :: proc (parent: ^ui.Frame, name, icon: string, text := "") -> ^ui.Frame {
-    label := ui.add_frame(parent, {
+add_chevron_label :: proc (parent: ^ui.Frame, name, icon: string, text_format := "") -> (label, text: ^ui.Frame) {
+    label = ui.add_frame(parent, {
         name=name,
         text=icon,
         size={130,30},
         draw=draw_chevron_label_rect,
     })
 
-    ui.add_frame(label, {
+    text = ui.add_frame(label, {
         name="text",
+        text_format=text_format,
         flags={.terse},
     },
         { point=.top_left, offset={40,0} },
         { point=.bottom_right },
     )
 
-    return label
+    return
 }

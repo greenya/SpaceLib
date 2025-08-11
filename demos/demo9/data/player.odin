@@ -9,6 +9,7 @@ Player :: struct {
 
     backpack: ^Container,
     // loadout: ^Container,
+    deposit: ^Container,
 }
 
 player: Player
@@ -21,7 +22,8 @@ create_player :: proc () {
         intel_points_avail = 123,
         skill_points_avail = 1,
 
-        backpack = create_container(slot_count=35, max_volume=175),
+        backpack    = create_container(slot_count=35, max_volume=175),
+        deposit     = create_container(slot_count=30, max_volume=800),
     }
 
     css :: container_set_slot
@@ -38,4 +40,5 @@ create_player :: proc () {
 
 destroy_player :: proc () {
     destroy_container(player.backpack)
+    destroy_container(player.deposit)
 }

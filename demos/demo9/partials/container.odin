@@ -1,5 +1,6 @@
 package partials
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../data"
@@ -8,12 +9,13 @@ Container :: struct {
     root                : ^ui.Frame,
 
     header              : ^ui.Frame,
-    header_icon         : ^ui.Frame,
-    header_text         : ^ui.Frame,
-
     footer              : ^ui.Frame,
-    footer_slots_text   : ^ui.Frame,
-    footer_volume_text  : ^ui.Frame,
+
+    title_icon          : ^ui.Frame,
+    title_text          : ^ui.Frame,
+    solaris_text        : ^ui.Frame,
+    slots_text          : ^ui.Frame,
+    volume_text         : ^ui.Frame,
 
     volume_bar          : ^ui.Frame,
     volume_bar_arrow    : ^ui.Frame,
@@ -38,8 +40,17 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
         { point=.top_right, offset={-10,10} },
     )
 
-    con.header_icon = ui.get(con.header, "icon")
-    con.header_text = ui.get(con.header, "text")
+    con.title_icon = ui.get(con.header, "icon")
+    con.title_text = ui.get(con.header, "text")
+
+    con.solaris_text = ui.add_frame(con.header, {
+        name="solaris",
+        flags={.terse},
+        text_format="<pad=10:0,right,font=text_4m,color=primary_l2,icon=two-coins> %s",
+    },
+        { point=.top_right },
+        { point=.bottom_right },
+    )
 
     con.footer = ui.add_frame(con.root, {
         name="footer",
@@ -50,11 +61,17 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
         { point=.bottom_right, offset=-10 },
     )
 
-    volume_label := add_chevron_label(con.footer, name="volume", icon="deployed_code")
-    slots_label := add_chevron_label(con.footer, name="slots", icon="view_cozy")
+    _, con.volume_text = add_chevron_label(con.footer,
+        name="volume",
+        icon="deployed_code",
+        text_format="<font=text_4r,color=primary_l2> %i / %i",
+    )
 
-    con.footer_volume_text = ui.get(volume_label, "text")
-    con.footer_slots_text = ui.get(slots_label, "text")
+    _, con.slots_text = add_chevron_label(con.footer,
+        name="slots",
+        icon="view_cozy",
+        text_format="<font=text_4r,color=primary_l2> %i / %i",
+    )
 
     // we only add this flow frame to have scroll;
     // maybe when Grid has own scroll we don't need it
@@ -98,9 +115,17 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
 set_container_state :: proc (con: ^Container, data_con: ^data.Container) {
     occupied_slots, max_slots, occupied_volume, max_volume := data.container_capacity(data_con^)
 
-    ui.set_text(con.footer_slots_text, occupied_slots, max_slots)
-    ui.set_text(con.footer_volume_text, int(occupied_volume), int(max_volume))
+    ui.set_text(con.slots_text, occupied_slots, max_slots)
+    ui.set_text(con.volume_text, int(occupied_volume), int(max_volume))
     ui.set_text(con.volume_bar_arrow, int(occupied_volume))
+
+    solaris := data.container_item_count(data_con^, "solari")
+    if solaris > 0 {
+        solaris_text := core.format_int(solaris, allocator=context.temp_allocator)
+        ui.set_text(con.solaris_text, solaris_text, shown=true)
+    } else {
+        ui.hide(con.solaris_text)
+    }
 
     {
         vol_bar_h := con.volume_bar.rect.h
@@ -120,7 +145,7 @@ set_container_state :: proc (con: ^Container, data_con: ^data.Container) {
     }
 
     // setup slots
-    for &s, i in data.player.backpack.slots {
+    for &s, i in data_con.slots {
         con.slots.children[i].flags -= {.hidden}
         con.slots.children[i].user_ptr = &s
     }

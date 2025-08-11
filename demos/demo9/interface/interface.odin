@@ -12,6 +12,7 @@ import "../partials"
 
 import "../screens/conversation"
 import "../screens/credits"
+import "../screens/deposit"
 import "../screens/home"
 import "../screens/player"
 import "../screens/settings"
@@ -57,6 +58,7 @@ create :: proc () {
 
     conversation.add(screens.layer)
     credits.add(screens.layer)
+    deposit.add(screens.layer)
     home.add(screens.layer)
     player.add(screens.layer)
     settings.add(screens.layer)

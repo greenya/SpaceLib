@@ -281,18 +281,27 @@ add_dev_stat_frames :: proc () {
         toggle.flags += {.check}
 
         for s in ui.get(ui_.root, "screens_layer").children {
+            if s.name == "conversation" do continue
+
             tabs := ui.find(s, "header/tabs")
             if tabs != nil do for t in tabs.children {
-                path := fmt.tprintf("%s/%s", s.name, t.name)
-                add_button(list,
-                    name=path,
-                    text=fmt.tprintf("<wrap,left,pad=10:0>%s", path),
-                    click=proc (f: ^ui.Frame) {
-                        parts := strings.split(f.name, "/", context.temp_allocator)
-                        events.open_screen({ screen_name=parts[0], tab_name=parts[1], skip_anim=dev.skip_curtain_anim })
-                    },
-                )
+                add_nav_button(list, s.name, t.name)
+            } else {
+                add_nav_button(list, s.name, "")
             }
+        }
+
+        add_nav_button :: proc (parent: ^ui.Frame, screen_name, tab_name: string) {
+            path := tab_name != "" ? fmt.tprintf("%s/%s", screen_name, tab_name) : screen_name
+            add_button(parent,
+                name=path,
+                text=fmt.tprintf("<wrap,left,pad=10:0>%s", path),
+                click=proc (f: ^ui.Frame) {
+                    parts := strings.split(f.name, "/", context.temp_allocator)
+                    screen_name, tab_name := parts[0], (len(parts) > 1 ? parts[1] : "")
+                    events.open_screen({ screen_name=screen_name, tab_name=tab_name, skip_anim=dev.skip_curtain_anim })
+                },
+            )
         }
     }
 
