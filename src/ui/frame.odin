@@ -525,6 +525,11 @@ first_visible_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
     return nil
 }
 
+first_hidden_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+    for child in parent.children do if .hidden in child.flags do return child
+    return nil
+}
+
 show_by_frame :: proc (f: ^Frame, hide_siblings := false) {
     if hide_siblings && f.parent != nil {
         for child in f.parent.children {
