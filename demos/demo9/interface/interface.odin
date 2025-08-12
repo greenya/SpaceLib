@@ -51,7 +51,7 @@ create :: proc () {
     )
 
     add_screens_layer(order=1, curtain_order=8)
-    // add_notifications_layer(order=2)
+    add_notifications_layer(order=2)
     add_modals_layer(order=3)
     add_dropdowns_layer(order=4)
     // add_tooltips_layer(order=5)
@@ -67,7 +67,8 @@ create :: proc () {
 }
 
 destroy :: proc () {
-    delete(dropdowns.data)
+    destroy_dropdowns_layer()
+    destroy_notifications_layer()
 
     ui.destroy(ui_)
     ui_ = nil

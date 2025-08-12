@@ -121,11 +121,15 @@ container_swap_slots :: proc (src_con: ^Container, src_slot_idx: int, dst_con: ^
         src_slot_volume := container_slot_volume(src_slot)
         dst_slot_volume := container_slot_volume(dst_slot)
 
-        _, _, src_con_occupied_volume, src_con_max_volume := container_capacity(src_con^)
-        _, _, dst_con_occupied_volume, dst_con_max_volume := container_capacity(dst_con^)
+        {
+            _, _, now, max := container_capacity(src_con^)
+            if now - src_slot_volume + dst_slot_volume > max do return .error_not_enough_volume
+        }
 
-        if src_slot_volume + dst_con_occupied_volume > dst_con_max_volume do return .error_not_enough_volume
-        if dst_slot_volume + src_con_occupied_volume > src_con_max_volume do return .error_not_enough_volume
+        {
+            _, _, now, max := container_capacity(dst_con^)
+            if now - dst_slot_volume + src_slot_volume > max do return .error_not_enough_volume
+        }
     }
 
     // all seems ok, do the swap

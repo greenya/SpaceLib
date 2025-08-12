@@ -77,13 +77,9 @@ Open_Screen :: struct {
 
 push_notification :: proc (args: Push_Notification) { send(.push_notification, args) }
 Push_Notification :: struct {
-    type    : Push_Notification_Type,
     title   : string,
     text    : string,
-}
-Push_Notification_Type :: enum {
-    info,
-    error,
+    is_error: bool,
 }
 
 set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }

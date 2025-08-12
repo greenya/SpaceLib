@@ -41,6 +41,10 @@ add_dropdowns_layer :: proc (order: int) {
     events.listen(.close_dropdown, close_dropdown_listener)
 }
 
+destroy_dropdowns_layer :: proc () {
+    delete(dropdowns.data)
+}
+
 set_dropdown_data_listener :: proc (args: events.Args) {
     data := args.(events.Set_Dropdown_Data)
     assert(data.target != nil)

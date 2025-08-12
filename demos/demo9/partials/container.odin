@@ -212,9 +212,9 @@ container_swap_slots :: proc (con_from: ^Container, idx_from: int, con_to: ^Cont
         }
     case .error_not_enough_volume:
         events.push_notification({
-            type    = .error,
             title   = "INVENTORY",
             text    = "Not enough free volume to store more items.",
+            is_error= true,
         })
     case .error_bad_slot_idx, .error_src_slot_is_empty:
         panic("Something is not right here")

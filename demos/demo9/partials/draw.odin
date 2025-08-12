@@ -241,6 +241,17 @@ draw_hexagon_rect_wide_hangout_accent :: proc (f: ^ui.Frame) {
     )
 }
 
+draw_hexagon_rect_wide_hangout_error :: proc (f: ^ui.Frame) {
+    draw_hexagon_header(f,
+        rect        = f.rect,
+        limit_x     = f.parent.rect.x,
+        limit_w     = f.parent.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.unrepairable, brightness=-.6),
+        hangout     = true,
+    )
+}
+
 draw_hexagon_rect_with_half_transparent_bg :: proc (f: ^ui.Frame) {
     draw_hexagon_header(f,
         rect        = f.terse.rect,
