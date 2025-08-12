@@ -226,6 +226,7 @@ app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
     if f.anim.ratio == 0 {
         ui.show(f)
+        ui.update(f, repeat=2)
         app_tooltip_update_anchor(f)
     }
 }
@@ -262,6 +263,4 @@ app_tooltip_update_anchor :: proc (f: ^ui.Frame) {
             f.anchors[0].offset = {0,30}
         }
     }
-
-    ui.update(f, include_hidden=true)
 }
