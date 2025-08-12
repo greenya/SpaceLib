@@ -133,7 +133,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
             inline_container := ui.add_frame(content, { layout=ui.Flow{ dir=.down, auto_size={.height} } })
             ui.add_frame(inline_container, { flags={.terse,.terse_height}, text="<top,left,color=c7>Test scrolling child frame" })
             sc := ui.add_frame(inline_container, { size={0,80}, flags={.scissor}, layout=ui.Flow{dir=.right,size={120,0},pad=10,gap=5,scroll={step=20}}, draw_after=draw_ui_border_15 })
-            for text in ([] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
+            for text in ([?] string { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta" }) {
                 ui.add_frame(sc, { flags={.capture,.radio,.terse}, text=text, draw=draw_ui_button })
             }
         }
@@ -205,7 +205,7 @@ main_menu_add_panel :: proc (parent: ^ui.Frame) -> ^ui.Frame {
         { point=.top_right, rel_point=.bottom_right, rel_frame=title_bar, offset={-25,0} },
     )
 
-    for info in ([][2] string {
+    for info in ([?][2] string {
         { "play"        , "<icon=play>Play " },
         { "options"     , "<icon=cog>Options " },
         { "how_to_play" , "<icon=question>How To Play "},

@@ -26,7 +26,7 @@ app_tooltip_create :: proc () {
     ui.add_frame(root, { name="image", size={0,128+16+16}, draw=draw_tooltip_image, text="[PH] image" })
 
     stats := ui.add_frame(root, { name="stats", size={0,72}, layout=ui.Flow{dir=.right_center,gap=20}, draw=draw_tooltip_stats })
-    for name in ([] string { "stat1", "stat2", "stat3", "stat4" }) {
+    for name in ([?] string { "stat1", "stat2", "stat3", "stat4" }) {
         item := ui.add_frame(stats, { name=name, flags={.terse,.terse_width},
             text_format="<font=text_18,color=bw_95>%s\n<font=text_32,color=bw_da>%.1f",
         })
@@ -36,7 +36,7 @@ app_tooltip_create :: proc () {
     resists := ui.add_frame(root, { name="resists", size={0,80},
         layout=ui.Flow{dir=.right_center,size={40,64},gap=4,align=.center}, draw=draw_tooltip_resists })
 
-    for name in ([] string { "bleed", "fire", "lightning", "poison", "blight" }) {
+    for name in ([?] string { "bleed", "fire", "lightning", "poison", "blight" }) {
         ui.add_frame(resists, { name=name, text="??", draw=draw_tooltip_resists_item })
     }
 

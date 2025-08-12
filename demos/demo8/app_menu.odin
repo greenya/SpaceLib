@@ -49,7 +49,7 @@ app_menu_add_bar_top :: proc (parent: ^ui.Frame) {
         { point=.bottom },
     )
 
-    for info in ([] struct { name:string, text:string } {
+    for info in ([?] struct { name:string, text:string } {
         { "tab_fragments"   , "FRAGMENTS" },
         { "tab_archetype"   , "ARCHETYPE" },
         { "tab_character"   , "CHARACTER" },
@@ -544,7 +544,7 @@ app_menu_add_page_inventory :: proc (parent: ^ui.Frame) {
 
     cols :: 9
 
-    for info in ([] struct { name:string, text:string, rows:int, item_tag: App_Data_Item_Tag } {
+    for info in ([?] struct { name:string, text:string, rows:int, item_tag: App_Data_Item_Tag } {
         { "consumables" , "<font=text_16,color=bw_59>CONSUMABLES" , 2, .consumable },
         { "quest"       , "<font=text_16,color=bw_59>QUEST"       , 1, .quest },
         { "materials"   , "<font=text_16,color=bw_59>MATERIALS"   , 3, .material },

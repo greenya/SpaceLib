@@ -81,7 +81,7 @@ main :: proc () {
         { point=.center },
     )
 
-    for text in ([] string { "A", "B", "C", "D", "E" }) {
+    for text in ([?] string { "A", "B", "C", "D", "E" }) {
         ui.add_frame(container, { name=text, text=text, draw=draw_slot,
             enter=proc (f: ^ui.Frame) { ui.animate(f, anim_slot_enter_feedback, .2) },
             leave=proc (f: ^ui.Frame) { ui.animate(f, anim_slot_leave_feedback, .6) },
