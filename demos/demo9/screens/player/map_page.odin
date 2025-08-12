@@ -144,7 +144,7 @@ add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
     partials.add_panel_header(parent, "LANDSCAPE", icon="landscape")
 
     details := add_map_info_panel_grid(parent)
-    for i in ([] struct { icon, text: string } {
+    for i in ([?] struct { icon, text: string } {
         { icon="flag_circle", text="2/2" },
         { icon="flag_circle", text="2/2" },
         { icon="flag_circle", text="1/1" },
@@ -159,7 +159,7 @@ add_map_info_panel_landscape :: proc (parent: ^ui.Frame) {
 add_map_info_panel_resource_density :: proc (parent: ^ui.Frame) {
     partials.add_panel_header(parent, "RESOURCE DENSITY", icon="lens_blur")
 
-    for rank in ([] struct { icon: string, list: [] string } {
+    for rank in ([?] struct { icon: string, list: [] string } {
         { icon="stat_3", list={ "cannabis", "spa", "hive", "database", "water_drop" } },
         { icon="stat_2", list={ "diamond", "deployed_code" } },
         { icon="stat_1", list={ "coronavirus" } },
@@ -282,7 +282,7 @@ add_map_legend_panel :: proc () {
 
     target_col: ^ui.Frame
 
-    for row in ([] union { Target, Header, Item } {
+    for row in ([?] union { Target, Header, Item } {
         // --------------------------------------------------------------------
         Target  { col=col_left },
         // --------------------------------------------------------------------

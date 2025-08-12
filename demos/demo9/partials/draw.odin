@@ -484,10 +484,12 @@ draw_chevron_label_rect :: proc (f: ^ui.Frame) {
 }
 
 draw_container_slot :: proc (f: ^ui.Frame) {
-    assert(f.user_ptr != nil)
-    slot := cast (^data.Container_Slot) f.user_ptr
+    con := ui.get_user_ptr(f, ^Container)
+    slot := &con.data.slots[f.user_idx]
 
     br_color := colors.get(.primary, alpha=.2)
+    br_color_focus := colors.get(.accent)
+    br_thick := f32(1)
 
     if slot.item != nil {
         draw_item_origin_rect(f.rect, slot.item.origin)
@@ -497,16 +499,20 @@ draw_container_slot :: proc (f: ^ui.Frame) {
         if slot.item.stack == 1 do draw_item_durability_and_liquid_levels(f.rect, slot)
         else                    do draw_item_stack_count(f.rect, slot.count)
 
-        br_color_hovered := colors.get(.accent)
-        hv_ratio := ui.hover_ratio(f, .Linear, .3, .Linear, .3)
-        br_color = core.ease_color(br_color, br_color_hovered, hv_ratio, .Linear)
+        if f.captured {
+            br_color = br_color_focus
+            br_thick = 3
+        } else {
+            hv_ratio := f.captured ? 1 : ui.hover_ratio(f, .Linear, .3, .Linear, .3)
+            br_color = core.ease_color(br_color, br_color_focus, hv_ratio, .Linear)
+        }
     } else {
         empty_sp_rect := core.rect_scaled(f.rect, .65)
         empty_sp_color := colors.get(.primary, alpha=.1)
         draw_sprite("add", empty_sp_rect, tint=empty_sp_color)
     }
 
-    draw.rect_lines(f.rect, 1, br_color)
+    draw.rect_lines(f.rect, br_thick, br_color)
 }
 
 draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
@@ -641,10 +647,11 @@ draw_container_volume_bar :: proc (f: ^ui.Frame) {
     draw.rect(core.rect_bar_top(f.rect, ln_thick), ln_color)
     draw.rect(core.rect_bar_bottom(f.rect, ln_thick), ln_color)
 
-    vol_ratio: f32 = f.user_ptr != nil ? (cast (^f32) f.user_ptr)^ : 0
+    con := ui.get_user_ptr(f, ^Container)
+    vol_ratio := con != nil ? con.volume_ratio : 0
 
     bar_rect := core.rect_inflated(f.rect, -2)
-    for i in ([] struct { ratio: Vec2, pad: Vec2, color: colors.ID } {
+    for i in ([?] struct { ratio: Vec2, pad: Vec2, color: colors.ID } {
         { ratio={0,.5}  , pad={2,0}, color=.vol_low },
         { ratio={.5,.75}, pad={2,2}, color=.vol_med },
         { ratio={.75,1} , pad={0,2}, color=.vol_high },

@@ -76,7 +76,7 @@ draw_screen_curtain_cross :: proc (f: ^ui.Frame, in_easing, out_easing: core.Eas
     shade_ratio := .777 * (move_in_ratio<1 ? move_in_ratio : 1-move_out_ratio)
     draw.rect(f.rect, core.alpha(core.black, shade_ratio))
 
-    for i in ([] struct { rect: Rect, dir: Vec2, distance: f32 } {
+    for i in ([?] struct { rect: Rect, dir: Vec2, distance: f32 } {
         { rect={ x1, y1-2*h, 2*h, 2*h }     , dir={0,1} , distance=h },     // top
         { rect={ x1, y2, 2*h, 2*h }         , dir={0,-1}, distance=h },     // bottom
         { rect={ x1-5*h, y1-h, 4*h, 4*h }   , dir={1,0} , distance=2*h },   // left

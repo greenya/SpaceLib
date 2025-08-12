@@ -3,6 +3,7 @@ package deposit
 import "spacelib:ui"
 
 import "../../data"
+import "../../events"
 import "../../partials"
 
 @private screen: struct {
@@ -22,17 +23,18 @@ add :: proc (parent: ^ui.Frame) {
 
     screen.backpack = partials.add_container(screen.root, "BACKPACK")
     ui.set_anchors(screen.backpack.root, { point=.center, offset={-380,0} })
+    partials.set_container_state(&screen.backpack, data.player.backpack)
 
     screen.deposit = partials.add_container(screen.root, "DEPOSIT")
     ui.set_anchors(screen.deposit.root, { point=.center, offset={380,0} })
+    partials.set_container_state(&screen.deposit, data.player.deposit)
 
-    update_state()
-
-    // ui.print_frame_tree(screen.root)
+    events.listen(.container_updated, container_updated_listener)
 }
 
-@private
-update_state :: proc () {
-    partials.set_container_state(&screen.backpack, data.player.backpack)
-    partials.set_container_state(&screen.deposit, data.player.deposit)
+container_updated_listener :: proc (args: events.Args) {
+    args := args.(events.Container_Updated)
+
+    if args.container == screen.backpack.data   do partials.update_container_state(&screen.backpack)
+    if args.container == screen.deposit.data    do partials.update_container_state(&screen.deposit)
 }

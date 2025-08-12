@@ -4,6 +4,7 @@ package player
 import "spacelib:ui"
 
 import "../../data"
+import "../../events"
 import "../../partials"
 
 inv_page: struct {
@@ -30,10 +31,14 @@ add_inv_backpack_panel :: proc () {
 
     inv_page.backpack = partials.add_container(column, "BACKPACK")
     ui.set_anchors(inv_page.backpack.root, { point=.center })
+    partials.set_container_state(&inv_page.backpack, data.player.backpack)
 
-    inv_update_backpack_state()
+    events.listen(.container_updated, container_updated_listener)
 }
 
-inv_update_backpack_state :: proc () {
-    partials.set_container_state(&inv_page.backpack, data.player.backpack)
+container_updated_listener :: proc (args: events.Args) {
+    args := args.(events.Container_Updated)
+    if args.container == inv_page.backpack.data {
+        partials.update_container_state(&inv_page.backpack)
+    }
 }

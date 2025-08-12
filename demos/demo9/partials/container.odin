@@ -1,12 +1,16 @@
 package partials
 
+import "core:fmt"
+
 import "spacelib:core"
 import "spacelib:ui"
 
 import "../data"
+import "../events"
 
 Container :: struct {
     root                : ^ui.Frame,
+    data                : ^data.Container,
 
     header              : ^ui.Frame,
     footer              : ^ui.Frame,
@@ -22,6 +26,7 @@ Container :: struct {
     volume_ratio        : f32,
 
     slots               : ^ui.Frame,
+    drag_slot           : ^ui.Frame,
 }
 
 add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
@@ -109,44 +114,109 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
         { point=.right, rel_point=.bottom_left, offset={10,0} },
     )
 
+    con.drag_slot = ui.add_frame(parent, {
+        order=9,
+        name="container_drag_slot",
+        flags={.pass,.hidden},
+        draw=draw_container_slot,
+    },
+        { point=.center, rel_point=.mouse },
+    )
+
     return con
 }
 
-set_container_state :: proc (con: ^Container, data_con: ^data.Container) {
-    occupied_slots, max_slots, occupied_volume, max_volume := data.container_capacity(data_con^)
+set_container_state :: proc (con: ^Container, con_data: ^data.Container) {
+    con.data = con_data
+    ui.set_user_ptr(con.root, con)
+
+    occupied_slots, max_slots, occupied_volume, max_volume := data.container_capacity(con.data^)
 
     ui.set_text(con.slots_text, occupied_slots, max_slots)
     ui.set_text(con.volume_text, int(occupied_volume), int(max_volume))
     ui.set_text(con.volume_bar_arrow, int(occupied_volume))
 
-    solaris := data.container_item_count(data_con^, "solari")
-    if solaris > 0 {
-        solaris_text := core.format_int(solaris, allocator=context.temp_allocator)
-        ui.set_text(con.solaris_text, solaris_text, shown=true)
-    } else {
-        ui.hide(con.solaris_text)
+    {
+        solaris := data.container_item_count(con.data^, "solari")
+        if solaris > 0 {
+            solaris_text := core.format_int(solaris, allocator=context.temp_allocator)
+            ui.set_text(con.solaris_text, solaris_text, shown=true)
+        } else {
+            ui.hide(con.solaris_text)
+        }
     }
 
     {
         vol_bar_h := con.volume_bar.rect.h
         con.volume_ratio = occupied_volume / max_volume
-        con.volume_bar.user_ptr = &con.volume_ratio
         con.volume_bar_arrow.anchors[0].offset.y = -2 -(vol_bar_h-4) * con.volume_ratio
+        ui.set_user_ptr(con.volume_bar, con)
     }
 
-    // add missing slots
-    missing_slots := max_slots - len(con.slots.children)
-    for _ in 0..<missing_slots do ui.add_frame(con.slots, { name="slot", draw=draw_container_slot })
+    ui.destroy_frame_children(con.slots)
+    for _, i in con.data.slots do add_container_slot(con, i)
 
-    // hide unused slots
-    for i in max_slots..<len(con.slots.children) {
-        con.slots.children[i].flags += {.hidden}
-        con.slots.children[i].user_ptr = nil
-    }
+    ui.set_user_ptr(con.drag_slot, con)
+    con.drag_slot.user_idx = -1
 
-    // setup slots
-    for &s, i in data_con.slots {
-        con.slots.children[i].flags -= {.hidden}
-        con.slots.children[i].user_ptr = &s
+    ui.update(con.root)
+}
+
+update_container_state :: proc (con: ^Container) {
+    assert(con.data != nil)
+    set_container_state(con, con.data)
+}
+
+@private
+add_container_slot :: proc (con: ^Container, slot_idx: int) {
+    slot_data := &con.data.slots[slot_idx]
+
+    slot := ui.add_frame(con.slots, {
+        name        = "slot",
+        flags       = slot_data.item != nil ? {.capture} : {},
+        user_idx    = slot_idx,
+        draw        = draw_container_slot,
+        drag        = proc (f: ^ui.Frame, info: ui.Drag_Info) {
+            // fmt.println("[drag]", f.user_idx)
+            con := ui.get_user_ptr(f, ^Container)
+            #partial switch info.phase {
+            case .start:
+                con.drag_slot.user_idx = f.user_idx
+                con.drag_slot.size = { f.rect.w, f.rect.h }
+                ui.show(con.drag_slot)
+
+            case .end:
+                con.drag_slot.user_idx = -1
+                ui.hide(con.drag_slot)
+
+                con_target := ui.get_user_ptr(info.target, ^Container)
+                if con_target != nil && info.target.name == "slot" {
+                    container_swap_slots(con, f.user_idx, con_target, info.target.user_idx)
+                }
+            }
+        },
+    })
+
+    ui.set_user_ptr(slot, con)
+}
+
+@private
+container_swap_slots :: proc (con_from: ^Container, idx_from: int, con_to: ^Container, idx_to: int) {
+    result := data.container_swap_slots(con_from.data, idx_from, con_to.data, idx_to)
+    fmt.println(#procedure, result)
+    switch result {
+    case .success:
+        events.container_updated({ container=con_from.data })
+        if con_from != con_to {
+            events.container_updated({ container=con_to.data })
+        }
+    case .error_not_enough_volume:
+        events.push_notification({
+            type    = .error,
+            title   = "INVENTORY",
+            text    = "Not enough free volume to store more items.",
+        })
+    case .error_bad_slot_idx, .error_src_slot_is_empty:
+        panic("Something is not right here")
     }
 }

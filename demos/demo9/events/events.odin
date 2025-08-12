@@ -1,53 +1,53 @@
 package events
 
 // import "core:fmt"
+import "core:slice"
 import "spacelib:ui"
 
 ID :: enum {
-    exit_app,
-    open_screen,
-    set_dropdown_data,
-    open_dropdown,
     close_dropdown,
-    open_modal,
     close_modal,
+    container_updated,
+    exit_app,
+    open_dropdown,
+    open_modal,
+    open_screen,
+    push_notification,
+    set_dropdown_data,
     start_conversation,
 }
 
 Args :: union {
-    Open_Screen,
-    Set_Dropdown_Data,
-    Open_Dropdown,
     Close_Dropdown,
-    Open_Modal,
     Close_Modal,
+    Container_Updated,
+    Open_Dropdown,
+    Open_Modal,
+    Open_Screen,
+    Push_Notification,
+    Set_Dropdown_Data,
     Start_Conversation,
-}
-
-exit_app :: proc () { send(.exit_app) }
-
-open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
-Open_Screen :: struct {
-    screen_name : string,
-    tab_name    : string,
-    skip_anim   : bool,
-}
-
-set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }
-Set_Dropdown_Data :: struct {
-    target  : ^ui.Frame `fmt:"p"`,
-    selected: ^ui.Frame `fmt:"p"`,
-    names   : [] string,
-    titles  : [] string,
-}
-
-open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
-Open_Dropdown :: struct {
-    target: ^ui.Frame `fmt:"p"`,
 }
 
 close_dropdown :: proc (args: Close_Dropdown) { send(.close_dropdown, args) }
 Close_Dropdown :: struct {
+    target: ^ui.Frame `fmt:"p"`,
+}
+
+close_modal :: proc (args: Close_Modal) { send(.close_modal, args) }
+Close_Modal :: struct {
+    target: ^ui.Frame `fmt:"p"`,
+}
+
+container_updated :: proc (args: Container_Updated) { send(.container_updated, args) }
+Container_Updated :: struct {
+    container: rawptr,
+}
+
+exit_app :: proc () { send(.exit_app) }
+
+open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
+Open_Dropdown :: struct {
     target: ^ui.Frame `fmt:"p"`,
 }
 
@@ -68,9 +68,30 @@ Open_Modal_Button_Role :: enum {
     cancel,
 }
 
-close_modal :: proc (args: Close_Modal) { send(.close_modal, args) }
-Close_Modal :: struct {
-    target: ^ui.Frame `fmt:"p"`,
+open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
+Open_Screen :: struct {
+    screen_name : string,
+    tab_name    : string,
+    skip_anim   : bool,
+}
+
+push_notification :: proc (args: Push_Notification) { send(.push_notification, args) }
+Push_Notification :: struct {
+    type    : Push_Notification_Type,
+    title   : string,
+    text    : string,
+}
+Push_Notification_Type :: enum {
+    info,
+    error,
+}
+
+set_dropdown_data :: proc (args: Set_Dropdown_Data) { send(.set_dropdown_data, args) }
+Set_Dropdown_Data :: struct {
+    target  : ^ui.Frame `fmt:"p"`,
+    selected: ^ui.Frame `fmt:"p"`,
+    names   : [] string,
+    titles  : [] string,
 }
 
 start_conversation :: proc (args: Start_Conversation) { send(.start_conversation, args) }
@@ -114,6 +135,14 @@ destroy :: proc () {
     events = {}
 }
 
-listen :: proc (id: ID, listener: Listener) {
-    append(&get(id).listeners, listener)
+listen :: proc (id: ID, listener: Listener, on_listener_duplication: enum { panic, skip } = .panic) {
+    event := get(id)
+
+    i, _ := slice.linear_search(event.listeners[:], listener)
+    if i >= 0 do switch on_listener_duplication {
+        case .panic : panic("Listener duplication")
+        case .skip  : return
+    }
+
+    append(&event.listeners, listener)
 }

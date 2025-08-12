@@ -14,6 +14,13 @@ Container_Slot :: struct {
     count           : int,
 }
 
+Container_Swap_Slots_Result :: enum {
+    success,
+    error_bad_slot_idx,
+    error_src_slot_is_empty,
+    error_not_enough_volume,
+}
+
 create_container :: proc (slot_count: int, max_volume: f32) -> ^Container {
     con := new (Container)
     con.max_volume = max_volume
@@ -60,7 +67,7 @@ container_set_slot :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
         ensure(slot.liquid_amount == 0, "Item is not a liquid container")
     }
 
-    slot_volume := slot.item.volume * f32(slot.count)
+    slot_volume := container_slot_volume(slot)
     ensure(max_volume >= occupied_volume + slot_volume, "Container has no free volume")
 
     slot_idx := slot_idx
@@ -79,9 +86,7 @@ container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, 
     max_volume = con.max_volume
 
     for s in con.slots do if s.item != nil {
-        assert(s.count > 0)
-        slot_volume := s.item.volume * f32(s.count)
-        occupied_volume += slot_volume
+        occupied_volume += container_slot_volume(s)
         occupied_slots += 1
     }
 
@@ -93,7 +98,39 @@ container_first_empty_slot_idx :: proc (con: Container) -> int {
     panic("Container has no empty slots")
 }
 
+container_slot_volume :: proc (slot: Container_Slot) -> f32 {
+    assert(slot.item == nil || (slot.item != nil && slot.count > 0))
+    return slot.item != nil ? slot.item.volume * f32(slot.count) : 0
+}
+
 container_item_count :: proc (con: Container, item_id: string) -> (total: int) {
     for s in con.slots do if s.item != nil && s.item.id == item_id do total += s.count
     return
+}
+
+container_swap_slots :: proc (src_con: ^Container, src_slot_idx: int, dst_con: ^Container, dst_slot_idx: int) -> Container_Swap_Slots_Result {
+    if src_slot_idx < 0 || src_slot_idx >= len(src_con.slots) do return .error_bad_slot_idx
+    if dst_slot_idx < 0 || dst_slot_idx >= len(dst_con.slots) do return .error_bad_slot_idx
+
+    src_slot := src_con.slots[src_slot_idx]
+    dst_slot := dst_con.slots[dst_slot_idx]
+
+    if src_slot.item == nil do return .error_src_slot_is_empty
+
+    if src_con != dst_con {
+        src_slot_volume := container_slot_volume(src_slot)
+        dst_slot_volume := container_slot_volume(dst_slot)
+
+        _, _, src_con_occupied_volume, src_con_max_volume := container_capacity(src_con^)
+        _, _, dst_con_occupied_volume, dst_con_max_volume := container_capacity(dst_con^)
+
+        if src_slot_volume + dst_con_occupied_volume > dst_con_max_volume do return .error_not_enough_volume
+        if dst_slot_volume + src_con_occupied_volume > src_con_max_volume do return .error_not_enough_volume
+    }
+
+    // all seems ok, do the swap
+    dst_con.slots[dst_slot_idx] = src_slot
+    src_con.slots[src_slot_idx] = dst_slot
+
+    return .success
 }

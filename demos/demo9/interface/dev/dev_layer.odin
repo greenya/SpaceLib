@@ -91,7 +91,7 @@ add_dev_window :: proc () {
         { point=.right },
     )
 
-    for b, i in ([] struct { icon:string, click:ui.Frame_Proc } {
+    for b, i in ([?] struct { icon:string, click:ui.Frame_Proc } {
         { icon="visibility_off" , click=proc (f: ^ui.Frame) { ui.hide(dev.window); dev.window_visible=false } },
         { icon="visibility"     , click=proc (f: ^ui.Frame) { ui.show(dev.window); dev.window_visible=true } },
     }) {
@@ -199,7 +199,7 @@ add_dev_stat_perf_monitor :: proc () {
         bottom_left_corner := Vec2 { f.rect.x, f.rect.y+f.rect.h }
         j := 0
 
-        for span in ([] [2] int {
+        for span in ([?] [2] int {
             { dev.ui_stats_buffer_idx, len(dev.ui_stats_buffer) },  // idx (first) -> <100
             { 0, dev.ui_stats_buffer_idx },                         // 0 -> <idx (last)
         }) {
