@@ -3,14 +3,17 @@ package spacelib_ui
 Layout_Scroll :: struct {
     // Multiplier for mouse wheel delta.
     step: f32,
+
     // Current scroll offset (in pixels).
     // This can be equal to `offset_min` or `offset_max`, meaning the scroll is at its limit.
     // Scrolling is also considered "inactive" when `offset_min == offset_max`.
     offset: f32,
+
     // Minimum scroll offset (in pixels).
     // In most common layout directions this is `0`, but it can be negative in some cases,
     // for example, when `Flow.dir == .left`.
     offset_min: f32,
+
     // Maximum scroll offset (in pixels).
     // In most common layout directions this is `>0`, but it can be `0` while scroll is active,
     // for example, when `Flow.dir == .left`.
@@ -31,7 +34,7 @@ layout_scroll :: #force_inline proc (f: ^Frame) -> ^Layout_Scroll {
 }
 
 @private
-layout_apply_scroll :: #force_inline proc (f: ^Frame, dy: f32, is_absolute := false) -> (consumed: bool) {
+layout_apply_scroll :: #force_inline proc (f: ^Frame, dy: f32, is_absolute := false) -> (scrolled: bool) {
     scroll := layout_scroll(f)
     if scroll != nil {
         new_offset := is_absolute ? dy : scroll.offset - dy * scroll.step

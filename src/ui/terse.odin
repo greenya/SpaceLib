@@ -10,14 +10,14 @@ update_terse :: proc (f: ^Frame) {
     action: enum { none, offset, rebuild }
     offset: Vec2
 
-    tol :: .1
+    tolerance :: .1
 
     if f.terse != nil {
         tri := &f.terse.rect_input
-        size_equal := abs(f.rect.w-tri.w) < tol && abs(f.rect.h-tri.h) < tol
+        size_equal := abs(f.rect.w-tri.w) < tolerance && abs(f.rect.h-tri.h) < tolerance
         if size_equal {
             offset = { f.rect.x-tri.x, f.rect.y-tri.y }
-            if abs(offset.x) > tol || abs(offset.y) > tol {
+            if abs(offset.x) > tolerance || abs(offset.y) > tolerance {
                 action = .offset
             }
         } else {

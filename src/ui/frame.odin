@@ -1,5 +1,6 @@
 package spacelib_ui
 
+import "base:intrinsics"
 import "core:fmt"
 import "core:slice"
 import "core:strings"
@@ -127,9 +128,6 @@ Frame_Init :: struct {
     // set it to `false` for all siblings with `.radio` flag.
     selected: bool,
 
-    // User pointer.
-    user_ptr: rawptr,
-
     // User index.
     user_idx: int,
 }
@@ -218,6 +216,14 @@ Frame :: struct {
     // Actor state.
     // More details in `setup_xxx_actors()` procedures.
     actor: Actor,
+
+    // User pointer.
+    // Use it directly when you know the datatype or use `get/set_user_ptr()` for typeid check.
+    user_ptr: rawptr,
+
+    // User pointer typeid.
+    // The value is used by `get/set_user_ptr()`.
+    user_ptr_typeid: typeid,
 
     rect_status: enum {
         ready,
@@ -472,14 +478,14 @@ hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: 
     }
 }
 
-scroll :: proc (f: ^Frame, dy: f32) -> (actually_scrolled: bool) {
-    actually_scrolled = layout_apply_scroll(f, dy)
+scroll :: proc (f: ^Frame, dy: f32) -> (scrolled: bool) {
+    scrolled = layout_apply_scroll(f, dy)
     if f.actor != nil do wheel_actor(f)
     return
 }
 
-scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (actually_scrolled: bool) {
-    actually_scrolled = layout_apply_scroll(f, new_offset, is_absolute=true)
+scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (scrolled: bool) {
+    scrolled = layout_apply_scroll(f, new_offset, is_absolute=true)
     if f.actor != nil do wheel_actor(f)
     return
 }
@@ -692,6 +698,15 @@ update :: proc (f: ^Frame, include_hidden := false, repeat := 1) {
         mark_rect_for_update_frame_tree(f, include_hidden)
         update_rect_frame_tree(f, include_hidden)
     }
+}
+
+set_user_ptr :: #force_inline proc (f: ^Frame, ptr: $T) where intrinsics.type_is_pointer(T) {
+    f.user_ptr = ptr
+    f.user_ptr_typeid = type_of(ptr)
+}
+
+get_user_ptr :: #force_inline proc (f: ^Frame, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
+    return f!=nil && f.user_ptr!=nil && f.user_ptr_typeid==T ? cast (T) f.user_ptr : nil
 }
 
 destroy_frame :: proc (f: ^Frame) {

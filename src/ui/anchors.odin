@@ -276,7 +276,7 @@ update_rect_with_anchors :: proc (f: ^Frame) {
 @private Rect_Pin :: struct { l, t, r, b: bool }
 
 @private
-transform_rect_dir :: proc (dir: ^Rect_Dir, pin: ^Rect_Pin, dir_next: Rect_Dir, pin_anchors: Rect_Pin) {
+transform_rect_dir :: #force_inline proc (dir: ^Rect_Dir, pin: ^Rect_Pin, dir_next: Rect_Dir, pin_anchors: Rect_Pin) {
     if !pin.l do dir.l = dir_next.l
     if !pin.t do dir.t = dir_next.t
     if !pin.r do dir.r = dir_next.r
