@@ -451,7 +451,7 @@ animate :: proc (f: ^Frame, tick: Frame_Proc, dur: f32) {
 }
 
 end_animation :: proc (f: ^Frame) {
-    if f.anim.tick != nil {
+    if f.anim.tick != nil && f.anim.ratio < 1 {
         f.anim.ratio = 1
         f.anim.tick(f)
         f.anim = {}
