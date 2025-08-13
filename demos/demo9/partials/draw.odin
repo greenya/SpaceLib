@@ -156,6 +156,12 @@ draw_color_rect_with_primary_border :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, 1, colors.get(.primary, alpha=f.opacity*0.5))
 }
 
+draw_color_rect_with_primary_border_d5 :: proc (f: ^ui.Frame) {
+    color := colors.get_by_name(f.text, alpha=f.opacity)
+    draw.rect(f.rect, color)
+    draw.rect_lines(f.rect, 2, colors.get(.primary, brightness=-.5, alpha=f.opacity*0.5))
+}
+
 draw_image_placeholder :: proc (f: ^ui.Frame) {
     bg_color := core.alpha(core.gray1, f.opacity)
     draw.rect(f.rect, bg_color)
@@ -533,8 +539,8 @@ draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
     case .imperial  : t=colors.get(.imperial, brightness=-.9)   ; b=colors.get(.imperial, brightness=-.6)
     case .house     : t=colors.get(.house, brightness=-.9)      ; b=colors.get(.house, brightness=-.6)
     case .fremen    : t=colors.get(.fremen, brightness=-.9)     ; b=colors.get(.fremen, brightness=-.6)
-    case .unique    : t=colors.get(.unique)                     ; b=colors.get(.unique, brightness=-.9)
-    case .special   : t=colors.get(.special)                    ; b=colors.get(.special, brightness=-.9)
+    case .unique    : t=colors.get(.unique, brightness=-.3)     ; b=colors.get(.unique, brightness=-.9)
+    case .special   : t=colors.get(.special, brightness=-.3)    ; b=colors.get(.special, brightness=-.9)
     }
     draw.rect_gradient_vertical(rect, t, b)
 }
@@ -544,17 +550,18 @@ draw_item_tier :: proc (rect: Rect, tier: int) {
     if tier < 1 || tier >= len(text_tiers) do return
 
     text := text_tiers[tier]
-    text_pos := core.rect_top_right(rect) + {-8,2}
+    text_pos := core.rect_top_right(rect) + {-10,2}
     text_font := fonts.get(.text_4l)
     text_color := colors.get(.primary, brightness=-.4)
+    draw_text_aligned(text, text_pos+{1,2}, {1,0}, text_font, colors.get(.bg0, alpha=.6))
     draw_text_aligned(text, text_pos, {1,0}, text_font, text_color)
 }
 
 draw_item_icon :: proc (rect: Rect, icon: string) {
     icon := icon != "" ? icon : "question_mark"
     icon_rect := core.rect_scaled(rect, .8)
-    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), tint=colors.get(.bg1))
-    draw_sprite(icon, icon_rect)
+    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain, tint=colors.get(.bg1))
+    draw_sprite(icon, icon_rect, fit=.contain)
 }
 
 draw_item_stack_count :: proc (rect: Rect, count: int) {
@@ -690,4 +697,58 @@ draw_container_volume_bar_arrow :: proc (f: ^ui.Frame) {
 
     tx_pos := core.rect_right(f.rect) - {15,0}
     draw_text_aligned(f.text, tx_pos, {1,.5}, fonts.get(.text_4m), color)
+}
+
+draw_tooltip_image :: proc (f: ^ui.Frame) {
+    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    assert(slot != nil && slot.item != nil)
+
+    rect := core.rect_moved(f.rect, {0,1})
+    draw_item_origin_rect(rect, slot.item.origin)
+    draw_item_icon(rect, slot.item.icon)
+    draw_item_tier(rect, slot.item.tier)
+}
+
+draw_tooltip_durability :: proc (f: ^ui.Frame) {
+    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    assert(slot != nil && slot.item != nil && slot.item.durability > 0)
+
+    draw.rect(f.rect, colors.get(.primary, brightness=-.75))
+
+    rect := core.rect_inflated(f.rect, {-15, -6})
+
+    icon_rect := core.rect_bar_left(rect, rect.h)
+    draw_sprite("settings", icon_rect, tint=colors.get(.primary, brightness=-.2))
+
+    bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
+    core.rect_inflate(&bar_rect, {0,-12})
+    draw_rect_progress_bar_durability(bar_rect,
+        value           = slot.durability.value,
+        unrepairable    = slot.durability.unrepairable,
+        maximum         = slot.item.durability,
+    )
+}
+
+draw_tooltip_liquid :: proc (f: ^ui.Frame) {
+    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    assert(slot != nil && slot.item != nil)
+
+    liquid_type := slot.item.liquid_container.type
+    assert(liquid_type == .water || liquid_type == .blood)
+    liquid_color_id: colors.ID = liquid_type == .water ? .water : .blood
+
+    draw.rect(f.rect, colors.get(.primary, brightness=-.85))
+
+    rect := core.rect_inflated(f.rect, {-15, -6})
+
+    icon_rect := core.rect_bar_left(rect, rect.h)
+    draw_sprite("water_drop", icon_rect, tint=colors.get(liquid_color_id))
+
+    bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
+    core.rect_inflate(&bar_rect, {0,-12})
+    draw_rect_progress_bar_with_sips(bar_rect,
+        value       = slot.liquid_amount,
+        maximum     = slot.item.liquid_container.capacity,
+        color_id    = liquid_color_id,
+    )
 }

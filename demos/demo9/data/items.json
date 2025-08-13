@@ -16,7 +16,8 @@
             "damage_type": "blade",
             "damage_per_hit": 76.5,
             "attack_speed": 105
-        }
+        },
+        "icon": "shard-sword"
     },
     {
         "id": "long_shot",
@@ -73,7 +74,7 @@
     {
         "id": "welding_wire",
         "name": "Welding Wire",
-        "disc": "Welding material is required when using the welding torch to repair vehicle parts. Crafted from salvaged metal parts.",
+        "desc": "Welding material is required when using the welding torch to repair vehicle parts. Crafted from salvaged metal parts.",
         "tag_list": [ "ammunition" ],
         "tier": 1,
         "volume": 0.01,
@@ -93,7 +94,8 @@
             "blade_mitigation": 8,
             "poison_mitigation": 15,
             "heat_protection": 0.7
-        }
+        },
+        "icon": "protection-glasses"
     },
     {
         "id": "batigh_stillsuit_garment",
@@ -126,7 +128,8 @@
         "stats_garment": {
             "armor_value": 46,
             "heat_protection": 1.2
-        }
+        },
+        "icon": "gloves"
     },
     {
         "id": "talab_softstep_boots",

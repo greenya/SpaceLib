@@ -49,7 +49,7 @@ add_notifications_layer :: proc (order: int) {
             }
         },
     },
-        { point=.top_right, offset={0,100} },
+        { point=.top_right, offset={4,100} },
     )
 
     for i in 0..<notification_cards_max_shown_at_once {
@@ -86,7 +86,7 @@ add_notification_card :: proc (order: int) {
         flags={.hidden},
         layout=ui.Flow{ dir=.down, auto_size={.height} },
         text="primary_d8",
-        draw=partials.draw_color_rect,
+        draw=partials.draw_color_rect_with_primary_border_d5,
     })
 
     ui.add_frame(card, {

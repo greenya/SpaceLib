@@ -28,6 +28,7 @@ ID :: enum {
     text_4l,
     text_4r,
     text_4m,
+    text_5m,
     text_6l,
     text_8l,
 }
@@ -54,6 +55,7 @@ create :: proc (scale := f32(1)) {
     case .text_4l: fonts[id] = create_font_from_data(kanit_light_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     case .text_4r: fonts[id] = create_font_from_data(kanit_regular_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     case .text_4m: fonts[id] = create_font_from_data(kanit_medium_data, height=28*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
+    case .text_5m: fonts[id] = create_font_from_data(kanit_medium_data, height=34*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     case .text_6l: fonts[id] = create_font_from_data(kanit_light_data, height=46*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     case .text_8l: fonts[id] = create_font_from_data(kanit_light_data, height=82*scale, line_spacing_ratio=-.25, filter=.BILINEAR)
     }

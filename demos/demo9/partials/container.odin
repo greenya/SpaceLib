@@ -175,29 +175,50 @@ add_container_slot :: proc (con: ^Container, slot_idx: int) {
         name        = "slot",
         flags       = slot_data.item != nil ? {.capture} : {},
         user_idx    = slot_idx,
+        enter       = enter_container_slot,
+        leave       = leave_container_slot,
         draw        = draw_container_slot,
-        drag        = proc (f: ^ui.Frame, info: ui.Drag_Info) {
-            // fmt.println("[drag]", f.user_idx)
-            con := ui.get_user_ptr(f, ^Container)
-            #partial switch info.phase {
-            case .start:
-                con.drag_slot.user_idx = f.user_idx
-                con.drag_slot.size = { f.rect.w, f.rect.h }
-                ui.show(con.drag_slot)
-
-            case .end:
-                con.drag_slot.user_idx = -1
-                ui.hide(con.drag_slot)
-
-                con_target := ui.get_user_ptr(info.target, ^Container)
-                if con_target != nil && info.target.name == "slot" {
-                    container_swap_slots(con, f.user_idx, con_target, info.target.user_idx)
-                }
-            }
-        },
+        drag        = drag_container_slot,
     })
 
     ui.set_user_ptr(slot, con)
+}
+
+@private
+enter_container_slot :: proc (f: ^ui.Frame) {
+    con := ui.get_user_ptr(f, ^Container)
+    if con != nil {
+        slot := &con.data.slots[f.user_idx]
+        if slot.item != nil {
+            events.show_tooltip({ frame=f, object=slot })
+        }
+    }
+}
+
+@private
+leave_container_slot :: proc (f: ^ui.Frame) {
+    events.hide_tooltip({ frame=f })
+}
+
+@private
+drag_container_slot :: proc (f: ^ui.Frame, info: ui.Drag_Info) {
+    // fmt.println("[drag]", f.user_idx)
+    con := ui.get_user_ptr(f, ^Container)
+    #partial switch info.phase {
+    case .start:
+        con.drag_slot.user_idx = f.user_idx
+        con.drag_slot.size = { f.rect.w, f.rect.h }
+        ui.show(con.drag_slot)
+
+    case .end:
+        con.drag_slot.user_idx = -1
+        ui.hide(con.drag_slot)
+
+        con_target := ui.get_user_ptr(info.target, ^Container)
+        if con_target != nil && info.target.name == "slot" {
+            container_swap_slots(con, f.user_idx, con_target, info.target.user_idx)
+        }
+    }
 }
 
 @private

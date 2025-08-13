@@ -15,7 +15,6 @@ Item :: struct {
     stack           : int,
     liquid_container: Item_Liquid_Container,
     icon            : string,
-    image           : string,
 
     stats_belt          : Item_Stats_Belt           `fmt:"-"`,
     stats_compactor     : Item_Stats_Compactor      `fmt:"-"`,
@@ -259,7 +258,6 @@ destroy_items :: proc () {
         delete_text(i.desc)
         delete(i.tag_list)
         delete(i.icon)
-        delete(i.image)
     }
     delete(items)
     items = nil
@@ -269,4 +267,42 @@ get_item :: proc (id: string) -> ^Item {
     assert(id != "")
     for &i in items do if i.id == id do return &i
     fmt.panicf("Item \"%s\" was not found", id)
+}
+
+get_item_category :: proc (item: ^Item) -> (category, sub_category: string) {
+    t := item.tags
+
+    switch {
+    case Item_Tag_Category_Weapons & t != {}    : category = "WEAPONS"
+    case Item_Tag_Category_Garment & t != {}    : category = "GARMENT"
+    case Item_Tag_Category_Utility & t != {}    : category = "UTILITY"
+    case Item_Tag_Category_Misc & t != {}       : category = "MISC"
+    }
+
+    switch {
+    case .ammunition in t           : sub_category = "AMMUNITION"
+    case .building_tools in t       : sub_category = "BUILDING TOOLS"
+    case .components in t           : sub_category = "COMPONENTS"
+    case .consumables in t          : sub_category = "CONSUMABLES"
+    case .deployables in t          : sub_category = "DEPLOYABLES"
+    case .exploration in t          : sub_category = "EXPLORATION"
+    case .fuel in t                 : sub_category = "FUEL"
+    case .gathering_tools in t      : sub_category = "GATHERING TOOLS"
+    case .heavy_armor in t          : sub_category = "HEAVY ARMOR"
+    case .hydration_tools in t      : sub_category = "HYDRATION TOOLS"
+    case .light_armor in t          : sub_category = "LIGHT ARMOR"
+    case .long_blades in t          : sub_category = "LONG BLADES"
+    case .raw_resources in t        : sub_category = "RAW RESOURCES"
+    case .refined_resources in t    : sub_category = "REFINED RESOURCES"
+    case .rifles in t               : sub_category = "RIFLES"
+    case .scatterguns in t          : sub_category = "SCATTERGUNS"
+    case .short_blades in t         : sub_category = "SHORT BLADES"
+    case .sidearms in t             : sub_category = "SIDEARMS"
+    case .solaris in t              : sub_category = "SOLARIS"
+    case .stillsuits in t           : sub_category = "STILLSUITS"
+    case .utility_tools in t        : sub_category = "UTILITY TOOLS"
+    }
+
+    fmt.assertf(category != "" && sub_category != "", "Failed to categorize \"%s\": tags=%v", item.id, item.tags)
+    return
 }

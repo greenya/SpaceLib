@@ -59,8 +59,8 @@ create :: proc () {
     case .imperial      : set(id, core.color_from_hex("#58b"))
     case .house         : set(id, core.color_from_hex("#ac6"))
     case .fremen        : set(id, core.color_from_hex("#d73"))
-    case .unique        : set(id, core.color_from_hex("#435"))
-    case .special       : set(id, core.color_from_hex("#042"))
+    case .unique        : set(id, core.color_from_hex("#759"))
+    case .special       : set(id, core.color_from_hex("#285"))
     }
 }
 

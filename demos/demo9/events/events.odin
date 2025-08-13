@@ -9,11 +9,13 @@ ID :: enum {
     close_modal,
     container_updated,
     exit_app,
+    hide_tooltip,
     open_dropdown,
     open_modal,
     open_screen,
     push_notification,
     set_dropdown_data,
+    show_tooltip,
     start_conversation,
 }
 
@@ -21,11 +23,13 @@ Args :: union {
     Close_Dropdown,
     Close_Modal,
     Container_Updated,
+    Hide_Tooltip,
     Open_Dropdown,
     Open_Modal,
     Open_Screen,
     Push_Notification,
     Set_Dropdown_Data,
+    Show_Tooltip,
     Start_Conversation,
 }
 
@@ -45,6 +49,11 @@ Container_Updated :: struct {
 }
 
 exit_app :: proc () { send(.exit_app) }
+
+hide_tooltip :: proc (args: Hide_Tooltip) { send(.hide_tooltip, args) }
+Hide_Tooltip :: struct {
+    frame: ^ui.Frame `fmt:"p"`,
+}
 
 open_dropdown :: proc (args: Open_Dropdown) { send(.open_dropdown, args) }
 Open_Dropdown :: struct {
@@ -88,6 +97,12 @@ Set_Dropdown_Data :: struct {
     selected: ^ui.Frame `fmt:"p"`,
     names   : [] string,
     titles  : [] string,
+}
+
+show_tooltip :: proc (args: Show_Tooltip) { send(.show_tooltip, args) }
+Show_Tooltip :: struct {
+    frame: ^ui.Frame `fmt:"p"`,
+    object: any,
 }
 
 start_conversation :: proc (args: Start_Conversation) { send(.start_conversation, args) }
