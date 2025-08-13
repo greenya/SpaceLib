@@ -2,6 +2,7 @@ package spacelib_ui
 
 import "base:intrinsics"
 import "core:fmt"
+import "core:math/ease"
 import "core:slice"
 import "core:strings"
 import "../core"
@@ -462,19 +463,19 @@ animating :: #force_inline proc (f: ^Frame) -> bool {
     return f.anim.tick != nil
 }
 
-hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: core.Ease, enter_dur: f32, leave_ease: core.Ease, leave_dur: f32) -> f32 {
+hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: ease.Ease, enter_dur: f32, leave_ease: ease.Ease, leave_dur: f32) -> f32 {
     if f.entered {
         leave_interrupted_dur := f.entered_time - f.left_time
         leftover_ratio := leave_interrupted_dur<leave_dur ? 1-(leave_interrupted_dur/leave_dur) : 0
         enter_ratio := core.clamp_ratio_span(f.ui.clock.time, f.entered_time, enter_dur)
         ratio := clamp(leftover_ratio + enter_ratio, 0, 1)
-        return core.ease_ratio(ratio, enter_ease)
+        return ease.ease(enter_ease, ratio)
     } else {
         enter_interrupted_dur := f.left_time - f.entered_time
         leftover_ratio := enter_interrupted_dur<enter_dur ? 1-(enter_interrupted_dur/enter_dur) : 0
         leave_ratio := core.clamp_ratio_span(f.ui.clock.time, f.left_time, leave_dur)
         ratio := clamp(leftover_ratio + leave_ratio, 0, 1)
-        return 1 - core.ease_ratio(ratio, leave_ease)
+        return 1 - ease.ease(leave_ease, ratio)
     }
 }
 

@@ -2,8 +2,8 @@
 package interface
 
 import "core:fmt"
+import "core:math/ease"
 
-import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
@@ -113,7 +113,7 @@ anim_modal_appear :: proc (f: ^ui.Frame) {
     }
 
     ui.set_opacity(modals.layer, f.anim.ratio)
-    f.offset = { -80 + 80 * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
+    f.offset = { -80 + 80 * ease.cubic_out(f.anim.ratio), 0 }
 
     if f.anim.ratio == 1 {
         f.flags -= {.pass}
@@ -128,7 +128,7 @@ anim_modal_disappear :: proc (f: ^ui.Frame) {
     }
 
     ui.set_opacity(modals.layer, 1-f.anim.ratio)
-    f.offset = { 80 * core.ease_ratio(f.anim.ratio, .Cubic_In), 0 }
+    f.offset = { 80 * ease.cubic_in(f.anim.ratio), 0 }
 
     if f.anim.ratio == 1 {
         f.flags -= {.pass}

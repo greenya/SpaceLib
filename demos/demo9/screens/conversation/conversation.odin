@@ -1,8 +1,8 @@
 package conversation
 
 import "core:fmt"
+import "core:math/ease"
 
-import "spacelib:core"
 import "spacelib:ui"
 
 import "../../data"
@@ -128,7 +128,7 @@ anim_next_talk :: proc (f: ^ui.Frame) {
         events.start_conversation(screen.next_talk)
     }
 
-    ratio := core.ease_ratio(f.anim.ratio, .Cubic_In)
+    ratio := ease.cubic_in(f.anim.ratio)
     ui.set_opacity(screen.root, ratio)
 
     if f.anim.ratio == 1 {

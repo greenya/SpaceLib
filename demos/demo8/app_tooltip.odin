@@ -1,8 +1,8 @@
 package demo8
 
 import "core:fmt"
+import "core:math/ease"
 import "core:strings"
-import "spacelib:core"
 import "spacelib:ui"
 
 app_tooltip_create :: proc () {
@@ -223,7 +223,7 @@ app_tooltip_hide :: proc (target: ^ui.Frame) {
 
 app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, f.anim.ratio)
-    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    f.offset = { 0, 40 * (1 - ease.cubic_out(f.anim.ratio)) }
     if f.anim.ratio == 0 {
         ui.show(f)
         ui.update(f, repeat=2)
@@ -233,7 +233,7 @@ app_tooltip_anim_appear :: proc (f: ^ui.Frame) {
 
 app_tooltip_anim_disappear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, 1-f.anim.ratio)
-    f.offset = { 0, 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    f.offset = { 0, 40 * ease.cubic_in(f.anim.ratio) }
     if f.anim.ratio == 1 do ui.hide(f)
 }
 

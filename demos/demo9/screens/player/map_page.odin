@@ -2,6 +2,7 @@
 package player
 
 import "core:fmt"
+import "core:math/ease"
 
 import "spacelib:core"
 import "spacelib:raylib/draw"
@@ -389,7 +390,7 @@ anim_map_legend_panel_appear :: proc (f: ^ui.Frame) {
         ui.set_opacity(f, 0)
         ui.show(f)
     case:
-        ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+        ratio := ease.cubic_out(f.anim.ratio)
         f.offset.x = offset_x * (1-ratio)
         ui.set_opacity(f, ratio)
     case 1:
@@ -402,7 +403,7 @@ anim_map_legend_panel_disappear :: proc (f: ^ui.Frame) {
     offset_x :: anim_map_legend_move_distance_x
     switch f.anim.ratio {
     case:
-        ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+        ratio := ease.cubic_out(f.anim.ratio)
         f.offset.x = offset_x * ratio
         ui.set_opacity(f, 1-ratio)
     case 1:

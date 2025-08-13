@@ -1,6 +1,7 @@
 package demo7
 
 import "core:fmt"
+import "core:math/ease"
 import rl "vendor:raylib"
 
 import "spacelib:core"
@@ -188,7 +189,7 @@ anim_show_slide_up :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
     ui.set_opacity(f, min(1, 3*f.anim.ratio))
-    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Elastic_Out)) }
+    f.offset = { 0, 40 * (1 - ease.elastic_out(f.anim.ratio)) }
     if f.anim.ratio == 0 do ui.show(f)
 }
 
@@ -196,7 +197,7 @@ anim_hide_slide_down :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
     ui.set_opacity(f, 1-f.anim.ratio)
-    f.offset = { 0, 80 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    f.offset = { 0, 80 * ease.cubic_in(f.anim.ratio) }
     if f.anim.ratio == 1 do ui.hide(f)
 }
 
@@ -204,12 +205,12 @@ anim_slot_enter_feedback :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
     base_w := ui.layout_flow(f.parent).size.x
-    f.size = { base_w + base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
+    f.size = { base_w + base_w * ease.cubic_out(f.anim.ratio), 0 }
 }
 
 anim_slot_leave_feedback :: proc (f: ^ui.Frame) {
     fmt.println(#procedure, f.name, f.anim.ratio)
 
     base_w := ui.layout_flow(f.parent).size.x
-    f.size = { base_w*2 - base_w * core.ease_ratio(f.anim.ratio, .Cubic_Out), 0 }
+    f.size = { base_w*2 - base_w * ease.cubic_out(f.anim.ratio), 0 }
 }

@@ -1,5 +1,7 @@
 package partials
 
+import "core:math/ease"
+
 import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
@@ -63,15 +65,15 @@ draw_screen_curtain_cross_bouncy :: proc (f: ^ui.Frame) {
     draw_screen_curtain_cross(f, .Bounce_Out, .Cubic_In)
 }
 
-draw_screen_curtain_cross :: proc (f: ^ui.Frame, in_easing, out_easing: core.Ease) {
+draw_screen_curtain_cross :: proc (f: ^ui.Frame, in_easing, out_easing: ease.Ease) {
     h := f.rect.h/2
     c := core.rect_center(f.rect)
     x1, y1 := c.x-h, f.rect.y
     x2, y2 := c.x+h, y1+f.rect.h
 
     sr :: draw_screen_curtain_cross_switch_screen_ratio
-    move_in_ratio := core.ease_ratio(core.clamp_ratio(f.anim.ratio, 0, sr), in_easing)
-    move_out_ratio := core.ease_ratio(core.clamp_ratio(f.anim.ratio, sr, 1), out_easing)
+    move_in_ratio :=  ease.ease(in_easing, core.clamp_ratio(f.anim.ratio, 0, sr))
+    move_out_ratio := ease.ease(out_easing, core.clamp_ratio(f.anim.ratio, sr, 1))
 
     shade_ratio := .777 * (move_in_ratio<1 ? move_in_ratio : 1-move_out_ratio)
     draw.rect(f.rect, core.alpha(core.black, shade_ratio))

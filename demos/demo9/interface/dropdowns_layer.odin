@@ -2,8 +2,8 @@
 package interface
 
 import "core:fmt"
+import "core:math/ease"
 
-import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
@@ -158,7 +158,7 @@ anim_dropdown_appear :: proc (f: ^ui.Frame) {
 
     ui.set_opacity(f, f.anim.ratio)
     dir := f.anchors[0].point == .top_left ? f32(-1): f32(1)
-    f.offset = { 0, dir * 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    f.offset = { 0, dir * 40 * (1 - ease.cubic_out(f.anim.ratio)) }
 
     if f.anim.ratio == 1 {
         f.flags -= {.pass}
@@ -174,7 +174,7 @@ anim_dropdown_disappear :: proc (f: ^ui.Frame) {
 
     ui.set_opacity(f, 1-f.anim.ratio)
     dir := f.anchors[0].point == .top_left ? f32(1): f32(-1)
-    f.offset = { 0, dir * 40 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    f.offset = { 0, dir * 40 * ease.cubic_in(f.anim.ratio) }
 
     if f.anim.ratio == 1 {
         f.flags -= {.pass}

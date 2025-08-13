@@ -2,6 +2,7 @@ package demo8
 
 import "core:fmt"
 import "core:math"
+import "core:math/ease"
 import "core:slice"
 import "spacelib:core"
 import "spacelib:ui"
@@ -579,7 +580,7 @@ app_menu_switch_page :: proc (page_name: string) {
 
 app_menu_anim_switch_page :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, f.anim.ratio)
-    f.offset = { 0, 40 * (1 - core.ease_ratio(f.anim.ratio, .Cubic_Out)) }
+    f.offset = { 0, 40 * (1 - ease.cubic_out(f.anim.ratio)) }
 
     if f.anim.ratio == 0 {
         s := ui.first_visible_sibling(f)
@@ -594,5 +595,5 @@ app_menu_anim_switch_page :: proc (f: ^ui.Frame) {
 
 app_menu_anim_slide_down_disappear :: proc (f: ^ui.Frame) {
     ui.set_opacity(f, 1-f.anim.ratio)
-    f.offset = { 0, 80 * core.ease_ratio(f.anim.ratio, .Cubic_In) }
+    f.offset = { 0, 80 * ease.cubic_in(f.anim.ratio) }
 }

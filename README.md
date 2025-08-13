@@ -107,9 +107,9 @@ TODO: ui: fix hover_ratio(): fix twitching for large duration and short enter/le
     maybe we should add a separate field -- Frame.hover: Hovering,
 
     Hovering :: struct {
-        enter_ease  : core.Ease,
+        enter_ease  : ease.Ease,
         enter_dur   : f32,
-        leave_ease  : core.Ease,
+        leave_ease  : ease.Ease,
         leave_dur   : f32,
         ratio       : f32,
     }

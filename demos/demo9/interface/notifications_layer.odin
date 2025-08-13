@@ -2,9 +2,9 @@
 package interface
 
 // import "core:fmt"
+import "core:math/ease"
 import "core:strings"
 
-import "spacelib:core"
 import "spacelib:ui"
 
 import "../events"
@@ -120,7 +120,7 @@ anim_notification_card_appear :: proc (f: ^ui.Frame) {
         ui.set_opacity(f, 0)
         ui.show(f)
     case:
-        ratio := core.ease_ratio(f.anim.ratio, .Cubic_Out)
+        ratio := ease.cubic_out(f.anim.ratio)
         f.offset = {f.rect.w*(1-ratio),0}
         ui.set_opacity(f, ratio)
     case 1:
@@ -140,7 +140,7 @@ anim_notification_card_stay :: proc (f: ^ui.Frame) {
 anim_notification_card_disappear :: proc (f: ^ui.Frame) {
     switch f.anim.ratio {
     case:
-        ratio := core.ease_ratio(f.anim.ratio, .Cubic_In)
+        ratio := ease.cubic_in(f.anim.ratio)
         f.offset = {f.rect.w*ratio,0}
         ui.set_opacity(f, 1-ratio)
     case 1:
