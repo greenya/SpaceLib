@@ -68,6 +68,7 @@ create :: proc () {
 
 destroy :: proc () {
     destroy_dropdowns_layer()
+    destroy_modals_layer()
     destroy_notifications_layer()
 
     ui.destroy(ui_)

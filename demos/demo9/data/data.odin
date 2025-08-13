@@ -6,6 +6,7 @@ lorem_ipsum_text    := string(#load("lorem_ipsum.txt"))
 create :: proc () {
     create_codex()
     create_conversations()
+    create_instructions()
     create_items()
     create_settings()
     create_tutorial_tips()
@@ -23,6 +24,7 @@ create :: proc () {
 destroy :: proc () {
     destroy_codex()
     destroy_conversations()
+    destroy_instructions()
     destroy_items()
     destroy_settings()
     destroy_tutorial_tips()

@@ -1,0 +1,51 @@
+[
+    {
+        "id": "home/welcome",
+        "pages": [
+            {
+                "title": "WELCOME TO ARRAKIS",
+                "text": "A beginning is the time for taking the most delicate care that the balances are correct."
+            }
+        ]
+    },
+    {
+        "id": "home/notification",
+        "pages": [
+            {
+                "title": "ITEM LOSS ON TRAVEL",
+                "text": [
+                    "We have received reports that some players have lost items from their inventory while traveling to the Deep Desert or Hagga Basin via the World Map after the recent patch.",
+                    "",
+                    "We are investigating the issue and will provide an update as soon as possible.",
+                    "",
+                    "Thank you."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "player/inventory/help",
+        "pages": [
+            {
+                "title": "Inventory",
+                "text": [
+                    "Your <font=text_4m>Backpack</> has a maximum <font=text_4m>Capacity</>, for example 35 slots. This, in turn, is limited by a maximum <font=text_4m>Volume</> it can carry, for example 175 V.",
+                    "",
+                    "Most items have their own Volume. When combined, their total can be seen on the <font=text_4m>Volume bar</> at the left side of the Backpack.",
+                    "",
+                    "Keep an eye on this and even sort by Volume in order to be aware of the largest items you are carrying."
+                ]
+            },
+            {
+                "title": "Primary Sources",
+                "text": [
+                    "The <font=text_4m>Components</> used for Fabricating some items can be found more often in specific locations.",
+                    "",
+                    "These locations are color-coded and listed in the <font=text_4m>Primary Source</> section on an item's info card alongside a specific icon.",
+                    "",
+                    "Look for these icons on your map to find the best locations for these components."
+                ]
+            }
+        ]
+    }
+]

@@ -8,12 +8,28 @@ import "../../events"
 import "../../partials"
 
 inv_page: struct {
-    root    : ^ui.Frame,
-    backpack: partials.Container,
+    root        : ^ui.Frame,
+
+    help_button : ^ui.Frame,
+
+    backpack    : partials.Container,
 }
 
 add_inv_page :: proc () {
     _, inv_page.root = partials.add_screen_tab_and_page(&screen, "inventory", "INVENTORY")
+
+    inv_page.help_button = partials.add_screen_key_button(&screen, "help", "<icon=key/H> Help")
+    inv_page.help_button.click = proc (f: ^ui.Frame) {
+        events.open_modal({ target=f, instruction_id="player/inventory/help" })
+    }
+
+    inv_page.root.show = proc (f: ^ui.Frame) {
+        ui.show(inv_page.help_button)
+    }
+
+    inv_page.root.hide = proc (f: ^ui.Frame) {
+        ui.hide(inv_page.help_button)
+    }
 
     add_inv_backpack_panel()
 }

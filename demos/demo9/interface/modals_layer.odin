@@ -3,16 +3,22 @@ package interface
 
 import "core:fmt"
 import "core:math/ease"
+import "core:strings"
 
 import "spacelib:ui"
 
+import "../data"
 import "../events"
 import "../partials"
 
 modals: struct {
     layer   : ^ui.Frame,
     modal   : ^ui.Frame,
-    target  : ^ui.Frame,
+    state   : struct {
+        target  : ^ui.Frame,
+        pages   : [] events.Open_Modal_Page,
+        page_idx: int,
+    },
 }
 
 max_buttons :: 4
@@ -34,6 +40,19 @@ add_modals_layer :: proc (order: int) {
     events.listen(.close_modal, close_modal_listener)
 }
 
+destroy_modals_layer :: proc () {
+    destroy_modal_state_pages()
+}
+
+destroy_modal_state_pages :: proc () {
+    for p in modals.state.pages {
+        delete(p.title)
+        delete(p.message)
+    }
+    delete(modals.state.pages)
+    modals.state = {}
+}
+
 add_modal :: proc () {
     modals.modal = ui.add_frame(modals.layer, {
         name    = "modal",
@@ -45,7 +64,7 @@ add_modal :: proc () {
     ui.add_frame(modals.modal, {
         name        = "title",
         flags       = {.terse,.terse_height},
-        text_format = "<wrap,pad=30,font=text_4m,color=primary_d2>%s",
+        text_format = "<wrap,pad=30,font=text_5m,color=primary_d2>%s",
     })
 
     ui.add_frame(modals.modal, {
@@ -71,39 +90,98 @@ open_modal_listener :: proc (args: events.Args) {
     args := args.(events.Open_Modal)
     assert(args.target != nil)
 
-    title := ui.get(modals.modal, "title")
-    ui.set_text(title, args.title)
+    state := &modals.state
+    state^ = { target=args.target }
 
-    message := ui.get(modals.modal, "message")
-    ui.set_text(message, args.message)
+    if args.instruction_id != "" {
+        assert(args.pages==nil, "[modal] pages are not supposed to be used with instruction_id")
+        inst := data.get_instruction(args.instruction_id)
+        state.pages = make([] events.Open_Modal_Page, len(inst.pages))
+        for p, i in inst.pages do state.pages[i] = {
+            title   = strings.clone(p.title),
+            message = data.text_to_string(p.text),
+        }
+    } else {
+        assert(len(args.pages) > 0)
+        state.pages = make([] events.Open_Modal_Page, len(args.pages))
+        for p, i in args.pages do state.pages[i] = {
+            title   = strings.clone(p.title),
+            message = data.text_to_string(p.message),
+        }
+    }
 
-    buttons := ui.get(modals.modal, "buttons")
-    assert(len(buttons.children) >= len(args.buttons))
-    ui.hide_children(buttons)
-    for b, i in args.buttons {
-        button := buttons.children[i]
-        ui.set_text(button, b.text, shown=true)
-        switch b.role {
-        case .click:
-            button.click = b.click
-        case .cancel:
-            button.click = proc (f: ^ui.Frame) {
-                events.close_modal({ target=modals.target })
+    args_buttons := args.buttons
+    if len(args_buttons) == 0 {
+        if len(state.pages) > 1 {
+            args_buttons = {
+                { text="<icon=key/A> Previous"      , role=.prev_page },
+                { text="<icon=key/Esc:1.4:1> Close" , role=.cancel },
+                { text="<icon=key/D> Next"          , role=.next_page },
+            }
+        } else {
+            args_buttons = {
+                { text="<icon=key/Esc:1.4:1> Close" , role=.cancel },
             }
         }
     }
 
-    modals.target = args.target
+    buttons := ui.get(modals.modal, "buttons")
+    assert(len(buttons.children) >= len(args_buttons))
+    ui.hide_children(buttons)
+    for b, i in args_buttons {
+        btn := buttons.children[i]
+        ui.set_text(btn, b.text, shown=true)
+        switch b.role {
+        case .click:
+            btn.click = b.click
+        case .cancel:
+            btn.click = proc (f: ^ui.Frame) {
+                events.close_modal({ target=modals.state.target })
+            }
+        case .next_page:
+            btn.click = proc (f: ^ui.Frame) {
+                set_modal_page(modals.state.page_idx + 1)
+            }
+        case .prev_page:
+            btn.click = proc (f: ^ui.Frame) {
+                set_modal_page(modals.state.page_idx - 1)
+            }
+        }
+    }
+
+    set_modal_page(0)
+
     ui.animate(modals.modal, anim_modal_appear, .222)
 }
 
 close_modal_listener :: proc (args: events.Args) {
     args := args.(events.Close_Modal)
     assert(args.target != nil)
-    assert(args.target == modals.target)
+    assert(args.target == modals.state.target)
 
-    modals.target = nil
+    // we can destroy pages here, as following disappear anim will set .pass for the layer,
+    // so user will not be able to click a button; the pages only needed when navigating to
+    // next/prev page (and the current state is in UI frames)
+    destroy_modal_state_pages()
+
     ui.animate(modals.modal, anim_modal_disappear, .222)
+}
+
+set_modal_page :: proc (new_page_idx: int) {
+    state := &modals.state
+    assert(len(state.pages) > 0)
+
+    state.page_idx = new_page_idx
+    if state.page_idx >= len(state.pages) do state.page_idx = 0
+    if state.page_idx < 0 do state.page_idx = len(state.pages) - 1
+
+    title := ui.get(modals.modal, "title")
+    ui.set_text(title, state.pages[state.page_idx].title)
+
+    message := ui.get(modals.modal, "message")
+    ui.set_text(message, state.pages[state.page_idx].message)
+
+    ui.update(modals.modal, repeat=2)
 }
 
 anim_modal_appear :: proc (f: ^ui.Frame) {

@@ -25,8 +25,12 @@ add :: proc (parent: ^ui.Frame) {
     close.click = proc (f: ^ui.Frame) {
         events.open_modal({
             target  = f,
-            title   = "Quit Game",
-            message = "Are you sure you want to quit?",
+            pages   = {
+                {
+                    title   = "Quit Game",
+                    message = "Are you sure you want to quit?",
+                },
+            },
             buttons = {
                 { text="<icon=key/__:1.2:1> Confirm", click=proc (f: ^ui.Frame) { events.exit_app() } },
                 { text="<icon=key/Esc:1.4:1> Cancel", role=.cancel },
@@ -115,8 +119,9 @@ add_home_page_welcome_area :: proc (page: ^ui.Frame) {
         { name="content", text_format="<wrap,pad=20:10,left,font=text_4r,color=primary_d2>%s", flags={.terse,.terse_height} },
     )
 
-    ui.set_text(header, data.info.welcome.title)
-    ui.set_text(content, data.info.welcome.content)
+    welcome_title, welcome_text := data.get_instruction_page("home/welcome", 0, context.temp_allocator)
+    ui.set_text(header, welcome_title)
+    ui.set_text(content, welcome_text)
 
     buttons_bar := ui.add_frame(welcome_area,
         { name="buttons_bar", size={0,60}, layout=ui.Flow{ dir=.right_center,size={200,0},gap=30 } },
@@ -174,9 +179,10 @@ add_home_page_notification_area :: proc (page: ^ui.Frame) {
         { name="content", text_format="<wrap,pad=20:0,left,font=text_4r,color=primary_d2>%s", flags={.terse,.terse_height} },
     )
 
-    if data.info.notification.title != "" {
-        ui.set_text(title, data.info.notification.title)
-        ui.set_text(content, data.info.notification.content)
+    notification_title, notification_text := data.get_instruction_page("home/notification", 0, context.temp_allocator)
+    if notification_title != "" {
+        ui.set_text(title, notification_title)
+        ui.set_text(content, notification_text)
         ui.show(notifications_area)
     }
 }

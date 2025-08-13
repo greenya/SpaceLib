@@ -62,10 +62,14 @@ Open_Dropdown :: struct {
 
 open_modal :: proc (args: Open_Modal) { send(.open_modal, args) }
 Open_Modal :: struct {
-    target  : ^ui.Frame `fmt:"p"`,
+    target          : ^ui.Frame `fmt:"p"`,
+    instruction_id  : string,
+    pages           : [] Open_Modal_Page,
+    buttons         : [] Open_Modal_Button,
+}
+Open_Modal_Page :: struct {
     title   : string,
     message : string,
-    buttons : [] Open_Modal_Button,
 }
 Open_Modal_Button :: struct {
     text    : string,
@@ -75,6 +79,8 @@ Open_Modal_Button :: struct {
 Open_Modal_Button_Role :: enum {
     click,
     cancel,
+    next_page,
+    prev_page,
 }
 
 open_screen :: proc (args: Open_Screen) { send(.open_screen, args) }
