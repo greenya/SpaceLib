@@ -2,6 +2,7 @@
 package interface
 
 import "core:fmt"
+import "core:math/ease"
 
 import "spacelib:ui"
 
@@ -88,8 +89,13 @@ show_tooltip_listener :: proc (args: events.Args) {
     case                        : fmt.panicf("Unexpected object for the tooltip: any.id=%v", args.object.id)
     }
 
-    ui.show(tt.root)
+    // we end anim here as anim_tooltip_disappear() clear anchors at the end, so if we don't end anim here,
+    // we do: setup anchor -> start new anim -- this will finalize any active anim, and clear anchors
+    ui.end_animation(tt.root)
+
     anchor_tooltip(args.frame)
+    ui.animate(tt.root, anim_tooltip_appear, .222)
+    // fmt.println("show", ui.index(args.frame))
 }
 
 hide_tooltip_listener :: proc (args: events.Args) {
@@ -99,17 +105,37 @@ hide_tooltip_listener :: proc (args: events.Args) {
     assert(tt.root != nil)
 
     if .hidden in tt.root.flags do return
+    if len(tt.root.anchors) == 0 do return
     if tt.root.anchors[0].rel_frame != args.frame do return
 
-    ui.clear_anchors(tt.root)
-    ui.hide(tt.root)
+    ui.animate(tt.root, anim_tooltip_disappear, .222)
+    // fmt.println("hide", ui.index(args.frame))
 }
 
 anchor_tooltip :: proc (rel_frame: ^ui.Frame) {
     tt := &tooltips.tooltip
 
     ui.set_anchors(tt.root, { point=.top_left, rel_point=.top_right, rel_frame=rel_frame, offset={20,0} })
-    ui.update(tt.root, repeat=2)
+    ui.update(tt.root, include_hidden=true, repeat=2)
+}
+
+anim_tooltip_appear :: proc (f: ^ui.Frame) {
+    if f.anim.ratio == 0 do ui.show(f)
+
+    ratio := ease.cubic_out(f.anim.ratio)
+    ui.set_opacity(f, ratio)
+    f.offset = {40*(1-ratio),0}
+}
+
+anim_tooltip_disappear :: proc (f: ^ui.Frame) {
+    ratio := ease.cubic_in(f.anim.ratio)
+    ui.set_opacity(f, 1-ratio)
+    f.offset = {40*ratio,0}
+
+    if f.anim.ratio == 1 {
+        ui.clear_anchors(f)
+        ui.hide(f)
+    }
 }
 
 setup_tooltip_for_container_slot :: proc (slot: ^data.Container_Slot) {

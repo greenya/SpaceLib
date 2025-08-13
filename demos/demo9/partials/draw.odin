@@ -509,12 +509,12 @@ draw_container_slot :: proc (f: ^ui.Frame) {
     br_thick := f32(1)
 
     if slot.item != nil {
-        draw_item_origin_rect(f.rect, slot.item.origin)
-        draw_item_icon(f.rect, slot.item.icon)
-        draw_item_tier(f.rect, slot.item.tier)
+        draw_item_origin_rect(f.rect, slot.item.origin, f.opacity)
+        draw_item_icon(f.rect, slot.item.icon, f.opacity)
+        draw_item_tier(f.rect, slot.item.tier, f.opacity)
 
-        if slot.item.stack == 1 do draw_item_durability_and_liquid_levels(f.rect, slot)
-        else                    do draw_item_stack_count(f.rect, slot.count)
+        if slot.item.stack == 1 do draw_item_durability_and_liquid_levels(f.rect, slot, f.opacity)
+        else                    do draw_item_stack_count(f.rect, slot.count, f.opacity)
 
         if f.captured {
             br_color = br_color_focus
@@ -532,49 +532,50 @@ draw_container_slot :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, br_thick, br_color)
 }
 
-draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin) {
+draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin, opacity: f32) {
     t, b: Color
+    clr :: #force_inline proc (id: colors.ID, b, a: f32) -> Color { return colors.get(id, brightness=b, alpha=a) }
     switch origin {
-    case .none      : t=colors.get(.primary, brightness=-.9)    ; b=colors.get(.primary, brightness=-.7)
-    case .imperial  : t=colors.get(.imperial, brightness=-.9)   ; b=colors.get(.imperial, brightness=-.6)
-    case .house     : t=colors.get(.house, brightness=-.9)      ; b=colors.get(.house, brightness=-.6)
-    case .fremen    : t=colors.get(.fremen, brightness=-.9)     ; b=colors.get(.fremen, brightness=-.6)
-    case .unique    : t=colors.get(.unique, brightness=-.3)     ; b=colors.get(.unique, brightness=-.9)
-    case .special   : t=colors.get(.special, brightness=-.3)    ; b=colors.get(.special, brightness=-.9)
+    case .none      : t=clr(.primary, -.9, opacity)   ; b=clr(.primary, -.7, opacity)
+    case .imperial  : t=clr(.imperial, -.9, opacity)  ; b=clr(.imperial, -.6, opacity)
+    case .house     : t=clr(.house, -.9, opacity)     ; b=clr(.house, -.6, opacity)
+    case .fremen    : t=clr(.fremen, -.9, opacity)    ; b=clr(.fremen, -.6, opacity)
+    case .unique    : t=clr(.unique, -.3, opacity)    ; b=clr(.unique, -.9, opacity)
+    case .special   : t=clr(.special, -.3, opacity)   ; b=clr(.special, -.9, opacity)
     }
     draw.rect_gradient_vertical(rect, t, b)
 }
 
-draw_item_tier :: proc (rect: Rect, tier: int) {
+draw_item_tier :: proc (rect: Rect, tier: int, opacity: f32) {
     text_tiers := [?] string { "", "I", "II", "III", "IV", "V", "VI" }
     if tier < 1 || tier >= len(text_tiers) do return
 
     text := text_tiers[tier]
     text_pos := core.rect_top_right(rect) + {-10,2}
     text_font := fonts.get(.text_4l)
-    text_color := colors.get(.primary, brightness=-.4)
-    draw_text_aligned(text, text_pos+{1,2}, {1,0}, text_font, colors.get(.bg0, alpha=.6))
+    text_color := colors.get(.primary, brightness=-.4, alpha=opacity)
+    draw_text_aligned(text, text_pos+{1,2}, {1,0}, text_font, colors.get(.bg0, alpha=.6*opacity))
     draw_text_aligned(text, text_pos, {1,0}, text_font, text_color)
 }
 
-draw_item_icon :: proc (rect: Rect, icon: string) {
+draw_item_icon :: proc (rect: Rect, icon: string, opacity: f32) {
     icon := icon != "" ? icon : "question_mark"
     icon_rect := core.rect_scaled(rect, .8)
-    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain, tint=colors.get(.bg1))
-    draw_sprite(icon, icon_rect, fit=.contain)
+    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain, tint=colors.get(.bg1, alpha=opacity))
+    draw_sprite(icon, icon_rect, fit=.contain, tint=core.alpha(core.white, opacity))
 }
 
-draw_item_stack_count :: proc (rect: Rect, count: int) {
+draw_item_stack_count :: proc (rect: Rect, count: int, opacity: f32) {
     if count < 1 do return
 
     text := core.format_int(count, allocator=context.temp_allocator)
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
-    draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6))
-    draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary))
+    draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6*opacity))
+    draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary, alpha=opacity))
 }
 
-draw_item_durability_and_liquid_levels :: proc (rect: Rect, slot: ^data.Container_Slot) {
+draw_item_durability_and_liquid_levels :: proc (rect: Rect, slot: ^data.Container_Slot, opacity: f32) {
     assert(slot.item.stack == 1)
 
     bar_h :: 4
@@ -586,6 +587,7 @@ draw_item_durability_and_liquid_levels :: proc (rect: Rect, slot: ^data.Containe
             value           = slot.durability.value,
             unrepairable    = slot.durability.unrepairable,
             maximum         = slot.item.durability,
+            opacity         = opacity,
         )
         bar_offset_y -= bar_h
     }
@@ -600,18 +602,20 @@ draw_item_durability_and_liquid_levels :: proc (rect: Rect, slot: ^data.Containe
                 value       = slot.liquid_amount,
                 maximum     = slot.item.liquid_container.capacity,
                 color_id    = liquid_type == .water ? .water : .blood,
+                opacity     = opacity,
             )
         case .fuel:
             draw_rect_progress_bar(bar_rect,
                 value       = slot.liquid_amount,
                 maximum     = slot.item.liquid_container.capacity,
                 color_id    = .water,
+                opacity     = opacity,
             )
         }
     }
 }
 
-draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID) {
+draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID, opacity: f32) {
     sip_amount :: 250
     sip_gap := rect.h / 2
     sips := int(maximum) / sip_amount
@@ -619,8 +623,8 @@ draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color
     sip_rect := Rect { rect.x, rect.y, sip_w, rect.h }
     value_i := int(value) / sip_amount
 
-    empty_color := colors.get(color_id, alpha=.2)
-    filled_color := colors.get(color_id)
+    empty_color := colors.get(color_id, alpha=opacity*.2)
+    filled_color := colors.get(color_id, alpha=opacity)
 
     for i in 0..<sips {
         color := i < value_i ? filled_color : empty_color
@@ -637,22 +641,22 @@ draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color
     }
 }
 
-draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID) {
-    empty_color := colors.get(color_id, brightness=-.8)
+draw_rect_progress_bar :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID, opacity: f32) {
+    empty_color := colors.get(color_id, brightness=-.8, alpha=opacity)
     draw.rect(rect, empty_color)
 
     filled_ratio := core.clamp_ratio(value, 0, maximum)
     filled_rect := core.rect_scaled_top_left(rect, {filled_ratio,1})
-    filled_color := colors.get(color_id)
+    filled_color := colors.get(color_id, alpha=opacity)
     draw.rect(filled_rect, filled_color)
 }
 
-draw_rect_progress_bar_durability :: proc (rect: Rect, value, unrepairable, maximum: f32) {
-    draw_rect_progress_bar(rect, value, maximum, .primary)
+draw_rect_progress_bar_durability :: proc (rect: Rect, value, unrepairable, maximum, opacity: f32) {
+    draw_rect_progress_bar(rect, value, maximum, .primary, opacity)
     if unrepairable > 0 {
         unrepairable_ratio := core.clamp_ratio(unrepairable, 0, maximum)
         unrepairable_rect := core.rect_scaled_top_right(rect, {unrepairable_ratio,1})
-        unrepairable_color := colors.get(.unrepairable)
+        unrepairable_color := colors.get(.unrepairable, alpha=opacity)
         draw.rect(unrepairable_rect, unrepairable_color)
     }
 }
@@ -704,21 +708,21 @@ draw_tooltip_image :: proc (f: ^ui.Frame) {
     assert(slot != nil && slot.item != nil)
 
     rect := core.rect_moved(f.rect, {0,1})
-    draw_item_origin_rect(rect, slot.item.origin)
-    draw_item_icon(rect, slot.item.icon)
-    draw_item_tier(rect, slot.item.tier)
+    draw_item_origin_rect(rect, slot.item.origin, f.opacity)
+    draw_item_icon(rect, slot.item.icon, f.opacity)
+    draw_item_tier(rect, slot.item.tier, f.opacity)
 }
 
 draw_tooltip_durability :: proc (f: ^ui.Frame) {
     slot := ui.user_ptr(f.parent, ^data.Container_Slot)
     assert(slot != nil && slot.item != nil && slot.item.durability > 0)
 
-    draw.rect(f.rect, colors.get(.primary, brightness=-.75))
+    draw.rect(f.rect, colors.get(.primary, brightness=-.75, alpha=f.opacity))
 
     rect := core.rect_inflated(f.rect, {-15, -6})
 
     icon_rect := core.rect_bar_left(rect, rect.h)
-    draw_sprite("settings", icon_rect, tint=colors.get(.primary, brightness=-.2))
+    draw_sprite("settings", icon_rect, tint=colors.get(.primary, brightness=-.2, alpha=f.opacity))
 
     bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
     core.rect_inflate(&bar_rect, {0,-12})
@@ -726,6 +730,7 @@ draw_tooltip_durability :: proc (f: ^ui.Frame) {
         value           = slot.durability.value,
         unrepairable    = slot.durability.unrepairable,
         maximum         = slot.item.durability,
+        opacity         = f.opacity,
     )
 }
 
@@ -737,12 +742,12 @@ draw_tooltip_liquid :: proc (f: ^ui.Frame) {
     assert(liquid_type == .water || liquid_type == .blood)
     liquid_color_id: colors.ID = liquid_type == .water ? .water : .blood
 
-    draw.rect(f.rect, colors.get(.primary, brightness=-.85))
+    draw.rect(f.rect, colors.get(.primary, brightness=-.85, alpha=f.opacity))
 
     rect := core.rect_inflated(f.rect, {-15, -6})
 
     icon_rect := core.rect_bar_left(rect, rect.h)
-    draw_sprite("water_drop", icon_rect, tint=colors.get(liquid_color_id))
+    draw_sprite("water_drop", icon_rect, tint=colors.get(liquid_color_id, alpha=f.opacity))
 
     bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
     core.rect_inflate(&bar_rect, {0,-12})
@@ -750,5 +755,6 @@ draw_tooltip_liquid :: proc (f: ^ui.Frame) {
         value       = slot.liquid_amount,
         maximum     = slot.item.liquid_container.capacity,
         color_id    = liquid_color_id,
+        opacity     = f.opacity,
     )
 }

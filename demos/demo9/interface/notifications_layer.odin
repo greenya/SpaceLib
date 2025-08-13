@@ -40,13 +40,13 @@ add_notifications_layer :: proc (order: int) {
             if len(notifications.queue) == 0 do return
 
             card := ui.first_hidden_child(notifications.cards)
-            if card != nil {
-                item := pop(&notifications.queue)
-                defer destroy_notification_queue_item(item)
-                set_notification_card_view(card, title=item.title, text=item.text, is_error=item.is_error)
-                ui.update(notifications.cards, repeat=3)
-                ui.animate(card, anim_notification_card_appear, notification_cards_appear_dur)
-            }
+            if card == nil do return
+
+            item := pop(&notifications.queue)
+            defer destroy_notification_queue_item(item)
+            set_notification_card_view(card, title=item.title, text=item.text, is_error=item.is_error)
+            ui.update(notifications.cards, repeat=3)
+            ui.animate(card, anim_notification_card_appear, notification_cards_appear_dur)
         },
     },
         { point=.top_right, offset={4,100} },
