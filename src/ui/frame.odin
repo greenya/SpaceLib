@@ -219,11 +219,9 @@ Frame :: struct {
     actor: Actor,
 
     // User pointer.
-    // Use it directly when you know the datatype or use `get/set_user_ptr()` for typeid check.
+    // Use it directly when you know the datatype or via `set_user_ptr()` and `user_ptr()` for type validation.
     user_ptr: rawptr,
 
-    // User pointer typeid.
-    // The value is used by `get/set_user_ptr()`.
     user_ptr_typeid: typeid,
 
     rect_status: enum {
@@ -427,6 +425,15 @@ set_text :: proc (f: ^Frame, values: ..any, shown := false) {
 set_text_format :: proc (f: ^Frame, text_format: string) {
     delete(f.text_format)
     f.text_format = text_format != "" ? strings.clone(text_format) : ""
+}
+
+set_user_ptr :: #force_inline proc (f: ^Frame, ptr: $T) where intrinsics.type_is_pointer(T) {
+    f.user_ptr = ptr
+    f.user_ptr_typeid = type_of(ptr)
+}
+
+user_ptr :: #force_inline proc (f: ^Frame, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
+    return f!=nil && f.user_ptr!=nil && f.user_ptr_typeid==T ? cast (T) f.user_ptr : nil
 }
 
 set_opacity :: proc (f: ^Frame, new_opacity: f32) {
@@ -704,15 +711,6 @@ update :: proc (f: ^Frame, include_hidden := false, repeat := 1) {
         mark_rect_for_update_frame_tree(f, include_hidden)
         update_rect_frame_tree(f, include_hidden)
     }
-}
-
-set_user_ptr :: #force_inline proc (f: ^Frame, ptr: $T) where intrinsics.type_is_pointer(T) {
-    f.user_ptr = ptr
-    f.user_ptr_typeid = type_of(ptr)
-}
-
-get_user_ptr :: #force_inline proc (f: ^Frame, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
-    return f!=nil && f.user_ptr!=nil && f.user_ptr_typeid==T ? cast (T) f.user_ptr : nil
 }
 
 destroy_frame :: proc (f: ^Frame) {

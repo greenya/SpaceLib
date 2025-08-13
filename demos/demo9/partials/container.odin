@@ -186,7 +186,7 @@ add_container_slot :: proc (con: ^Container, slot_idx: int) {
 
 @private
 enter_container_slot :: proc (f: ^ui.Frame) {
-    con := ui.get_user_ptr(f, ^Container)
+    con := ui.user_ptr(f, ^Container)
     if con != nil {
         slot := &con.data.slots[f.user_idx]
         if slot.item != nil {
@@ -203,7 +203,7 @@ leave_container_slot :: proc (f: ^ui.Frame) {
 @private
 drag_container_slot :: proc (f: ^ui.Frame, info: ui.Drag_Info) {
     // fmt.println("[drag]", f.user_idx)
-    con := ui.get_user_ptr(f, ^Container)
+    con := ui.user_ptr(f, ^Container)
     #partial switch info.phase {
     case .start:
         con.drag_slot.user_idx = f.user_idx
@@ -214,7 +214,7 @@ drag_container_slot :: proc (f: ^ui.Frame, info: ui.Drag_Info) {
         con.drag_slot.user_idx = -1
         ui.hide(con.drag_slot)
 
-        con_target := ui.get_user_ptr(info.target, ^Container)
+        con_target := ui.user_ptr(info.target, ^Container)
         if con_target != nil && info.target.name == "slot" {
             container_swap_slots(con, f.user_idx, con_target, info.target.user_idx)
         }

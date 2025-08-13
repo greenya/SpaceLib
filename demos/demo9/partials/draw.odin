@@ -501,7 +501,7 @@ draw_chevron_label_rect :: proc (f: ^ui.Frame) {
 }
 
 draw_container_slot :: proc (f: ^ui.Frame) {
-    con := ui.get_user_ptr(f, ^Container)
+    con := ui.user_ptr(f, ^Container)
     slot := &con.data.slots[f.user_idx]
 
     br_color := colors.get(.primary, alpha=.2)
@@ -665,7 +665,7 @@ draw_container_volume_bar :: proc (f: ^ui.Frame) {
     draw.rect(core.rect_bar_top(f.rect, ln_thick), ln_color)
     draw.rect(core.rect_bar_bottom(f.rect, ln_thick), ln_color)
 
-    con := ui.get_user_ptr(f, ^Container)
+    con := ui.user_ptr(f, ^Container)
     vol_ratio := con != nil ? con.volume_ratio : 0
 
     bar_rect := core.rect_inflated(f.rect, -2)
@@ -700,7 +700,7 @@ draw_container_volume_bar_arrow :: proc (f: ^ui.Frame) {
 }
 
 draw_tooltip_image :: proc (f: ^ui.Frame) {
-    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    slot := ui.user_ptr(f.parent, ^data.Container_Slot)
     assert(slot != nil && slot.item != nil)
 
     rect := core.rect_moved(f.rect, {0,1})
@@ -710,7 +710,7 @@ draw_tooltip_image :: proc (f: ^ui.Frame) {
 }
 
 draw_tooltip_durability :: proc (f: ^ui.Frame) {
-    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    slot := ui.user_ptr(f.parent, ^data.Container_Slot)
     assert(slot != nil && slot.item != nil && slot.item.durability > 0)
 
     draw.rect(f.rect, colors.get(.primary, brightness=-.75))
@@ -730,7 +730,7 @@ draw_tooltip_durability :: proc (f: ^ui.Frame) {
 }
 
 draw_tooltip_liquid :: proc (f: ^ui.Frame) {
-    slot := ui.get_user_ptr(f.parent, ^data.Container_Slot)
+    slot := ui.user_ptr(f.parent, ^data.Container_Slot)
     assert(slot != nil && slot.item != nil)
 
     liquid_type := slot.item.liquid_container.type
