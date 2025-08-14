@@ -19,7 +19,13 @@ _ :: fmt
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-draw_text_aligned :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Color) {
+draw_text_aligned :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Color, drop_shadow := false) {
+    if drop_shadow {
+        sh_color := colors.get(.bg1)
+        sh_color.a = color.a
+        sh_pos := pos + { font.height/30, font.height/15 }
+        draw.text_aligned(text, sh_pos, align, &font.font_tr, sh_color)
+    }
     draw.text_aligned(text, pos, align, &font.font_tr, color)
 }
 
@@ -509,12 +515,12 @@ draw_container_slot :: proc (f: ^ui.Frame) {
     br_thick := f32(1)
 
     if slot.item != nil {
-        draw_item_origin_rect(f.rect, slot.item.origin, f.opacity)
-        draw_item_icon(f.rect, slot.item.icon, f.opacity)
-        draw_item_tier(f.rect, slot.item.tier, f.opacity)
-
-        if slot.item.stack == 1 do draw_item_durability_and_liquid_levels(f.rect, slot, f.opacity)
-        else                    do draw_item_stack_count(f.rect, slot.count, f.opacity)
+        draw_slot_origin_rect(slot, f.rect, f.opacity)
+        draw_slot_icon(slot, f.rect, f.opacity)
+        draw_slot_tier(slot, f.rect, f.opacity)
+        if slot.item.stack == 1 do draw_slot_durability_and_liquid_levels(slot, f.rect, f.opacity)
+        else                    do draw_slot_stack_count(slot, f.rect, f.opacity)
+        draw_slot_volume(slot, f.rect, f.opacity)
 
         if f.captured {
             br_color = br_color_focus
@@ -532,10 +538,12 @@ draw_container_slot :: proc (f: ^ui.Frame) {
     draw.rect_lines(f.rect, br_thick, br_color)
 }
 
-draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin, opacity: f32) {
+draw_slot_origin_rect :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+    assert(slot.item != nil)
+
     t, b: Color
     clr :: #force_inline proc (id: colors.ID, b, a: f32) -> Color { return colors.get(id, brightness=b, alpha=a) }
-    switch origin {
+    switch slot.item.origin {
     case .none      : t=clr(.primary, -.9, opacity)   ; b=clr(.primary, -.7, opacity)
     case .imperial  : t=clr(.imperial, -.9, opacity)  ; b=clr(.imperial, -.6, opacity)
     case .house     : t=clr(.house, -.9, opacity)     ; b=clr(.house, -.6, opacity)
@@ -546,55 +554,101 @@ draw_item_origin_rect :: proc (rect: Rect, origin: data.Item_Origin, opacity: f3
     draw.rect_gradient_vertical(rect, t, b)
 }
 
-draw_item_tier :: proc (rect: Rect, tier: int, opacity: f32) {
-    text_tiers := [?] string { "", "I", "II", "III", "IV", "V", "VI" }
-    if tier < 1 || tier >= len(text_tiers) do return
+draw_slot_volume :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32, in_tooltip := false) {
+    assert(slot.item != nil)
 
-    text := text_tiers[tier]
+    volume := data.container_slot_volume(slot^)
+    if volume == 0 do return
+
+    pad: f32 = in_tooltip ? 10 : 5
+    bar_w :: 6
+    bar_h: f32
+    bar_color: Color
+
+    switch {
+    case volume < 5     : bar_h=rect.h/8    ; bar_color=colors.get(.vol_low, alpha=opacity)
+    case volume < 15    : bar_h=rect.h/5    ; bar_color=colors.get(.vol_med, alpha=opacity)
+    case                : bar_h=rect.h/3    ; bar_color=colors.get(.vol_high, alpha=opacity)
+    }
+
+    rect := rect
+    rect = Rect { rect.x+pad, rect.y+rect.h-bar_h-pad, bar_w, bar_h }
+
+    if in_tooltip {
+        volume_text := core.format_f32(volume, 3, context.temp_allocator)
+        text := fmt.tprintf("%sV", volume_text)
+        text_pos := core.rect_bottom_right(rect) + {4,6}
+        text_font := fonts.get(.text_4l)
+        draw_text_aligned(text, text_pos, {0,1}, text_font, colors.get(.primary, alpha=opacity), drop_shadow=true)
+    } else {
+        if slot.item.durability > 0                 do rect.y -= container_slot_progress_bar_h
+        if slot.item.liquid_container.type != .none do rect.y -= container_slot_progress_bar_h
+    }
+
+    draw.rect(rect, core.brightness(bar_color, .5))
+    rect.w -= 1
+    rect.h -= 1
+    rect.x += 1
+    rect.y += 1
+    draw.rect(rect, core.brightness(bar_color, -.5))
+    rect.w -= 1
+    rect.h -= 1
+    draw.rect(rect, bar_color)
+}
+
+draw_slot_tier :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+    assert(slot.item != nil)
+
+    text_tiers := [?] string { "", "I", "II", "III", "IV", "V", "VI" }
+    if slot.item.tier < 1 || slot.item.tier >= len(text_tiers) do return
+
+    text := text_tiers[slot.item.tier]
     text_pos := core.rect_top_right(rect) + {-10,2}
     text_font := fonts.get(.text_4l)
     text_color := colors.get(.primary, brightness=-.4, alpha=opacity)
-    draw_text_aligned(text, text_pos+{1,2}, {1,0}, text_font, colors.get(.bg0, alpha=.6*opacity))
-    draw_text_aligned(text, text_pos, {1,0}, text_font, text_color)
+    draw_text_aligned(text, text_pos, {1,0}, text_font, text_color, drop_shadow=true)
 }
 
-draw_item_icon :: proc (rect: Rect, icon: string, opacity: f32) {
-    icon := icon != "" ? icon : "question_mark"
+draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+    assert(slot.item != nil)
+
+    icon := slot.item.icon != "" ? slot.item.icon : "question_mark"
     icon_rect := core.rect_scaled(rect, .8)
     draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain, tint=colors.get(.bg1, alpha=opacity))
     draw_sprite(icon, icon_rect, fit=.contain, tint=core.alpha(core.white, opacity))
 }
 
-draw_item_stack_count :: proc (rect: Rect, count: int, opacity: f32) {
-    if count < 1 do return
+draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+    if slot.count < 1 do return
 
-    text := core.format_int(count, allocator=context.temp_allocator)
+    text := core.format_int(slot.count, allocator=context.temp_allocator)
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
-    draw_text_aligned(text, text_pos+{1,2}, 1, text_font, colors.get(.bg0, alpha=.6*opacity))
-    draw_text_aligned(text, text_pos, 1, text_font, colors.get(.primary, alpha=opacity))
+    text_color := colors.get(.primary, alpha=opacity)
+    draw_text_aligned(text, text_pos, 1, text_font, text_color, drop_shadow=true)
 }
 
-draw_item_durability_and_liquid_levels :: proc (rect: Rect, slot: ^data.Container_Slot, opacity: f32) {
+container_slot_progress_bar_h :: 4
+
+draw_slot_durability_and_liquid_levels :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     assert(slot.item.stack == 1)
 
-    bar_h :: 4
     bar_offset_y := f32(0)
 
     if slot.item.durability > 0 {
-        bar_rect := core.rect_bar_bottom(core.rect_inflated(rect, -1), bar_h)
+        bar_rect := core.rect_bar_bottom(core.rect_inflated(rect, -1), container_slot_progress_bar_h)
         draw_rect_progress_bar_durability(bar_rect,
             value           = slot.durability.value,
             unrepairable    = slot.durability.unrepairable,
             maximum         = slot.item.durability,
             opacity         = opacity,
         )
-        bar_offset_y -= bar_h
+        bar_offset_y -= container_slot_progress_bar_h
     }
 
     liquid_type := slot.item.liquid_container.type
     if liquid_type != .none {
-        bar_rect := core.rect_bar_bottom(core.rect_inflated(rect, -1), bar_h)
+        bar_rect := core.rect_bar_bottom(core.rect_inflated(rect, -1), container_slot_progress_bar_h)
         bar_rect.y += bar_offset_y
         #partial switch liquid_type {
         case .water, .blood:
@@ -708,9 +762,10 @@ draw_tooltip_image :: proc (f: ^ui.Frame) {
     assert(slot != nil && slot.item != nil)
 
     rect := core.rect_moved(f.rect, {0,1})
-    draw_item_origin_rect(rect, slot.item.origin, f.opacity)
-    draw_item_icon(rect, slot.item.icon, f.opacity)
-    draw_item_tier(rect, slot.item.tier, f.opacity)
+    draw_slot_origin_rect(slot, rect, f.opacity)
+    draw_slot_icon(slot, rect, f.opacity)
+    draw_slot_tier(slot, rect, f.opacity)
+    draw_slot_volume(slot, rect, f.opacity, in_tooltip=true)
 }
 
 draw_tooltip_durability :: proc (f: ^ui.Frame) {
