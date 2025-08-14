@@ -4,6 +4,7 @@ package interface
 import "core:fmt"
 import "core:math/ease"
 
+import "spacelib:core"
 import "spacelib:ui"
 
 import "../data"
@@ -126,9 +127,33 @@ hide_tooltip_listener :: proc (args: events.Args) {
 
 anchor_tooltip :: proc (rel_frame: ^ui.Frame) {
     tt := &tooltips.tooltip
+    tt_rect := &tooltips.tooltip.root.rect
+    safe_rect := core.rect_inflated(tooltips.layer.rect, {-30,-10})
+
+    debug :: false
+    if debug do fmt.println("------------------------+")
+    if debug do fmt.println("layer\t\t\t:", core.rect_ltrb(safe_rect))
 
     ui.set_anchors(tt.root, { point=.top_left, rel_point=.top_right, rel_frame=rel_frame, offset={60,-10} })
-    ui.update(tt.root, include_hidden=true, repeat=2)
+    ui.update(tt.root, include_hidden=true, repeat=5)
+
+    if debug do fmt.println("anchored to the right\t:", core.rect_ltrb(tt_rect^))
+
+    is_offscreen_right := tt_rect.x+tt_rect.w > safe_rect.x+safe_rect.w
+    if is_offscreen_right {
+        ui.set_anchors(tt.root, { point=.top_right, rel_point=.top_left, rel_frame=rel_frame, offset={-60,-10} })
+        ui.update(tt.root, include_hidden=true, repeat=5)
+        if debug do fmt.println("anchored to the left\t:", core.rect_ltrb(tt_rect^))
+    }
+
+    offscreen_bottom_amount := tt_rect.y+tt_rect.h - (safe_rect.y+safe_rect.h)
+    if offscreen_bottom_amount > 0 {
+        tt.root.anchors[0].offset.y -= offscreen_bottom_amount
+        ui.update(tt.root, include_hidden=true, repeat=5)
+        if debug do fmt.println("moved up to fit in safe\t:", core.rect_ltrb(tt_rect^))
+    }
+
+    if debug do fmt.println("------------------------+")
 }
 
 anim_tooltip_appear :: proc (f: ^ui.Frame) {
@@ -136,16 +161,21 @@ anim_tooltip_appear :: proc (f: ^ui.Frame) {
 
     ratio := ease.cubic_out(f.anim.ratio)
     ui.set_opacity(f, ratio)
-    f.offset = {40*(1-ratio),0}
+    f.offset = f.anchors[0].point == .top_left\
+        ? {40*(1-ratio),0}\
+        : {-40*(1-ratio),0}
 }
 
 anim_tooltip_disappear :: proc (f: ^ui.Frame) {
     ratio := ease.cubic_in(f.anim.ratio)
     ui.set_opacity(f, 1-ratio)
-    f.offset = {40*ratio,0}
+    f.offset = f.anchors[0].point == .top_left\
+        ? {40*ratio,0}\
+        : {-40*ratio,0}
 
     if f.anim.ratio == 1 {
         tooltips.tooltip.data_container_slot = {}
+        f.offset = 0
         ui.clear_anchors(f)
         ui.hide(f)
     }
