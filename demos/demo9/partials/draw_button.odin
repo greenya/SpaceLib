@@ -73,12 +73,12 @@ draw_button_featured :: proc (f: ^ui.Frame) {
 
 draw_button_radio_rect :: proc (f: ^ui.Frame) {
     bg_color := f.selected\
-        ? colors.get(.primary, brightness=-.3)\
-        : colors.get(.bg1)
+        ? colors.get(.primary, brightness=-.3, alpha=f.opacity)\
+        : colors.get(.bg1, alpha=f.opacity)
     draw.rect(f.rect, bg_color)
 
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .222, .Cubic_In, .222)
-    br_color := colors.get(.primary, alpha=hv_ratio)
+    br_color := colors.get(.primary, alpha=hv_ratio*f.opacity)
     draw.rect_lines(f.rect, 1, br_color)
 }
 

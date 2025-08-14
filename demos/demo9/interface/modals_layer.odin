@@ -22,6 +22,7 @@ modals: struct {
 }
 
 max_buttons :: 4
+max_pages   :: 8
 
 add_modals_layer :: proc (order: int) {
     assert(modals.layer == nil)
@@ -56,8 +57,8 @@ destroy_modal_state_pages :: proc () {
 add_modal :: proc () {
     modals.modal = ui.add_frame(modals.layer, {
         name    = "modal",
-        size    = {640,0},
-        layout  = ui.Flow { dir=.down, pad=30, auto_size={.height} },
+        size    = {680,0},
+        layout  = ui.Flow { dir=.down, pad={40,40,25,35}, auto_size={.height} },
         draw    = partials.draw_window_rect,
     }, { point=.center })
 
@@ -67,11 +68,37 @@ add_modal :: proc () {
         text_format = "<wrap,pad=30,font=text_5m,color=primary_d2>%s",
     })
 
-    ui.add_frame(modals.modal, {
+    body := ui.add_frame(modals.modal, {
+        name        = "body",
+        flags       = {.scissor},
+        layout      = ui.Flow { dir=.down, scroll={step=20}, auto_size={.height} },
+        size_max    = {0,320},
+    })
+
+    ui.add_frame(body, {
         name        = "message",
         flags       = {.terse,.terse_height},
         text_format = "<wrap,font=text_4l,color=primary_d2>%s",
     })
+
+    body_track, _ := partials.add_scrollbar(body)
+    body_track.anchors[0].offset.x = 39
+    body_track.anchors[1].offset.x = 39
+
+    pagination := ui.add_frame(modals.modal, {
+        name    = "pagination",
+        size    = {0,50},
+        layout  = ui.Flow { dir=.right_center, gap=4, align=.end },
+    })
+
+    for _ in 0..<max_pages {
+        ui.add_frame(pagination, {
+            flags   = {.radio},
+            size    = 16,
+            draw    = partials.draw_button_radio_pin,
+            click   = proc (f: ^ui.Frame) { set_modal_page(ui.index(f)) },
+        })
+    }
 
     buttons := ui.add_frame(modals.modal, {
         name    = "buttons",
@@ -110,6 +137,16 @@ open_modal_listener :: proc (args: events.Args) {
         }
     }
 
+    pagination := ui.get(modals.modal, "pagination")
+    if len(state.pages) > 1 {
+        ui.show(pagination)
+        ui.hide_children(pagination)
+        for i in 0..<len(state.pages) do ui.show(pagination.children[i])
+        ui.click(pagination.children[0])
+    } else {
+        ui.hide(pagination)
+    }
+
     args_buttons := args.buttons
     if len(args_buttons) == 0 {
         if len(state.pages) > 1 {
@@ -140,11 +177,13 @@ open_modal_listener :: proc (args: events.Args) {
             }
         case .next_page:
             btn.click = proc (f: ^ui.Frame) {
-                set_modal_page(modals.state.page_idx + 1)
+                pagination := ui.get(modals.modal, "pagination")
+                ui.select_next_child(pagination, allow_rotation=true)
             }
         case .prev_page:
             btn.click = proc (f: ^ui.Frame) {
-                set_modal_page(modals.state.page_idx - 1)
+                pagination := ui.get(modals.modal, "pagination")
+                ui.select_prev_child(pagination, allow_rotation=true)
             }
         }
     }
@@ -178,10 +217,10 @@ set_modal_page :: proc (new_page_idx: int) {
     title := ui.get(modals.modal, "title")
     ui.set_text(title, state.pages[state.page_idx].title)
 
-    message := ui.get(modals.modal, "message")
+    message := ui.get(modals.modal, "body/message")
     ui.set_text(message, state.pages[state.page_idx].message)
 
-    ui.update(modals.modal, repeat=2)
+    ui.update(modals.modal, repeat=3)
 }
 
 anim_modal_appear :: proc (f: ^ui.Frame) {

@@ -127,7 +127,7 @@ hide_tooltip_listener :: proc (args: events.Args) {
 anchor_tooltip :: proc (rel_frame: ^ui.Frame) {
     tt := &tooltips.tooltip
 
-    ui.set_anchors(tt.root, { point=.top_left, rel_point=.top_right, rel_frame=rel_frame, offset={20,0} })
+    ui.set_anchors(tt.root, { point=.top_left, rel_point=.top_right, rel_frame=rel_frame, offset={60,-10} })
     ui.update(tt.root, include_hidden=true, repeat=2)
 }
 
