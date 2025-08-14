@@ -68,3 +68,21 @@ format_int :: proc (value: int, thousands_separator := ",", allocator := context
 
     return strings.to_string(sb)
 }
+
+// cuts-off all `0` decimal digits from the right side;
+// examples:
+// - 123.211100, max=3 -> 123.211
+// - 123.210000, max=3 -> 123.21
+// - 123.000000, max=3 -> 123
+format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.allocator) -> string {
+    format := fmt.tprintf("%%.%if", max_decimal_digits)
+    text := fmt.aprintf(format, value, allocator=allocator)
+    if max_decimal_digits > 0 {
+        // cut-off zeros from the end until non-'0' is met (a digit or '.')
+        #reverse for c, i in text do if c != '0' { text=text[:i+1]; break }
+        // cut-off possible last '.' (when all decimal digits are 0)
+        last_i := len(text)-1
+        if last_i > 0 && text[last_i] == '.' do text = text[:last_i]
+    }
+    return text
+}
