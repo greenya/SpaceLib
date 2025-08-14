@@ -8,14 +8,16 @@ import "spacelib:core"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 
+import "../../events"
 import "../../partials"
 
 map_page: struct {
-    root                 : ^ui.Frame,
+    root                : ^ui.Frame,
 
-    filter_button        : ^ui.Frame,
-    legend_button        : ^ui.Frame,
-    recenter_button      : ^ui.Frame,
+    filter_button       : ^ui.Frame,
+    legend_button       : ^ui.Frame,
+    help_button         : ^ui.Frame,
+    recenter_button     : ^ui.Frame,
 
     area                : ^ui.Frame,
     area_land           : [333] struct { center: Vec2, size: Vec2 },
@@ -45,6 +47,11 @@ add_map_page :: proc () {
         }
     }
 
+    map_page.help_button = partials.add_screen_key_button(&screen, "help", "<icon=key/H> Help")
+    map_page.help_button.click = proc (f: ^ui.Frame) {
+        events.open_modal({ target=f, instruction_id="player/map/help" })
+    }
+
     map_page.recenter_button = partials.add_screen_key_button(&screen, "recenter", "<icon=key/R> Re-center")
     map_page.recenter_button.click = proc (f: ^ui.Frame) {
         map_page.area_offset = 0
@@ -54,6 +61,7 @@ add_map_page :: proc () {
         partials.move_screen_pyramid_buttons(&screen, .left)
         ui.show(map_page.filter_button)
         ui.show(map_page.legend_button)
+        ui.show(map_page.help_button)
         ui.show(map_page.recenter_button)
     }
 
@@ -61,6 +69,7 @@ add_map_page :: proc () {
         partials.move_screen_pyramid_buttons(&screen, .center)
         ui.hide(map_page.filter_button)
         ui.hide(map_page.legend_button)
+        ui.hide(map_page.help_button)
         ui.hide(map_page.recenter_button)
     }
 

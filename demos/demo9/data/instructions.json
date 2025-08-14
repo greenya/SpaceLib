@@ -35,15 +35,122 @@
                     "",
                     "Keep an eye on this and even sort by Volume in order to be aware of the largest items you are carrying."
                 ]
+            }
+        ]
+    },
+    {
+        "id": "player/skills/help",
+        "pages": [
+            {
+                "title": "Skill Points",
+                "text": [
+                    "Skill points used to learn Abilities, Techniques, and Passive improvements to your character in the Skills menu.",
+                    "",
+                    "Learn Skills from five different Skill Trees (Bene Gesserit, Mentat, Planetologist, Swordmaster. Trooper), each with their own set of upgrades, and their representative Mentor.",
+                    "",
+                    "Earn Skill points by leveling up your character."
+                ]
+            },
+            {
+                "title": "Abilities, Techniques, and Passives",
+                "text": [
+                    "Skills are divided between Abilities, Techniques, and Passives.",
+                    "",
+                    "Abilities are actions that require activation while Techniques provide powerful bonuses under specific conditions. Both Abilities and Techniques must be equipped in the Skills Loadout in order to utilize their effects.",
+                    "",
+                    "Passives, once trained, provide bonuses that are always in effect."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "player/map/help",
+        "pages": [
+            {
+                "title": "Map",
+                "text": [
+                    "A <font=text_4m>Waypoint</> can be set anywhere on the map that will also appear on the <font=text_4m>Compass</>.",
+                    "",
+                    "The map <font=text_4m>Legend</> provides an overview of all map markers. Use the <font=text_4m>Filter</> to quickly toggle the visibility of markers and categories.",
+                    "",
+                    "The <font=text_4m>Area Summary</> panel gives detailed information on specific regions of the map. Fabricate and launch a <font=text_4m>Survey Probe</> to view this information."
+                ]
+            },
+            {
+                "title": "Map",
+                "text": [
+                    "The <font=text_4m>Fog of War</> will be lifted when exploring or surveying a region. When a <font=text_4m>Coriolis Storm</> sweeps the land, the Fog of War will return to regions that have not been surveyed.",
+                    "",
+                    "In the <font=text_4m>Deep Desert</>, the storm will completely change the topography of the land and reset the Fog of War.",
+                    "",
+                    "Trained <font=text_4m>Planetologists</> can create <font=text_4m>Sinkcharts</> of surveyed regions using the passive skill, <font=text_4m>Cartographer</>. <font=text_4m>Blank Sinkcharts</> can be purchased at a <font=text_4m>Tradepost</> for this purpose."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "player/crafting/help",
+        "pages": [
+            {
+                "title": "Crafting",
+                "text": [
+                    "The <font=text_4m>Crafting</> menu can be used to craft basic items when exploring Arrakis. These items can be unlocked by using <font=text_4m>Intel</> in the <font=text_4m>Research</> menu. A <font=text_4m>Fabricator</> is required to craft more complex items.",
+                    "",
+                    "The <font=text_4m>Required Resources</> for each item can be seen in the menu, along with the option to craft one, a set amount, or the maximum possible with the resources available.",
+                    "",
+                    "Items set to craft are added to the <font=text_4m>Queue</>. From here, items can be moved up in the craft order, or removed from the Queue."
+                ]
+            }
+        ]
+    },
+    {
+        "id": "player/research/help",
+        "pages": [
+            {
+                "title": "Intel",
+                "text": [
+                    "<font=text_4m>Intel</> is used to research <font=text_4m>Schematics</> from the <font=text_4m>Research</> menu.",
+                    "",
+                    "Research Schematics to unlock specific <font=text_4m>Recipes</> for <font=text_4m>Fabrication</>.",
+                    "",
+                    "Earn Intel by leveling up your character or find hidden Intel inside enemy Outposts marked on your map."
+                ]
             },
             {
                 "title": "Primary Sources",
                 "text": [
-                    "The <font=text_4m>Components</> used for Fabricating some items can be found more often in specific locations.",
+                    "The <font=text_4m>Components</> used for <font=text_4m>Fabricating</> some items can be found more often in specific locations.",
                     "",
                     "These locations are color-coded and listed in the <font=text_4m>Primary Source</> section on an item's info card alongside a specific icon.",
                     "",
                     "Look for these icons on your map to find the best locations for these components."
+                ]
+            },
+            {
+                "title": "Equipment Progression",
+                "text": [
+                    "Higher quality equipment requires better materials which can be sourced from various locations:",
+                    "",
+                    "<font=text_4m>Salvage Products</>",
+                    "Equipment fabricated with <font=text_4m>Salvaged Metal</> found scattered throughout the world.",
+                    "",
+                    "<font=text_4m>Copper Products</>",
+                    "Equipment fabricated with <font=text_4m>Copper Ore</> found in <font=text_4m>Hagga Basin South</> and beyond.",
+                    "",
+                    "<font=text_4m>Iron Products</>",
+                    "Equipment fabricated with <font=text_4m>Iron Ore</> found in <font=text_4m>Vermilius Gap</>.",
+                    "",
+                    "<font=text_4m>Steel Products</>",
+                    "Equipment fabricated using a combination of <font=text_4m>Iron Ore</> from <font=text_4m>Vermilius Gap</> and <font=text_4m>Carbon</> found in <font=text_4m>Jabal Eifrit</>.",
+                    "",
+                    "<font=text_4m>Aluminum Products</>",
+                    "Equipment fabricated with <font=text_4m>Aluminum Ore</> found in the <font=text_4m>Shield Wall</>.",
+                    "",
+                    "<font=text_4m>Duraluminum Products</>",
+                    "Equipment fabricated using a combination of <font=text_4m>Aluminum Ore</> from the <font=text_4m>Shield Wall</> and <font=text_4m>Jasmium Crystals</> found in the radioactive pools in <font=text_4m>Sheol</>.",
+                    "",
+                    "<font=text_4m>Plastanium Products</>",
+                    "Equipment fabricated using a combination of <font=text_4m>Titanium Ore</> and <font=text_4m>Stravidium Mass</> from the <font=text_4m>Deep Desert</>."
                 ]
             }
         ]
