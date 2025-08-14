@@ -43,6 +43,14 @@ Frame_Init :: struct {
     // The value is used only by `Flow` and `terse`.
     size_min: Vec2,
 
+    // Maximum size.
+    // Sub-values (width and height) are processed separately.
+    // Sub-value is considered "not set" if it is zero.
+    // The value is used only by `Flow` after application of `auto_size`.
+    // Use this value when you want to have optional scrollbar, e.g. the element adjusts its size
+    // to some point, and after it stays on some maximum size providing scrolling for the content.
+    size_max: Vec2,
+
     // Layout method for `children`.
     // Affects only children without `anchors`.
     layout: union { Flow, Grid },

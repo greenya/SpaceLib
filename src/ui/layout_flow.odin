@@ -27,7 +27,8 @@ Flow :: struct {
 
     // Scroll state. Set `scroll.step` to enable scroll processing.
     // `scroll.offset*` values will be updated automatically.
-    // Setting `auto_size` to same direction will effectively disable scrolling conditions.
+    // Setting `auto_size` to same direction will effectively disable scrolling conditions, unless you
+    // use `size_max`, which will enable scroll at some maximum point.
     scroll: Layout_Scroll,
 
     // Spacing between adjacent children.
@@ -166,8 +167,14 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
     full_content_size, dir_content_size, dir_rect_size := flow_content_size(f, vis_children)
 
     if flow.auto_size != {} {
-        if .width in flow.auto_size     do f.size.x = full_content_size.x
-        if .height in flow.auto_size    do f.size.y = full_content_size.y
+        if .width in flow.auto_size {
+            f.size.x = full_content_size.x
+            if f.size_max.x > 0 && f.size.x > f.size_max.x do f.size.x = f.size_max.x
+        }
+        if .height in flow.auto_size {
+            f.size.y = full_content_size.y
+            if f.size_max.y > 0 && f.size.y > f.size_max.y do f.size.y = f.size_max.y
+        }
     }
 
     scroll := layout_scroll(f)
