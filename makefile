@@ -10,8 +10,14 @@ endif
 
 collection_args	= -collection:spacelib=src
 checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon
-debug_args 		= ${collection_args} ${checker_args} -debug -o:none -keep-executable
-release_args 	= ${collection_args} ${checker_args} -o:speed -keep-executable
+
+debug_args 		= ${collection_args} ${checker_args} -keep-executable -o:none -debug
+release_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed
+fastest_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed -no-type-assert -disable-assert -no-bounds-check
+
+# not sure if the fastest_args is _the_ fastest args possible;
+# it seems it gives almost unnoticeable gain if any at all (~1-2%);
+# always test if it worth using
 
 run: demo9
 
