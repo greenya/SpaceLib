@@ -545,7 +545,7 @@ draw_slot_origin_rect :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: 
     clr :: #force_inline proc (id: colors.ID, b, a: f32) -> Color { return colors.get(id, brightness=b, alpha=a) }
     switch slot.item.origin {
     case .none      : t=clr(.primary, -.9, opacity)   ; b=clr(.primary, -.7, opacity)
-    case .imperial  : t=clr(.imperial, -.9, opacity)  ; b=clr(.imperial, -.6, opacity)
+    case .imperial  : t=clr(.imperial, -.9, opacity)  ; b=clr(.imperial, -.4, opacity)
     case .house     : t=clr(.house, -.9, opacity)     ; b=clr(.house, -.6, opacity)
     case .fremen    : t=clr(.fremen, -.9, opacity)    ; b=clr(.fremen, -.6, opacity)
     case .unique    : t=clr(.unique, -.3, opacity)    ; b=clr(.unique, -.9, opacity)
@@ -575,7 +575,7 @@ draw_slot_volume :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32, 
     rect = Rect { rect.x+pad, rect.y+rect.h-bar_h-pad, bar_w, bar_h }
 
     if in_tooltip {
-        volume_text := core.format_f32(volume, 3, context.temp_allocator)
+        volume_text := core.format_f32_tmp(volume, 3)
         text := fmt.tprintf("%sV", volume_text)
         text_pos := core.rect_bottom_right(rect) + {4,6}
         text_font := fonts.get(.text_4l)
@@ -621,7 +621,7 @@ draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
 draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     if slot.count < 1 do return
 
-    text := core.format_int(slot.count, allocator=context.temp_allocator)
+    text := core.format_int_tmp(slot.count)
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
     text_color := colors.get(.primary, alpha=opacity)
@@ -670,12 +670,19 @@ draw_slot_durability_and_liquid_levels :: proc (slot: ^data.Container_Slot, rect
 }
 
 draw_rect_progress_bar_with_sips :: proc (rect: Rect, value, maximum: f32, color_id: colors.ID, opacity: f32) {
-    sip_amount :: 250
+    sip_amount: f32
+    switch {
+    case maximum <= 500: sip_amount = 100
+    case maximum <= 2500: sip_amount = 250
+    case maximum <= 8000: sip_amount = 500
+    case                : sip_amount = 1000
+    }
+
     sip_gap := rect.h / 2
-    sips := int(maximum) / sip_amount
+    sips := int(maximum) / int(sip_amount)
     sip_w := (rect.w - (f32(sips)-1)*sip_gap) / f32(sips)
     sip_rect := Rect { rect.x, rect.y, sip_w, rect.h }
-    value_i := int(value) / sip_amount
+    value_i := int(value) / int(sip_amount)
 
     empty_color := colors.get(color_id, alpha=opacity*.2)
     filled_color := colors.get(color_id, alpha=opacity)
@@ -780,7 +787,7 @@ draw_tooltip_durability :: proc (f: ^ui.Frame) {
     draw_sprite("settings", icon_rect, tint=colors.get(.primary, brightness=-.2, alpha=f.opacity))
 
     bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
-    core.rect_inflate(&bar_rect, {0,-12})
+    core.rect_inflate(&bar_rect, {0,-10})
     draw_rect_progress_bar_durability(bar_rect,
         value           = slot.durability.value,
         unrepairable    = slot.durability.unrepairable,
@@ -805,11 +812,17 @@ draw_tooltip_liquid :: proc (f: ^ui.Frame) {
     draw_sprite("water_drop", icon_rect, tint=colors.get(liquid_color_id, alpha=f.opacity))
 
     bar_rect := core.rect_bar_right(rect, rect.w-icon_rect.w-10)
-    core.rect_inflate(&bar_rect, {0,-12})
+    core.rect_inflate(&bar_rect, {0,-10})
     draw_rect_progress_bar_with_sips(bar_rect,
         value       = slot.liquid_amount,
         maximum     = slot.item.liquid_container.capacity,
         color_id    = liquid_color_id,
         opacity     = f.opacity,
     )
+}
+
+draw_attr_rect :: proc (f: ^ui.Frame) {
+    i := ui.index(f)
+    c := colors.get(.primary, brightness=i%2==0?-.75:-.85, alpha=f.opacity)
+    draw.rect(f.rect, c)
 }

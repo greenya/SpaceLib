@@ -139,7 +139,7 @@ set_container_state :: proc (con: ^Container, con_data: ^data.Container) {
     {
         solaris := data.container_item_count(con.data^, "solari")
         if solaris > 0 {
-            solaris_text := core.format_int(solaris, allocator=context.temp_allocator)
+            solaris_text := core.format_int_tmp(solaris)
             ui.set_text(con.solaris_text, solaris_text, shown=true)
         } else {
             ui.hide(con.solaris_text)

@@ -22,7 +22,7 @@
     {
         "id": "long_shot",
         "name": "Long Shot",
-        "desc": "This <color=unique>Unique</> rifle was named for an assassin who was paid a huge sum by the Atreides to take down the Beast Rabban. Witnesses say that the shot was perfect -- lodging a poison dart deep into Rabban's neck -- and that he laughed and pulled it out while his bodyguard",
+        "desc": "This <color=unique>Unique</> rifle was named for an assassin who was paid a huge sum by the Atreides to take down the Beast Rabban. Witnesses say that the shot was perfect -- lodging a poison dart deep into Rabban's neck -- and that he laughed and pulled it out while his bodyguard swarmed the assassin.",
         "tag_list": [ "rifles", "slot_weapon" ],
         "origin": "unique",
         "tier": 4,
@@ -38,7 +38,8 @@
             "effective_range": 75,
             "accuracy": 0.15,
             "stability": 9.8
-        }
+        },
+        "icon": "winchester-rifle"
     },
     {
         "id": "way_of_the_wanderer",
@@ -114,7 +115,8 @@
             "armor_value": 184,
             "hydration_capture": 2,
             "heat_protection": 1.2
-        }
+        },
+        "icon": "moncler-jacket"
     },
     {
         "id": "mercenary_stillsuit_gloves",
@@ -146,7 +148,8 @@
             "worm_threat": -45,
             "blade_mitigation": 6,
             "heat_protection": 0.4
-        }
+        },
+        "icon": "steeltoe-boots"
     },
     {
         "id": "paranoid_holtzman_shield",
@@ -181,13 +184,15 @@
         "name": "Young Sparky Mk5",
         "desc": "Sim found that if he crossed the wires in his power pack just so, he could create a <color=unique>Unique</> power pack that recharged quickly - but with a slightly reduced power pool. Sim's power pack became known as 'old sparky' for its constant discharge of electrical sparks - but his technique was copied widely by those who value speed over duration.",
         "tag_list": [ "utility_tools", "slot_power" ],
+        "origin": "unique",
         "tier": 5,
         "volume": 0.1,
         "durability": 100,
         "stats_power_pack": {
             "regen_per_second": 55,
             "power_pool": 500
-        }
+        },
+        "icon": "power-generator"
     },
     {
         "id": "personal_light",
@@ -203,12 +208,13 @@
         "name": "Healkit",
         "desc": "A standardized pack of cleansing agents, dermastraps and chemical stimulants, widely used to keep injured troops on their feet and in the fight.",
         "tag_list": [ "consumables" ],
-        "volume": 1,
+        "volume": 0.05,
         "stack": 20,
         "stats_healkit": {
             "health_restoration_over_time": 25,
             "instant_health_restoration": 25
-        }
+        },
+        "icon": "bandage-roll"
     },
     {
         "id": "construction_tool",
@@ -231,7 +237,8 @@
             "repair_speed": 312.5,
             "detach_speed": 85,
             "power_consumption_per_second": 68.8
-        }
+        },
+        "icon": "bolt-cutter"
     },
     {
         "id": "industrial_cutteray_mk4",
@@ -244,7 +251,8 @@
         "durability": 100,
         "stats_cutteray": {
             "power_consumption_per_second": 74.9
-        }
+        },
+        "icon": "pizza-cutter"
     },
     {
         "id": "compact_compactor_mk5",
@@ -259,7 +267,8 @@
             "gather_rate": "high",
             "power_consumption": 70,
             "worm_attraction_intensity": "medium"
-        }
+        },
+        "icon": "coa-de-jima"
     },
     {
         "id": "vehicle_backup_tool",
@@ -285,17 +294,17 @@
         "icon": "cannister"
     },
     {
-        "id": "small_blood_sack",
-        "name": "Small Blood Sack",
+        "id": "large_blood_sack",
+        "name": "Large Blood Sack",
         "desc": "An item that can store blood collected with a Blood Extraction Tool. Deposit in a Blood Purifier to make drinkable water. Can be drunk directly to rehydrate, but max health will suffer.",
         "tag_list": [ "hydration_tools" ],
         "origin": "fremen",
         "tier": 1,
-        "volume": 4,
+        "volume": 12,
         "durability": 100,
         "liquid_container": {
             "type": "blood",
-            "capacity": 2000
+            "capacity": 12000
         },
         "icon": "magic-potion"
     },

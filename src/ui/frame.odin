@@ -212,10 +212,11 @@ Frame :: struct {
     // at least twice: once with `anim.ratio == 0` (start of animation, immediately upon calling `animate()`)
     // and once with `anim.ratio == 1` (end of animation).
     //
-    // A new animation can be started at any time by calling `animate()` again -- there's no need to check
-    // `animating()` or manually call `end_animation()`; the UI handles that automatically. The animation callback
-    // can always expect to receive a final call with `anim.ratio == 1`, which can be used to show/hide the frame,
-    // update alpha, apply a final offset, etc.
+    // A new animation can be started by calling `animate()` again -- there's no need to check `animating()`
+    // or manually call `end_animation()`; the UI handles that automatically. You can call `animate()` even
+    // from the animation tick itself, restating active animation or chaining into another animation.
+    // The animation callback can always expect to receive a final call with `anim.ratio == 1`, which can
+    // be used to show/hide the frame, update opacity, apply a final offset value, etc.
     //
     // Only one animation per frame can run at a time.
     anim: Animation,

@@ -66,6 +66,30 @@ Item_Tag :: enum {
     utility_tools,
 }
 
+item_tag_names := #partial [Item_Tag] string {
+    .ammunition         = "Ammunition",
+    .building_tools     = "Building Tools",
+    .components         = "Components",
+    .consumables        = "Consumables",
+    .deployables        = "Deployables",
+    .exploration        = "Exploration",
+    .fuel               = "Fuel",
+    .gathering_tools    = "Gathering Tools",
+    .heavy_armor        = "Heavy Armor",
+    .hydration_tools    = "Hydration Tools",
+    .light_armor        = "Light Armor",
+    .long_blades        = "Long Blades",
+    .raw_resources      = "Raw Resources",
+    .refined_resources  = "Refined Resources",
+    .rifles             = "Rifles",
+    .scatterguns        = "Scatterguns",
+    .short_blades       = "Short Blades",
+    .sidearms           = "Sidearms",
+    .solaris            = "Solaris",
+    .stillsuits         = "Stillsuits",
+    .utility_tools      = "Utility Tools",
+}
+
 Item_Tag_Category_Weapons :: bit_set [Item_Tag] {
     .ammunition,
     .long_blades,
@@ -143,14 +167,14 @@ Item_Stats :: union {
 }
 
 Item_Stats_Belt :: struct {
-    worm_attraction_intensity   : enum { extreme },
+    worm_attraction_intensity   : Item_Stat_Type_Intensity,
     power_drain                 : f32,
 }
 
 Item_Stats_Compactor :: struct {
-    gather_rate                 : enum { high },
+    gather_rate                 : Item_Stat_Type_Intensity,
     power_consumption           : f32,
-    worm_attraction_intensity   : enum { medium },
+    worm_attraction_intensity   : Item_Stat_Type_Intensity,
 }
 
 Item_Stats_Cutteray :: struct {
@@ -159,16 +183,22 @@ Item_Stats_Cutteray :: struct {
 
 Item_Stats_Garment :: struct {
     armor_value             : f32,
+
     dash_stamina_cost       : f32,
+    climbing_stamina_cost   : f32,
     worm_threat             : f32,
     sun_stroke_rate         : f32,
-    hydration_capture       : f32,
+
+    blade_mitigation        : f32,
     light_dart_mitigation   : f32,
     heavy_dart_mitigation   : f32,
     energy_mitigation       : f32,
-    blade_mitigation        : f32,
     concussive_mitigation   : f32,
+    fire_mitigation         : f32,
     poison_mitigation       : f32,
+    radiation_mitigation    : f32,
+
+    hydration_capture       : f32,
     heat_protection         : f32,
 }
 
@@ -183,7 +213,7 @@ Item_Stats_Power_Pack :: struct {
 }
 
 Item_Stats_Shield :: struct {
-    worm_attraction_intensity   : enum { extreme },
+    worm_attraction_intensity   : Item_Stat_Type_Intensity,
     shield_refresh_time         : f32,
     power_drain_percent         : f32,
 }
@@ -193,14 +223,14 @@ Item_Stats_Stilltent :: struct {
 }
 
 Item_Stats_Weapon_Melee :: struct {
-    damage_type     : enum { blade },
+    damage_type     : Item_Stat_Type_Damage,
     damage_per_hit  : f32,
     attack_speed    : f32,
 }
 
 Item_Stats_Weapon_Ranged :: struct {
-    damage_type     : enum { light_dart, heavy_dart },
-    fire_mode       : enum { semi_automatic, automatic },
+    damage_type     : Item_Stat_Type_Damage,
+    fire_mode       : Item_Stat_Type_Fire_Mode,
     damage_per_shot : f32,
     rate_of_fire    : int, // in RPM
     clip_size       : int,
@@ -211,11 +241,40 @@ Item_Stats_Weapon_Ranged :: struct {
 }
 
 Item_Stats_Welding_Torch :: struct {
-    range                       : enum { long },
+    range                       : Item_Stat_Type_Range,
     repair_quality              : f32,
     repair_speed                : f32,
     detach_speed                : f32,
     power_consumption_per_second: f32,
+}
+
+Item_Stat_Type_Intensity :: enum { low, medium, high, extreme }
+item_stat_type_intensity_names := [Item_Stat_Type_Intensity] string {
+    .low        = "Low",
+    .medium     = "Medium",
+    .high       = "High",
+    .extreme    = "Extreme",
+}
+
+Item_Stat_Type_Range :: enum { short, medium, long }
+item_stat_type_range_names := [Item_Stat_Type_Range] string {
+    .short  = "Short",
+    .medium = "Medium",
+    .long   = "Long",
+}
+
+Item_Stat_Type_Damage :: enum { blade, light_dart, heavy_dart, energy }
+item_stat_type_damage_names := [Item_Stat_Type_Damage] string {
+    .blade      = "Blade",
+    .light_dart = "Light Dart",
+    .heavy_dart = "Heavy Dart",
+    .energy     = "Energy",
+}
+
+Item_Stat_Type_Fire_Mode :: enum { semi_automatic, automatic }
+item_stat_type_fire_mode_names := [Item_Stat_Type_Fire_Mode] string {
+    .semi_automatic = "Semi-Automatic",
+    .automatic      = "Automatic",
 }
 
 @private items: [] Item
@@ -270,37 +329,16 @@ get_item :: proc (id: string) -> ^Item {
 }
 
 get_item_category :: proc (item: ^Item) -> (category, sub_category: string) {
-    t := item.tags
-
     switch {
-    case Item_Tag_Category_Weapons & t != {}    : category = "WEAPONS"
-    case Item_Tag_Category_Garment & t != {}    : category = "GARMENT"
-    case Item_Tag_Category_Utility & t != {}    : category = "UTILITY"
-    case Item_Tag_Category_Misc & t != {}       : category = "MISC"
+    case Item_Tag_Category_Weapons & item.tags != {}    : category = "Weapons"
+    case Item_Tag_Category_Garment & item.tags != {}    : category = "Garment"
+    case Item_Tag_Category_Utility & item.tags != {}    : category = "Utility"
+    case Item_Tag_Category_Misc & item.tags != {}       : category = "Misc"
     }
 
-    switch {
-    case .ammunition in t           : sub_category = "AMMUNITION"
-    case .building_tools in t       : sub_category = "BUILDING TOOLS"
-    case .components in t           : sub_category = "COMPONENTS"
-    case .consumables in t          : sub_category = "CONSUMABLES"
-    case .deployables in t          : sub_category = "DEPLOYABLES"
-    case .exploration in t          : sub_category = "EXPLORATION"
-    case .fuel in t                 : sub_category = "FUEL"
-    case .gathering_tools in t      : sub_category = "GATHERING TOOLS"
-    case .heavy_armor in t          : sub_category = "HEAVY ARMOR"
-    case .hydration_tools in t      : sub_category = "HYDRATION TOOLS"
-    case .light_armor in t          : sub_category = "LIGHT ARMOR"
-    case .long_blades in t          : sub_category = "LONG BLADES"
-    case .raw_resources in t        : sub_category = "RAW RESOURCES"
-    case .refined_resources in t    : sub_category = "REFINED RESOURCES"
-    case .rifles in t               : sub_category = "RIFLES"
-    case .scatterguns in t          : sub_category = "SCATTERGUNS"
-    case .short_blades in t         : sub_category = "SHORT BLADES"
-    case .sidearms in t             : sub_category = "SIDEARMS"
-    case .solaris in t              : sub_category = "SOLARIS"
-    case .stillsuits in t           : sub_category = "STILLSUITS"
-    case .utility_tools in t        : sub_category = "UTILITY TOOLS"
+    for tag in item.tags do if item_tag_names[tag] != "" {
+        sub_category = item_tag_names[tag]
+        break
     }
 
     fmt.assertf(category != "" && sub_category != "", "Failed to categorize \"%s\": tags=%v", item.id, item.tags)

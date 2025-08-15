@@ -56,7 +56,7 @@ create :: proc () {
     case .vol_low       : set(id, core.color_from_hex("#077"))
     case .vol_med       : set(id, core.color_from_hex("#da4"))
     case .vol_high      : set(id, core.color_from_hex("#d33"))
-    case .imperial      : set(id, core.color_from_hex("#58b"))
+    case .imperial      : set(id, core.color_from_hex("#59d"))
     case .house         : set(id, core.color_from_hex("#ac6"))
     case .fremen        : set(id, core.color_from_hex("#d73"))
     case .unique        : set(id, core.color_from_hex("#759"))
