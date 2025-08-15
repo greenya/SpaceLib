@@ -50,8 +50,8 @@ print :: proc (verbosity := Print_Verbosity.full_always, max_issues := 10, and_d
 
 @private
 print_report :: proc (max_issues: int) {
-    fmt_int :: proc (i: int) -> string { return core.format_int(    i , allocator=context.temp_allocator) }
-    fmt_i64 :: proc (i: i64) -> string { return core.format_int(int(i), allocator=context.temp_allocator) }
+    fmt_int :: proc (i: int) -> string { return core.format_int_tmp(i) }
+    fmt_i64 :: proc (i: i64) -> string { return core.format_int_tmp(int(i)) }
 
     fmt.println("[TA] --------------- Report ---------------")
     fmt.println("[TA] Current memory allocated :", fmt_i64(track.current_memory_allocated))

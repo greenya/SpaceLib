@@ -69,6 +69,10 @@ format_int :: proc (value: int, thousands_separator := ",", allocator := context
     return strings.to_string(sb)
 }
 
+format_int_tmp :: proc (value: int, thousands_separator := ",") -> string {
+    return format_int(value, thousands_separator, context.temp_allocator)
+}
+
 // cuts-off all `0` decimal digits from the right side;
 // examples:
 // - 123.211100, max=3 -> 123.211
@@ -85,4 +89,8 @@ format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.al
         if last_i > 0 && text[last_i] == '.' do text = text[:last_i]
     }
     return text
+}
+
+format_f32_tmp :: proc (value: f32, max_decimal_digits: int) -> string {
+    return format_f32(value, max_decimal_digits, context.temp_allocator)
 }
