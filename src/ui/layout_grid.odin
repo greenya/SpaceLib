@@ -44,7 +44,7 @@ Grid_Direction :: enum {
     left_down,
     // right_up,
     // left_up,
-    // down_right,
+    down_right,
     // down_left,
     // up_right,
     // up_left,
@@ -65,16 +65,24 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
     wrap := grid.wrap
     size := grid.size
     aspect := grid.aspect > 0 ? grid.aspect : 1
+    is_dir_vertical := is_layout_dir_vertical(f)
 
     switch {
     case wrap > 0:
         if size == {} {
-            size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
-            size.y = size.x / aspect
+            if is_dir_vertical {
+                size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
+                size.y = size.x / aspect
+            } else {
+                size.y = (f.rect.h - grid.pad[T] - grid.pad[B] - f32(wrap-1)*grid.gap.y) / f32(wrap)
+                size.x = size.y * aspect
+            }
         } else {
             switch grid.dir {
             case .right_down, .left_down:
                 if size.x == 0 do size.x = (f.rect.w - grid.pad[L] - grid.pad[R] - f32(wrap-1)*grid.gap.x) / f32(wrap)
+            case .down_right:
+                if size.y == 0 do size.y = (f.rect.h - grid.pad[T] - grid.pad[B] - f32(wrap-1)*grid.gap.y) / f32(wrap)
             }
         }
     case wrap == 0:
@@ -83,9 +91,12 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         case size.x == 0 && size.y  > 0: size.x = size.y * aspect
         case size.x == 0 && size.y == 0: panic("Grid.size (width and/or height) must be set when Grid.wrap==0")
         }
-        if is_layout_dir_vertical(f) {
+        if is_dir_vertical {
             w := f.rect.w - grid.pad[L] - grid.pad[R]
             wrap = int(math.floor(w+grid.gap.x) / (size.x+grid.gap.x))
+        } else {
+            h := f.rect.h - grid.pad[T] - grid.pad[B]
+            wrap = int(math.floor(h+grid.gap.y) / (size.y+grid.gap.y))
         }
     case:
         panic("Grid.wrap cannot be negative.")
@@ -105,13 +116,13 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
         switch grid.dir {
         case .right_down:
             rect.x = f.rect.x+grid.pad[L] + f32(i_mod)*rect.w + f32(i_mod)*grid.gap.x
+            rect.y = f.rect.y+grid.pad[T] + f32(i_div)*rect.h + f32(i_div)*grid.gap.y
         case .left_down:
             rect.x = f_rect_x2-grid.pad[R] - f32(i_mod+1)*rect.w - f32(i_mod)*grid.gap.x
-        }
-
-        switch grid.dir {
-        case .right_down, .left_down:
             rect.y = f.rect.y+grid.pad[T] + f32(i_div)*rect.h + f32(i_div)*grid.gap.y
+        case .down_right:
+            rect.x = f.rect.x+grid.pad[L] + f32(i_div)*rect.w + f32(i_div)*grid.gap.x
+            rect.y = f.rect.y+grid.pad[T] + f32(i_mod)*rect.h + f32(i_mod)*grid.gap.y
         }
 
         child.rect = core.rect_moved(rect, child.offset)
@@ -126,14 +137,14 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
 
             switch grid.dir {
             case .right_down:
-                if .width in grid.auto_size do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + grid.pad[L]+grid.pad[R]
+                if .width in grid.auto_size     do f.size.x = lc_div0.rect.x+lc_div0.rect.w - fc.rect.x + grid.pad[L]+grid.pad[R]
+                if .height in grid.auto_size    do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
             case .left_down:
-                if .width in grid.auto_size do f.size.x = fc.rect.x+fc.rect.w - lc_div0.rect.x + grid.pad[L]+grid.pad[R]
-            }
-
-            switch grid.dir {
-            case .right_down, .left_down:
-                if .height in grid.auto_size do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
+                if .width in grid.auto_size     do f.size.x = fc.rect.x+fc.rect.w - lc_div0.rect.x + grid.pad[L]+grid.pad[R]
+                if .height in grid.auto_size    do f.size.y = lc.rect.y+lc.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
+            case .down_right:
+                if .width in grid.auto_size     do f.size.x = lc.rect.x+lc.rect.w - fc.rect.x + grid.pad[L]+grid.pad[R]
+                if .height in grid.auto_size    do f.size.y = lc_div0.rect.y+lc_div0.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
             }
         } else {
             if .width in grid.auto_size     do f.size.x = 0

@@ -68,8 +68,10 @@ is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
         case .left, .right, .right_center   : return false
         }
     case Grid:
+        // we return "true" for secondary Grid direction (potential vertical scroll)
         switch l.dir {
-        case .right_down, .left_down: return true
+        case .right_down, .left_down        : return true
+        case .down_right                    : return false
         }
     }
     panic("Frame has no layout")
