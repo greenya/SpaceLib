@@ -475,11 +475,14 @@ animate :: proc (f: ^Frame, tick: Frame_Proc, dur: f32) {
 }
 
 end_animation :: proc (f: ^Frame) {
-    if f.anim.tick != nil && f.anim.ratio < 1 {
-        f.anim.ratio = 1
-        f.anim.tick(f)
-        f.anim = {}
-    }
+    // we check ratio==1 because end_animation() can be called from the running animation's
+    // tick, e.g. starting another animation (or restarting running one) from currently
+    // ticking one; so we ensure we finalize animation only once
+    if f.anim.tick == nil || f.anim.ratio == 1 do return
+
+    f.anim.ratio = 1
+    f.anim.tick(f)
+    f.anim = {}
 }
 
 animating :: #force_inline proc (f: ^Frame) -> bool {

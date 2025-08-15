@@ -31,8 +31,10 @@ UI :: struct {
 
     // Visible frames currently under the mouse cursor, updated every tick.
     mouse_frames: [dynamic] ^Frame,
+
     // Frames that received the `enter` event (candidates for future `leave` event).
     entered_frames: [dynamic] ^Frame,
+
     // Frames with `.auto_hide` flag, updated every tick.
     auto_hide_frames: [dynamic] ^Frame,
 
