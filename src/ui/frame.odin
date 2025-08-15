@@ -76,6 +76,13 @@ Frame_Init :: struct {
     // Text.
     // This value might differ from what you've set in case `text_format` is used.
     // Use `set_text()` to set new value. The value will be cloned (allocated).
+    //
+    // `set_text()` takes `..any` and can be used like:
+    //
+    //      ui.set_text_format(f, "Health: %i/%i")
+    //      ui.set_text(f, 33, 100)
+    //
+    // Note: if `text_format` is not set, it is treated as `%s` value.
     text: string,
 
     // Text format for the `text`.

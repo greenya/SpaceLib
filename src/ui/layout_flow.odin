@@ -182,6 +182,11 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
         scroll.offset_min = min(0, dir_content_size[0])
         scroll.offset_max = max(0, dir_content_size[1] - dir_rect_size)
 
+        if scroll.offset_max - scroll.offset_min < 0.001 {
+            scroll.offset_min = 0
+            scroll.offset_max = 0
+        }
+
         #partial switch flow.dir {
         case .left, .up:
             scroll.offset_min = -scroll.offset_max
