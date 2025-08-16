@@ -156,7 +156,7 @@ set_container_state :: proc (con: ^Container, con_data: ^data.Container) {
 }
 
 @private
-add_container_slot :: proc (con: ^Container, slot_idx: int) {
+add_container_slot :: proc (con: ^Container, slot_idx: int) -> ^ui.Frame {
     slot_data := &con.data.slots[slot_idx]
 
     slot := ui.add_frame(con.slots, {
@@ -170,6 +170,8 @@ add_container_slot :: proc (con: ^Container, slot_idx: int) {
     })
 
     ui.set_user_ptr(slot, con)
+
+    return slot
 }
 
 @private
@@ -264,39 +266,14 @@ add_equipment_container :: proc (parent: ^ui.Frame, title: string) -> Container 
         { point=.bottom_right },
     )
 
-    add_simple_container_title(&con, title)
+    add_container_title(&con, title)
 
     con.drag_slot = add_container_drag_slot(parent)
 
     return con
 }
 
-add_loadout_container :: proc (parent: ^ui.Frame, title: string) -> Container {
-    con: Container
-
-    con.root = ui.add_frame(parent, {
-        name="container",
-        size={0,580},
-    })
-
-    // todo: rework to custom positions (not grid)
-    con.slots = ui.add_frame(con.root, {
-        name="slots",
-        layout=ui.Grid{ dir=.down_right, wrap=5, gap=15, auto_size={.width} },
-    },
-        { point=.top_right },
-        { point=.bottom_right },
-    )
-
-    add_simple_container_title(&con, title)
-
-    con.drag_slot = add_container_drag_slot(parent)
-
-    return con
-}
-
-// updates slots only
-set_simple_container_state :: proc (con: ^Container, con_data: ^data.Container) {
+set_equipment_container_state :: proc (con: ^Container, con_data: ^data.Container) {
     con.data = con_data
     ui.set_user_ptr(con.root, con)
 
@@ -309,8 +286,57 @@ set_simple_container_state :: proc (con: ^Container, con_data: ^data.Container) 
     ui.update(con.root)
 }
 
+add_loadout_container :: proc (parent: ^ui.Frame, title: string) -> Container {
+    con: Container
+
+    con.root = ui.add_frame(parent, {
+        name="container",
+        size={0,580},
+    })
+
+    con.slots = ui.add_frame(con.root,
+        { name="slots" },
+        { point=.top },
+        { point=.bottom },
+    )
+
+    add_container_title(&con, title)
+
+    con.drag_slot = add_container_drag_slot(parent)
+
+    return con
+}
+
+set_loadout_container_state :: proc (con: ^Container, con_data: ^data.Container) {
+    con.data = con_data
+    ui.set_user_ptr(con.root, con)
+
+    slot_size :: 104
+
+    ui.destroy_frame_children(con.slots)
+    for _, i in con.data.slots {
+        slot := add_container_slot(con, i)
+        slot.size = slot_size
+        switch i {
+        case 0: ui.set_anchors(slot, { point=.center, offset={ 0                , -slot_size*2-30   } })
+        case 1: ui.set_anchors(slot, { point=.center, offset={ +slot_size/2+15  , -slot_size-15     } })
+        case 2: ui.set_anchors(slot, { point=.center, offset={ +slot_size+20    , 0                 } })
+        case 3: ui.set_anchors(slot, { point=.center, offset={ +slot_size/2+15  , +slot_size+15     } })
+        case 4: ui.set_anchors(slot, { point=.center, offset={ 0                , +slot_size*2+30   } })
+        case 5: ui.set_anchors(slot, { point=.center, offset={ -slot_size/2-15  , +slot_size+15     } })
+        case 6: ui.set_anchors(slot, { point=.center, offset={ -slot_size-20    , 0                 } })
+        case 7: ui.set_anchors(slot, { point=.center, offset={ -slot_size/2-15  , -slot_size-15     } })
+        }
+    }
+
+    ui.set_user_ptr(con.drag_slot, con)
+    con.drag_slot.user_idx = -1
+
+    ui.update(con.root)
+}
+
 @private
-add_simple_container_title :: proc (con: ^Container, title: string) {
+add_container_title :: proc (con: ^Container, title: string) {
     assert(con.root != nil)
     assert(con.slots != nil)
 

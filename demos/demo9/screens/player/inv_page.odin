@@ -64,18 +64,18 @@ add_inv_equipment_panel :: proc () {
 
     inv_page.equipment = partials.add_equipment_container(inv_page.root, "CHARACTER")
     ui.set_anchors(inv_page.equipment.root, { point=.right, rel_frame=column })
-    partials.set_simple_container_state(&inv_page.equipment, data.player.equipment)
+    partials.set_equipment_container_state(&inv_page.equipment, data.player.equipment)
 }
 
 add_inv_loadout_panel :: proc () {
     column := ui.add_frame(inv_page.root,
         { name="loadout", },
-        { point=.right, offset={-500,0} },
+        { point=.right, offset={-600,0} },
     )
 
     inv_page.loadout = partials.add_loadout_container(inv_page.root, "LOADOUT")
     ui.set_anchors(inv_page.loadout.root, { point=.right, rel_frame=column })
-    partials.set_simple_container_state(&inv_page.loadout, data.player.loadout)
+    partials.set_loadout_container_state(&inv_page.loadout, data.player.loadout)
 }
 
 container_updated_listener :: proc (args: events.Args) {
@@ -83,7 +83,7 @@ container_updated_listener :: proc (args: events.Args) {
 
     switch args.container {
     case inv_page.backpack.data : partials.set_container_state(&inv_page.backpack, data.player.backpack)
-    case inv_page.equipment.data: partials.set_simple_container_state(&inv_page.equipment, data.player.equipment)
-    case inv_page.loadout.data  : partials.set_simple_container_state(&inv_page.loadout, data.player.loadout)
+    case inv_page.equipment.data: partials.set_equipment_container_state(&inv_page.equipment, data.player.equipment)
+    case inv_page.loadout.data  : partials.set_loadout_container_state(&inv_page.loadout, data.player.loadout)
     }
 }
