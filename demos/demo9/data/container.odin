@@ -8,16 +8,22 @@ Container :: struct {
 }
 
 Container_Slot :: struct {
-    item            : ^Item,
-    durability      : struct { value, unrepairable: f32 },
-    liquid_amount   : f32,
-    count           : int,
+    using meta: struct {
+        spec: union { Item_Tag },
+    },
+    using data: struct {
+        item            : ^Item,
+        durability      : struct { value, unrepairable: f32 },
+        liquid_amount   : f32,
+        count           : int,
+    },
 }
 
 Container_Swap_Slots_Result :: enum {
     success,
     error_bad_slot_idx,
     error_src_slot_is_empty,
+    error_slot_spec_mismatch,
     error_not_enough_volume,
 }
 
@@ -78,7 +84,9 @@ container_set_slot :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
         ensure(con.slots[slot_idx].item == nil)
     }
 
-    con.slots[slot_idx] = slot
+    ensure(container_slot_item_allowed(con.slots[slot_idx], slot.item^))
+
+    con.slots[slot_idx].data = slot.data
 }
 
 container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, occupied_volume, max_volume: f32) {
@@ -103,12 +111,24 @@ container_slot_volume :: proc (slot: Container_Slot) -> f32 {
     return slot.item != nil ? slot.item.volume * f32(slot.count) : 0
 }
 
+container_slot_item_allowed :: proc (slot: Container_Slot, item: Item) -> bool {
+    switch v in slot.spec {
+    case Item_Tag   : return v in item.tags
+    case            : return true // no specialization -- allow any item
+    }
+}
+
 container_item_count :: proc (con: Container, item_id: string) -> (total: int) {
     for s in con.slots do if s.item != nil && s.item.id == item_id do total += s.count
     return
 }
 
-container_swap_slots :: proc (src_con: ^Container, src_slot_idx: int, dst_con: ^Container, dst_slot_idx: int) -> Container_Swap_Slots_Result {
+container_swap_slots :: proc (
+    src_con         : ^Container,
+    src_slot_idx    : int,
+    dst_con         : ^Container,
+    dst_slot_idx    : int,
+) -> Container_Swap_Slots_Result {
     if src_slot_idx < 0 || src_slot_idx >= len(src_con.slots) do return .error_bad_slot_idx
     if dst_slot_idx < 0 || dst_slot_idx >= len(dst_con.slots) do return .error_bad_slot_idx
 
@@ -116,6 +136,9 @@ container_swap_slots :: proc (src_con: ^Container, src_slot_idx: int, dst_con: ^
     dst_slot := dst_con.slots[dst_slot_idx]
 
     if src_slot.item == nil do return .error_src_slot_is_empty
+
+    if                          !container_slot_item_allowed(dst_slot, src_slot.item^) do return .error_slot_spec_mismatch
+    if dst_slot.item != nil &&  !container_slot_item_allowed(src_slot, dst_slot.item^) do return .error_slot_spec_mismatch
 
     if src_con != dst_con {
         src_slot_volume := container_slot_volume(src_slot)
@@ -133,8 +156,8 @@ container_swap_slots :: proc (src_con: ^Container, src_slot_idx: int, dst_con: ^
     }
 
     // all seems ok, do the swap
-    dst_con.slots[dst_slot_idx] = src_slot
-    src_con.slots[src_slot_idx] = dst_slot
+    dst_con.slots[dst_slot_idx].data = src_slot.data
+    src_con.slots[src_slot_idx].data = dst_slot.data
 
     return .success
 }

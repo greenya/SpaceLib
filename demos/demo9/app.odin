@@ -18,7 +18,7 @@ app_startup :: proc () {
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 9")
-    // rl.MaximizeWindow()
+    rl.MaximizeWindow()
 
     colors.create()
     data.create()
@@ -38,8 +38,8 @@ app_startup :: proc () {
     // events.open_screen({ screen_name="settings", tab_name="display" })
     // events.open_screen({ screen_name="player", tab_name="journey" })
     // events.open_screen({ screen_name="player", tab_name="map" })
-    // events.open_screen({ screen_name="player", tab_name="inventory" })
-    events.open_screen({ screen_name="deposit" })
+    events.open_screen({ screen_name="player", tab_name="inventory" })
+    // events.open_screen({ screen_name="deposit" })
 }
 
 app_shutdown :: proc () {

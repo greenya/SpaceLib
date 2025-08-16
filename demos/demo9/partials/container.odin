@@ -91,7 +91,7 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
 
     con.slots = ui.add_frame(flow, {
         name="slots",
-        layout=ui.Grid{ dir=.right_down, wrap=5, aspect=1, gap=15, auto_size={.height} },
+        layout=ui.Grid{ dir=.right_down, wrap=5, gap=15, auto_size={.height} },
     })
 
     add_scrollbar(flow)
@@ -114,14 +114,7 @@ add_container :: proc (parent: ^ui.Frame, title: string) -> Container {
         { point=.right, rel_point=.bottom_left, offset={10,0} },
     )
 
-    con.drag_slot = ui.add_frame(parent, {
-        order=9,
-        name="container_drag_slot",
-        flags={.pass,.hidden},
-        draw=draw_container_slot,
-    },
-        { point=.center, rel_point=.mouse },
-    )
+    con.drag_slot = add_container_drag_slot(parent)
 
     return con
 }
@@ -162,11 +155,6 @@ set_container_state :: proc (con: ^Container, con_data: ^data.Container) {
     ui.update(con.root)
 }
 
-update_container_state :: proc (con: ^Container) {
-    assert(con.data != nil)
-    set_container_state(con, con.data)
-}
-
 @private
 add_container_slot :: proc (con: ^Container, slot_idx: int) {
     slot_data := &con.data.slots[slot_idx]
@@ -182,6 +170,18 @@ add_container_slot :: proc (con: ^Container, slot_idx: int) {
     })
 
     ui.set_user_ptr(slot, con)
+}
+
+@private
+add_container_drag_slot :: proc (parent: ^ui.Frame) -> ^ui.Frame {
+    return ui.add_frame(parent, {
+        order=9,
+        name="container_drag_slot",
+        flags={.pass,.hidden},
+        draw=draw_container_slot,
+    },
+        { point=.center, rel_point=.mouse },
+    )
 }
 
 @private
@@ -224,13 +224,19 @@ drag_container_slot :: proc (f: ^ui.Frame, info: ui.Drag_Info) {
 @private
 container_swap_slots :: proc (con_from: ^Container, idx_from: int, con_to: ^Container, idx_to: int) {
     result := data.container_swap_slots(con_from.data, idx_from, con_to.data, idx_to)
-    fmt.println(#procedure, result)
+    fmt.println("["+#procedure+"]", result)
     switch result {
     case .success:
         events.container_updated({ container=con_from.data })
         if con_from != con_to {
             events.container_updated({ container=con_to.data })
         }
+    case .error_slot_spec_mismatch:
+        events.push_notification({
+            title   = "INVENTORY",
+            text    = "The item cannot be placed here.",
+            is_error= true,
+        })
     case .error_not_enough_volume:
         events.push_notification({
             title   = "INVENTORY",
@@ -240,4 +246,49 @@ container_swap_slots :: proc (con_from: ^Container, idx_from: int, con_to: ^Cont
     case .error_bad_slot_idx, .error_src_slot_is_empty:
         panic("Something is not right here")
     }
+}
+
+add_equipment_container :: proc (parent: ^ui.Frame, title: string) -> Container {
+    con: Container
+
+    con.root = ui.add_frame(parent, {
+        name="container",
+        size={0,580},
+    })
+
+    con.slots = ui.add_frame(con.root, {
+        name="slots",
+        layout=ui.Grid{ dir=.down_right, wrap=5, gap=15, auto_size={.width} },
+    },
+        { point=.top_right },
+        { point=.bottom_right },
+    )
+
+    ui.add_frame(con.root, {
+        name="title",
+        flags={.terse,.terse_height},
+        text=title,
+        text_format="<wrap,pad=5:0,font=text_4r,color=primary>%s",
+        draw=draw_hexagon_rect_hangout_self_rect,
+    },
+        { point=.bottom_left, rel_point=.top_left, rel_frame=con.slots, offset={0,-25} },
+        { point=.bottom_right, rel_point=.top_right, rel_frame=con.slots, offset={0,-25} },
+    )
+
+    con.drag_slot = add_container_drag_slot(parent)
+
+    return con
+}
+
+set_equipment_container_state :: proc (con: ^Container, con_data: ^data.Container) {
+    con.data = con_data
+    ui.set_user_ptr(con.root, con)
+
+    ui.destroy_frame_children(con.slots)
+    for _, i in con.data.slots do add_container_slot(con, i)
+
+    ui.set_user_ptr(con.drag_slot, con)
+    con.drag_slot.user_idx = -1
+
+    ui.update(con.root)
 }

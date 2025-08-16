@@ -13,6 +13,7 @@ inv_page: struct {
     help_button : ^ui.Frame,
 
     backpack    : partials.Container,
+    equipment   : partials.Container,
 }
 
 add_inv_page :: proc () {
@@ -32,6 +33,9 @@ add_inv_page :: proc () {
     }
 
     add_inv_backpack_panel()
+    add_inv_equipment_panel()
+
+    events.listen(.container_updated, container_updated_listener)
 }
 
 add_inv_backpack_panel :: proc () {
@@ -45,16 +49,29 @@ add_inv_backpack_panel :: proc () {
         { point=.bottom_left, offset={100,0} },
     )
 
-    inv_page.backpack = partials.add_container(column, "BACKPACK")
-    ui.set_anchors(inv_page.backpack.root, { point=.center })
+    inv_page.backpack = partials.add_container(inv_page.root, "BACKPACK")
+    ui.set_anchors(inv_page.backpack.root, { point=.center, rel_frame=column })
     partials.set_container_state(&inv_page.backpack, data.player.backpack)
+}
 
-    events.listen(.container_updated, container_updated_listener)
+add_inv_equipment_panel :: proc () {
+    column := ui.add_frame(inv_page.root,
+        { name="equipment", },
+        { point=.right, offset={-100,0} },
+    )
+
+    inv_page.equipment = partials.add_equipment_container(inv_page.root, "CHARACTER")
+    ui.set_anchors(inv_page.equipment.root, { point=.right, rel_frame=column })
+    partials.set_equipment_container_state(&inv_page.equipment, data.player.equipment)
 }
 
 container_updated_listener :: proc (args: events.Args) {
     args := args.(events.Container_Updated)
-    if args.container == inv_page.backpack.data {
-        partials.update_container_state(&inv_page.backpack)
+
+    switch args.container {
+    case inv_page.backpack.data:
+        partials.set_container_state(&inv_page.backpack, data.player.backpack)
+    case inv_page.equipment.data:
+        partials.set_equipment_container_state(&inv_page.equipment, data.player.equipment)
     }
 }

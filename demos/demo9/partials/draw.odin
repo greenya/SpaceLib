@@ -197,6 +197,17 @@ draw_hexagon_rect_hangout :: proc (f: ^ui.Frame) {
     )
 }
 
+draw_hexagon_rect_hangout_self_rect :: proc (f: ^ui.Frame) {
+    draw_hexagon_header(f,
+        rect        = f.terse.rect,
+        limit_x     = f.rect.x,
+        limit_w     = f.rect.w,
+        ln_color    = colors.get(.primary),
+        bg_color    = colors.get(.bg1),
+        hangout     = true,
+    )
+}
+
 draw_hexagon_rect_fill_hangout_self_rect :: proc (f: ^ui.Frame) {
     color := colors.get(.primary, brightness=-.3)
     draw_hexagon_header(f,
@@ -515,7 +526,7 @@ draw_container_slot :: proc (f: ^ui.Frame) {
     br_thick := f32(1)
 
     if slot.item != nil {
-        draw_slot_origin_rect(slot, f.rect, f.opacity)
+        draw_slot_origin(slot, f.rect, f.opacity)
         draw_slot_icon(slot, f.rect, f.opacity)
         draw_slot_tier(slot, f.rect, f.opacity)
         if slot.item.stack == 1 do draw_slot_durability_and_liquid_levels(slot, f.rect, f.opacity)
@@ -530,15 +541,32 @@ draw_container_slot :: proc (f: ^ui.Frame) {
             br_color = core.ease_color(br_color, br_color_focus, hv_ratio, .Linear)
         }
     } else {
-        empty_sp_rect := core.rect_scaled(f.rect, .65)
-        empty_sp_color := colors.get(.primary, alpha=.1)
-        draw_sprite("add", empty_sp_rect, tint=empty_sp_color)
+        draw_empty_slot(slot, f.rect, f.opacity)
     }
 
     draw.rect_lines(f.rect, br_thick, br_color)
 }
 
-draw_slot_origin_rect :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+draw_empty_slot :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
+    icon: string
+    switch slot.spec {
+    case .slot_head     : icon = "protection-glasses"
+    case .slot_chest    : icon = "moncler-jacket"
+    case .slot_legs     : icon = "armored-pants"
+    case .slot_hands    : icon = "gloves"
+    case .slot_feet     : icon = "steeltoe-boots"
+    case .slot_shield   : icon = "shieldcomb"
+    case .slot_belt     : icon = "belt-armor"
+    case .slot_light    : icon = "torch"
+    case .slot_power    : icon = "power-generator"
+    case                : icon = "add"
+    }
+    sp_rect := core.rect_scaled(rect, .65)
+    sp_color := colors.get(.primary, alpha=.1*opacity)
+    draw_sprite(icon, sp_rect, tint=sp_color)
+}
+
+draw_slot_origin :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     assert(slot.item != nil)
 
     t, b: Color
@@ -769,7 +797,7 @@ draw_tooltip_image :: proc (f: ^ui.Frame) {
     assert(slot != nil && slot.item != nil)
 
     rect := core.rect_moved(f.rect, {0,1})
-    draw_slot_origin_rect(slot, rect, f.opacity)
+    draw_slot_origin(slot, rect, f.opacity)
     draw_slot_icon(slot, rect, f.opacity)
     draw_slot_tier(slot, rect, f.opacity)
     draw_slot_volume(slot, rect, f.opacity, in_tooltip=true)

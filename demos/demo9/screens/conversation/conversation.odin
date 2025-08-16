@@ -108,6 +108,11 @@ click_conversation_reply :: proc (f: ^ui.Frame) {
         fmt.println("[reply action]", reply.action)
         if reply.action == .close {
             events.open_screen({ screen_name="player" })
+        } else {
+            events.push_notification({
+                title="CONVERSATION",
+                text=fmt.tprintf("[reply action] %v", reply.action),
+            })
         }
     } else {
         next_chat_id := reply.next != "" ? reply.next : chat.id

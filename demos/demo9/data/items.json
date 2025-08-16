@@ -102,7 +102,7 @@
         "id": "batigh_stillsuit_garment",
         "name": "Batigh Stillsuit Garment",
         "desc": "A stillsuit manufacturer from Carthag once visited Kynes the Planetologist to enlist his aid in designing a better stillsuit. This <color=unique>Unique</> stillsuit was the result, and Kynes insisted that the manufacturer name it the Batigh, which the manufacturer proudly did.",
-        "tag_list": [ "stillsuits", "slot_body" ],
+        "tag_list": [ "stillsuits", "slot_chest" ],
         "origin": "unique",
         "tier": 5,
         "volume": 4,
@@ -117,6 +117,25 @@
             "heat_protection": 1.2
         },
         "icon": "moncler-jacket"
+    },
+    {
+        "id": "slaver_heavy_pants",
+        "name": "Slaver Heavy Pants",
+        "desc": "Heavy combat leg armor made of reinforced steel providing maximum protection to <color=house>Great House</> troops.",
+        "tag_list": [ "heavy_armor", "slot_legs" ],
+        "origin": "house",
+        "tier": 3,
+        "volume": 2,
+        "durability": 100,
+        "stats_garment": {
+            "armor_value": 100,
+            "dash_stamina_cost": 5,
+            "blade_mitigation": -8,
+            "light_dart_mitigation": 4,
+            "heavy_dart_mitigation": 4,
+            "concussive_mitigation": 4
+        },
+        "icon": "armored-pants"
     },
     {
         "id": "mercenary_stillsuit_gloves",

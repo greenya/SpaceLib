@@ -11,7 +11,7 @@ main :: proc () {
     context.assertion_failure_proc = stack_trace.init()
     defer stack_trace.destroy()
 
-    defer timed_scope.print()
+    defer timed_scope.print(.by_avg_dur)
 
     app_startup()
 
