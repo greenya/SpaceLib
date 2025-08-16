@@ -8,10 +8,8 @@ Container :: struct {
 }
 
 Container_Slot :: struct {
-    using meta: struct {
-        spec: union { Item_Tag },
-    },
-    using data: struct {
+    spec: Maybe(Item_Tag), // specialization of the slot; nil allows any item
+    using content: struct {
         item            : ^Item,
         durability      : struct { value, unrepairable: f32 },
         liquid_amount   : f32,
@@ -86,7 +84,7 @@ container_set_slot :: proc (con: ^Container, slot: Container_Slot, slot_idx := -
 
     ensure(container_slot_item_allowed(con.slots[slot_idx], slot.item^))
 
-    con.slots[slot_idx].data = slot.data
+    con.slots[slot_idx].content = slot.content
 }
 
 container_capacity :: proc (con: Container) -> (occupied_slots, max_slots: int, occupied_volume, max_volume: f32) {
@@ -114,7 +112,7 @@ container_slot_volume :: proc (slot: Container_Slot) -> f32 {
 container_slot_item_allowed :: proc (slot: Container_Slot, item: Item) -> bool {
     switch v in slot.spec {
     case Item_Tag   : return v in item.tags
-    case            : return true // no specialization -- allow any item
+    case            : return true
     }
 }
 
@@ -156,8 +154,8 @@ container_swap_slots :: proc (
     }
 
     // all seems ok, do the swap
-    dst_con.slots[dst_slot_idx].data = src_slot.data
-    src_con.slots[src_slot_idx].data = dst_slot.data
+    dst_con.slots[dst_slot_idx].content = src_slot.content
+    src_con.slots[src_slot_idx].content = dst_slot.content
 
     return .success
 }

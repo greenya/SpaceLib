@@ -36,9 +36,7 @@ container_updated_listener :: proc (args: events.Args) {
     args := args.(events.Container_Updated)
 
     switch args.container {
-    case screen.backpack.data:
-        partials.set_container_state(&screen.backpack, data.player.backpack)
-    case screen.deposit.data:
-        partials.set_container_state(&screen.deposit, data.player.deposit)
+    case screen.backpack.data   : partials.set_container_state(&screen.backpack, data.player.backpack)
+    case screen.deposit.data    : partials.set_container_state(&screen.deposit, data.player.deposit)
     }
 }

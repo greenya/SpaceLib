@@ -264,23 +264,39 @@ add_equipment_container :: proc (parent: ^ui.Frame, title: string) -> Container 
         { point=.bottom_right },
     )
 
-    ui.add_frame(con.root, {
-        name="title",
-        flags={.terse,.terse_height},
-        text=title,
-        text_format="<wrap,pad=5:0,font=text_4r,color=primary>%s",
-        draw=draw_hexagon_rect_hangout_self_rect,
-    },
-        { point=.bottom_left, rel_point=.top_left, rel_frame=con.slots, offset={0,-25} },
-        { point=.bottom_right, rel_point=.top_right, rel_frame=con.slots, offset={0,-25} },
-    )
+    add_simple_container_title(&con, title)
 
     con.drag_slot = add_container_drag_slot(parent)
 
     return con
 }
 
-set_equipment_container_state :: proc (con: ^Container, con_data: ^data.Container) {
+add_loadout_container :: proc (parent: ^ui.Frame, title: string) -> Container {
+    con: Container
+
+    con.root = ui.add_frame(parent, {
+        name="container",
+        size={0,580},
+    })
+
+    // todo: rework to custom positions (not grid)
+    con.slots = ui.add_frame(con.root, {
+        name="slots",
+        layout=ui.Grid{ dir=.down_right, wrap=5, gap=15, auto_size={.width} },
+    },
+        { point=.top_right },
+        { point=.bottom_right },
+    )
+
+    add_simple_container_title(&con, title)
+
+    con.drag_slot = add_container_drag_slot(parent)
+
+    return con
+}
+
+// updates slots only
+set_simple_container_state :: proc (con: ^Container, con_data: ^data.Container) {
     con.data = con_data
     ui.set_user_ptr(con.root, con)
 
@@ -291,4 +307,21 @@ set_equipment_container_state :: proc (con: ^Container, con_data: ^data.Containe
     con.drag_slot.user_idx = -1
 
     ui.update(con.root)
+}
+
+@private
+add_simple_container_title :: proc (con: ^Container, title: string) {
+    assert(con.root != nil)
+    assert(con.slots != nil)
+
+    ui.add_frame(con.root, {
+        name="title",
+        size={220,0},
+        flags={.terse,.terse_height},
+        text=title,
+        text_format="<wrap,pad=5:0,font=text_4r,color=primary>%s",
+        draw=draw_hexagon_rect_hangout_self_rect,
+    },
+        { point=.bottom, rel_point=.top, rel_frame=con.slots, offset={0,-25} },
+    )
 }
