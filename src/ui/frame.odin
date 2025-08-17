@@ -58,7 +58,7 @@ Frame_Init :: struct {
     // Relative order of this frame to other siblings.
     // This value effects order of this frame in the `parent.children` array. It is not an index,
     // but a priority. Use `index()` to get the zero-based index. The higher `order`, the later
-    // frame drawn and input tested (its above any lower-order sibling frame).
+    // frame drawn and earlier input tested (its above any lower-order sibling frame).
     //
     // Note: adding all frames with the same `order` (say 0) will keep the order same the order
     // they were added. But when adding a frame with say order `-1` will ensure the new frame will
