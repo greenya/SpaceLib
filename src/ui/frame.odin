@@ -118,7 +118,7 @@ Frame_Init :: struct {
     // any of its children. The callback can expect `entered == true`, and `entered_time` set.
     enter: Frame_Proc,
 
-    // Mouse status callback. Triggered when the mouse has left the `rect` of the frame or
+    // Mouse status callback. Triggered when the mouse has left the `rect` of the frame and
     // any of its children. The callback can expect `entered == false`, and `left_time` set.
     leave: Frame_Proc,
 
@@ -139,8 +139,8 @@ Frame_Init :: struct {
     drag: Frame_Drag_Proc,
 
     // Indicates that the frame is selected.
-    // Use with `.check` flag if you want UI to toggle it on `click`.
-    // Use with `.radio` flag if you want UI to set it to `true` on `click` for this frame while
+    // - Use with `.check` flag if you want UI to toggle it on `click`.
+    // - Use with `.radio` flag if you want UI to set it to `true` on `click` for this frame while
     // set it to `false` for all siblings with `.radio` flag.
     selected: bool,
 
@@ -192,7 +192,7 @@ Frame :: struct {
     // Time (in seconds) when the mouse entered the `rect` of the frame or any of its children.
     entered_time: f32,
 
-    // Time (in seconds) when the mouse left the `rect` of the frame or any of its children.
+    // Time (in seconds) when the mouse left the `rect` of the frame and any of its children.
     left_time: f32,
 
     // Indicates that the frame has captured the mouse.
