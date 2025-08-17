@@ -82,7 +82,7 @@ Frame_Init :: struct {
     //      ui.set_text_format(f, "Health: %i/%i")
     //      ui.set_text(f, 33, 100)
     //
-    // Note: if `text_format` is not set, it is treated as `%s` value.
+    // Note: if `text_format` is not set, it is treated as `%v` value.
     text: string,
 
     // Text format for the `text`.
