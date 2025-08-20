@@ -57,7 +57,16 @@ app_shutdown :: proc () {
 }
 
 app_running :: proc () -> bool {
-    return !rl.WindowShouldClose() && !app_exit_requested
+    when ODIN_OS != .JS {
+        return !app_exit_requested && !rl.WindowShouldClose()
+    } else {
+        return !app_exit_requested
+    }
+}
+
+app_resized :: proc (w, h: i32) {
+    fmt.println(#procedure, w, h)
+    rl.SetWindowSize(w, h)
 }
 
 app_tick :: proc () {

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <title>The App</title>
+    <style>
+        html, body, #canvas {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+        body {
+            overflow: hidden;
+            touch-action: none;
+            color: #fff;
+            background-color: #000;
+        }
+        #canvas {
+            display: block;
+        }
+        #canvas:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas">
+        Your browser does not support the canvas tag.
+    </canvas>
+
+    <noscript>
+        Your browser does not support JavaScript.
+    </noscript>
+
+    <script src="odin.js"></script>
+
+    <script>
+        const odinMemoryInterface = new odin.WasmMemoryInterface()
+        odinMemoryInterface.setIntSize(4)
+        const odinImports = odin.setupDefaultImports(odinMemoryInterface)
+        const canvas = document.querySelector("#canvas")
+
+        var Module = { // must be "var" as it gets reassigned by Emscripten
+            canvas,
+
+            instantiateWasm: (imports, successCallback) => {
+                const newImports = { ...odinImports, ...imports }
+                return WebAssembly.instantiateStreaming(fetch("index.wasm"), newImports).then(output => {
+                    const e = output.instance.exports
+                    odinMemoryInterface.setExports(e)
+                    odinMemoryInterface.setMemory(e.memory)
+                    return successCallback(output.instance)
+                })
+            },
+
+            onRuntimeInitialized: () => {
+                const we = wasmExports
+
+                we._start()
+                we.platform_init()
+
+                function on_resize() {
+                    we.platform_resized(canvas.width, canvas.height)
+                }
+
+                function on_request_anim_frame() {
+                    if (we.platform_running()) {
+                        we.platform_update()
+                        window.requestAnimationFrame(on_request_anim_frame)
+                    } else {
+                        we.platform_shutdown()
+                        we._end()
+                    }
+                }
+
+                canvas.addEventListener("contextmenu", event => event.preventDefault())
+                window.addEventListener("resize", on_resize, true)
+                window.addEventListener("orientationchange", on_resize, true)
+
+                on_resize()
+                on_request_anim_frame()
+            },
+
+            print: text => {
+                console.log(text)
+            },
+        }
+    </script>
+
+    <!-- Emscripten injects its javascript here -->
+    {{{ SCRIPT }}}
+</body>
+</html>

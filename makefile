@@ -49,4 +49,7 @@ demo8: mkdir
 	@odin run demos/demo8 -out:build/demo8${os_ext} ${debug_args}
 
 demo9: mkdir
-	@odin run demos/demo9 -out:build/demo9${os_ext} ${debug_args}
+	@odin run demos/demo9/build/desktop -out:build/demo9${os_ext} ${debug_args}
+
+demo9_web:
+	@cd demos\demo9\build && web.bat

@@ -1,8 +1,10 @@
-package demo9
+package main_desktop
 
 import "spacelib:core/stack_trace"
 import "spacelib:core/timed_scope"
 import "spacelib:core/tracking_allocator"
+
+import app "../.."
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
@@ -13,13 +15,13 @@ main :: proc () {
 
     defer timed_scope.print(.by_avg_dur)
 
-    app_startup()
+    app.app_startup()
 
-    for app_running() {
+    for app.app_running() {
         free_all(context.temp_allocator)
-        app_tick()
-        app_draw()
+        app.app_tick()
+        app.app_draw()
     }
 
-    app_shutdown()
+    app.app_shutdown()
 }
