@@ -8,6 +8,7 @@ import "../../core"
 @private Rect :: core.Rect
 
 window_size :: proc () -> Vec2 { return { f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) } }
+window_rect :: proc () -> Rect { return { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) } }
 
 scissor_set     :: proc (r: Rect) { rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h)) }
 scissor_clear   :: proc () { rl.EndScissorMode() }

@@ -30,7 +30,7 @@ app_startup :: proc () {
 
     events.listen(.exit_app, proc (args: events.Args) { app_exit_requested=true })
 
-    // events.open_screen({ screen_name="home" })
+    events.open_screen({ screen_name="home" })
     // events.open_screen({ screen_name="credits" })
     // events.open_screen({ screen_name="credits", tab_name="lorem_ipsum" })
     // events.start_conversation({ conversation_id="tyg_rolsum", chat_id="welcome" })
@@ -38,7 +38,7 @@ app_startup :: proc () {
     // events.open_screen({ screen_name="settings", tab_name="display" })
     // events.open_screen({ screen_name="player", tab_name="journey" })
     // events.open_screen({ screen_name="player", tab_name="map" })
-    events.open_screen({ screen_name="player", tab_name="inventory" })
+    // events.open_screen({ screen_name="player", tab_name="inventory" })
     // events.open_screen({ screen_name="deposit" })
 }
 

@@ -1,5 +1,6 @@
 package spacelib_raylib_draw
 
+import "core:math"
 import rl "vendor:raylib"
 
 line :: proc (start, end: Vec2, thick: f32, color: Color) {
@@ -11,6 +12,13 @@ rect :: proc (rect: Rect, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
     color_rl := rl.Color(color)
     rl.DrawRectangleRec(rect_rl, color_rl)
+}
+
+rect_rot :: proc (rect: Rect, origin: Vec2, rot_rad: f32, color: Color) {
+    rect_rl := transmute (rl.Rectangle) rect
+    color_rl := rl.Color(color)
+    rot_degree := 90 + math.to_degrees(rot_rad)
+    rl.DrawRectanglePro(rect_rl, origin, rot_degree, color_rl)
 }
 
 rect_lines :: proc (rect: Rect, thick: f32, color: Color) {

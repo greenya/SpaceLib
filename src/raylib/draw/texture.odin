@@ -1,5 +1,6 @@
 package spacelib_raylib_draw
 
+import "core:math"
 import rl "vendor:raylib"
 import "../../core"
 
@@ -36,8 +37,6 @@ texture :: proc (
     tex         : rl.Texture,
     src         : Rect,
     dst         : Rect,
-    origin      := Vec2 {},
-    rot_degree  := f32(0),
     fit         := Texture_Fit.fill,
     fit_align   := Texture_Fit_Align.center,
     tint        := core.white,
@@ -51,6 +50,22 @@ texture :: proc (
 
     src_rl := transmute (rl.Rectangle) src
     dst_rl := transmute (rl.Rectangle) dst
+    tint_rl := rl.Color(tint)
+    rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
+}
+
+texture_rot :: proc (
+    tex         : rl.Texture,
+    src         : Rect,
+    dst         : Rect,
+    origin_uv   := Vec2 {},
+    rot_rad     := f32(0),
+    tint        := core.white,
+) {
+    src_rl := transmute (rl.Rectangle) src
+    dst_rl := transmute (rl.Rectangle) dst
+    origin := Vec2 { origin_uv.x * src.w, origin_uv.y * src.h }
+    rot_degree := 90 + math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_degree, tint_rl)
 }
