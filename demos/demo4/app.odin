@@ -4,7 +4,6 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 import "spacelib:core"
-import "spacelib:core/clock"
 import "spacelib:core/tracking_allocator"
 import "spacelib:ui"
 import "spacelib:terse"
@@ -14,7 +13,7 @@ Vec2 :: core.Vec2
 Rect :: core.Rect
 
 App :: struct {
-    clock: clock.Clock(f32),
+    clock: core.Clock(f32),
     screen_rect: Rect,
     camera: rl.Camera2D,
 
@@ -37,7 +36,7 @@ app_startup :: proc () {
     assets_load()
 
     app = new(App)
-    clock.init(&app.clock)
+    core.clock_init(&app.clock)
     app.camera = { zoom=1 }
 
     app.ui = ui.create(
@@ -78,7 +77,7 @@ app_running :: proc () -> bool {
 
 app_tick :: proc () {
     free_all(context.temp_allocator)
-    clock.tick(&app.clock)
+    core.clock_tick(&app.clock)
     app.screen_rect = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) }
     app.camera.offset = { app.screen_rect.w/2, app.screen_rect.h/2 }
 

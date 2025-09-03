@@ -3,8 +3,6 @@ package spacelib_ui
 import "core:slice"
 import "core:time"
 import "../core"
-import "../core/clock"
-import "../core/stack"
 import "../terse"
 
 UI :: struct {
@@ -18,7 +16,7 @@ UI :: struct {
     // Clock.
     // Use `clock.time` and `clock.dt` for timing and smooth updates.
     // Adjust `clock.time_scale` to control the speed of all animations.
-    clock: clock.Clock(f32),
+    clock: core.Clock(f32),
 
     // Processing phase.
     // This value is usually not needed, as each frame's callback runs in a known phase:
@@ -48,7 +46,7 @@ UI :: struct {
     scissor_rect: Rect,
 
     // Current stack of all scissor absolute rectangles.
-    scissor_rects: stack.Stack(Rect, 16),
+    scissor_rects: core.Stack(Rect, 16),
 
     // Callback for applying scissor rectangle during drawing phase.
     scissor_set_proc: Scissor_Set_Proc,
@@ -131,7 +129,7 @@ create :: proc (
 
     ui.root.ui = ui
 
-    clock.init(&ui.clock)
+    core.clock_init(&ui.clock)
 
     return ui
 }
@@ -158,7 +156,7 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
         ui.stats.tick_time = time.tick_since(phase_started)
     }
 
-    clock.tick(&ui.clock)
+    core.clock_tick(&ui.clock)
 
     ui.root.rect = root_rect
     ui.scissor_rect = root_rect
@@ -296,10 +294,10 @@ push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
     new_rect := new_rect
 
     if ui.scissor_rects.size > 0 {
-        new_rect = core.rect_intersection(new_rect, stack.top(ui.scissor_rects))
+        new_rect = core.rect_intersection(new_rect, core.stack_top(ui.scissor_rects))
     }
 
-    stack.push(&ui.scissor_rects, new_rect)
+    core.stack_push(&ui.scissor_rects, new_rect)
 
     ui.scissor_rect = new_rect
     if ui.phase == .draw && ui.scissor_set_proc != nil {
@@ -312,10 +310,10 @@ push_scissor_rect :: proc (ui: ^UI, new_rect: Rect) {
 pop_scissor_rect :: proc (ui: ^UI) {
     assert(ui.phase != .none)
 
-    stack.drop(&ui.scissor_rects)
+    core.stack_drop(&ui.scissor_rects)
 
     if ui.scissor_rects.size > 0 {
-        ui.scissor_rect = stack.top(ui.scissor_rects)
+        ui.scissor_rect = core.stack_top(ui.scissor_rects)
         if ui.phase == .draw && ui.scissor_set_proc != nil do ui.scissor_set_proc(ui.scissor_rect)
     } else {
         ui.scissor_rect = ui.root.rect

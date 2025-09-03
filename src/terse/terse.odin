@@ -4,7 +4,6 @@ import "core:fmt"
 import "core:slice"
 import "core:strings"
 import "../core"
-import "../core/stack"
 
 Terse :: struct {
     rect        : Rect,
@@ -107,12 +106,12 @@ create :: proc (
     alpha := f32(1)
     brightness := f32(0)
 
-    fonts_stack: stack.Stack(^Font, default_fonts_stack_size)
-    stack.push(&fonts_stack, query_font(default_font_name))
-    ensure(stack.top(fonts_stack).measure_text != nil, "Font.measure_text must be set")
+    fonts_stack: core.Stack(^Font, default_fonts_stack_size)
+    core.stack_push(&fonts_stack, query_font(default_font_name))
+    ensure(core.stack_top(fonts_stack).measure_text != nil, "Font.measure_text must be set")
 
-    colors_stack: stack.Stack(Color, default_colors_stack_size)
-    stack.push(&colors_stack, query_color(default_color_name))
+    colors_stack: core.Stack(Color, default_colors_stack_size)
+    core.stack_push(&colors_stack, query_color(default_color_name))
 
     group: ^Group
 
@@ -128,7 +127,7 @@ create :: proc (
     word_tab_width  : f32
 
     for para in strings.split(text, "\n", context.temp_allocator) {
-        line := append_line(&builder, stack.top(fonts_stack))
+        line := append_line(&builder, core.stack_top(fonts_stack))
 
         cursor = { .text, 0 }
         for i:=0; i<len(para); i+=1 {
@@ -178,13 +177,13 @@ create :: proc (
                     case "bottom"   : builder.terse.valign = .bottom
 
                     case "/font":
-                        ensure(!stack.is_empty(fonts_stack), "Fonts stack underflow")
-                        stack.drop(&fonts_stack)
+                        ensure(!core.stack_is_empty(fonts_stack), "Fonts stack underflow")
+                        core.stack_drop(&fonts_stack)
                         last_opened_command = .none
 
                     case "/color":
-                        ensure(!stack.is_empty(colors_stack), "Colors stack underflow")
-                        stack.drop(&colors_stack)
+                        ensure(!core.stack_is_empty(colors_stack), "Colors stack underflow")
+                        core.stack_drop(&colors_stack)
                         last_opened_command = .none
 
                     case "/group":
@@ -215,17 +214,17 @@ create :: proc (
                                 brightness = parse_f32(command_value)
 
                             case "font":
-                                ensure(!stack.is_full(fonts_stack), "Fonts stack overflow")
+                                ensure(!core.stack_is_full(fonts_stack), "Fonts stack overflow")
                                 font := query_font(command_value)
                                 ensure(font.measure_text != nil, "Font.measure_text must be set")
-                                stack.push(&fonts_stack, font)
+                                core.stack_push(&fonts_stack, font)
                                 line.rect.h = line._word_count > 0 ? max(line.rect.h, font.height) : font.height
                                 last_opened_command = .font
 
                             case "color":
-                                ensure(!stack.is_full(colors_stack), "Colors stack overflow")
+                                ensure(!core.stack_is_full(colors_stack), "Colors stack overflow")
                                 color := command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
-                                stack.push(&colors_stack, color)
+                                core.stack_push(&colors_stack, color)
                                 last_opened_command = .color
 
                             case "group":
@@ -249,7 +248,7 @@ create :: proc (
 
                             case "gap":
                                 gap_ratio := parse_f32(command_value)
-                                line.gap = gap_ratio * stack.top(fonts_stack).height
+                                line.gap = gap_ratio * core.stack_top(fonts_stack).height
 
                             case "pad":
                                 ensure(len(builder.words_arr) == 0 && len(builder.lines_arr) == 1, "Can apply pad only on 1st line with no words measured")
@@ -270,7 +269,7 @@ create :: proc (
             }
 
             if word != "" || word_is_tab {
-                font := stack.top(fonts_stack)
+                font := core.stack_top(fonts_stack)
                 size := word_is_icon\
                     ? word_icon_scale * Vec2 { font.height, font.height }\
                     : word_is_tab\
@@ -303,7 +302,7 @@ create :: proc (
                 }
 
                 if word != " " || word_is_tab || line_has_printable_words(builder, line^) { // skip " " at the start of the line
-                    color := stack.top(colors_stack)
+                    color := core.stack_top(colors_stack)
                     color = core.brightness(color, brightness)
                     color = core.alpha(color, alpha)
                     append_word(&builder, word, size, font, color, word_is_icon, group)

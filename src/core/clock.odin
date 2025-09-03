@@ -1,4 +1,4 @@
-package spacelib_clock
+package spacelib_core
 
 import "base:intrinsics"
 import tm "core:time"
@@ -12,14 +12,14 @@ Clock :: struct ($T: typeid) where intrinsics.type_is_float(T) {
     _now        : tm.Tick,
 }
 
-init :: proc (c: ^Clock($T)) {
+clock_init :: proc (c: ^Clock($T)) {
     c^ = {
         time_scale  = 1,
         _now        = tm.tick_now(),
     }
 }
 
-tick :: proc (c: ^Clock($T)) {
+clock_tick :: proc (c: ^Clock($T)) {
     c.tick += 1
 
     now := tm.tick_now()
