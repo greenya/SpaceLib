@@ -64,8 +64,6 @@ draw_terse :: proc (f: ^ui.Frame, override_color := "", offset := Vec2 {}) {
             draw.text(word.text, pos, font_rl, font.height, font.rune_spacing, tint)
         }
     }
-
-    if app.debug_drawing do draw.debug_terse(f.terse)
 }
 
 draw_color_rect :: proc (f: ^ui.Frame) {

@@ -68,8 +68,6 @@ draw_terse :: proc (f: ^ui.Frame, color: Color = {}, offset := Vec2 {}, drop_sha
             }
         }
     }
-
-    if raylib.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(f.terse)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,diamond} = .box, font := "text_4m", shadow_only := false) {

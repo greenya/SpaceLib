@@ -20,8 +20,6 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
 }
 
 draw_terse :: proc (f: ^ui.Frame, override_color: ^Color = nil, offset := Vec2 {}) {
-    if app.debug_drawing do draw.debug_terse(f.terse)
-
     for word in f.terse.words {
         // if word.in_group do continue
 

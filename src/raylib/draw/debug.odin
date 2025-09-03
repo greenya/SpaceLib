@@ -12,6 +12,8 @@ import "../res"
 @private Color :: core.Color
 
 debug_frame :: proc (f: ^ui.Frame) {
+    assert(f != nil)
+
     color := _debug_frame_color(f)
 
     if f.parent == nil {
@@ -41,6 +43,8 @@ debug_frame :: proc (f: ^ui.Frame) {
         }
     }
 
+    if f.terse != nil do debug_terse(f.terse)
+
     if f.name != "" do _debug_text(f.name, { f.rect.x+4, f.rect.y+2 }, color)
 
     if f.order != 0 {
@@ -66,12 +70,15 @@ debug_frame_tree :: proc (f: ^ui.Frame) {
 }
 
 debug_frame_scissor :: proc (f: ^ui.Frame) {
+    assert(f != nil)
     if .scissor in f.flags {
         rect_lines(core.rect_inflated(f.rect, 4), 4, core.aqua)
     }
 }
 
 debug_frame_anchors :: proc (f: ^ui.Frame) {
+    assert(f != nil)
+
     thick :: 3
     size :: 6
     color := core.alpha(_debug_frame_color(f), .333)
@@ -93,6 +100,8 @@ debug_frame_anchors :: proc (f: ^ui.Frame) {
 }
 
 debug_frame_layout :: proc (f: ^ui.Frame) {
+    assert(f != nil)
+
     step :: 10
     size :: 20
     thick :: 2
@@ -153,6 +162,8 @@ debug_frame_layout :: proc (f: ^ui.Frame) {
 }
 
 debug_terse :: proc (t: ^terse.Terse) {
+    assert(t != nil)
+
     rect_lines(t.rect_input, 4, {255,128,64,80})
     rect_lines(t.rect, 1, {255,0,0,160})
     rect(t.rect, {255,0,0,20})
