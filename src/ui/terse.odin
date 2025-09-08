@@ -33,7 +33,7 @@ update_terse :: proc (f: ^Frame) {
 
     case .rebuild:
         terse.destroy(f.terse)
-        f.terse = terse.create(f.text, f.rect)
+        f.terse = terse.create(f.text, f.rect, should_clone_text=false)
 
         if f.flags & {.terse_size,.terse_width} != {} {
             f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w

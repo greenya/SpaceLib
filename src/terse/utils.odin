@@ -79,6 +79,7 @@ size_of_terse :: proc (terse: ^Terse) -> (total: int) {
     if terse == nil do return
 
     total = size_of(Terse)
+    if terse.text_cloned do total += len(terse.text)
     total += size_of(Word) * len(terse.words)
     total += size_of(Line) * len(terse.lines)
     total += size_of(Group) * len(terse.groups)

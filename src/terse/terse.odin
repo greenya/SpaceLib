@@ -6,6 +6,8 @@ import "core:strings"
 import "../core"
 
 Terse :: struct {
+    text        : string,
+    text_cloned : bool,
     rect        : Rect,
     rect_input  : Rect,
     pad         : Vec2,
@@ -80,7 +82,7 @@ Query_Color_Proc    :: proc (name: string) -> Color
 query_font : Query_Font_Proc
 query_color: Query_Color_Proc
 
-create :: proc (text: string, rect: Rect, allocator := context.allocator) -> ^Terse {
+create :: proc (text: string, rect: Rect, should_clone_text := true, allocator := context.allocator) -> ^Terse {
     ensure(query_font != nil)
     ensure(query_color != nil)
 
@@ -94,6 +96,15 @@ create :: proc (text: string, rect: Rect, allocator := context.allocator) -> ^Te
         builder.terse.rect.w = 0
         builder.terse.rect.h = 0
         return builder.terse
+    }
+
+    text := text
+    if should_clone_text {
+        builder.terse.text = strings.clone(text, allocator=allocator)
+        builder.terse.text_cloned = true
+        text = builder.terse.text
+    } else {
+        builder.terse.text = text
     }
 
     builder.words_arr.allocator = allocator
@@ -383,6 +394,7 @@ create :: proc (text: string, rect: Rect, allocator := context.allocator) -> ^Te
 destroy :: proc (terse: ^Terse) {
     if terse == nil do return
 
+    if terse.text_cloned do delete(terse.text)
     delete(terse.groups)
     delete(terse.lines)
     delete(terse.words)
