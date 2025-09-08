@@ -307,11 +307,6 @@ create_items :: proc () {
     case i.stats_welding_torch != {}    : i.stats = i.stats_welding_torch
     }
 
-    when ODIN_OS == .JS {
-        // assigning tags directly because of the issue https://github.com/odin-lang/Odin/issues/5605
-        get_item("talab_softstep_boots").tags = { .light_armor, .slot_feet }
-    }
-
     // fmt.printfln("%#v", items)
 }
 
