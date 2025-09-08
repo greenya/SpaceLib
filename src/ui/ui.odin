@@ -3,7 +3,6 @@ package spacelib_ui
 import "core:slice"
 import "core:time"
 import "../core"
-import "../terse"
 
 UI :: struct {
     // Root frame.
@@ -54,12 +53,6 @@ UI :: struct {
     // Callback for clearing scissor rectangle during drawing phase.
     scissor_clear_proc: Scissor_Clear_Proc,
 
-    // Callback for querying font information. Should be set if you use `.terse` frames.
-    terse_query_font_proc: terse.Query_Font_Proc,
-
-    // Callback for querying color information. Should be set if you use `.terse` frames.
-    terse_query_color_proc: terse.Query_Color_Proc,
-
     // Fallback drawing callback for `.terse` frames.
     // Used when a frame does not have its own `draw` callback.
     terse_draw_proc: Frame_Proc,
@@ -107,8 +100,6 @@ create :: proc (
     root_rect               : Rect = {},
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
-    terse_query_font_proc   : terse.Query_Font_Proc = nil,
-    terse_query_color_proc  : terse.Query_Color_Proc = nil,
     terse_draw_proc         : Frame_Proc = nil,
     frame_overdraw_proc     : Frame_Proc = nil,
 ) -> ^UI {
@@ -121,8 +112,6 @@ create :: proc (
 
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
-        terse_query_font_proc   = terse_query_font_proc,
-        terse_query_color_proc  = terse_query_color_proc,
         terse_draw_proc         = terse_draw_proc,
         frame_overdraw_proc     = frame_overdraw_proc,
     }

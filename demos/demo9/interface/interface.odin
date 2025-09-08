@@ -24,14 +24,16 @@ import "dev"
 create :: proc () {
     assert(ui_ == nil)
 
+    terse.query_font = proc (name: string) -> ^terse.Font {
+        return &fonts.get_by_name(name).font_tr
+    }
+
+    terse.query_color = proc (name: string) -> core.Color {
+        return colors.get_by_name(name)
+    }
+
     ui_ = ui.create(
-        root_rect = core.rect_from_size(env.window_size()),
-        terse_query_font_proc = #force_inline proc (name: string) -> ^terse.Font {
-            return &fonts.get_by_name(name).font_tr
-        },
-        terse_query_color_proc = #force_inline proc (name: string) -> core.Color {
-            return colors.get_by_name(name)
-        },
+        root_rect = env.window_rect(),
         terse_draw_proc = #force_inline proc (f: ^ui.Frame) {
             partials.draw_terse(f)
         },
@@ -77,7 +79,7 @@ destroy :: proc () {
 
 tick :: proc () {
     ui.tick(ui_,
-        root_rect   = core.rect_from_size(env.window_size()),
+        root_rect   = env.window_rect(),
         mouse       = {
             pos         = env.mouse_pos(),
             wheel_dy    = env.mouse_wheel_dy(),

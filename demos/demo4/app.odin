@@ -35,6 +35,15 @@ app_startup :: proc () {
 
     assets_load()
 
+    terse.query_font = proc (name: string) -> ^terse.Font {
+        return &assets_font(name).font_tr
+    }
+
+    terse.query_color = proc (name: string) -> core.Color {
+        if name[0] == '#'   do return core.color_from_hex(name)
+        else                do return assets_color(name).val
+    }
+
     app = new(App)
     core.clock_init(&app.clock)
     app.camera = { zoom=1 }
@@ -47,13 +56,6 @@ app_startup :: proc () {
         scissor_clear_proc = proc () {
             if app.debug_drawing do return
             rl.EndScissorMode()
-        },
-        terse_query_font_proc = proc (name: string) -> ^terse.Font {
-            return &assets_font(name).font_tr
-        },
-        terse_query_color_proc = proc (name: string) -> core.Color {
-            if name[0] == '#'   do return core.color_from_hex(name)
-            else                do return assets_color(name).val
         },
         terse_draw_proc = proc (f: ^ui.Frame) {
             draw_terse(f)

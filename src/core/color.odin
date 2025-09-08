@@ -24,7 +24,7 @@ gray7 :: Color {175,175,175,255}
 gray8 :: Color {200,200,200,255}
 gray9 :: Color {225,225,225,255}
 
-vec3_to_color :: #force_inline proc (vec: Vec3) -> Color {
+color_from_vec3 :: #force_inline proc (vec: Vec3) -> Color {
     return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
 }
 

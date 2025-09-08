@@ -43,13 +43,15 @@ app_startup :: proc () {
 
     app_data_create()
 
+    terse.query_font = proc (name: string) -> ^terse.Font {
+        return &app.res.fonts[name].font_tr
+    }
+
+    terse.query_color = proc (name: string) -> core.Color {
+        return app.res.colors[name].value
+    }
+
     app.ui = ui.create(
-        terse_query_font_proc = proc (name: string) -> ^terse.Font {
-            return &app.res.fonts[name].font_tr
-        },
-        terse_query_color_proc = proc (name: string) -> core.Color {
-            return app.res.colors[name].value
-        },
         terse_draw_proc = proc (f: ^ui.Frame) {
             draw_terse(f)
         },

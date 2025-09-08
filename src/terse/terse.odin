@@ -53,10 +53,6 @@ Font :: struct {
 Horizontal_Alignment    :: enum { left, center, right }
 Vertical_Alignment      :: enum { top, middle, bottom }
 
-Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
-Query_Font_Proc     :: proc (name: string) -> ^Font
-Query_Color_Proc    :: proc (name: string) -> Color
-
 default_escape_rune         :: '\\'
 default_code_start_rune     :: '<'
 default_code_end_rune       :: '>'
@@ -77,13 +73,14 @@ Builder :: struct {
     groups_arr  : [dynamic] Group,
 }
 
-create :: proc (
-    text        : string,
-    rect        : Rect,
-    query_font  : Query_Font_Proc,
-    query_color : Query_Color_Proc,
-    allocator   := context.allocator,
-) -> ^Terse {
+Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
+Query_Font_Proc     :: proc (name: string) -> ^Font
+Query_Color_Proc    :: proc (name: string) -> Color
+
+query_font : Query_Font_Proc
+query_color: Query_Color_Proc
+
+create :: proc (text: string, rect: Rect, allocator := context.allocator) -> ^Terse {
     ensure(query_font != nil)
     ensure(query_color != nil)
 

@@ -4,9 +4,6 @@ import "../terse"
 
 @private
 update_terse :: proc (f: ^Frame) {
-    assert(f.ui.terse_query_font_proc != nil, "UI.terse_query_font_proc must not be nil when using terse")
-    assert(f.ui.terse_query_color_proc != nil, "UI.terse_query_color_proc must not be nil when using terse")
-
     action: enum { none, offset, rebuild }
     offset: Vec2
 
@@ -36,12 +33,7 @@ update_terse :: proc (f: ^Frame) {
 
     case .rebuild:
         terse.destroy(f.terse)
-        f.terse = terse.create(
-            f.text,
-            f.rect,
-            f.ui.terse_query_font_proc,
-            f.ui.terse_query_color_proc,
-        )
+        f.terse = terse.create(f.text, f.rect)
 
         if f.flags & {.terse_size,.terse_width} != {} {
             f.size.x = f.size_min.x>0 ? max(f.size_min.x, f.terse.rect.w) : f.terse.rect.w

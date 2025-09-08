@@ -47,6 +47,17 @@ main :: proc () {
     rl.SetMusicVolume(bg_music, .333)
     rl.PlayMusicStream(bg_music)
 
+    terse.query_font = proc (name: string) -> ^terse.Font {
+        fmt.assertf(name in app.res.fonts, "No font with name \"%s\"", name)
+        return &app.res.fonts[name].font_tr
+    }
+
+    terse.query_color = proc (name: string) -> Color {
+        if name[0] == '#' do return core.color_from_hex(name)
+        fmt.assertf(name in app.res.colors, "No color with name \"%s\"", name)
+        return app.res.colors[name]
+    }
+
     for !rl.WindowShouldClose() {
         free_all(context.temp_allocator)
 
@@ -84,7 +95,7 @@ main :: proc () {
             bt_height := app.res.sprites["square-yellow"].info.(rl.NPatchInfo).source.height
             bt_rect := Rect { screen_w-512-80, 280, 512, bt_height }
             draw_sprite("square-yellow", bt_rect)
-            draw_terse(create_terse("<color=indigo>Press SPACE to play random sound", bt_rect, context.temp_allocator))
+            draw_terse(terse.create("<color=indigo>Press SPACE to play random sound", bt_rect, context.temp_allocator))
         }
 
         { // draw vertical 3-patch sprite
@@ -108,7 +119,7 @@ main :: proc () {
                 fmt.sbprint(&sb, "</font,/color>\n\n")
             }
 
-            tr := create_terse(strings.to_string(sb), tr_rect, context.temp_allocator)
+            tr := terse.create(strings.to_string(sb), tr_rect, context.temp_allocator)
             if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(tr)
             draw_terse(tr)
         }
@@ -121,23 +132,6 @@ main :: proc () {
 
     rl.CloseAudioDevice()
     rl.CloseWindow()
-}
-
-create_terse :: proc (text: string, rect: Rect, allocator := context.allocator) -> ^terse.Terse {
-    return terse.create(
-        text,
-        rect,
-        #force_inline proc (name: string) -> ^terse.Font {
-            fmt.assertf(name in app.res.fonts, "No font with name \"%s\"", name)
-            return &app.res.fonts[name].font_tr
-        },
-        #force_inline proc (name: string) -> Color {
-            if name[0] == '#' do return core.color_from_hex(name)
-            fmt.assertf(name in app.res.colors, "No color with name \"%s\"", name)
-            return app.res.colors[name]
-        },
-        allocator=allocator,
-    )
 }
 
 draw_terse :: proc (tr: ^terse.Terse) {
