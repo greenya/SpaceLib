@@ -14,7 +14,7 @@ stack_push :: #force_inline proc(stack: ^Stack($T, $N), value: T) {
 stack_pop :: #force_inline proc(stack: ^Stack($T, $N)) -> T {
     assert(stack.size > 0)
     stack.size -= 1
-    return stack[stack.size+1]
+    return stack.items[stack.size]
 }
 
 stack_drop :: #force_inline proc(stack: ^Stack($T, $N)) {
