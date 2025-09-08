@@ -54,6 +54,17 @@ texture :: proc (
     rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
 }
 
+texture_full :: proc (
+    tex     : rl.Texture,
+    dst     : Rect,
+    tint    := core.white,
+) {
+    src_rl := rl.Rectangle { 0, 0, f32(tex.width), f32(tex.height) }
+    dst_rl := transmute (rl.Rectangle) dst
+    tint_rl := rl.Color(tint)
+    rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
+}
+
 texture_rot :: proc (
     tex         : rl.Texture,
     src         : Rect,
