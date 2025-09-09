@@ -815,7 +815,7 @@ update_rect_frame_tree :: proc (f: ^Frame, include_hidden: bool) {
 
 @private
 destroy_frame_tree :: proc (f: ^Frame, ui: ^UI = nil) {
-    for child in f.children do destroy_frame_tree(child)
+    for child in f.children do destroy_frame_tree(child, ui)
 
     if ui != nil do forget_frame(ui, f)
 

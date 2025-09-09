@@ -317,16 +317,16 @@ forget_frame :: proc (ui: ^UI, f: ^Frame) {
     if ui.captured.frame == f       do ui.captured.frame = nil
     if ui.captured.drag.target == f do ui.captured.drag.target = nil
 
-    known_frame_arrays := [?] [dynamic] ^Frame {
-        ui.mouse_frames,
-        ui.entered_frames,
-        ui.auto_hide_frames,
+    known_frame_arrays := [?] ^[dynamic] ^Frame {
+        &ui.mouse_frames,
+        &ui.entered_frames,
+        &ui.auto_hide_frames,
     }
 
-    for &arr in known_frame_arrays {
+    for arr in known_frame_arrays {
         for i := len(arr)-1; i >= 0; i -= 1 {
             if f == arr[i] {
-                unordered_remove(&arr, i)
+                unordered_remove(arr, i)
             }
         }
     }
