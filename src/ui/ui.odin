@@ -309,3 +309,26 @@ pop_scissor_rect :: proc (ui: ^UI) {
         if ui.phase == .draw && ui.scissor_clear_proc != nil do ui.scissor_clear_proc()
     }
 }
+
+@private
+forget_frame :: proc (ui: ^UI, f: ^Frame) {
+    assert(f != nil)
+
+    if ui.captured.frame == f {
+        ui.captured.frame = nil
+    }
+
+    known_frame_arrays := [?] [dynamic] ^Frame {
+        ui.mouse_frames,
+        ui.entered_frames,
+        ui.auto_hide_frames,
+    }
+
+    for &arr in known_frame_arrays {
+        for i := len(arr)-1; i >= 0; i -= 1 {
+            if f == ui.entered_frames[i] {
+                unordered_remove(&arr, i)
+            }
+        }
+    }
+}

@@ -733,12 +733,13 @@ update :: proc (f: ^Frame, include_hidden := false, repeat := 1) {
 }
 
 destroy_frame :: proc (f: ^Frame) {
+    ui := f.ui
     set_parent(f, nil)
-    destroy_frame_tree(f)
+    destroy_frame_tree(f, ui)
 }
 
 destroy_frame_children :: proc (f: ^Frame) {
-    for child in f.children do destroy_frame_tree(child)
+    for child in f.children do destroy_frame_tree(child, f.ui)
     clear(&f.children)
 }
 
@@ -813,14 +814,18 @@ update_rect_frame_tree :: proc (f: ^Frame, include_hidden: bool) {
 }
 
 @private
-destroy_frame_tree :: proc (f: ^Frame) {
+destroy_frame_tree :: proc (f: ^Frame, ui: ^UI = nil) {
     for child in f.children do destroy_frame_tree(child)
+
+    if ui != nil do forget_frame(ui, f)
+
     terse.destroy(f.terse)
     delete(f.name)
     delete(f.text)
     delete(f.text_format)
     delete(f.children)
     delete(f.anchors)
+
     free(f)
 }
 
