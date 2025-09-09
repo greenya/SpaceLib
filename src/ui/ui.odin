@@ -326,7 +326,7 @@ forget_frame :: proc (ui: ^UI, f: ^Frame) {
 
     for &arr in known_frame_arrays {
         for i := len(arr)-1; i >= 0; i -= 1 {
-            if f == ui.entered_frames[i] {
+            if f == arr[i] {
                 unordered_remove(&arr, i)
             }
         }
