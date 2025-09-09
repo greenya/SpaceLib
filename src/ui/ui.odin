@@ -314,9 +314,8 @@ pop_scissor_rect :: proc (ui: ^UI) {
 forget_frame :: proc (ui: ^UI, f: ^Frame) {
     assert(f != nil)
 
-    if ui.captured.frame == f {
-        ui.captured.frame = nil
-    }
+    if ui.captured.frame == f       do ui.captured.frame = nil
+    if ui.captured.drag.target == f do ui.captured.drag.target = nil
 
     known_frame_arrays := [?] [dynamic] ^Frame {
         ui.mouse_frames,
