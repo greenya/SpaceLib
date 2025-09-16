@@ -226,6 +226,28 @@ vec_orbited_around_vec :: #force_inline proc (vec, center_vec: Vec2, speed, dt: 
     return center_vec + vec_on_circle(radius, new_angle)
 }
 
+vec_on_rotated_rect :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {
+    ox, oy := origin_uv.x, origin_uv.y
+    u, v := target_uv.x, target_uv.y
+
+    px := u * rect.w
+    py := v * rect.h
+    oxp := ox * rect.w
+    oyp := oy * rect.h
+
+    rx := px - oxp
+    ry := py - oyp
+
+    cos_a := math.cos(-rot_rad)
+    sin_a := math.sin(-rot_rad)
+    rpx := rx * cos_a - ry * sin_a
+    rpy := rx * sin_a + ry * cos_a
+
+    wx := rect.x + oxp + rpx
+    wy := rect.y + oyp + rpy
+    return { wx, wy }
+}
+
 fit_target_size :: #force_inline proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
     scale = min(screen.x/target.x, screen.y/target.y)
     render_w, render_h := target.x*scale, target.y*scale
