@@ -76,9 +76,9 @@ texture_rot :: proc (
     src_rl := transmute (rl.Rectangle) src
     dst_rl := transmute (rl.Rectangle) dst
     origin := Vec2 { origin_uv.x * src.w, origin_uv.y * src.h }
-    rot_degree := 90 + math.to_degrees(rot_rad)
+    rot_deg := 90 + math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
-    rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_degree, tint_rl)
+    rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_deg, tint_rl)
 }
 
 texture_wrap :: proc (
@@ -111,17 +111,18 @@ texture_wrap :: proc (
     }
 }
 
+// TODO: change "rot_deg" to "rot_rad"
 texture_npatch :: proc (
-    tex         : rl.Texture,
-    info        : rl.NPatchInfo,
-    dst         : Rect,
-    origin      := Vec2 {},
-    rot_degree  := f32(0),
-    tint        := core.white,
+    tex     : rl.Texture,
+    info    : rl.NPatchInfo,
+    dst     : Rect,
+    origin  := Vec2 {},
+    rot_deg := f32(0),
+    tint    := core.white,
 ) {
     dst_rl := transmute (rl.Rectangle) dst
     tint_rl := rl.Color(tint)
-    rl.DrawTextureNPatch(tex, info, dst_rl, origin, rot_degree, tint_rl)
+    rl.DrawTextureNPatch(tex, info, dst_rl, origin, rot_deg, tint_rl)
 }
 
 @private

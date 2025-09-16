@@ -14,11 +14,12 @@ rect :: proc (rect: Rect, color: Color) {
     rl.DrawRectangleRec(rect_rl, color_rl)
 }
 
-rect_rot :: proc (rect: Rect, origin: Vec2, rot_rad: f32, color: Color) {
+rect_rot :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, color: Color) {
     rect_rl := transmute (rl.Rectangle) rect
+    origin := Vec2 { origin_uv.x * rect.w, origin_uv.y * rect.h }
     color_rl := rl.Color(color)
-    rot_degree := 90 + math.to_degrees(rot_rad)
-    rl.DrawRectanglePro(rect_rl, origin, rot_degree, color_rl)
+    rot_deg := -math.to_degrees(rot_rad)
+    rl.DrawRectanglePro(rect_rl, origin, rot_deg, color_rl)
 }
 
 rect_lines :: proc (rect: Rect, thick: f32, color: Color) {
@@ -101,9 +102,11 @@ circle_gradient :: proc (center: Vec2, radius: f32, inner_color, outer_color: Co
     rl.DrawCircleGradient(i32(center.x), i32(center.y), radius, inner_color_rl, outer_color_rl)
 }
 
-ring :: proc (center: Vec2, inner_radius, outer_radius, start_angle, end_angle: f32, segments: int, color: Color) {
+ring :: proc (center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32, segments: int, color: Color) {
+    start_deg := -math.to_degrees(start_rad)
+    end_deg := -math.to_degrees(end_rad)
     color_rl := rl.Color(color)
-    rl.DrawRing(center, inner_radius, outer_radius, start_angle, end_angle, i32(segments), color_rl)
+    rl.DrawRing(center, inner_radius, outer_radius, start_deg, end_deg, i32(segments), color_rl)
 }
 
 // counter-clockwise order

@@ -95,7 +95,7 @@ main :: proc () {
             bt_height := app.res.sprites["square-yellow"].info.(rl.NPatchInfo).source.height
             bt_rect := Rect { screen_w-512-80, 280, 512, bt_height }
             draw_sprite("square-yellow", bt_rect)
-            draw_terse(terse.create("<color=indigo>Press SPACE to play random sound", bt_rect, context.temp_allocator))
+            draw_terse(terse.create("<color=indigo>Press SPACE to play random sound", bt_rect, allocator=context.temp_allocator))
         }
 
         { // draw vertical 3-patch sprite
@@ -119,7 +119,7 @@ main :: proc () {
                 fmt.sbprint(&sb, "</font,/color>\n\n")
             }
 
-            tr := terse.create(strings.to_string(sb), tr_rect, context.temp_allocator)
+            tr := terse.create(strings.to_string(sb), tr_rect, allocator=context.temp_allocator)
             if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_terse(tr)
             draw_terse(tr)
         }
