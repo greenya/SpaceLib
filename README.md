@@ -10,6 +10,7 @@
     /terse                      - text layout calculation
     /tweens                     - [planned] [maybe] tween manager
     /ui                         - ui manager
+    /userfs                     - [planned] user file system (should also work on web via IndexedDB or localStorage maybe)
 
 ## TODOs
 
