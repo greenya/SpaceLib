@@ -11,7 +11,14 @@ import "../res"
 @private Rect :: core.Rect
 @private Color :: core.Color
 
-debug_frame :: proc (f: ^ui.Frame) {
+Debug_Frame_Filter :: enum {
+    scissor,
+    anchors,
+    layout,
+    terse,
+}
+
+debug_frame :: proc (f: ^ui.Frame, filter := ~bit_set [Debug_Frame_Filter] {}) {
     assert(f != nil)
 
     color := _debug_frame_color(f)
@@ -43,7 +50,10 @@ debug_frame :: proc (f: ^ui.Frame) {
         }
     }
 
-    if f.terse != nil do debug_terse(f.terse)
+    if .scissor in filter                   do debug_frame_scissor(f)
+    if .anchors in filter                   do debug_frame_anchors(f)
+    if .layout in filter                    do debug_frame_layout(f)
+    if .terse in filter && f.terse != nil   do debug_terse(f.terse)
 
     if f.name != "" do _debug_text(f.name, { f.rect.x+4, f.rect.y+2 }, color)
 

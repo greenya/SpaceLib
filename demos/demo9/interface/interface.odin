@@ -46,9 +46,6 @@ create :: proc () {
         frame_overdraw_proc = #force_inline proc (f: ^ui.Frame) {
             if !env.key_down(.LEFT_CONTROL) do return
             draw.debug_frame(f)
-            draw.debug_frame_scissor(f)
-            draw.debug_frame_anchors(f)
-            draw.debug_frame_layout(f)
         },
     )
 

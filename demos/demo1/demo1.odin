@@ -24,8 +24,6 @@ main :: proc () {
     game.ui = ui.create_ui(
         overdraw_proc = proc (f: ^ui.Frame) {
             draw.debug_frame(f)
-            draw.debug_frame_anchors(f)
-            draw.debug_frame_layout(f)
         },
     )
 
