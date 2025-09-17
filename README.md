@@ -24,6 +24,8 @@ TODO: userfs: expose error status
     anyway; if added, the developer can decided to handle error or don't; at the moment there is no way to know
     that something went wrong
 
+TODO: userfs: replace localStorage with indexedDB
+
 TODO: terse: make line alignment to be stack-based (open and close) OR at least change line alignment when actual word is added
 
     the problem at the moment is that using "left", "right" or "center" immediately sets current line alignment;
