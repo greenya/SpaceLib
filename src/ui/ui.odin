@@ -228,7 +228,9 @@ tick :: proc (ui: ^UI, root_rect: Rect, mouse: Mouse_Input) -> (mouse_input_cons
             }
 
             if lmb_released || !keep_capture {
-                if ui.captured.frame.entered do click(ui.captured.frame)
+                if ui.captured.frame != nil && ui.captured.frame.entered {
+                    click(ui.captured.frame)
+                }
                 ui.captured = {}
             }
         }
