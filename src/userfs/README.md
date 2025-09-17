@@ -7,7 +7,7 @@ A way to save and load small files in the web browser and a desktop environment.
 - In Odin, import the package and call it's members, e.g. `userfs.init()`, `userfs.read()` etc.
 
 - In JS, when build is done:
-    + make sure `userfs.js` (this file) is copied to the web output (just like `odin.js`), something like this (assuming `SPACELIB_DIR` is path to the `src` dir of SpaceLib collection):
+    + make sure `userfs.js` is copied to the web output (just like `odin.js`), something like this (assuming `SPACELIB_DIR` is path to the `src` dir of SpaceLib collection):
         ```cmd
         copy %SPACELIB_DIR%\userfs\userfs.js %OUT_DIR%
         ```
