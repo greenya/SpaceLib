@@ -10,9 +10,19 @@
     /terse                      - text layout calculation
     /tweens                     - [planned] [maybe] tween manager
     /ui                         - ui manager
-    /userfs                     - [planned] user file system (should also work on web via IndexedDB or localStorage maybe)
+    /userfs                     - user file system: save/load a file in user data dir (supports web build)
 
 ## TODOs
+
+TODO: userfs: expose error status
+
+    maybe not, as i hardly believe somebody would handle the error properly;
+    if in a web browser for some reason userfs fails, i guess the last thing we want to tell user about it;
+    so maybe just silently do nothing (don't load or save), the app should act like nothing previously
+    was saved and just use default preset, and any further writes will do nothing
+
+    anyway; if added, the developer can decided to handle error or don't; at the moment there is no way to know
+    that something went wrong
 
 TODO: terse: make line alignment to be stack-based (open and close) OR at least change line alignment when actual word is added
 
