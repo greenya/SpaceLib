@@ -15,11 +15,7 @@ debug_args 		= ${collection_args} ${checker_args} -keep-executable -o:none -debu
 release_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed
 fastest_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed -no-type-assert -disable-assert -no-bounds-check
 
-# not sure if the fastest_args is _the_ fastest args possible;
-# it seems it gives almost unnoticeable gain if any at all (~1-2%);
-# always test if it worth using
-
-run: demo9
+run: demo10
 
 mkdir:
 	$(call os_mkdir_build)
@@ -53,3 +49,9 @@ demo9: mkdir
 
 demo9_web:
 	@cd demos\demo9\build && web.bat
+
+demo10: mkdir
+	@odin run demos/demo10/platform/desktop -out:build/demo10${os_ext} ${debug_args}
+
+demo10_web:
+	@cd demos\demo10\platform && build_web.bat
