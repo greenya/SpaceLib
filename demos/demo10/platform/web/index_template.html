@@ -34,12 +34,16 @@
     </noscript>
 
     <script src="odin.js"></script>
+    <script src="userfs.js"></script>
 
     <script>
         const odinMemory = new odin.WasmMemoryInterface()
         odinMemory.setIntSize(4)
         const odinImports = odin.setupDefaultImports(odinMemory)
         const canvas = document.querySelector("#canvas")
+
+        window.userfs.memory = odinMemory
+        odinImports.userfs = window.userfs.imports
 
         var Module = { // must be "var" as it gets reassigned by Emscripten
             canvas,
