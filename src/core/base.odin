@@ -207,6 +207,18 @@ random_vec_in_ring :: #force_inline proc (inner_radius, outer_radius: f32) -> Ve
     return dir * rand.float32_range(inner_radius, outer_radius)
 }
 
+random_vec_sway :: #force_inline proc (dir: Vec2, sway_side_rad: f32) -> Vec2 {
+    if sway_side_rad == 0 do return dir
+    assert(sway_side_rad > 0)
+    d := rand.float32_range(-sway_side_rad, +sway_side_rad)
+    cos_d := math.cos(d)
+    sin_d := math.sin(d)
+    return {
+        dir.x*cos_d - dir.y*sin_d,
+        dir.x*sin_d + dir.y*cos_d,
+    }
+}
+
 vec_on_circle :: #force_inline proc (radius, angle_rad: f32) -> Vec2 {
     return { radius * math.cos(angle_rad), radius * math.sin(angle_rad) }
 }
@@ -226,7 +238,7 @@ vec_orbited_around_vec :: #force_inline proc (vec, center_vec: Vec2, speed, dt: 
     return center_vec + vec_on_circle(radius, new_angle)
 }
 
-vec_on_rotated_rect :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {
+vec_on_rotated_rect :: #force_inline proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {
     ox, oy := origin_uv.x, origin_uv.y
     u, v := target_uv.x, target_uv.y
 
