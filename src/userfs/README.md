@@ -24,7 +24,7 @@ A way to save and load small files in the web browser and a desktop environment.
             odinImports.userfs = window.userfs.imports
         </script>
         ```
-        - `odinMemory` is an instance of odin.`WasmMemoryInterface`
+        - `odinMemory` is an instance of `odin.WasmMemoryInterface`
         - `odinImports` is from `odin.setupDefaultImports(odinMemory)`
         - __Note__: this must be done before instantiating web assembly (`index.wasm`).
 
