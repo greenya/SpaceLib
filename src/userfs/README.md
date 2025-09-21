@@ -46,10 +46,18 @@ Generally you don't need to use JS part to work with the storage, as you develop
 
     __Note__: this is not the same as `localStorage.clear()`, a way to clear all the `localStorage` for current web site.
 
-## Comments
+## Notes
 
-Currently we use `localStorage`, it has limits:
+1. Currently we use `localStorage`, it has limits:
 
 - 5MB maximum per web site.
 
 - Simple `key->value` storage where `key` and `value` are strings; even if you use `localStorage.setItem("a", {x:1,y:2})`, the `localStorage.getItem("a")` will return string `[object Object]`; this is why we don't emulate tree structure with objects, e.g. `localStorage.userfs.app_name.key`, as it will not work; instead we build each key like `userfs/app_name/key`.
+
+2. When we open browser console on Itch.io of a running game and type `userfs.info()`, it doesn't work, "userfs" is not defined. All works locally when running web build with local web server.
+
+    This is due to how Itch.io embeds our game. It does it via IFrame tag. Technically we can get window object of an IFrame on the page with `document.getElementById("game_drop").contentWindow` where "game_drop" is an id of the IFrame and Itch.io uses "game_drop" for the id. But you cannot do `...contentWindow.userfs` as this leads to error:
+    ```
+    Uncaught SecurityError: Failed to read a named property 'userfs' from 'Window': Blocked a frame with origin "..." from accessing a cross-origin frame.
+    ```
+    So we cannot do this via JS code (our user code), but we still able to do it via web browser's tools directly. In the web browser Console window toolbar, find dropdown with "top" in it, this is a frame which executes all we type in the console. Select "index.html (html-classic.itch.zone)" and now typing `userfs.info()` should work; browser will execute this code in the window of the running game.
