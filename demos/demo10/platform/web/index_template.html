@@ -25,7 +25,7 @@
     </style>
 </head>
 <body>
-    <canvas id="canvas">
+    <canvas id="canvas" tabindex="-1">
         Your browser does not support the canvas tag.
     </canvas>
 
@@ -78,7 +78,10 @@
                     }
                 }
 
-                canvas.addEventListener("contextmenu", event => event.preventDefault())
+                canvas.addEventListener("contextmenu",  event => event.preventDefault())
+                canvas.addEventListener("keydown",      event => event.preventDefault())
+                canvas.addEventListener("mousedown",    event => event.target.focus())
+
                 window.addEventListener("resize", on_resize, true)
                 window.addEventListener("orientationchange", on_resize, true)
 
