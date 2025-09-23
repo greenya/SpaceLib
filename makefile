@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 	os_mkdir_build	= @if not exist build mkdir build
 else
 	os				= $(shell uname)
-	os_ext			= .bin
+	os_ext			=
 	os_mkdir_build	= @mkdir -p build
 endif
 
