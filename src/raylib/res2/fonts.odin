@@ -45,7 +45,7 @@ create_font_from_rl_font :: proc (
         height          = height,
         rune_spacing    = height * rune_spacing_ratio,
         line_spacing    = height * line_spacing_ratio,
-        measure_text    = measure_text_for_tr_font,
+        measure_text    = measure_text,
         font_rl         = font_rl,
     }
     font.font_ptr = &font.font_rl
@@ -71,4 +71,9 @@ measure_text_for_rl_font :: proc (font: rl.Font, height, rune_spacing: f32, text
 measure_text_for_tr_font :: proc (font: ^terse.Font, text: string) -> [2] f32 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     return rl.MeasureTextEx((cast (^rl.Font) font.font_ptr)^, cstr, font.height, font.rune_spacing)
+}
+
+measure_text :: proc {
+    measure_text_for_tr_font,
+    measure_text_for_rl_font,
 }
