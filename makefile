@@ -9,7 +9,7 @@ else
 endif
 
 collection_args	= -collection:spacelib=src
-checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon
+checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon -warnings-as-errors
 
 debug_args 		= ${collection_args} ${checker_args} -keep-executable -o:none -debug
 release_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed

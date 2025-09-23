@@ -10,7 +10,7 @@
     /terse                      - text layout calculation
     /tweens                     - [planned] [maybe] tween manager
     /ui                         - ui manager
-    /userfs                     - user file system: save/load a file in user data dir (supports web build)
+    /userfs                     - user file system: save/load a file in user data dir or localStorage
 
 ## TODOs
 
