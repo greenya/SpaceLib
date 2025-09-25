@@ -4,7 +4,7 @@ import "core:fmt"
 import "core:reflect"
 import "spacelib:ui"
 
-options_add_ui :: proc (tab_parent, content_parent: ^ui.Frame) {
+options_ui_add :: proc (tab_parent, content_parent: ^ui.Frame) {
     _, content := ui_add_tab_and_content(tab_parent, content_parent, "Options")
 
     bar := ui.add_frame(content, {

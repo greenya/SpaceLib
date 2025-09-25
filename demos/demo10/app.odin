@@ -72,7 +72,7 @@ app_startup :: proc () {
 
     bit_grid_ui_add     (tab_bar, tab_content)
     leaderboard_ui_add  (tab_bar, tab_content)
-    options_add_ui      (tab_bar, tab_content)
+    options_ui_add      (tab_bar, tab_content)
 
     about := ui.add_frame(app_ui.root,
         { flags={.scissor}, layout=ui.Flow { dir=.down, scroll={step=20} } },
