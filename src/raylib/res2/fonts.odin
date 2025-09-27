@@ -9,10 +9,10 @@ Font :: struct {
     font_rl         : rl.Font,
 }
 
-create_font_from_default :: proc (scale := f32(1)) -> ^Font {
+create_font_from_default :: proc (height := f32(-1)) -> ^Font {
     font_rl := rl.GetFontDefault()
     return create_font_from_rl_font(font_rl,
-        height              = scale * f32(font_rl.baseSize),
+        height              = height > 0 ? height : f32(font_rl.baseSize),
         rune_spacing_ratio  = .1,
     )
 }
@@ -59,6 +59,7 @@ create_font_from_rl_font :: proc (
 }
 
 destroy_font :: proc (font: ^Font, should_unload_rl_font := true) {
+    if font == nil do return
     if should_unload_rl_font do rl.UnloadFont(font.font_rl)
     free(font)
 }
