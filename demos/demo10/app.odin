@@ -50,10 +50,14 @@ app_startup :: proc () {
         frame_overdraw_proc = proc (f: ^ui.Frame)   { if rl.IsKeyDown(.LEFT_CONTROL) do draw.debug_frame(f) },
     )
 
-    column := ui.add_frame(app_ui.root,
-        { size={500,0} },
-        { point=.top_left, offset={100,40} },
-        { point=.bottom_left, offset={100,-40} },
+    panel := ui.add_frame(app_ui.root,
+        { layout=ui.Flow { dir=.right, pad={100,100,40,40}, gap=100 } },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    column := ui.add_frame(panel,
+        { size_ratio={.5,0} },
     )
 
     tab_bar := ui.add_frame(column,
@@ -74,10 +78,8 @@ app_startup :: proc () {
     leaderboard_ui_add  (tab_bar, tab_content)
     options_ui_add      (tab_bar, tab_content)
 
-    about := ui.add_frame(app_ui.root,
-        { flags={.scissor}, layout=ui.Flow { dir=.down, scroll={step=20} } },
-        { point=.top_left, rel_point=.top_right, rel_frame=column, offset={100,0} },
-        { point=.bottom_right, offset={-100,-40} },
+    about := ui.add_frame(panel,
+        { size_ratio={.5,0}, flags={.scissor}, layout=ui.Flow { dir=.down, scroll={step=20} } },
     )
 
     about_track, _ := ui_add_scrollbar(about, position=.left)
