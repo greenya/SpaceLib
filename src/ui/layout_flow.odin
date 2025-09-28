@@ -20,6 +20,10 @@ Flow :: struct {
     // For example, you can have a flow with vertical direction and a child with only size_aspect=5
     // and size_min={0,100}, this will make it to take whole width of the flow, height will be width/5
     // as long as the value is greater than 100.
+    //
+    // Flow supports child's `size_ratio`, Width and height are processed separately.
+    // For example: size_ratio={.5,0} -> resulting child width will be 50% of the parent width,
+    // and 100% of the parent height (in case nothing else is set).
     size: Vec2,
 
     // Children alignment in orthogonal direction to the `dir`.
@@ -75,6 +79,14 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
     vis_children := layout_visible_children(f, context.temp_allocator)
     is_dir_vertical := is_layout_dir_vertical(f)
 
+    f_rect_w_avail := f.rect.w - flow.pad[L] - flow.pad[R]
+    f_rect_h_avail := f.rect.h - flow.pad[T] - flow.pad[B]
+
+    if len(vis_children) > 1 {
+        if is_dir_vertical  do f_rect_h_avail -= flow.gap * f32(len(vis_children)-1)
+        else                do f_rect_w_avail -= flow.gap * f32(len(vis_children)-1)
+    }
+
     for child in vis_children {
         rect := Rect {
             x = 0,
@@ -83,12 +95,12 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
                 ? child.size.x\
                 : flow.size.x != 0\
                     ? flow.size.x\
-                    : f.rect.w - flow.pad[L] - flow.pad[R],
+                    : f_rect_w_avail,
             h = child.size.y != 0\
                 ? child.size.y\
                 : flow.size.y != 0\
                     ? flow.size.y\
-                    : f.rect.h - flow.pad[T] - flow.pad[B],
+                    : f_rect_h_avail,
         }
 
         if rect.w < 0 do rect.w = 0
