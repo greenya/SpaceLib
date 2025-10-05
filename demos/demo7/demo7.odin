@@ -7,7 +7,7 @@ import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:core/tracking_allocator"
 import "spacelib:raylib/draw"
-import "spacelib:raylib/res"
+import res "spacelib:raylib/res2"
 import "spacelib:ui"
 
 Vec2 :: core.Vec2
@@ -15,9 +15,16 @@ Rect :: core.Rect
 Color :: core.Color
 
 app: struct {
-    res: ^res.Res,
+    fonts: struct {
+        default : ^res.Font,
+        heavy   : ^res.Font,
+        huge    : ^res.Font,
+    },
     ui: ^ui.UI,
 }
+
+file_font_regular   := #load("res/Gauge-Regular.ttf")
+file_font_heavy     := #load("res/Gauge-Heavy.ttf")
 
 main :: proc () {
     context.allocator = tracking_allocator.init()
@@ -26,12 +33,19 @@ main :: proc () {
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 7")
+    defer rl.CloseWindow()
 
-    app.res = res.create()
-    res.add_files(app.res, #load_directory("res/fonts"))
-    res.load_fonts(app.res)
+    app.fonts.default   = res.create_font_from_data(file_font_regular, height=24, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
+    app.fonts.heavy     = res.create_font_from_data(file_font_heavy, height=24, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
+    app.fonts.huge      = res.create_font_from_data(file_font_heavy, height=72, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
+    defer {
+        res.destroy_font(app.fonts.default)
+        res.destroy_font(app.fonts.heavy)
+        res.destroy_font(app.fonts.huge)
+    }
 
     app.ui = ui.create()
+    defer ui.destroy(app.ui)
 
     time_scale_control := ui.add_frame(app.ui.root,
         { layout=ui.Flow{ dir=.down, align=.end, size={120,40}, gap=10, auto_size={.height} } },
@@ -65,13 +79,13 @@ main :: proc () {
         { point=.center },
     )
 
-    /*popup_header :=*/ ui.add_frame(popup,
+    ui.add_frame(popup,
         { size={0,100}, text="Hello, World!", draw=draw_panel_header },
         { point=.top_left },
         { point=.top_right },
     )
 
-    /*popup_button :=*/ ui.add_frame(popup,
+    ui.add_frame(popup,
         { size={170,70}, text="Close", flags={.capture}, draw=draw_button,
             click=proc (f: ^ui.Frame) { ui.animate(f.parent, anim_hide_slide_down, .2) } },
         { point=.bottom, offset={0,-40} },
@@ -105,17 +119,12 @@ main :: proc () {
 
         draw.text(
             fmt.tprintf("clock: %#v", app.ui.clock),
-            {10,30}, app.res.fonts["default"], Color {255,255,255,255},
+            {10,30}, app.fonts.default, Color {255,255,255,255},
         )
 
         rl.DrawFPS(10, 10)
         rl.EndDrawing()
     }
-
-    ui.destroy(app.ui)
-    res.destroy(app.res)
-
-    rl.CloseWindow()
 }
 
 click_toggle_popup :: proc (f: ^ui.Frame) {
@@ -132,13 +141,13 @@ click_toggle_popup :: proc (f: ^ui.Frame) {
 }
 
 draw_label :: proc (f: ^ui.Frame) {
-    font := app.res.fonts["heavy"]
+    font := app.fonts.heavy
     tx_color := core.alpha({255,255,255,255}, f.opacity)
     draw.text_aligned(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
 }
 
 draw_button :: proc (f: ^ui.Frame) {
-    font := app.res.fonts["default"]
+    font := app.fonts.default
     bg_color := core.alpha({200,150,100,255}, f.opacity)
     tx_color := core.alpha({80,60,40,255}, f.opacity)
 
@@ -161,7 +170,7 @@ draw_panel :: proc (f: ^ui.Frame) {
 }
 
 draw_panel_header :: proc (f: ^ui.Frame) {
-    font := app.res.fonts["heavy"]
+    font := app.fonts.heavy
     tx_color := core.alpha({255,255,255,255}, f.opacity)
     ln_color := core.alpha(core.brightness({140,180,220,255}, .4), f.opacity)
 
@@ -170,13 +179,13 @@ draw_panel_header :: proc (f: ^ui.Frame) {
 }
 
 draw_slot :: proc (f: ^ui.Frame) {
-    font := app.res.fonts["huge"]
+    font := app.fonts.huge
     tx_color := core.alpha({40,40,40,255}, f.opacity)
 
     if f.entered {
         draw.rect_lines(f.rect, 4, tx_color)
         if f.anim.tick == nil {
-            font2 := app.res.fonts["default"]
+            font2 := app.fonts.default
             sub_text := fmt.tprintf("Hello, %s!", f.text)
             draw.text_aligned(sub_text, core.rect_center(f.rect)+{0,46}, .5, font2, tx_color)
         }

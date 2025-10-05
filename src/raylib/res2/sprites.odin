@@ -11,6 +11,7 @@ Sprite :: struct {
 Texture :: rl.Texture
 NPatch  :: rl.NPatchInfo
 
+@require_results
 create_sprite :: proc (init: Sprite) -> ^Sprite {
     sprite := new(Sprite)
     sprite^ = init

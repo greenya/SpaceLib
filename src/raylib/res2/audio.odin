@@ -8,6 +8,7 @@ Audio :: struct {
     info: union { rl.Music, rl.Sound },
 }
 
+@require_results
 create_audio :: proc (file: File, type: enum { auto, music, sound } = .auto) -> ^Audio {
     type := type
     if type == .auto {

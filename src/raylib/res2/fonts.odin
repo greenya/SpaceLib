@@ -10,6 +10,7 @@ Font :: struct {
     font_rl         : rl.Font,
 }
 
+@require_results
 create_font_from_default :: proc (height := f32(-1)) -> ^Font {
     font_rl := rl.GetFontDefault()
     return create_font_from_rl_font(font_rl,
@@ -18,6 +19,7 @@ create_font_from_default :: proc (height := f32(-1)) -> ^Font {
     )
 }
 
+@require_results
 create_font_from_data :: proc (
     data                : [] byte,
     height              : f32,
@@ -34,6 +36,7 @@ create_font_from_data :: proc (
     )
 }
 
+@require_results
 create_font_from_rl_font :: proc (
     font_rl             : rl.Font,
     height              : f32,
@@ -65,11 +68,13 @@ destroy_font :: proc (font: ^Font, should_unload_rl_font := true) {
     free(font)
 }
 
+@require_results
 measure_text_for_rl_font :: proc (font: rl.Font, height, rune_spacing: f32, text: string) -> [2] f32 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     return rl.MeasureTextEx(font, cstr, height, rune_spacing)
 }
 
+@require_results
 measure_text_for_tr_font :: proc (font: ^terse.Font, text: string) -> [2] f32 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     return rl.MeasureTextEx((cast (^rl.Font) font.font_ptr)^, cstr, font.height, font.rune_spacing)
