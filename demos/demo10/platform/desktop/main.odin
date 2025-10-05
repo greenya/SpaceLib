@@ -27,9 +27,9 @@ main :: proc () {
     app.app_startup()
 
     for app.app_running() {
-        free_all(context.temp_allocator)
         app.app_tick()
         app.app_draw()
+        free_all(context.temp_allocator)
     }
 
     app.app_shutdown()

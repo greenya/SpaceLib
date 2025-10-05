@@ -41,6 +41,7 @@ platform_update :: proc "c" () {
     context = web_context
     app.app_tick()
     app.app_draw()
+    free_all(context.temp_allocator)
 }
 
 @export
