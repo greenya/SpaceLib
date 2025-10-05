@@ -1,6 +1,15 @@
 package demo8
 
+import "spacelib:core"
+import res "spacelib:raylib/res2"
 import "spacelib:ui"
+
+Vec2    :: core.Vec2
+Rect    :: core.Rect
+Color   :: core.Color
+Font    :: res.Font
+Sprite  :: res.Sprite
+NPatch  :: res.NPatch
 
 // Set of shortcuts to execute some command by path from the ui root.
 // This is removed from the UI so to keep this demo working, we just impl it here.

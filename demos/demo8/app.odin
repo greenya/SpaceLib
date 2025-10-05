@@ -2,20 +2,13 @@ package demo8
 
 import "core:fmt"
 import rl "vendor:raylib"
-import "spacelib:core"
 import "spacelib:raylib/draw"
-import "spacelib:raylib/res"
-import "spacelib:terse"
 import "spacelib:ui"
 
-Vec2 :: core.Vec2
-Rect :: core.Rect
-Color :: core.Color
-
 App :: struct {
-    res             : ^res.Res,
-    ui              : ^ui.UI,
+    res             : ^App_Res,
     data            : ^App_Data,
+    ui              : ^ui.UI,
     debug_drawing   : bool,
     debug_update_ui : bool,
 }
@@ -32,24 +25,8 @@ app_startup :: proc () {
 
     app = new(App)
 
-    app.res = res.create()
-    res.add_files(app.res, #load_directory("res/colors"))
-    res.add_files(app.res, #load_directory("res/fonts"))
-    res.add_files(app.res, #load_directory("res/sprites"))
-    res.load_colors(app.res)
-    res.load_fonts(app.res)
-    res.load_sprites(app.res, texture_size_limit={1024,2048}, texture_sprites_gap=2, texture_filter=.BILINEAR)
-    // res.print(app.res, {.textures,.sprites})
-
+    app_res_create()
     app_data_create()
-
-    terse.query_font = proc (name: string) -> ^terse.Font {
-        return &app.res.fonts[name].font_tr
-    }
-
-    terse.query_color = proc (name: string) -> core.Color {
-        return app.res.colors[name].value
-    }
 
     app.ui = ui.create(
         terse_draw_proc = proc (f: ^ui.Frame) {
@@ -63,6 +40,7 @@ app_startup :: proc () {
 
     app_menu_create()
     app_tooltip_create()
+
     ui.print_frame_tree(app.ui.root)
 }
 
@@ -71,9 +49,10 @@ app_shutdown :: proc () {
 
     app_tooltip_destroy()
     app_menu_destroy()
-    app_data_destroy()
     ui.destroy(app.ui)
-    res.destroy(app.res)
+
+    app_data_destroy()
+    app_res_destroy()
 
     free(app)
     app = nil
@@ -86,8 +65,6 @@ app_running :: proc () -> bool {
 }
 
 app_tick :: proc () {
-    free_all(context.temp_allocator)
-
     if app.debug_update_ui {
         t := app.ui.clock.tick
         w := f32(t%1000)/10
@@ -120,7 +97,7 @@ app_tick :: proc () {
 
 app_draw :: proc () {
     rl.BeginDrawing()
-    rl.ClearBackground(app.res.colors["bw_11"].value.rgba)
+    rl.ClearBackground(color("bw_11").rgba)
 
     ui.draw(app.ui)
 

@@ -11,6 +11,7 @@ main :: proc () {
     for app_running() {
         app_tick()
         app_draw()
+        free_all(context.temp_allocator)
     }
 
     app_shutdown()
