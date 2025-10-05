@@ -792,7 +792,7 @@ drag :: proc (f: ^Frame, info: Drag_Info) {
 
 @private
 sort_children :: #force_inline proc (parent: ^Frame) {
-    slice.sort_by(parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
+    slice.stable_sort_by(parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
         return f1.order < f2.order
     })
 }
