@@ -1,28 +1,37 @@
 package spacelib_raylib_res2
 
+import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 
-import "spacelib:core"
-
 Audio :: struct {
-    name: string,
     info: union { rl.Music, rl.Sound },
 }
 
-create_audios :: proc (
-    files           : [] File,
-    file_extensions := [] string { ".wav", ".ogg", ".mp3" },
-    created         : proc (a: ^Audio),
-) {
-    assert(created != nil)
-    for file in files {
-        dot_ext := core.string_suffix_from_slice(file.name, file_extensions)
-        audio := strings.contains(file.name, ".music.")\
-            ? create_audio_as_music(file, dot_ext)\
-            : create_audio_as_sound(file, dot_ext)
-        created(audio)
+create_audio :: proc (file: File, type: enum { auto, music, sound } = .auto) -> ^Audio {
+    type := type
+    if type == .auto {
+        type = strings.contains(file.name, ".music.")\
+            ? .music\
+            : .sound
     }
+
+    audio := new(Audio)
+
+    dot_ext := file_dot_ext(file.name)
+    fmt.assertf(dot_ext != "", "Audio file \"%s\" must contain extension", file.name)
+    dot_ext_cstr := strings.clone_to_cstring(dot_ext, context.temp_allocator)
+
+    #partial switch type {
+    case .music:
+        audio.info = rl.LoadMusicStreamFromMemory(dot_ext_cstr, raw_data(file.data), i32(len(file.data)))
+    case .sound:
+        wave_rl := rl.LoadWaveFromMemory(dot_ext_cstr, raw_data(file.data), i32(len(file.data)))
+        audio.info = rl.LoadSoundFromWave(wave_rl)
+        rl.UnloadWave(wave_rl)
+    }
+
+    return audio
 }
 
 destroy_audio :: proc (audio: ^Audio) {
@@ -33,28 +42,5 @@ destroy_audio :: proc (audio: ^Audio) {
     case rl.Sound: rl.UnloadSound(i)
     }
 
-    delete(audio.name)
     free(audio)
-}
-
-create_audio_as_music :: proc (file: File, dot_ext: string) -> ^Audio {
-    dot_ext_cstr := strings.clone_to_cstring(dot_ext, context.temp_allocator)
-    music_rl := rl.LoadMusicStreamFromMemory(dot_ext_cstr, raw_data(file.data), i32(len(file.data)))
-
-    a := new(Audio)
-    a.name = strings.clone(file.name[:strings.index_byte(file.name, '.')])
-    a.info = music_rl
-    return a
-}
-
-create_audio_as_sound :: proc (file: File, dot_ext: string) -> ^Audio {
-    dot_ext_cstr := strings.clone_to_cstring(dot_ext, context.temp_allocator)
-    wave_rl := rl.LoadWaveFromMemory(dot_ext_cstr, raw_data(file.data), i32(len(file.data)))
-    sound_rl := rl.LoadSoundFromWave(wave_rl)
-    rl.UnloadWave(wave_rl)
-
-    a := new(Audio)
-    a.name = strings.clone(file.name[:strings.index_byte(file.name, '.')])
-    a.info = sound_rl
-    return a
 }

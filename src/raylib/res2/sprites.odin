@@ -1,222 +1,27 @@
 package spacelib_raylib_res2
 
-import "base:runtime"
-import "core:fmt"
-import "core:slice"
-import "core:strings"
 import rl "vendor:raylib"
 
-import "spacelib:core"
-
 Sprite :: struct {
-    name    : string,
     wrap    : bool,
-    texture : ^Texture,
+    texture : Texture,
     info    : union { Rect, NPatch },
 }
 
 Texture :: rl.Texture
 NPatch  :: rl.NPatchInfo
 
-@private Rect :: core.Rect
-@private File :: runtime.Load_Directory_File
-
-@private Drawing_Cursor :: struct { x, y, gap, max_row_h, used_w, used_h: i32 }
-@private Drawing_Status :: enum { ok, width_overflow, height_overflow }
-
-create_sprite_atlas :: proc (
-    files           : [] File,
-    file_extensions := [] string { ".png", ".jpg", ".jpeg" },
-    name_format     := "%s",
-    size_limit      := [2] int { 1024, 1024 },
-    sprites_gap     := 1,
-    sprites_scale   := f32(1),
-    force_pot       := true,
-    filter          := rl.TextureFilter.POINT,
-    created_texture : proc (t: ^Texture),
-    created_sprite  : proc (s: ^Sprite),
-) {
-    assert(created_texture != nil)
-    assert(created_sprite != nil)
-
-    atlas := rl.GenImageColor(i32(size_limit.x), i32(size_limit.y), {})
-    cursor := Drawing_Cursor {
-        x   = i32(sprites_gap),
-        y   = i32(sprites_gap),
-        gap = i32(sprites_gap),
-    }
-
-    sprites_arr := make([dynamic] ^Sprite)
-    defer delete(sprites_arr)
-
-    for file in get_image_files_ordered_by_height(files, file_extensions, context.temp_allocator) {
-        file_ext := core.string_suffix_from_slice(file.name, file_extensions)
-        wrap := strings.contains(file.name, ".wrap.")
-
-        image := rl_load_image_from_bytes(file_ext, file.data)
-        defer rl.UnloadImage(image)
-
-        if sprites_scale != 1 {
-        assert(sprites_scale > 0 && sprites_scale < 1)
-            rl.ImageResize(&image, i32(f32(image.width)*sprites_scale), i32(f32(image.height)*sprites_scale))
-        }
-
-        status, image_rect_on_atlas := draw_image_on_image(&cursor, &atlas, image, wrap)
-        if status != .ok {
-            fmt.eprintfln("[!] %s failed: Unable to fit \"%s\": %v", #procedure, file.name, status)
-        }
-
-        sprite := new(Sprite)
-        sprite.name = fmt.aprintf(name_format, file.name[:strings.index_byte(file.name, '.')])
-        sprite.wrap = wrap
-        sprite.info = image_rect_on_atlas
-        append(&sprites_arr, sprite)
-    }
-
-    rl.ImageCrop(&atlas, { 0, 0, f32(cursor.used_w), f32(cursor.used_h) })
-    if force_pot do rl.ImageToPOT(&atlas, {255,0,255,255})
-
-    atlas_texture := rl.LoadTextureFromImage(atlas)
-    rl.UnloadImage(atlas)
-
-    if filter != .POINT {
-        rl.GenTextureMipmaps(&atlas_texture)
-        rl.SetTextureFilter(atlas_texture, filter)
-    }
-
-    texture: = new(Texture)
-    texture^ = atlas_texture
-    created_texture(texture)
-
-    for s in sprites_arr {
-        s.texture = texture
-        created_sprite(s)
-    }
+create_sprite :: proc (init: Sprite) -> ^Sprite {
+    sprite := new(Sprite)
+    sprite^ = init
+    return sprite
 }
 
 destroy_sprite :: proc (sprite: ^Sprite) {
     if sprite == nil do return
-    delete(sprite.name)
     free(sprite)
 }
 
-destroy_texture :: proc (texture: ^Texture) {
-    if texture == nil do return
-    rl.UnloadTexture(texture^)
-    free(texture)
-}
-
-// Takes any files and returns:
-// - only image files (filtered by file_extensions)
-// - ordered by image height (this improves arrangement of sprites on atlas... but not much to be honest :)
-@private
-get_image_files_ordered_by_height :: proc (
-    files           : [] File,
-    file_extensions : [] string,
-    allocator       := context.allocator,
-) -> [] File {
-    Info :: struct { file: File, image_height: int }
-    infos := make([dynamic] Info, context.temp_allocator)
-
-    for file in files {
-        file_ext := core.string_suffix_from_slice(file.name, file_extensions)
-        if file_ext == "" do continue
-
-        image := rl_load_image_from_bytes(file_ext, file.data)
-        defer rl.UnloadImage(image)
-
-        append(&infos, Info { file=file, image_height=int(image.height) })
-    }
-
-    slice.sort_by(infos[:], less=proc (i1, i2: Info) -> bool {
-        return i1.image_height < i2.image_height
-    })
-
-    list := make([dynamic] File, len=0, cap=len(infos), allocator=allocator)
-    for i in infos do append(&list, i.file)
-
-    return list[:]
-}
-
-@private
-draw_image_on_image :: proc (
-    cursor  : ^Drawing_Cursor,
-    target  : ^rl.Image,
-    source  : rl.Image,
-    wrap    : bool,
-) -> (
-    status              : Drawing_Status,
-    image_rect_on_atlas : Rect,
-) {
-    if cursor.x + source.width + cursor.gap > target.width {
-        cursor.x = cursor.gap
-        cursor.y += cursor.gap + cursor.max_row_h
-        cursor.max_row_h = 0
-    }
-
-    if cursor.x + source.width + cursor.gap > target.width {
-        return .width_overflow, {}
-    }
-
-    if cursor.y + source.height + cursor.gap > target.height {
-        return .height_overflow, {}
-    }
-
-    src_rect := rl.Rectangle { 0, 0, f32(source.width), f32(source.height) }
-    dst_rect := rl.Rectangle { f32(cursor.x), f32(cursor.y), f32(source.width), f32(source.height) }
-
-    if wrap {
-        // checker rect lines {{{
-        // wrap_rect := dst_rect
-        // wrap_rect.width += 2
-        // wrap_rect.height += 2
-        // rl.ImageDrawRectangleLines(target, wrap_rect, 1, {255,0,255,255})
-        // }}}
-
-        dst_rect.x += 1
-        dst_rect.y += 1
-
-        // top line
-        rl.ImageDraw(target, source,
-            {0,0,src_rect.width,1},
-            {dst_rect.x,dst_rect.y-1,dst_rect.width,1},
-            rl.WHITE,
-        )
-        // bottom line
-        rl.ImageDraw(target, source,
-            {0,src_rect.height-1,src_rect.width,1},
-            {dst_rect.x,dst_rect.y+dst_rect.height,dst_rect.width,1},
-            rl.WHITE,
-        )
-        // left line
-        rl.ImageDraw(target, source,
-            {0,0,1,src_rect.height},
-            {dst_rect.x-1,dst_rect.y,1,dst_rect.height},
-            rl.WHITE,
-        )
-        // right line
-        rl.ImageDraw(target, source,
-            {src_rect.width-1,0,1,src_rect.height},
-            {dst_rect.x+dst_rect.width,dst_rect.y,1,dst_rect.height},
-            rl.WHITE,
-        )
-    }
-
-    rl.ImageDraw(target, source, src_rect, dst_rect, rl.WHITE)
-
-    cursor.x += source.width + cursor.gap + (wrap?2:0)
-    cursor.max_row_h = max(cursor.max_row_h, source.height+(wrap?2:0))
-    cursor.used_w = max(cursor.used_w, cursor.x)
-    cursor.used_h = cursor.y + cursor.max_row_h + cursor.gap
-
-    return .ok, transmute (Rect) dst_rect
-}
-
-@private
-rl_load_image_from_bytes :: proc (file_ext: string, bytes: [] byte) -> rl.Image {
-    return rl.LoadImageFromMemory(
-        fileType = strings.clone_to_cstring(file_ext, context.temp_allocator),
-        fileData = raw_data(bytes),
-        dataSize = i32(len(bytes)),
-    )
+destroy_texture :: proc (texture: Texture) {
+    rl.UnloadTexture(texture)
 }
