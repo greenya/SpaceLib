@@ -58,7 +58,7 @@ Frame_Init :: struct {
     // Relative order of this frame to other siblings.
     // This value effects order of this frame in the `parent.children` array. It is not an index,
     // but a priority. Use `index()` to get the zero-based index. The higher `order`, the later
-    // frame drawn and earlier input tested (its above any lower-order sibling frame).
+    // frame drawn and earlier mouse input tested (its above any lower-order sibling frame).
     //
     // Note: adding all frames with the same `order` (say 0) will keep the order same the order
     // they were added. But when adding a frame with say order `-1` will ensure the new frame will
@@ -119,7 +119,7 @@ Frame_Init :: struct {
     enter: Frame_Proc,
 
     // Mouse status callback. Triggered when the mouse has left the `rect` of the frame and
-    // any of its children. The callback can expect `entered == false`, and `left_time` set.
+    // all of its children. The callback can expect `entered == false`, and `left_time` set.
     leave: Frame_Proc,
 
     // Mouse action callback. Triggered when the mouse button is clicked over the `rect`.
@@ -175,12 +175,10 @@ Frame :: struct {
     // Terse (measured text).
     //
     // Created from `text` using `terse.create()`. The UI might regenerate the value when needed,
-    // for example, when new `text` is set or the `rect` is updated.
+    // for example, when new `text` is set or the `rect` is updated. Note that `terse.create()`
+    // requires `terse.query_font` and `terse.query_color` callbacks to be set.
     //
-    // Terse uses following callbacks:
-    // - `UI.terse_query_font_proc`
-    // - `UI.terse_query_color_proc`
-    // - `UI.terse_draw_proc` (optional)
+    // Terse uses optional callback `UI.terse_draw_proc` for drawing when the frame's `draw` is not set.
     //
     // Enabled by `.terse` flag.
     terse: ^terse.Terse,
@@ -192,7 +190,7 @@ Frame :: struct {
     // Time (in seconds) when the mouse entered the `rect` of the frame or any of its children.
     entered_time: f32,
 
-    // Time (in seconds) when the mouse left the `rect` of the frame and any of its children.
+    // Time (in seconds) when the mouse left the `rect` of the frame and all of its children.
     left_time: f32,
 
     // Indicates that the frame has captured the mouse.
@@ -251,45 +249,63 @@ Flag :: enum {
     // The frame is hidden.
     // Hidden frames do not receive any input, and none of their callbacks (including `tick`) are triggered.
     // However, if the frame has an unfinished animation, its animation callback is still guaranteed
-    // to be called one final time with `anim.ratio == 1` to ensure proper finalization.
+    // to be called at least one final time with `anim.ratio == 1` to ensure proper finalization.
     hidden,
+
     // The frame is disabled.
     // The frame will not be able to capture mouse even with `.capture` flag.
-    // Action events `click`, `drag` and `wheel` will not be triggered.
+    //
+    // Mouse action events `click`, `drag` and `wheel` will not be triggered.
+    //
+    // Mouse status events `enter` and `leave` will continue trigger. Useful when you need to display
+    // a reason why the frame is disabled, e.g. show a tooltip for disabled button.
     disabled,
-    // The frame and all its children pass all input events.
+
+    // The frame and all its children pass all mouse input events.
     pass,
-    // The frame passes all input events. The children are not affected.
+
+    // The frame passes all mouse input events. The children are not affected.
     pass_self,
+
     // The frame blocks `wheel` event from propagation to deeper frames.
     block_wheel,
+
     // The frame can capture mouse. More in `Frame.captured`.
     capture,
+
     // The frame's `rect` will be used as a scissor for its children when drawing and calculating mouse hit.
     //
     // The following optional UI callbacks are used in drawing phase:
     // - `UI.scissor_set_proc`
     // - `UI.scissor_clear_proc`
     scissor,
+
     // The frame has trait of a check button. More in `Frame.selected`.
     check,
+
     // The frame has trait of a radio button. More in `Frame.selected`.
     radio,
+
     // The frame automatically hides itself when clicked outside of its `rect` or any of its children.
     auto_hide,
+
     // The frame's `text` is used for terse. More in `Frame.terse`.
     terse,
+
     // The frame's `size` is set to value of `terse.rect.w/h`.
-    // This flag can be used only with `.terse` flag.
+    // This flag should be used only with `.terse` flag.
     terse_size,
+
     // The frame's `size.y` is set to value of `terse.rect.h`.
-    // This flag can be used only with `.terse` flag.
+    // This flag should be used only with `.terse` flag.
     terse_height,
+
     // The frame's `size.x` is set to value of `terse.rect.w`.
-    // This flag can be used only with `.terse` flag.
+    // This flag should be used only with `.terse` flag.
     terse_width,
+
     // The frame's `terse.rect` is used for mouse hit test instead of `rect`.
-    // This flag can be used only with `.terse` flag.
+    // This flag should be used only with `.terse` flag.
     terse_hit_rect,
 }
 
