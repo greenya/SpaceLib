@@ -225,10 +225,10 @@ _debug_text_right :: proc (str: string, pos: Vec2, tint: Color) {
 
 @private
 _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
-    gray        :: Color(rl.GRAY)
-    red         :: Color(rl.RED)
-    yellow      :: Color(rl.YELLOW)
-    light_gray  :: Color(rl.LIGHTGRAY)
+    gray        :: transmute (Color) rl.GRAY
+    red         :: transmute (Color) rl.RED
+    yellow      :: transmute (Color) rl.YELLOW
+    light_gray  :: transmute (Color) rl.LIGHTGRAY
     return f.parent == nil ? gray : f.captured ? red : f.entered ? yellow : light_gray
 }
 
