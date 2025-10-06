@@ -14,41 +14,41 @@ Font :: struct {
 create_font_from_default :: proc (height := f32(-1)) -> ^Font {
     font_rl := rl.GetFontDefault()
     return create_font_from_rl_font(font_rl,
-        height              = height > 0 ? height : f32(font_rl.baseSize),
-        rune_spacing_ratio  = .1,
+        height          = height > 0 ? height : f32(font_rl.baseSize),
+        rune_spacing    = .1,
     )
 }
 
 @require_results
 create_font_from_data :: proc (
-    data                : [] byte,
-    height              : f32,
-    rune_spacing_ratio  := f32(0),
-    line_spacing_ratio  := f32(0),
-    filter              := rl.TextureFilter.POINT,
+    data            : [] byte,
+    height          : f32,
+    rune_spacing    := f32(0),
+    line_spacing    := f32(0),
+    filter          := rl.TextureFilter.POINT,
 ) -> ^Font {
     font_rl := rl.LoadFontFromMemory(".ttf", raw_data(data), i32(len(data)), i32(height), nil, 0)
     return create_font_from_rl_font(font_rl,
-        height              = height,
-        rune_spacing_ratio  = rune_spacing_ratio,
-        line_spacing_ratio  = line_spacing_ratio,
-        filter              = filter,
+        height          = height,
+        rune_spacing    = rune_spacing,
+        line_spacing    = line_spacing,
+        filter          = filter,
     )
 }
 
 @require_results
 create_font_from_rl_font :: proc (
-    font_rl             : rl.Font,
-    height              : f32,
-    rune_spacing_ratio  := f32(0),
-    line_spacing_ratio  := f32(0),
-    filter              := rl.TextureFilter.POINT,
+    font_rl         : rl.Font,
+    height          : f32,
+    rune_spacing    := f32(0),
+    line_spacing    := f32(0),
+    filter          := rl.TextureFilter.POINT,
 ) -> ^Font {
     font := new(Font)
     font^ = {
         height          = height,
-        rune_spacing    = height * rune_spacing_ratio,
-        line_spacing    = height * line_spacing_ratio,
+        rune_spacing    = height * rune_spacing,
+        line_spacing    = height * line_spacing,
         measure_text    = measure_text,
         font_rl         = font_rl,
     }
