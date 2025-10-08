@@ -224,9 +224,9 @@ add_dev_stat_perf_monitor :: proc () {
             point := bottom_left_corner + { f32(j)+10, -f32(100) }
             rect := Rect { f.rect.x, f.rect.y, f32(j)+50, point.y-f.rect.y }
             draw.rect(rect, core.alpha(core.gray5, .6))
-            draw.text("1 ms", point+{0,-20}, fonts.get(.default), core.gray3)
+            draw.text("1 ms", point+{0,-20}, 0, fonts.get(.default), core.gray3)
 
-            draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{45,-20}, fonts.get(.default), core.gray8)
+            draw.text(fmt.tprintf("FPS: %i", raylib.GetFPS()), point+{45,-20}, 0, fonts.get(.default), core.gray8)
         }
 
         stats := last_stats_buffer()
@@ -234,19 +234,19 @@ add_dev_stat_perf_monitor :: proc () {
 
         cursor.y -= 20
         frames_drawn_text := fmt.tprintf("frames: %i", stats.frames_drawn)
-        draw.text(frames_drawn_text, cursor, fonts.get(.default), core.gray8)
+        draw.text(frames_drawn_text, cursor, 0, fonts.get(.default), core.gray8)
 
         cursor.y -= 20
         scissors_set_text := fmt.tprintf("scissors: %i", stats.scissors_set)
-        draw.text(scissors_set_text, cursor, fonts.get(.default), core.gray8)
+        draw.text(scissors_set_text, cursor, 0, fonts.get(.default), core.gray8)
 
         cursor.y -= 20
         draw_time_text := fmt.tprintf("draw: %v", stats.draw_time)
-        draw.text(draw_time_text, cursor, fonts.get(.default), core.yellow)
+        draw.text(draw_time_text, cursor, 0, fonts.get(.default), core.yellow)
 
         cursor.y -= 20
         tick_time_text := fmt.tprintf("tick: %v", stats.tick_time)
-        draw.text(tick_time_text, cursor, fonts.get(.default), core.magenta)
+        draw.text(tick_time_text, cursor, 0, fonts.get(.default), core.magenta)
     }
 }
 
@@ -341,7 +341,7 @@ add_dev_stat_clock :: proc () {
         draw=proc (f: ^ui.Frame) {
             c := &f.ui.clock
             text := fmt.tprintf("tick: %v\ntime: %v\ndt: %v", c.tick, c.time, c.dt)
-            draw.text(text, {f.rect.x,f.rect.y}, fonts.get(.default), core.gray9)
+            draw.text(text, {f.rect.x,f.rect.y}, 0, fonts.get(.default), core.gray9)
         },
     })
 }
@@ -459,7 +459,7 @@ add_dev_stat_color_component_slider :: proc (parent: ^ui.Frame, name, text: stri
 
             _, data := ui.actor_slider(f)
             text := fmt.tprintf("%i%%", int((100*f32(data.idx))/f32(data.total-1)))
-            draw.text_aligned(text, core.rect_center(f.rect), .5, fonts.get(.default), core.gray1)
+            draw.text(text, core.rect_center(f.rect), .5, fonts.get(.default), core.gray1)
         },
     },
         { point=.left, rel_point=.left },
@@ -537,29 +537,23 @@ add_dev_stat_texture_atlas :: proc () {
 
     ui.add_frame(dev.window_content, {
         tick=proc (f: ^ui.Frame) {
-            tex := texture()
+            tex := sprites.texture()
             f.size = preview_scale * { f32(tex.width), f32(tex.height) }
         },
         draw=proc (f: ^ui.Frame) {
-            tex := texture()
+            tex := sprites.texture()
             tex_rect := Rect {0,0,f32(tex.width),f32(tex.height)}
             tex_rect_scaled := core.rect_scaled(tex_rect, preview_scale)
             dst_rect := f.rect
             dst_rect.w = tex_rect_scaled.w
             dst_rect.h = tex_rect_scaled.h
             draw.rect_lines(dst_rect, 1, core.red)
-            draw.texture(tex, tex_rect, dst_rect)
+            draw.texture(tex, dst_rect, tex_rect)
         },
     })
 
-    texture :: proc () -> raylib.Texture {
-        t := sprites.get_textures()
-        assert(len(t) > 0)
-        return t[0]^
-    }
-
     update_header_text :: proc () {
-        tex := texture()
+        tex := sprites.texture()
         text := fmt.tprintf("Texture atlas: %ix%i", tex.width, tex.height)
         ui.set_text(dev.texture_atlas_header, text)
     }
@@ -617,8 +611,8 @@ draw_frame_list_under_mouse :: proc () {
     for j, i in ui_.mouse_frames {
         path := ui.path_string(j, allocator=context.temp_allocator)
         text := fmt.tprintf("[%i] %s", i, path)
-        draw.text(text, pos+{1,2}, font, tint=core.gray1)
-        draw.text(text, pos, font, tint=core.gray9)
+        draw.text(text, pos+{1,2}, 0, font, tint=core.gray1)
+        draw.text(text, pos, 0, font, tint=core.gray9)
         pos.y += 20
     }
 }

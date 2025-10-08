@@ -16,7 +16,7 @@ draw_terse :: proc (t: ^terse.Terse, opacity := f32(1), color: Color = {}, offse
         tint := color.a > 0 ? color : w.color
         tint = core.alpha(tint, opacity)
 
-        draw.text(w.text, {rect.x,rect.y}, w.font, tint)
+        draw.text(w.text, {rect.x,rect.y}, 0, w.font, tint)
     }
 }
 

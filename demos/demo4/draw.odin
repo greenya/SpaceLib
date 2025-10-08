@@ -21,8 +21,6 @@ draw_sprite :: proc (id: Sprite_ID, rect: Rect, tint: core.Color) {
 
 draw_terse :: proc (f: ^ui.Frame, override_color: ^Color = nil, offset := Vec2 {}) {
     for word in f.terse.words {
-        // if word.in_group do continue
-
         rect := core.rect_moved(word.rect, offset)
         tint := override_color != nil ? override_color.val : word.color
         if word.is_icon {
@@ -30,9 +28,7 @@ draw_terse :: proc (f: ^ui.Frame, override_color: ^Color = nil, offset := Vec2 {
             draw_sprite(sprite_id, rect, tint)
         } else {
             pos := Vec2 { rect.x, rect.y }
-            font := word.font
-            font_rl := (cast (^rl.Font) font.font_ptr)^
-            draw.text(word.text, pos, font_rl, font.height, font.rune_spacing, tint)
+            draw.text(word.text, pos, 0, word.font, tint)
         }
     }
 }

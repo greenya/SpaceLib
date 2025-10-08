@@ -10,20 +10,20 @@ import "spacelib:ui"
 draw_sprite :: proc (name: string, rect: Rect, tint: Color) {
     sprite_ := sprite(name)
     switch info in sprite_.info {
-    case Rect   : if sprite_.wrap   do draw.texture_wrap    (sprite_.texture, info, rect, tint=tint)
-                  else              do draw.texture         (sprite_.texture, info, rect, tint=tint)
-    case NPatch :                      draw.texture_npatch  (sprite_.texture, info, rect, tint=tint)
+    case Rect   : if sprite_.wrap   do draw.texture_wrap    (sprite_.texture, rect, info, tint=tint)
+                  else              do draw.texture         (sprite_.texture, rect, info, tint=tint)
+    case Patch  :                      draw.texture_patch   (sprite_.texture, rect, info, tint=tint)
     }
 }
 
 draw_text_center :: proc (text: string, rect: Rect, font_name: string, color: Color) {
     font_tr := &font(font_name).font_tr
-    draw.text_aligned(text, core.rect_center(rect), .5, font_tr, color)
+    draw.text(text, core.rect_center(rect), .5, font_tr, color)
 }
 
 draw_text_right :: proc (text: string, pos: Vec2, font_name: string, color: Color) {
     font_tr := &font(font_name).font_tr
-    draw.text_aligned(text, pos, {1,0}, font_tr, color)
+    draw.text(text, pos, {1,0}, font_tr, color)
 }
 
 draw_icon_key :: proc (text: string, rect: Rect, opacity: f32) {
@@ -53,7 +53,7 @@ draw_terse :: proc (f: ^ui.Frame, override_color := "", offset := Vec2 {}) {
             else                                    do draw_sprite(word.text, rect, tint)
         } else if word.text != " " {
             pos := Vec2 { rect.x, rect.y }
-            draw.text(word.text, pos, word.font, tint)
+            draw.text(word.text, pos, 0, word.font, tint)
         }
     }
 }

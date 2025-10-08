@@ -7,7 +7,7 @@ import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:core/tracking_allocator"
 import "spacelib:raylib/draw"
-import res "spacelib:raylib/res2"
+import "spacelib:raylib/res"
 import "spacelib:ui"
 
 Vec2 :: core.Vec2
@@ -35,9 +35,9 @@ main :: proc () {
     rl.InitWindow(1280, 720, "spacelib demo 7")
     defer rl.CloseWindow()
 
-    app.fonts.default   = res.create_font_from_data(file_font_regular, height=24, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
-    app.fonts.heavy     = res.create_font_from_data(file_font_heavy, height=24, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
-    app.fonts.huge      = res.create_font_from_data(file_font_heavy, height=72, rune_spacing_ratio=.02, line_spacing_ratio=-.25)
+    app.fonts.default   = res.create_font_from_data(file_font_regular, height=24, rune_spacing=.02, line_spacing=-.25)
+    app.fonts.heavy     = res.create_font_from_data(file_font_heavy, height=24, rune_spacing=.02, line_spacing=-.25)
+    app.fonts.huge      = res.create_font_from_data(file_font_heavy, height=72, rune_spacing=.02, line_spacing=-.25)
     defer {
         res.destroy_font(app.fonts.default)
         res.destroy_font(app.fonts.heavy)
@@ -119,7 +119,7 @@ main :: proc () {
 
         draw.text(
             fmt.tprintf("clock: %#v", app.ui.clock),
-            {10,30}, app.fonts.default, Color {255,255,255,255},
+            {10,30}, 0, app.fonts.default, Color {255,255,255,255},
         )
 
         rl.DrawFPS(10, 10)
@@ -143,7 +143,7 @@ click_toggle_popup :: proc (f: ^ui.Frame) {
 draw_label :: proc (f: ^ui.Frame) {
     font := app.fonts.heavy
     tx_color := core.alpha({255,255,255,255}, f.opacity)
-    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
+    draw.text(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
 }
 
 draw_button :: proc (f: ^ui.Frame) {
@@ -159,7 +159,7 @@ draw_button :: proc (f: ^ui.Frame) {
 
     draw.rect(rect1, bg_color)
     draw.rect_lines(rect1, 4, core.brightness(bg_color, f.entered ? .6 : .3))
-    draw.text_aligned(f.text, core.rect_center(rect1)+{0,4}, .5, font, tx_color)
+    draw.text(f.text, core.rect_center(rect1)+{0,4}, .5, font, tx_color)
 }
 
 draw_panel :: proc (f: ^ui.Frame) {
@@ -175,7 +175,7 @@ draw_panel_header :: proc (f: ^ui.Frame) {
     ln_color := core.alpha(core.brightness({140,180,220,255}, .4), f.opacity)
 
     draw.rect(core.rect_bar_bottom(core.rect_inflated(f.rect, {-40,0}), 4), ln_color)
-    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
+    draw.text(f.text, core.rect_center(f.rect)+{0,8}, .5, font, tx_color)
 }
 
 draw_slot :: proc (f: ^ui.Frame) {
@@ -187,11 +187,11 @@ draw_slot :: proc (f: ^ui.Frame) {
         if f.anim.tick == nil {
             font2 := app.fonts.default
             sub_text := fmt.tprintf("Hello, %s!", f.text)
-            draw.text_aligned(sub_text, core.rect_center(f.rect)+{0,46}, .5, font2, tx_color)
+            draw.text(sub_text, core.rect_center(f.rect)+{0,46}, .5, font2, tx_color)
         }
     }
 
-    draw.text_aligned(f.text, core.rect_center(f.rect)+{0,6}, .5, font, tx_color)
+    draw.text(f.text, core.rect_center(f.rect)+{0,6}, .5, font, tx_color)
 }
 
 anim_show_slide_up :: proc (f: ^ui.Frame) {

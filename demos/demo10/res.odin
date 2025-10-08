@@ -1,8 +1,8 @@
 package demo10
 
-import      "spacelib:core"
-import res  "spacelib:raylib/res2"
-import      "spacelib:terse"
+import "spacelib:core"
+import "spacelib:raylib/res"
+import "spacelib:terse"
 
 color_bg    :: core.gray2
 color_panel :: core.gray4

@@ -86,7 +86,7 @@ draw_button_radio_with_text :: proc (f: ^ui.Frame) {
     draw_button_radio_rect(f)
 
     tx_color := colors.get(f.selected ? .bg1 : .primary)
-    draw_text_aligned(f.text, core.rect_center(f.rect), .5, fonts.get(.text_4r), tx_color)
+    draw_text(f.text, core.rect_center(f.rect), .5, fonts.get(.text_4r), tx_color)
 }
 
 draw_button_radio_pin :: proc (f: ^ui.Frame) {
@@ -146,7 +146,7 @@ draw_button_dropdown_item :: proc (f: ^ui.Frame) {
     q_e_rect.x += aox/2
     q_rect := core.ease_rect(q_s_rect, q_e_rect, hv_ratio)
     q_color := core.ease_color({}, colors.get(.bg0), hv_ratio)
-    draw_text_aligned("?", core.rect_center(q_rect), .5, fonts.get(.text_4l), q_color)
+    draw_text("?", core.rect_center(q_rect), .5, fonts.get(.text_4l), q_color)
 }
 
 draw_conversation_reply :: proc (f: ^ui.Frame) {

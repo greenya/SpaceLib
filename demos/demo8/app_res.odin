@@ -2,13 +2,13 @@ package demo8
 
 import "core:fmt"
 import "spacelib:core"
-import res "spacelib:raylib/res2"
+import "spacelib:raylib/res"
 import "spacelib:terse"
 
 App_Res :: struct {
     colors  : map [string] Color,
     fonts   : map [string] ^Font,
-    sprites : res.Sprite_Atlas,
+    atlas   : ^res.Atlas,
 }
 
 app_res_create :: proc () {
@@ -28,7 +28,7 @@ app_res_destroy :: proc () {
     for _, font in app.res.fonts do res.destroy_font(font)
     delete(app.res.fonts)
 
-    res.destroy_sprite_atlas(app.res.sprites)
+    res.destroy_atlas(app.res.atlas)
 
     free(app.res)
     app.res = nil
@@ -86,17 +86,17 @@ app_res_create_fonts :: proc () {
     f["text_18_bold"]   = from_data(font_file_bold, height=18, filter=.BILINEAR)
     f["text_20"]        = from_data(font_file_regular, height=20, filter=.BILINEAR)
     f["text_24"]        = from_data(font_file_bold, height=24, filter=.BILINEAR)
-    f["text_24_sparse"] = from_data(font_file_bold, height=24, rune_spacing_ratio=.15, filter=.BILINEAR)
+    f["text_24_sparse"] = from_data(font_file_bold, height=24, rune_spacing=.15, filter=.BILINEAR)
     f["text_32"]        = from_data(font_file_bold, height=32, filter=.BILINEAR)
     f["text_40"]        = from_data(font_file_bold, height=40, filter=.BILINEAR)
 }
 
 app_res_create_sprites :: proc () {
-    assert(app.res.sprites == nil)
+    assert(app.res.atlas == nil)
 
-    app.res.sprites = res.create_sprite_atlas(
+    app.res.atlas = res.create_atlas(
         files       = #load_directory("res/sprites"),
-        size_limit  = {1024,2048},
+        size_limit  = { 1024, 2048 },
         gap         = 2,
         filter      = .BILINEAR,
     )
@@ -116,6 +116,6 @@ font :: #force_inline proc (name: string) -> ^Font {
 }
 
 sprite :: #force_inline proc (name: string) -> ^Sprite {
-    fmt.assertf(name in app.res.sprites, "Unknown sprite \"%s\"", name)
-    return app.res.sprites[name]
+    fmt.assertf(name in app.res.atlas.sprites, "Unknown sprite \"%s\"", name)
+    return app.res.atlas.sprites[name]
 }

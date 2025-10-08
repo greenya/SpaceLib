@@ -2,10 +2,10 @@ package partials
 
 import "core:fmt"
 import "core:strings"
-import "vendor:raylib"
 
 import "spacelib:core"
 import "spacelib:raylib/draw"
+import "spacelib:raylib/res"
 import "spacelib:ui"
 
 import "../colors"
@@ -18,23 +18,24 @@ _ :: fmt
 @private Vec2 :: core.Vec2
 @private Rect :: core.Rect
 @private Color :: core.Color
+@private Patch :: res.Patch
 
-draw_text_aligned :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Color, drop_shadow := false) {
+draw_text :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Color, drop_shadow := false) {
     if drop_shadow {
         sh_color := colors.get(.bg1)
         sh_color.a = color.a
         sh_pos := pos + { font.height/30, font.height/15 }
-        draw.text_aligned(text, sh_pos, align, &font.font_tr, sh_color)
+        draw.text(text, sh_pos, align, &font.font_tr, sh_color)
     }
-    draw.text_aligned(text, pos, align, &font.font_tr, color)
+    draw.text(text, pos, align, &font.font_tr, color)
 }
 
 draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit_align := draw.Texture_Fit_Align.center, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
-    case Rect               : if sprite.wrap    do draw.texture_wrap    (sprite.tex^, info, rect, tint=tint)
-                              else              do draw.texture         (sprite.tex^, info, rect, fit=fit, fit_align=fit_align, tint=tint)
-    case raylib.NPatchInfo  :                      draw.texture_npatch  (sprite.tex^, info, rect, tint=tint)
+    case Rect   : if sprite.wrap    do draw.texture_wrap    (sprite.texture, rect, info, tint=tint)
+                  else              do draw.texture         (sprite.texture, rect, info, fit=fit, fit_align=fit_align, tint=tint)
+    case Patch  :                      draw.texture_patch   (sprite.texture, rect, info, tint=tint)
     }
 }
 
@@ -64,7 +65,7 @@ draw_terse :: proc (f: ^ui.Frame, color: Color = {}, offset := Vec2 {}, drop_sha
                 case                                    : draw_sprite(word.text, rect, tint=tint)
                 }
             } else if word.text != "" && word.text != " " {
-                draw.text(word.text, {rect.x,rect.y}, word.font, tint)
+                draw.text(word.text, {rect.x,rect.y}, 0, word.font, tint)
             }
         }
     }
@@ -81,7 +82,7 @@ draw_icon_key :: proc (text: string, rect: Rect, opacity: f32, shape: enum {box,
         tx_color := colors.get(.bg0, alpha=opacity)
         switch text {
         case "__"   : draw_sprite("space_bar", core.rect_moved(rect, {0,rect.h/10}), tint=tx_color)
-        case        : draw_text_aligned(text, core.rect_center(rect), .5, fonts.get_by_name(font), tx_color)
+        case        : draw_text(text, core.rect_center(rect), .5, fonts.get_by_name(font), tx_color)
         }
     }
 }
@@ -171,7 +172,7 @@ draw_image_placeholder :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 
     tx_color := core.alpha(core.gray3, f.opacity)
-    draw_text_aligned(f.text, core.rect_center(f.rect), .5, fonts.get(.text_4l), tx_color)
+    draw_text(f.text, core.rect_center(f.rect), .5, fonts.get(.text_4l), tx_color)
 }
 
 draw_hexagon_rect :: proc (f: ^ui.Frame) {
@@ -312,8 +313,8 @@ draw_gradient_fade_right_rect :: proc (f: ^ui.Frame) {
 draw_game_title :: proc (f: ^ui.Frame) {
     color := colors.get(.primary, alpha=f.opacity*.3)
     center := core.rect_center(f.rect)
-    draw_text_aligned("D    U    N    E", center, {.5,.75}, fonts.get(.text_8l), color)
-    draw_text_aligned("A  W  A  K  E  N  I  N  G", center, {.5,0}, fonts.get(.text_6l), color)
+    draw_text("D    U    N    E", center, {.5,.75}, fonts.get(.text_8l), color)
+    draw_text("A  W  A  K  E  N  I  N  G", center, {.5,0}, fonts.get(.text_6l), color)
 }
 
 draw_scrollbar_track :: proc (f: ^ui.Frame) {
@@ -605,7 +606,7 @@ draw_slot_volume :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32, 
         text := fmt.tprintf("%sV", volume_text)
         text_pos := core.rect_bottom_right(rect) + {4,6}
         text_font := fonts.get(.text_4l)
-        draw_text_aligned(text, text_pos, {0,1}, text_font, colors.get(.primary, alpha=opacity), drop_shadow=true)
+        draw_text(text, text_pos, {0,1}, text_font, colors.get(.primary, alpha=opacity), drop_shadow=true)
     } else {
         if slot.item.durability > 0                 do rect.y -= container_slot_progress_bar_h
         if slot.item.liquid_container.type != .none do rect.y -= container_slot_progress_bar_h
@@ -632,7 +633,7 @@ draw_slot_tier :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     text_pos := core.rect_top_right(rect) + {-10,2}
     text_font := fonts.get(.text_4l)
     text_color := colors.get(.primary, brightness=-.4, alpha=opacity)
-    draw_text_aligned(text, text_pos, {1,0}, text_font, text_color, drop_shadow=true)
+    draw_text(text, text_pos, {1,0}, text_font, text_color, drop_shadow=true)
 }
 
 draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
@@ -651,7 +652,7 @@ draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: 
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
     text_color := colors.get(.primary, alpha=opacity)
-    draw_text_aligned(text, text_pos, 1, text_font, text_color, drop_shadow=true)
+    draw_text(text, text_pos, 1, text_font, text_color, drop_shadow=true)
 }
 
 container_slot_progress_bar_h :: 4
@@ -787,7 +788,7 @@ draw_container_volume_bar_arrow :: proc (f: ^ui.Frame) {
     draw_sprite("label_arrow_right", f.rect, tint=color)
 
     tx_pos := core.rect_right(f.rect) - {15,0}
-    draw_text_aligned(f.text, tx_pos, {1,.5}, fonts.get(.text_4m), color)
+    draw_text(f.text, tx_pos, {1,.5}, fonts.get(.text_4m), color)
 }
 
 draw_tooltip_image :: proc (f: ^ui.Frame) {

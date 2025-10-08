@@ -106,8 +106,6 @@ app_draw :: proc () {
 }
 
 app_draw_frame_stats :: proc () {
-    // draw.debug_res_texture(app.res, "sprites", {10,100}, .25)
-
     rect_w, rect_h :: 210, 172
     rect := rl.Rectangle { 10, app.ui.root.rect.h-rect_h-72, rect_w, rect_h }
     rl.DrawRectangleRec(rect, { 40, 10, 20, 255 })

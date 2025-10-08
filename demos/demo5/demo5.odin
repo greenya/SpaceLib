@@ -116,7 +116,7 @@ draw_terse_text :: proc (t: ^terse.Terse, debug := false) {
             pos := Vec2 { word.rect.x, word.rect.y }
             font := word.font
             font_rl := (cast (^rl.Font) font.font_ptr)^
-            draw.text(word.text, pos, font_rl, font.height, font.rune_spacing, word.color)
+            draw.text(word.text, pos, 0, font_rl, font.height, font.rune_spacing, word.color)
         }
     }
 }

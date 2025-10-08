@@ -1,8 +1,9 @@
 package interface
 
+import rl "vendor:raylib"
+
 import "spacelib:core"
 import "spacelib:raylib/draw"
-import "spacelib:raylib/env"
 import "spacelib:terse"
 import "spacelib:ui"
 
@@ -33,18 +34,18 @@ create :: proc () {
     }
 
     ui_ = ui.create(
-        root_rect = env.window_rect(),
+        root_rect = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
         terse_draw_proc = #force_inline proc (f: ^ui.Frame) {
             partials.draw_terse(f)
         },
         scissor_set_proc = #force_inline proc (r: core.Rect) {
-            if !env.key_down(.LEFT_CONTROL) do env.scissor_set(r)
+            if !rl.IsKeyDown(.LEFT_CONTROL) do rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
         },
         scissor_clear_proc = #force_inline proc () {
-            if !env.key_down(.LEFT_CONTROL) do env.scissor_clear()
+            if !rl.IsKeyDown(.LEFT_CONTROL) do rl.EndScissorMode()
         },
         frame_overdraw_proc = #force_inline proc (f: ^ui.Frame) {
-            if !env.key_down(.LEFT_CONTROL) do return
+            if !rl.IsKeyDown(.LEFT_CONTROL) do return
             draw.debug_frame(f)
         },
     )
@@ -76,11 +77,11 @@ destroy :: proc () {
 
 tick :: proc () {
     ui.tick(ui_,
-        root_rect   = env.window_rect(),
+        root_rect   = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
         mouse       = {
-            pos         = env.mouse_pos(),
-            wheel_dy    = env.mouse_wheel_dy(),
-            lmb_down    = env.mouse_button_down(.LEFT),
+            pos         = rl.GetMousePosition(),
+            wheel_dy    = rl.GetMouseWheelMove(),
+            lmb_down    = rl.IsMouseButtonDown(.LEFT),
         },
     )
 }
