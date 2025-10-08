@@ -69,18 +69,18 @@ destroy_font :: proc (font: ^Font, should_unload_rl_font := true) {
 }
 
 @require_results
-measure_text_for_rl_font :: proc (font: rl.Font, height, rune_spacing: f32, text: string) -> [2] f32 {
+measure_text_by_rl_font :: proc (font: rl.Font, height, rune_spacing: f32, text: string) -> [2] f32 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     return rl.MeasureTextEx(font, cstr, height, rune_spacing)
 }
 
 @require_results
-measure_text_for_tr_font :: proc (font: ^terse.Font, text: string) -> [2] f32 {
+measure_text_by_tr_font :: proc (font: ^terse.Font, text: string) -> [2] f32 {
     cstr := strings.clone_to_cstring(text, context.temp_allocator)
     return rl.MeasureTextEx((cast (^rl.Font) font.font_ptr)^, cstr, font.height, font.rune_spacing)
 }
 
 measure_text :: proc {
-    measure_text_for_tr_font,
-    measure_text_for_rl_font,
+    measure_text_by_tr_font,
+    measure_text_by_rl_font,
 }
