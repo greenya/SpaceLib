@@ -35,46 +35,35 @@ Texture_Fit_Align :: enum {
 
 texture :: proc (
     tex         : rl.Texture,
-    src         : Rect,
     dst         : Rect,
+    src         : Rect,
     fit         := Texture_Fit.fill,
     fit_align   := Texture_Fit_Align.center,
     tint        := core.white,
 ) {
-    src := src
     dst := dst
+    src := src
 
     if fit != .fill {
         fit_src_to_dst(&src, &dst, fit, fit_align)
     }
 
+    dst_rl := transmute (rl.Rectangle) dst
     src_rl := transmute (rl.Rectangle) src
-    dst_rl := transmute (rl.Rectangle) dst
-    tint_rl := rl.Color(tint)
-    rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
-}
-
-texture_full :: proc (
-    tex     : rl.Texture,
-    dst     : Rect,
-    tint    := core.white,
-) {
-    src_rl := rl.Rectangle { 0, 0, f32(tex.width), f32(tex.height) }
-    dst_rl := transmute (rl.Rectangle) dst
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
 }
 
 texture_rot :: proc (
     tex         : rl.Texture,
-    src         : Rect,
     dst         : Rect,
+    src         : Rect,
     origin_uv   := Vec2 {},
     rot_rad     := f32(0),
     tint        := core.white,
 ) {
-    src_rl := transmute (rl.Rectangle) src
     dst_rl := transmute (rl.Rectangle) dst
+    src_rl := transmute (rl.Rectangle) src
     origin := Vec2 { origin_uv.x * src.w, origin_uv.y * src.h }
     rot_deg := 90 + math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
@@ -83,13 +72,13 @@ texture_rot :: proc (
 
 texture_wrap :: proc (
     tex     : rl.Texture,
-    src     : Rect,
     dst     : Rect,
+    src     : Rect,
     tint    := core.white,
 ) {
     is_whole_tex_used := src.x == 0 && src.y == 0 && i32(src.w) == tex.width && i32(src.h) == tex.height
     if is_whole_tex_used {
-        texture(tex, Rect { 0, 0, dst.w, dst.h }, dst, tint=tint)
+        texture(tex, dst, Rect { 0, 0, dst.w, dst.h }, tint=tint)
         return
     }
 
@@ -111,18 +100,29 @@ texture_wrap :: proc (
     }
 }
 
-// TODO: change "rot_deg" to "rot_rad"
-texture_npatch :: proc (
+texture_patch :: proc (
     tex     : rl.Texture,
-    info    : rl.NPatchInfo,
     dst     : Rect,
+    info    : rl.NPatchInfo,
     origin  := Vec2 {},
-    rot_deg := f32(0),
+    rot_rad := f32(0),
     tint    := core.white,
 ) {
     dst_rl := transmute (rl.Rectangle) dst
+    rot_deg := 90 + math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
     rl.DrawTextureNPatch(tex, info, dst_rl, origin, rot_deg, tint_rl)
+}
+
+texture_all :: proc (
+    tex     : rl.Texture,
+    dst     : Rect,
+    tint    := core.white,
+) {
+    dst_rl := transmute (rl.Rectangle) dst
+    src_rl := rl.Rectangle { 0, 0, f32(tex.width), f32(tex.height) }
+    tint_rl := rl.Color(tint)
+    rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
 }
 
 @private
