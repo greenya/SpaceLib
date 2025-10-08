@@ -45,10 +45,10 @@ demo8: mkdir
 	@odin run demos/demo8 -out:build/demo8${os_ext} ${debug_args}
 
 demo9: mkdir
-	@odin run demos/demo9/build/desktop -out:build/demo9${os_ext} ${debug_args}
+	@odin run demos/demo9/platform/desktop -out:build/demo9${os_ext} ${debug_args}
 
 demo9_web:
-	@cd demos\demo9\build && web.bat
+	@cd demos\demo9\platform && build_web.bat
 
 demo10: mkdir
 	@odin run demos/demo10/platform/desktop -out:build/demo10${os_ext} ${debug_args}
