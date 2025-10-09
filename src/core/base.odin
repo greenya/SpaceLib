@@ -260,6 +260,14 @@ vec_on_rotated_rect :: #force_inline proc (rect: Rect, origin_uv: Vec2, rot_rad:
     return { wx, wy }
 }
 
+// Returns angle in radians between -PI to PI, where 0 is {1,0}.
+//
+// Note: This is close to `core:math/linalg.angle_between(vec, {1,0})`, which returns
+//       the smallest angle and result is never full circle, but a semi-circle, e.g. from 0 to PI.
+vec_angle :: #force_inline proc (vec: Vec2) -> f32 {
+    return math.atan2(-vec.y, vec.x)
+}
+
 fit_target_size :: #force_inline proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
     scale = min(screen.x/target.x, screen.y/target.y)
     render_w, render_h := target.x*scale, target.y*scale
