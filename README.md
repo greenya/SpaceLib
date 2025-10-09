@@ -45,10 +45,6 @@ TODO: terse: make line alignment to be stack-based (open and close) OR at least 
 
     Ugly and stupid :)
 
-TODO: core: add support for HSL color format
-
-    https://www.youtube.com/watch?v=vvPklRN0Tco
-
 TODO: terse: add support for <overflow> command
 
     allow to have text fit to any size without need for scrollbar; very needed for dropdown boxes and similar limited space controls; at least to be able to use it for one liners (not wrapping text); ideally support two modes:
@@ -226,27 +222,3 @@ ui.set_text(ui.get(dialog, "buttons/button_1"), "Confirm")
 ui.set_text(ui.get(dialog, "buttons/button_2"), "Cancel")
 ui.show(dialog)
 ```
-
-TODO: [?] terse: maybe add support for nested groups? need to see good reason with example first
-
------------------------------------------
----- maybe remove raylib/res package ----
------------------------------------------
-
-TODO: raylib/res: when printing error about "Generate atlas texture failed: Unable to fit SPRITE", set its coords to lower right corner of the texture, so it will be like 1x1 of color (255,0,255,255) and should be visible on the screen
-
-TODO: raylib/res: sprite: add support for animations (Sprite.info variant)
-
-    would be nice to support animation names, so its possible to express something like:
-    draw_sprite(character_sprite.anim.seq["walk"], rect, tint)
-    simple animation has single sequence named "default"
-
-TODO: [?] raylib/res: audio: maybe add support for variations
-
-    e.g. book_flip-1, book_flip-2, book_flip-3 should be single sound "book_flip" with 3 variations; the idea is to use rl.PlaySound(app.res.sounds["bool_flip"]) and get random variation
-
-    // [?] maybe we need "spacelib:raylib/audio" package to have "play_random(list: [] rl.Sound)"
-    // ...maybe not
-    // [?] maybe just load "book_flip-1" as "book_flip", and extend Sound struct to have
-    // "variations: [dynamic] rl.Sound"; keep "using sound_rl" so its possible to just
-    // rl.PlaySound() the Sound value directly.

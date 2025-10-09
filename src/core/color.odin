@@ -77,6 +77,39 @@ color_to_hex :: proc (c: Color, allocator := context.allocator) -> string {
     else            do return fmt.aprintf("#%02x%02x%02x", c.r, c.g, c.b, allocator=allocator)
 }
 
+// - `hue` from 0 to 1 (color wheel: 0 - red, 1/6 - yellow, 2/6 - green, 3/6 - cyan, 4/6 - blue, 5/6 - magenta)
+// - `saturation` from 0 to 1 (0 - grayscale, 1 - no change)
+// - `lightness` from 0 to 1 (0 - full black, .5 - no change, 1 - full white)
+hsl_to_vec3 :: proc (hue: f32, saturation := f32(1), lightness := f32(.5)) -> Vec3 {
+    if saturation == 0 {
+        return { lightness, lightness, lightness }
+    } else {
+        channel_max := lightness < .5\
+            ? lightness * (1+saturation)\
+            : lightness + saturation - lightness*saturation
+        channel_min := 2*lightness - channel_max
+        return {
+            hue_to_channel(channel_min, channel_max, hue + 1./3),
+            hue_to_channel(channel_min, channel_max, hue),
+            hue_to_channel(channel_min, channel_max, hue - 1./3),
+        }
+    }
+
+    hue_to_channel :: proc (channel_min, channel_max, hue_pos: f32) -> f32 {
+        hue_pos := hue_pos
+
+        if hue_pos < 0 do hue_pos += 1
+        if hue_pos > 1 do hue_pos -= 1
+
+        switch {
+        case hue_pos<1./6   : return channel_min + (channel_max-channel_min) * 6 * hue_pos
+        case hue_pos<1./2   : return channel_max
+        case hue_pos<2./3   : return channel_min + (channel_max-channel_min) * 6 * (2./3 - hue_pos)
+        case                : return channel_min
+        }
+    }
+}
+
 // `ratio`: multiplier for current alpha, e.g. `0.0` (fully transparent) -> `1.0` (unchanged)
 alpha :: #force_inline proc (c: Color, ratio: f32) -> Color {
     c := c
