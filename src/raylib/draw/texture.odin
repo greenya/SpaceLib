@@ -64,8 +64,8 @@ texture_rot :: proc (
 ) {
     dst_rl := transmute (rl.Rectangle) dst
     src_rl := transmute (rl.Rectangle) src
-    origin := Vec2 { origin_uv.x * src.w, origin_uv.y * src.h }
-    rot_deg := 90 + math.to_degrees(rot_rad)
+    origin := Vec2 { origin_uv.x * src.w, origin_uv.y * abs(src.h) } // abs() for possible render target texture flipped h
+    rot_deg := math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_deg, tint_rl)
 }
@@ -115,12 +115,14 @@ texture_patch :: proc (
 }
 
 texture_all :: proc (
-    tex     : rl.Texture,
-    dst     : Rect,
-    tint    := core.white,
+    tex         : rl.Texture,
+    dst         : Rect,
+    flip_src_h  := false,
+    tint        := core.white,
 ) {
     dst_rl := transmute (rl.Rectangle) dst
     src_rl := rl.Rectangle { 0, 0, f32(tex.width), f32(tex.height) }
+    if flip_src_h do src_rl.height = -src_rl.height
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
 }
