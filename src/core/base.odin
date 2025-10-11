@@ -269,6 +269,22 @@ vec_angle :: #force_inline proc (vec: Vec2) -> f32 {
     return math.atan2(-vec.y, vec.x)
 }
 
+lines_intersection :: proc (start1, end1, start2, end2: Vec2) -> (pos: Vec2, ok: bool) {
+    r := end1 - start1
+    s := end2 - start2
+    rxs := linalg.cross(r, s)
+
+    if abs(rxs) < .000001 do return
+
+    qp := start2 - start1
+    t := linalg.cross(qp, s) / rxs
+    u := linalg.cross(qp, r) / rxs
+
+    if t<0 || t>1 || u<0 || u>1 do return
+
+    return start1 + r*t, true
+}
+
 fit_target_size :: #force_inline proc (screen_size: Vec2, target_size: Vec2) -> (render_scale: f32, render_rect: Rect) {
     render_scale = min(screen_size.x/target_size.x, screen_size.y/target_size.y)
     render_w, render_h := target_size.x*render_scale, target_size.y*render_scale
