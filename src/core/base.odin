@@ -107,6 +107,7 @@ rect_scaled_bottom_right:: #force_inline proc (r: Rect, s: Vec2) -> Rect { retur
 
 rect_from_size      :: #force_inline proc (size: Vec2)          -> Rect { return { 0, 0, size.x, size.y } }
 rect_from_center    :: #force_inline proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x/2, v.y-size.y/2, size.x, size.y } }
+rect_from_top_left  :: #force_inline proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y, size.x, size.y } }
 
 rect_grow :: #force_inline proc (r: ^Rect, o: Rect) {
     if o.x < r.x {
@@ -268,14 +269,13 @@ vec_angle :: #force_inline proc (vec: Vec2) -> f32 {
     return math.atan2(-vec.y, vec.x)
 }
 
-fit_target_size :: #force_inline proc (screen: Vec2, target: Vec2) -> (scale: f32, render: Rect) {
-    scale = min(screen.x/target.x, screen.y/target.y)
-    render_w, render_h := target.x*scale, target.y*scale
-    render = {
-        (screen.x - render_w)/2,
-        (screen.y - render_h)/2,
+fit_target_size :: #force_inline proc (screen_size: Vec2, target_size: Vec2) -> (render_scale: f32, render_rect: Rect) {
+    render_scale = min(screen_size.x/target_size.x, screen_size.y/target_size.y)
+    render_w, render_h := target_size.x*render_scale, target_size.y*render_scale
+    return render_scale, {
+        (screen_size.x - render_w)/2,
+        (screen_size.y - render_h)/2,
         render_w,
         render_h,
     }
-    return
 }
