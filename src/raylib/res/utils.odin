@@ -7,6 +7,7 @@ import "spacelib:core"
 
 image_file_extensions := [] string { ".png", ".jpg", ".jpeg" }
 
+@private Vec2 :: core.Vec2
 @private Rect :: core.Rect
 @private File :: runtime.Load_Directory_File
 

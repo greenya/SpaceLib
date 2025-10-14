@@ -8,12 +8,71 @@ import rl "vendor:raylib"
 import "spacelib:core"
 
 Atlas :: struct {
-    texture: Texture,
-    sprites: map [string] ^Sprite,
+    texture     : Texture,
+    sprites     : map [string] ^Sprite,
+    sequences   : map [string] [] ^Sprite,
+
+    _should_unload_texture: bool,
 }
 
 @require_results
-create_atlas :: proc (
+create_atlas_from_texture :: proc (texture: Texture) -> ^Atlas {
+    atlas := new(Atlas)
+    atlas.texture = texture
+    return atlas
+}
+
+@require_results
+create_atlas_from_bytes :: proc (image_bytes: [] byte, image_ext: string) -> ^Atlas {
+    atlas := new(Atlas)
+    image := rl_load_image_from_bytes(image_bytes, image_ext)
+    atlas.texture = rl.LoadTextureFromImage(image)
+    atlas._should_unload_texture = true
+    rl.UnloadImage(image)
+    return atlas
+}
+
+add_atlas_sprites :: proc (
+    atlas       : ^Atlas,
+    offset      : Vec2,
+    size        : Vec2,
+    locations   : [] struct { row, col: int, name: string },
+) {
+    if atlas.sprites == nil do atlas.sprites = make(map [string] ^Sprite)
+
+    for loc in locations {
+        fmt.assertf(loc.name not_in atlas.sprites, "Duplicated sprite name \"%s\" in the atlas", loc.name)
+        pos := offset + size*{f32(loc.col),f32(loc.row)}
+        atlas.sprites[loc.name] = create_sprite({
+            texture = atlas.texture,
+            info    = Rect { pos.x, pos.y, size.x, size.y },
+        })
+    }
+}
+
+add_atlas_sequence :: proc (
+    atlas   : ^Atlas,
+    name    : string,
+    format  := "%s_%02i",
+    range   := [2] int {1,99},
+) -> [] ^Sprite {
+    if atlas.sequences == nil do atlas.sequences = make(map [string] [] ^Sprite)
+    list := make([dynamic] ^Sprite)
+
+    assert(range[0] <= range[1])
+    for i in range[0]..=range[1] {
+        sprite_name := fmt.tprintf(format, name, i)
+        if sprite_name not_in atlas.sprites do break
+        append(&list, atlas.sprites[sprite_name])
+    }
+
+    shrink(&list)
+    atlas.sequences[name] = list[:]
+    return list[:]
+}
+
+@require_results
+gen_atlas_from_files :: proc (
     files       : [] File,
     auto_patch  := false,
     size_limit  := [2] int { 1024, 1024 },
@@ -79,10 +138,15 @@ create_atlas :: proc (
 destroy_atlas :: proc (atlas: ^Atlas) {
     if atlas == nil do return
 
-    if atlas.texture.id > 0 do rl.UnloadTexture(atlas.texture)
-
     for _, sprite in atlas.sprites do destroy_sprite(sprite)
     delete(atlas.sprites)
+
+    for _, seq in atlas.sequences do delete(seq)
+    delete(atlas.sequences)
+
+    if atlas.texture.id > 0 && atlas._should_unload_texture {
+        rl.UnloadTexture(atlas.texture)
+    }
 
     free(atlas)
 }
