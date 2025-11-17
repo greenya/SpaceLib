@@ -22,12 +22,14 @@ create_font_from_default :: proc (height := f32(-1)) -> ^Font {
 @require_results
 create_font_from_data :: proc (
     data            : [] byte,
-    height          : f32,
+    type            := ".ttf",
+    height          := f32(10),
     rune_spacing    := f32(0),
     line_spacing    := f32(0),
     filter          := rl.TextureFilter.POINT,
 ) -> ^Font {
-    font_rl := rl.LoadFontFromMemory(".ttf", raw_data(data), i32(len(data)), i32(height), nil, 0)
+    type_cstr := strings.clone_to_cstring(type, context.temp_allocator)
+    font_rl := rl.LoadFontFromMemory(type_cstr, raw_data(data), i32(len(data)), i32(height), nil, 0)
     return create_font_from_rl_font(font_rl,
         height          = height,
         rune_spacing    = rune_spacing,
