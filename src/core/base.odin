@@ -187,6 +187,31 @@ vec_in_rect :: #force_inline proc (vec: Vec2, r: Rect) -> bool {
     return r.x<vec.x && r.x+r.w>vec.x && r.y<vec.y && r.y+r.h>vec.y
 }
 
+vec_in_ring :: #force_inline proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
+    dir := vec - center
+
+    dist := math.hypot(dir.x, dir.y)
+    if dist < inner_radius || dist > outer_radius {
+        return false
+    }
+
+    ang := math.atan2(-dir.y, dir.x) // "-Y" because Y axis grows down
+    ang = norm(ang)
+    s := norm(start_rad)
+    e := norm(end_rad)
+
+    return s <= e\
+        ? s <= ang && ang <= e\
+        : ang >= s || ang <= e
+
+    norm :: proc (a: f32) -> f32 {
+        a := a
+        for a < 0           do a += 2*math.PI
+        for a >= 2*math.PI  do a -= 2*math.PI
+        return a
+    }
+}
+
 clamp_vec_to_rect :: #force_inline proc (vec: Vec2, r: Rect) -> Vec2 {
     return { clamp(vec.x, r.x, r.x + r.w), clamp(vec.y, r.y, r.y + r.h) }
 }
