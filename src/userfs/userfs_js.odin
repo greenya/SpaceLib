@@ -3,7 +3,6 @@
 package userfs
 
 import "core:mem"
-import "core:fmt"
 
 foreign import "userfs"
 
