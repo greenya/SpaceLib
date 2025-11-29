@@ -64,7 +64,9 @@ texture_rot :: proc (
 ) {
     dst_rl := transmute (rl.Rectangle) dst
     src_rl := transmute (rl.Rectangle) src
-    origin := Vec2 { origin_uv.x * src.w, origin_uv.y * abs(src.h) } // abs() for possible render target texture flipped h
+    origin := Vec2 { origin_uv.x * dst.w, origin_uv.y * abs(dst.h) } // abs() for possible render target texture flipped h
+    dst_rl.x += origin.x
+    dst_rl.y += origin.y
     rot_deg := math.to_degrees(rot_rad)
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, origin, rot_deg, tint_rl)
