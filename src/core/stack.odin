@@ -22,13 +22,17 @@ stack_drop :: #force_inline proc(stack: ^Stack($T, $N)) {
     stack.size -= 1
 }
 
-stack_clear :: #force_inline proc(stack: ^Stack($T, $N)) -> T {
-    stack.size = 0
-}
-
 stack_top :: #force_inline proc(stack: Stack($T, $N)) -> T {
     assert(stack.size > 0)
     return stack.items[stack.size-1]
+}
+
+stack_items :: #force_inline proc(stack: ^Stack($T, $N)) -> [] T {
+    return stack.items[:stack.size]
+}
+
+stack_clear :: #force_inline proc(stack: ^Stack($T, $N)) -> T {
+    stack.size = 0
 }
 
 stack_is_empty :: #force_inline proc(stack: Stack($T, $N)) -> bool {
