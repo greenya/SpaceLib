@@ -102,7 +102,7 @@ circle_gradient :: proc (center: Vec2, radius: f32, inner_color, outer_color: Co
     rl.DrawCircleGradient(i32(center.x), i32(center.y), radius, inner_color_rl, outer_color_rl)
 }
 
-ring :: proc (center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32, segments: int, color: Color) {
+arc :: proc (center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32, segments: int, color: Color) {
     start_deg := -math.to_degrees(start_rad)
     end_deg := -math.to_degrees(end_rad)
     color_rl := rl.Color(color)

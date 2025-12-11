@@ -187,7 +187,7 @@ vec_in_rect :: #force_inline proc (vec: Vec2, r: Rect) -> bool {
     return r.x<vec.x && r.x+r.w>vec.x && r.y<vec.y && r.y+r.h>vec.y
 }
 
-vec_in_ring :: #force_inline proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
+vec_in_arc :: #force_inline proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
     dir := vec - center
 
     dist := math.hypot(dir.x, dir.y)
