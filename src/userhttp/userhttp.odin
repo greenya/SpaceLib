@@ -1,6 +1,7 @@
 package userhttp
 
 import "core:fmt"
+import "core:mem"
 
 Request :: struct {
     // Request method.
@@ -43,6 +44,19 @@ Request :: struct {
 }
 
 Response :: struct {
+    allocator: mem.Allocator,
+
+    // Error.
+    //
+    // This is the same value as returned by `send()`.
+    error: Error,
+
+    // Error message.
+    //
+    // Only used with `Network_Error`, and contains platform dependent details (error message).
+    // For `Allocator_Error` and `Status_Code` errors, the value is empty.
+    error_msg: string,
+
     // HTTP status code.
     //
     // - `1xx`: Informational - Request received, continuing process
@@ -55,7 +69,7 @@ Response :: struct {
     // received, it will be followed automatically, and only the final response will be returned.
     //
     // More: [Status Code Registry](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
-    status: int,
+    status: Status_Code,
 
     // Received headers.
     //
@@ -84,13 +98,51 @@ Content :: union {
 }
 
 Content_Type_Binary :: "application/octet-stream"
-Content_Type_Params :: "application/x-www-form-urlencoded; charset=UTF-8" // For content params
+Content_Type_Params :: "application/x-www-form-urlencoded; charset=UTF-8"
 Content_Type_JSON   :: "application/json" // JSON is in UTF-8 by the standard. RFC 8259: No "charset" parameter is defined for this registration.
 Content_Type_XML    :: "application/xml; charset=UTF-8"
 Content_Type_Text   :: "text/plain; charset=UTF-8"
 
-send :: proc (req: Request) -> Response {
+Error :: union #shared_nil {
+    // Memory allocation error.
+    mem.Allocator_Error,
+
+    // Network error:
+    // - on the desktop, it equals to cURL's Error Code
+    // - on the web, it is a simple enum with `.ok` and `.error`
+    //
+    // Note: `Response.error_msg` contains the details on this type of error.
+    Network_Error,
+
+    // HTTP error (status code):
+    // Status codes 200-299 are not used here and considered to be "no error" codes.
+    Status_Code,
+}
+
+// Sends the request.
+//
+// - `res` should be deleted via `delete_response()` regardless of `ok` and `res.error`
+// - `ok` is:
+//      - `true` if the response was successfully received and `status_code_kind(res.status) == .success`;
+//      if you need to know exact code like "200 OK" or "202 Accepted", see the `res.status`
+//      - `false` if there was an error, which can be one of:
+//          - `Allocator_Error`: `res` is fully invalid
+//          - `Network_Error`: `res` is partially valid, only `res.error` and `res.error_msg` are valid
+//          - `Status_Code`: `res` is fully valid
+send :: proc (req: Request, allocator := context.allocator) -> (res: Response, ok: bool) {
     fmt.println(#procedure)
     fmt.println("req", req)
-    return {}
+
+    res.allocator = allocator
+    // res.headers = ...
+    // res.content = ...
+
+    return
+}
+
+delete_response :: proc (res: Response) -> (err: mem.Allocator_Error) {
+    delete(res.error_msg, res.allocator) or_return
+    delete(res.headers, res.allocator) or_return
+    delete(res.content, res.allocator) or_return
+    return
 }
