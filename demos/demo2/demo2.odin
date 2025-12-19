@@ -1,6 +1,16 @@
 package demo2
 
 import "core:fmt"
+
+main :: proc () {
+    fmt.println("The demo is way too old to compile.")
+    fmt.println("The demo might be removed from the repo in future.")
+    fmt.println("All the code is commented out, please see the source if necessary.")
+}
+
+/*
+
+import "core:fmt"
 import rl "vendor:raylib"
 import sl "../spacelib"
 import sl_rl "../spacelib/raylib"
@@ -280,3 +290,5 @@ tooltip_hide :: proc () {
     fmt.println("hide tooltip")
     tooltip_frame.hidden = true
 }
+
+*/

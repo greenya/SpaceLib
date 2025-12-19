@@ -1,5 +1,15 @@
 package demo1
 
+import "core:fmt"
+
+main :: proc () {
+    fmt.println("The demo is way too old to compile.")
+    fmt.println("The demo might be removed from the repo in future.")
+    fmt.println("All the code is commented out, please see the source if necessary.")
+}
+
+/*
+
 import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:ui"
@@ -175,3 +185,5 @@ init_ui_spell_book :: proc () {
         }
     }
 }
+
+*/
