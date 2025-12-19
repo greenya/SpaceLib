@@ -94,7 +94,7 @@ app_res_create_fonts :: proc () {
 app_res_create_sprites :: proc () {
     assert(app.res.atlas == nil)
 
-    app.res.atlas = res.create_atlas(
+    app.res.atlas = res.gen_atlas_from_files(
         files       = #load_directory("res/sprites"),
         size_limit  = { 1024, 2048 },
         gap         = 2,

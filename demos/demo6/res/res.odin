@@ -103,7 +103,7 @@ create_fonts :: proc () {
 
 create_sprites :: proc () {
     assert(atlas == nil)
-    atlas = res.create_atlas(
+    atlas = res.gen_atlas_from_files(
         files       = #load_directory("sprites"),
         auto_patch  = true,
         filter      = .BILINEAR,

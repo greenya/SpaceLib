@@ -4,19 +4,19 @@ import "spacelib:core/stack_trace"
 import "spacelib:core/timed_scope"
 import "spacelib:core/tracking_allocator"
 
+import app "../.."
+
 _ :: stack_trace
 _ :: timed_scope
 _ :: tracking_allocator
-
-import app "../.."
 
 main :: proc () {
     when ODIN_DEBUG {
         context.allocator = tracking_allocator.init()
         defer tracking_allocator.print(.minimal_unless_issues)
 
-        // skip stack_trace usage on Mac, as it requires "stdc++_libbacktrace"
-        when ODIN_OS != .Darwin {
+        // Only for Windows, as it requires "stdc++_libbacktrace" on Mac and Linux
+        when ODIN_OS == .Windows {
             context.assertion_failure_proc = stack_trace.init()
             defer stack_trace.destroy()
         }

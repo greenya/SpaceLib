@@ -10,7 +10,7 @@ texture :: #force_inline proc () -> rl.Texture { return atlas.texture }
 
 create :: proc (scale := f32(1), filter := rl.TextureFilter.BILINEAR) {
     assert(atlas == nil)
-    atlas = res.create_atlas(
+    atlas = res.gen_atlas_from_files(
         files   = #load_directory("./"),
         scale   = scale,
         filter  = filter,

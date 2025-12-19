@@ -15,7 +15,8 @@ main :: proc () {
         context.allocator = tracking_allocator.init()
         defer tracking_allocator.print(.minimal_unless_issues)
 
-        when ODIN_OS != .Darwin {
+        // Only for Windows, as it requires "stdc++_libbacktrace" on Mac and Linux
+        when ODIN_OS == .Windows {
             context.assertion_failure_proc = stack_trace.init()
             defer stack_trace.destroy()
         }

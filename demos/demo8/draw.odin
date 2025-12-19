@@ -88,7 +88,7 @@ draw_art_ring :: proc (f: ^ui.Frame) {
     color := color("bw_40", a=.2*f.opacity)
     center := core.rect_center(f.rect)
     radius := f.rect.h/2
-    draw.ring(center, radius, radius+8, 0, 2*math.π, 64, color)
+    draw.arc(center, radius, radius+8, 0, 2*math.π, 64, color)
 }
 
 draw_player_title :: proc (f: ^ui.Frame) {
@@ -112,7 +112,7 @@ draw_slot_ring :: proc (f: ^ui.Frame) {
     center := core.rect_center(f.rect)
     radius := f.rect.h/2
     draw.circle(center, radius, bg_color)
-    draw.ring(center, radius, radius+2, 0, 2*math.π, 32, br_color)
+    draw.arc(center, radius, radius+2, 0, 2*math.π, 32, br_color)
 }
 
 draw_slot_round :: proc (f: ^ui.Frame) {
