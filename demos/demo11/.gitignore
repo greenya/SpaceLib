@@ -1,0 +1,3 @@
+build/*
+!build/raylib.dll
+!build/libraylib.so.550

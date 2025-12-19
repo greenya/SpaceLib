@@ -13,7 +13,6 @@ checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon -warnings
 
 debug_args 		= ${collection_args} ${checker_args} -keep-executable -o:none -debug
 release_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed
-fastest_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed -no-type-assert -disable-assert -no-bounds-check
 
 run: demo10
 
@@ -55,3 +54,6 @@ demo10: mkdir
 
 demo10_web:
 	@cd demos\demo10\platform && build_web.bat
+
+demo11: mkdir
+	@echo "Demo11 uses own makefile, please nav to demos/demo11 and 'make' from there."
