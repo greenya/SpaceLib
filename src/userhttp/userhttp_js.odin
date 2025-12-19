@@ -22,3 +22,7 @@ platform_init :: proc () -> Network_Error {
 platform_destroy :: proc () {
     // nothing
 }
+
+platform_send :: proc (req: Request, res: ^Response) {
+    unimplemented()
+}

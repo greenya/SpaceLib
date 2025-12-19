@@ -2,6 +2,9 @@ package userhttp
 
 import "core:fmt"
 import "core:mem"
+import "core:slice"
+import "core:strings"
+import "core:time"
 
 Request :: struct {
     // Request method.
@@ -46,9 +49,7 @@ Request :: struct {
 Response :: struct {
     allocator: mem.Allocator,
 
-    // Error.
-    //
-    // This is the same value as returned by `send()`.
+    // Error indicator.
     error: Error,
 
     // Error message.
@@ -57,7 +58,10 @@ Response :: struct {
     // For `Allocator_Error` and `Status_Code` errors, the value is empty.
     error_msg: string,
 
-    // HTTP status code.
+    // Total time taken by `send()`.
+    time: time.Duration,
+
+    // Received HTTP status code.
     //
     // - `1xx`: Informational - Request received, continuing process
     // - `2xx`: Success - The action was successfully received, understood, and accepted
@@ -65,7 +69,7 @@ Response :: struct {
     // - `4xx`: Client Error - The request contains bad syntax or cannot be fulfilled
     // - `5xx`: Server Error - The server failed to fulfill an apparently valid request
     //
-    // Note: In practice the codes `1xx` and `3xx` will not be returned; when redirection response
+    // In practice the codes `1xx` and `3xx` will not be returned; when redirection response
     // received, it will be followed automatically, and only the final response will be returned.
     //
     // More: [Status Code Registry](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
@@ -73,7 +77,6 @@ Response :: struct {
 
     // Received headers.
     //
-    // Notes:
     // - on the desktop, cURL returns all the headers
     // - on the web, Fetch API doesn't return all the headers (e.g. `Set-Cookie`)
     //
@@ -111,7 +114,7 @@ Error :: union #shared_nil {
     // - on the desktop, it equals to cURL's Error Code
     // - on the web, it is a simple enum with `.ok` and `.error`
     //
-    // Note: `Response.error_msg` contains the details on this type of error.
+    // `Response.error_msg` contains the details on this type of error.
     Network_Error,
 
     // HTTP error (status code):
@@ -130,27 +133,67 @@ destroy :: proc () {
 // Sends the request.
 //
 // - `res` should be deleted via `delete_response()` regardless of `ok` and `res.error`
-// - `ok` is:
-//      - `true` if the response was successfully received and `status_code_kind(res.status) == .success`;
-//      if you need to know exact code like "200 OK" or "202 Accepted", see the `res.status`
-//      - `false` if there was an error, which can be one of:
-//          - `Allocator_Error`: `res` is fully invalid
-//          - `Network_Error`: `res` is partially valid, only `res.error` and `res.error_msg` are valid
-//          - `Status_Code`: `res` is fully valid
+// - `ok == true` if response was received successfully and `res.status` is in range `2xx`
+// - `ok == false` if there was an error, which can be one of:
+//      - `Allocator_Error`: any `res` member can be invalid
+//      - `Network_Error`: only `res.error` and `res.error_msg` are valid
+//      - `Status_Code`: all `res` members are valid
 send :: proc (req: Request, allocator := context.allocator) -> (res: Response, ok: bool) {
     fmt.println(#procedure)
     fmt.println("req", req)
 
     res.allocator = allocator
-    // res.headers = ...
-    // res.content = ...
 
+    start := time.now()
+    platform_send(req, &res)
+    res.time = time.since(start)
+
+    // if no allocator error and no network error -- check http status
+    if res.error == nil && status_code_category(res.status) != .successful {
+        res.error = res.status
+    }
+
+    ok = res.error == nil
     return
 }
 
 delete_response :: proc (res: Response) -> (err: mem.Allocator_Error) {
-    delete(res.error_msg, res.allocator) or_return
-    delete(res.headers, res.allocator) or_return
-    delete(res.content, res.allocator) or_return
+    context.allocator = res.allocator
+
+    for h in res.headers {
+        delete(h.name) or_return
+        if v, ok := h.value.(string); ok do delete(v) or_return
+    }
+
+    delete(res.error_msg) or_return
+    delete(res.headers) or_return
+    delete(res.content) or_return
+
+    return
+}
+
+@private
+create_headers_from_text :: proc (text: string, allocator: mem.Allocator) -> (headers: [] Param, err: mem.Allocator_Error) {
+    headers_temp := make([dynamic] Param, context.temp_allocator) or_return
+
+    for line in strings.split_lines(text, context.temp_allocator) or_return {
+        if line == "" do continue
+
+        pair := strings.split_n(line, ":", 2, context.temp_allocator) or_return
+        if len(pair) != 2 do continue
+
+        name := strings.trim(pair[0], " \t")
+        if name == "" do continue
+
+        value := strings.trim(pair[1], " \t")
+        if value == "" do continue
+
+        append(&headers_temp, Param {
+            name    = strings.clone(name, allocator) or_return,
+            value   = strings.clone(value, allocator) or_return,
+        })
+    }
+
+    headers = slice.clone(headers_temp[:], allocator)
     return
 }

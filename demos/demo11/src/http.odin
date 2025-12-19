@@ -15,6 +15,7 @@ http_send_request :: proc () {
     fmt.println(#procedure)
 
     res, ok := userhttp.send({ url="https://www.google.com/test/for/404" })
+    defer userhttp.delete_response(res)
 
     fmt.println("res", res)
     fmt.println("ok", ok)
