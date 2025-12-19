@@ -6,6 +6,8 @@ import rl "vendor:raylib"
 app_startup :: proc () {
     fmt.println(#procedure)
 
+    http_init()
+
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(400, 300, "SpaceLib Demo11")
@@ -13,7 +15,10 @@ app_startup :: proc () {
 
 app_shutdown :: proc () {
     fmt.println(#procedure)
+
     rl.CloseWindow()
+
+    http_destroy()
 }
 
 app_tick :: proc () {

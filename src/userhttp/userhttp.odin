@@ -119,6 +119,14 @@ Error :: union #shared_nil {
     Status_Code,
 }
 
+init :: proc () -> Network_Error {
+    return platform_init()
+}
+
+destroy :: proc () {
+    platform_destroy()
+}
+
 // Sends the request.
 //
 // - `res` should be deleted via `delete_response()` regardless of `ok` and `res.error`
