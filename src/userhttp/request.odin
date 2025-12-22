@@ -3,7 +3,6 @@ package userhttp
 import "base:builtin"
 import "core:fmt"
 import "core:mem"
-import "core:slice"
 import "core:strings"
 import "core:time"
 
@@ -71,10 +70,6 @@ Request :: struct {
     // For other errors (`Allocator_Error`, `Status_Code`) this value is empty.
     error_msg: string,
 
-    // Total time taken by `send()`.
-    // This includes sending the request and receiving the very last byte of the response.
-    time: time.Duration,
-
     // Received response after `send()` call.
     //
     // Only valid if call was successful or the `error` is a `Status_Code` error.
@@ -97,27 +92,36 @@ Response :: struct {
 
     // Received content, expected to be in form of `Content-Type` header.
     content: [] byte,
+
+    // Total time taken by `send()`.
+    //
+    // This includes sending the request and receiving the very last byte of the response.
+    // This value is set only after response is received. It will not be set on any
+    // `Allocator_Error` or `Network_Error`.
+    time: time.Duration,
 }
 
-Param :: struct {
-    name    : string,
-    value   : Param_Value,
-}
-
-Param_Value :: union { i64, f64, string }
-
-Content :: union {
-    [] Param,
-    [] byte,
-    string,
-}
-
+// Allocates new request instance. Call `delete()` to deallocate it later.
+//
+// If `method` is empty, it will be auto-set to:
+// - "GET" if no `content == nil`
+// - "POST" if `content != nil`
+//
+// If `content` is set and no "Content-Type" `header` is set, it will be auto-set to:
+// - `Content_Type_Params` for content of type `[] Param`
+// - `Content_Type_Binary` for content of type `[] byte`
+// - `Content_Type_Text` for content of type `string`
 make :: proc (init: Request, allocator := context.allocator) -> (req: Request, err: mem.Allocator_Error) #optional_allocator_error {
     req.allocator = allocator
     context.allocator = allocator
 
+    method := init.method
+    if method == "" {
+        method = init.content == nil ? "GET" : "POST"
+    }
+
     content_type: string
-    if header(init.headers, "content-type") == nil do switch _ in init.content {
+    if param(init.headers, "Content-Type") == nil do switch _ in init.content {
     case [] Param   : content_type = Content_Type_Params
     case [] byte    : content_type = Content_Type_Binary
     case string     : content_type = Content_Type_Text
@@ -125,19 +129,22 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
 
     req.method  = strings.clone(init.method != "" ? init.method : "GET") or_return
     req.url     = strings.clone(init.url) or_return
-    req.query   = params_clone(init.query) or_return
-    req.headers = params_clone(init.headers, append_content_type=content_type) or_return
-    req.content = content_clone(init.content) or_return
+    req.query   = clone_params(init.query) or_return
+    req.headers = clone_params(init.headers, append_content_type=content_type) or_return
+    req.content = clone_content(init.content) or_return
 
     return
 }
 
 delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
-    delete_(req.method) or_return
-    delete_(req.url) or_return
-    // delete_params(req.query) or_return
-    // delete_params(req.headers) or_return
-    // delete_content(req.content) or_return
+    delete_         (req.method)            or_return
+    delete_         (req.url)               or_return
+    delete_params   (req.query)             or_return
+    delete_params   (req.headers)           or_return
+    delete_content  (req.content)           or_return
+    delete_         (req.error_msg)         or_return
+    delete_params   (req.response.headers)  or_return
+    delete_         (req.response.content)  or_return
     return
 }
 
@@ -150,87 +157,24 @@ delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
 //
 // Note: Returned `content` is the same slice as `req.response.content`, and it will be deallocated
 // on `delete(req)`, so clone it in case you need to keep it.
-send :: proc (req: ^Request) -> (content: [] byte, ok: bool) {
+send :: proc (req: ^Request) -> (content: [] byte, ok: bool) #optional_ok {
     fmt.println(#procedure)
     fmt.println("req", req)
 
     start := time.now()
     platform_send(req)
-    req.time = time.since(start)
 
-    // if no allocator error and no network error -- check http status
-    if req.error == nil && status_code_category(req.response.status) != .successful {
-        assert(req.response.status != .None)
-        req.error = req.response.status
+    if req.error == nil {
+        req.response.time = time.since(start)
+        // if no allocator error and no network error -- check http status
+        if status_code_category(req.response.status) != .successful {
+            assert(req.response.status != .None)
+            req.error = req.response.status
+        }
     }
 
     ok = req.error == nil
-    if ok do content = req.response.content
-    return
-}
+    content = ok ? req.response.content : nil
 
-// delete_response :: proc (res: Response) -> (err: mem.Allocator_Error) {
-//     context.allocator = res.allocator
-
-//     for h in res.headers {
-//         delete(h.name) or_return
-//         if v, ok := h.value.(string); ok do delete(v) or_return
-//     }
-
-//     delete(res.error_msg) or_return
-//     delete(res.headers) or_return
-//     delete(res.content) or_return
-
-//     return
-// }
-
-header :: proc (headers: [] Param, name: string) -> Param_Value {
-    for h in headers {
-        if strings.equal_fold(name, h.name) {
-            return h.value
-        }
-    }
-    return nil
-}
-
-// @private
-// param_as_string :: proc (params: [] Param, name: string, case_sensitive := false, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) {
-//     for p in params {
-//         if case_sensitive {
-//             if name == p.name
-//         }
-//     }
-// }
-
-@private
-params_clone :: proc (params: [] Param, append_content_type := "") -> (result: [] Param, err: mem.Allocator_Error) {
-    count := len(params) + (append_content_type != "" ? 1 : 0)
-
-    result = make_([] Param, count) or_return
-    for p, i in params {
-        result[i].name = strings.clone(p.name) or_return
-        switch v in p.value {
-        case i64, f64   : result[i].value = v
-        case string     : result[i].value = strings.clone(v) or_return
-        }
-    }
-
-    if append_content_type != "" {
-        result[count-1] = {
-            name    = strings.clone("Content-Type"),
-            value   = strings.clone(append_content_type),
-        }
-    }
-
-    return
-}
-
-@private
-content_clone :: proc (content: Content) -> (result: Content, err: mem.Allocator_Error) {
-    switch v in content {
-    case [] Param   : result = params_clone(v) or_return
-    case [] byte    : result = slice.clone(v) or_return
-    case string     : result = strings.clone(v) or_return
-    }
     return
 }

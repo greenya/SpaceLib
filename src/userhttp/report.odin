@@ -6,10 +6,8 @@ import "core:slice"
 import "core:strings"
 
 Report_Option :: enum {
-    // request_headers,    // Include request headers
     req_content,    // Include request content
-    // res_headers,   // Include response headers
-    res_content,   // Include response content
+    res_content,    // Include response content
 }
 
 print_report :: proc (req: Request, options: bit_set [Report_Option] = ~{}) {
@@ -20,32 +18,38 @@ print_report :: proc (req: Request, options: bit_set [Report_Option] = ~{}) {
 report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) #optional_allocator_error {
     sb := strings.builder_make(allocator) or_return
 
-    sbprint_request(&sb, req, options) or_return
+    {
+        req_ct := param(req.headers, "content-type")
+        req_ct_str := req_ct.(string)
+        fmt.sbprintln       (&sb, "--------------------------------------------------[request]")
+        fmt.sbprintfln      (&sb, "-----------[method] %v", req.method == "" ? "GET" : req.method)
+        fmt.sbprintfln      (&sb, "--------------[url] %v", req.url)
+        sbprint_params      (&sb, "------------[query]", req.query) or_return
+        sbprint_params      (&sb, "----------[headers]", req.headers) or_return
+        sbprint_req_content (&sb, "----------[content]", req.content, req_ct_str, .req_content in options) or_return
+    }
+
+    if req.error != nil {
+        fmt.sbprintln       (&sb, "----------------------------------------------------[error]")
+        fmt.sbprintfln      (&sb, "%17s | %i | %v", error_type_name(req.error), req.error, req.error)
+        if req.error_msg != "" {
+            fmt.sbprintfln  (&sb, "%17s | %s", "Message", req.error_msg)
+        }
+    }
+
+    if req.response.status != .None {
+        res_ct := param(req.response.headers, "content-type")
+        res_ct_str := res_ct.(string)
+        fmt.sbprintln       (&sb, "-------------------------------------------------[response]")
+        fmt.sbprintfln      (&sb, "-----------[status] %i %v", int(req.response.status), req.response.status)
+        fmt.sbprintfln      (&sb, "-------------[time] %v", req.response.time)
+        sbprint_params      (&sb, "----------[headers]", req.response.headers) or_return
+        sbprint_res_content (&sb, "----------[content]", req.response.content, res_ct_str, .res_content in options)
+    }
 
     fmt.sbprint(&sb, "-----------------------------------------------------------")
 
     result = strings.to_string(sb)
-    return
-}
-
-@private
-sbprint_request :: proc (sb: ^strings.Builder, req: Request, options: bit_set [Report_Option]) -> (err: mem.Allocator_Error) {
-    fmt.sbprintln(sb, "--------------------------------------------------[request]")
-
-    fmt.sbprintfln      (sb, "-----------[method] %v", req.method == "" ? "GET" : req.method)
-    fmt.sbprintfln      (sb, "--------------[url] %v", req.url)
-    sbprint_params      (sb, "------------[query]", req.query) or_return
-    sbprint_params      (sb, "----------[headers]", req.headers) or_return
-    sbprint_req_content (sb, "----------[content]", req.content, should_dump=.req_content in options) or_return
-
-    // headers_str := header_map_to_string(req.headers, context.temp_allocator) or_return
-    // fmt.sbprintfln(sb, "-----------[header] %M", len(headers_str))
-    // if .req_header in options do fmt.sbprint(sb, headers_str)
-
-    // sbprint_params(sb, "---[content_params]", req.content_params) or_return
-    // content_type := header_map_value(req.headers, .content_type, allocator=context.temp_allocator) or_return
-    // sbprint_content(sb, req.content, content_type, should_dump=.req_content in options)
-
     return
 }
 
@@ -66,33 +70,46 @@ sbprint_params :: proc (sb: ^strings.Builder, prefix: string, params: [] Param) 
 }
 
 @private
-sbprint_req_content :: proc (sb: ^strings.Builder, prefix: string, content: Content, should_dump: bool) -> (err: mem.Allocator_Error) {
+sbprint_req_content :: proc (sb: ^strings.Builder, prefix: string, content: Content, content_type: string, should_dump: bool) -> (err: mem.Allocator_Error) {
     switch v in content {
     case [] Param:
         sbprint_params(sb, prefix, v) or_return
+
     case [] byte:
+        content_bytes := v
+        sbprint_res_content(sb, prefix, content_bytes, content_type, should_dump)
+
     case string:
-        fmt.sbprintfln(sb, "%s %M", prefix, len(v))
-        if should_dump do fmt.sbprintfln(sb, "%v", v)
-    case nil:
-        fmt.sbprintfln(sb, "%s -", prefix)
+        content_bytes := transmute ([] byte) v
+        sbprint_res_content(sb, prefix, content_bytes, content_type, should_dump)
     }
     return
 }
 
-// @private
-// sbprint_content :: proc (sb: ^strings.Builder, prefix: string, content: [] u8, content_type: string, should_dump: bool) {
-//     content_size := len(content)
-//     if content_size > 0 {
-//         content_type_text := content_type != "" ? content_type : "[content type not set]"
-//         fmt.sbprintfln(sb, "----------[content] %M | %s", content_size, content_type_text)
-//         if should_dump {
-//             dump: union { [] u8, string } = content_type_is_textual(content_type)\
-//                 ? string(content)\
-//                 : content
-//             fmt.sbprintfln(sb, "%v", dump)
-//         }
-//     } else {
-//         fmt.sbprintfln(sb, "----------[content] %M", 0)
-//     }
-// }
+@private
+sbprint_res_content :: proc (sb: ^strings.Builder, prefix: string, content: [] byte, content_type: string, should_dump: bool) {
+    content_size := len(content)
+    if content_size > 0 {
+        content_type_text := content_type != "" ? content_type : "[content type not set]"
+        fmt.sbprintfln(sb, "%s %M | %s", prefix, content_size, content_type_text)
+        if should_dump {
+            dump: union { [] byte, string } = guess_content_type_is_textual(content_type)\
+                ? string(content)\
+                : content
+            fmt.sbprintfln(sb, "%v", dump)
+        }
+    } else {
+        fmt.sbprintfln(sb, "%s %M", prefix, 0)
+    }
+    return
+}
+
+@private
+error_type_name :: proc (error: Error) -> string {
+    switch v in error {
+    case mem.Allocator_Error: return "Allocator Error"
+    case Network_Error      : return "Network Error"
+    case Status_Code        : return "HTTP Error"
+    case                    : unimplemented()
+    }
+}
