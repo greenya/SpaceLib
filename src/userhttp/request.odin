@@ -1,20 +1,15 @@
 package userhttp
 
-import "base:builtin"
-import "core:fmt"
 import "core:mem"
 import "core:strings"
 import "core:time"
-
-@private make_      :: builtin.make
-@private delete_    :: builtin.delete
 
 Request :: struct {
     allocator: mem.Allocator,
 
     // Request method.
     //
-    // - `GET` (default)
+    // - `GET`
     // - `POST`
     // - `PUT`
     // - `PATCH`
@@ -43,17 +38,12 @@ Request :: struct {
     headers: [] Param,
 
     // The content.
-    //
-    // If set, the `Content-Type` header is required, and if missing the value will be auto-assigned:
-    // - `Content_Type_Params` for `[] Param`
-    // - `Content_Type_Binary` for `[] byte`
-    // - `Content_Type_Text` for `string`
     content: Content,
 
     // Error of the `send()` call.
     //
-    // This is `nil` for no error. Meaning the `send()` call was successful and `response` contains
-    // the result.
+    // This is `nil` for no error. Meaning the `send()` call was successful and `response`
+    // contains the result.
     //
     // For `Network_Error`, the value is platform dependent:
     // - on the desktop, it is `curl.code` and `error_msg` contains value from `curl.easy_strerror()`
@@ -90,7 +80,7 @@ Response :: struct {
     // - [Field Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml)
     headers: [] Param,
 
-    // Received content, expected to be in form of `Content-Type` header.
+    // Received content, expected to be in form of "Content-Type" header.
     content: [] byte,
 
     // Total time taken by `send()`.
@@ -104,20 +94,19 @@ Response :: struct {
 // Allocates new request instance. Call `delete()` to deallocate it later.
 //
 // If `method` is empty, it will be auto-set to:
-// - "GET" if no `content == nil`
+// - "GET" if `content == nil`
 // - "POST" if `content != nil`
 //
-// If `content` is set and no "Content-Type" `header` is set, it will be auto-set to:
+// If `content != nil` and no "Content-Type" `header` is set, it will be auto-added with value:
 // - `Content_Type_Params` for content of type `[] Param`
 // - `Content_Type_Binary` for content of type `[] byte`
 // - `Content_Type_Text` for content of type `string`
 make :: proc (init: Request, allocator := context.allocator) -> (req: Request, err: mem.Allocator_Error) #optional_allocator_error {
-    req.allocator = allocator
     context.allocator = allocator
 
-    method := init.method
-    if method == "" {
-        method = init.content == nil ? "GET" : "POST"
+    init_method := init.method
+    if init_method == "" {
+        init_method = init.content == nil ? "GET" : "POST"
     }
 
     content_type: string
@@ -127,7 +116,8 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
     case string     : content_type = Content_Type_Text
     }
 
-    req.method  = strings.clone(init.method != "" ? init.method : "GET") or_return
+    req.allocator = allocator
+    req.method  = strings.clone(init_method) or_return
     req.url     = strings.clone(init.url) or_return
     req.query   = clone_params(init.query) or_return
     req.headers = clone_params(init.headers, append_content_type=content_type) or_return
@@ -136,6 +126,7 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
     return
 }
 
+// Deallocates request instance previously allocated by `make()`.
 delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
     delete_         (req.method)            or_return
     delete_         (req.url)               or_return
@@ -155,11 +146,20 @@ delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
 //      - the `req.error_msg` will be set in case error is a `Network_Error`
 //      - the `req.response` will be set in case error is a `Status_Code` error
 //
-// Note: Returned `content` is the same slice as `req.response.content`, and it will be deallocated
-// on `delete(req)`, so clone it in case you need to keep it.
+// Note: Returned `content` is the same slice as `req.response.content`, and it will be
+// deallocated on `delete(req)`, so clone it in case you need to keep it.
 send :: proc (req: ^Request) -> (content: [] byte, ok: bool) #optional_ok {
-    fmt.println(#procedure)
-    fmt.println("req", req)
+    // clean up previous response and error (ignore allocator errors)
+
+    delete_params(req.response.headers)
+    delete_(req.response.content)
+    req.response = {}
+
+    delete_(req.error_msg)
+    req.error_msg = ""
+    req.error = nil
+
+    // perform the request
 
     start := time.now()
     platform_send(req)
@@ -172,6 +172,8 @@ send :: proc (req: ^Request) -> (content: [] byte, ok: bool) #optional_ok {
             req.error = req.response.status
         }
     }
+
+    // setup return values
 
     ok = req.error == nil
     content = ok ? req.response.content : nil

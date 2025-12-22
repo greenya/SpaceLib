@@ -20,10 +20,10 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
 
     {
         req_ct := param(req.headers, "content-type")
-        req_ct_str := req_ct.(string)
+        req_ct_str := req_ct != nil ? req_ct.(string) : "" // expect string only
         fmt.sbprintln       (&sb, "--------------------------------------------------[request]")
-        fmt.sbprintfln      (&sb, "-----------[method] %v", req.method == "" ? "GET" : req.method)
-        fmt.sbprintfln      (&sb, "--------------[url] %v", req.url)
+        fmt.sbprintfln      (&sb, "-----------[method] %s", req.method)
+        fmt.sbprintfln      (&sb, "--------------[url] %s", req.url)
         sbprint_params      (&sb, "------------[query]", req.query) or_return
         sbprint_params      (&sb, "----------[headers]", req.headers) or_return
         sbprint_req_content (&sb, "----------[content]", req.content, req_ct_str, .req_content in options) or_return
@@ -39,7 +39,7 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
 
     if req.response.status != .None {
         res_ct := param(req.response.headers, "content-type")
-        res_ct_str := res_ct.(string)
+        res_ct_str := res_ct != nil ? res_ct.(string) : "" // expect string only
         fmt.sbprintln       (&sb, "-------------------------------------------------[response]")
         fmt.sbprintfln      (&sb, "-----------[status] %i %v", int(req.response.status), req.response.status)
         fmt.sbprintfln      (&sb, "-------------[time] %v", req.response.time)

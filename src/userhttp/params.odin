@@ -11,6 +11,7 @@ Param :: struct {
 
 Param_Value :: union { i64, f64, string }
 
+// `name` is case-insensitive.
 param :: proc (params: [] Param, name: string) -> Param_Value {
     for p in params {
         if strings.equal_fold(name, p.name) {

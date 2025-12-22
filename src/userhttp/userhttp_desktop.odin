@@ -4,6 +4,8 @@ package userhttp
 
 import "base:runtime"
 import "core:c"
+import "core:fmt"
+import "core:mem"
 import "core:slice"
 import "core:strings"
 import "vendor:curl"
@@ -28,16 +30,17 @@ platform_send :: proc (req: ^Request) {
     }
 }
 
-// TODO: use req.query
 // TODO: use req.headers
 // TODO: use req.content
 _curl_send :: proc (req: ^Request) -> (err: Error) {
+    context.allocator = context.temp_allocator
+
     cu := curl.easy_init()
     defer curl.easy_cleanup(cu)
 
     // setup method
 
-    req_method_lower := strings.to_lower(req.method, context.temp_allocator) or_return
+    req_method_lower := strings.to_lower(req.method) or_return
     custom_request: string
 
     switch req_method_lower {
@@ -47,27 +50,41 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
     }
 
     if custom_request != "" {
-        custom_request_cstr := strings.clone_to_cstring(custom_request, context.temp_allocator) or_return
+        custom_request_cstr := strings.clone_to_cstring(custom_request) or_return
         curl.easy_setopt(cu, .CUSTOMREQUEST, custom_request_cstr) or_return
     }
 
     // setup request details
 
-    url_cstr := strings.clone_to_cstring(req.url, context.temp_allocator) or_return
+    query_params_encoded := _percent_encoded_params(req.query) or_return
+    url := len(query_params_encoded) > 0\
+        ? fmt.tprintf("%s?%s", req.url, query_params_encoded)\
+        : req.url
+    url_cstr := strings.clone_to_cstring(url) or_return
 
     curl.easy_setopt(cu, .URL, url_cstr) or_return
     curl.easy_setopt(cu, .FOLLOWLOCATION, c.long(1)) or_return // allow auto process redirects (3xx status codes)
 
+    if req.content != nil do switch v in req.content {
+    case [] Param:
+        encoded := _percent_encoded_params(v) or_return
+        encoded_cstr := strings.clone_to_cstring(encoded) or_return
+        curl.easy_setopt(cu, .POSTFIELDS, encoded_cstr) or_return
+
+    case [] byte:
+    case string:
+    }
+
     // setup buffer for response header block
 
-    header := make_([dynamic] byte, context.temp_allocator) or_return
+    header := make_([dynamic] byte) or_return
 
     curl.easy_setopt(cu, .HEADERFUNCTION, _header_callback) or_return
     curl.easy_setopt(cu, .HEADERDATA, &header) or_return
 
     // setup buffer for response content block
 
-    content := make_([dynamic] byte, context.temp_allocator) or_return
+    content := make_([dynamic] byte) or_return
 
     curl.easy_setopt(cu, .WRITEFUNCTION, _write_callback) or_return
     curl.easy_setopt(cu, .WRITEDATA, &content) or_return
@@ -88,6 +105,32 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
     req.response.headers = create_headers_from_text(string(header[:]), req.allocator) or_return
     req.response.content = slice.clone(content[:], req.allocator) or_return
 
+    return
+}
+
+_curl_escape :: proc (s: string, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) {
+    // Since 7.82.0, the cURL handle (1st parameter) is ignored.
+    cstr := curl.easy_escape(nil, cstring(raw_data(s)), c.int(len(s)))
+    result = strings.clone_from_cstring(cstr, allocator) or_return
+    curl.free(rawptr(cstr))
+    return
+}
+
+_percent_encoded_params :: proc (params: [] Param, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) {
+    if len(params) == 0 do return "", .None
+
+    context.allocator = context.temp_allocator
+
+    sb := strings.builder_make(allocator) or_return
+
+    for p in params {
+        separator := strings.builder_len(sb) > 0 ? "&" : ""
+        name_encoded := _curl_escape(p.name) or_return
+        value_encoded := _curl_escape(fmt.tprintf("%v", p.value)) or_return
+        fmt.sbprintf(&sb, "%s%s=%s", separator, name_encoded, value_encoded)
+    }
+
+    result = strings.to_string(sb)
     return
 }
 

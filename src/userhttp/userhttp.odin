@@ -1,6 +1,10 @@
 package userhttp
 
+import "base:builtin"
 import "core:mem"
+
+@private make_      :: builtin.make
+@private delete_    :: builtin.delete
 
 Error :: union #shared_nil {
     // Memory allocation error.
