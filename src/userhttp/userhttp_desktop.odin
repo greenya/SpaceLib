@@ -18,20 +18,20 @@ platform_destroy :: proc () {
     curl.global_cleanup()
 }
 
-platform_send :: proc (req: Request, res: ^Response) {
-    res.error = _curl_send(req, res)
+platform_send :: proc (req: ^Request) {
+    req.error = _curl_send(req)
 
-    if err_net, ok := res.error.(Network_Error); ok {
+    if err_net, ok := req.error.(Network_Error); ok {
         assert(err_net != .E_OK)
         cstr := curl.easy_strerror(err_net)
-        res.error_msg = strings.clone_from(cstr, res.allocator) // ignore allocator error
+        req.error_msg = strings.clone_from(cstr, req.allocator) // ignore allocator error
     }
 }
 
 // TODO: use req.query
 // TODO: use req.headers
 // TODO: use req.content
-_curl_send :: proc (req: Request, res: ^Response) -> (err: Error) {
+_curl_send :: proc (req: ^Request) -> (err: Error) {
     cu := curl.easy_init()
     defer curl.easy_cleanup(cu)
 
@@ -60,14 +60,14 @@ _curl_send :: proc (req: Request, res: ^Response) -> (err: Error) {
 
     // setup buffer for response header block
 
-    header := make([dynamic] byte, context.temp_allocator) or_return
+    header := make_([dynamic] byte, context.temp_allocator) or_return
 
     curl.easy_setopt(cu, .HEADERFUNCTION, _header_callback) or_return
     curl.easy_setopt(cu, .HEADERDATA, &header) or_return
 
     // setup buffer for response content block
 
-    content := make([dynamic] byte, context.temp_allocator) or_return
+    content := make_([dynamic] byte, context.temp_allocator) or_return
 
     curl.easy_setopt(cu, .WRITEFUNCTION, _write_callback) or_return
     curl.easy_setopt(cu, .WRITEDATA, &content) or_return
@@ -83,9 +83,10 @@ _curl_send :: proc (req: Request, res: ^Response) -> (err: Error) {
 
     // fill the response
 
-    res.status = Status_Code(response_code)
-    res.headers = create_headers_from_text(string(header[:]), res.allocator) or_return
-    res.content = slice.clone(content[:], res.allocator) or_return
+    req.response = {}
+    req.response.status = Status_Code(response_code)
+    req.response.headers = create_headers_from_text(string(header[:]), req.allocator) or_return
+    req.response.content = slice.clone(content[:], req.allocator) or_return
 
     return
 }

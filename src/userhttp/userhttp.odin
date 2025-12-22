@@ -1,104 +1,8 @@
 package userhttp
 
-import "core:fmt"
 import "core:mem"
 import "core:slice"
 import "core:strings"
-import "core:time"
-
-Request :: struct {
-    // Request method.
-    //
-    // - `GET` (default)
-    // - `POST`
-    // - `PUT`
-    // - `PATCH`
-    // - `DELETE`
-    // - `OPTIONS`
-    // - `HEAD`
-    //
-    // More:
-    // - [Fetch: Cross-Origin Requests](https://javascript.info/fetch-crossorigin)
-    // - [Method Registry](https://www.iana.org/assignments/http-methods/http-methods.xhtml)
-    method: string,
-
-    // Request URL.
-    //
-    // More: [What is URL?](https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL)
-    url: string,
-
-    // Query parameters to be percent-encoded and sent as part of the `url`.
-    query: [] Param,
-
-    // Request headers.
-    //
-    // More:
-    // - [Forbidden request header](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_request_header)
-    // - [Field Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml)
-    headers: [] Param,
-
-    // The content.
-    //
-    // If set, the `Content-Type` header is required, and if missing the value will be auto-assigned:
-    // - `Content_Type_Params` for `[] Param`
-    // - `Content_Type_Binary` for `[] byte`
-    // - `Content_Type_Text` for `string`
-    content: Content,
-}
-
-Response :: struct {
-    allocator: mem.Allocator,
-
-    // Error indicator.
-    error: Error,
-
-    // Error message.
-    //
-    // Only used with `Network_Error`, and contains platform dependent details (error message).
-    // For `Allocator_Error` and `Status_Code` errors, the value is empty.
-    error_msg: string,
-
-    // Total time taken by `send()`.
-    time: time.Duration,
-
-    // Received HTTP status code.
-    //
-    // - `1xx`: Informational - Request received, continuing process
-    // - `2xx`: Success - The action was successfully received, understood, and accepted
-    // - `3xx`: Redirection - Further action must be taken in order to complete the request
-    // - `4xx`: Client Error - The request contains bad syntax or cannot be fulfilled
-    // - `5xx`: Server Error - The server failed to fulfill an apparently valid request
-    //
-    // In practice the codes `1xx` and `3xx` will not be returned; when redirection response
-    // received, it will be followed automatically, and only the final response will be returned.
-    //
-    // More: [Status Code Registry](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
-    status: Status_Code,
-
-    // Received headers.
-    //
-    // - on the desktop, cURL returns all the headers
-    // - on the web, Fetch API doesn't return all the headers (e.g. `Set-Cookie`)
-    //
-    // More:
-    // - [Forbidden response header name](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_response_header_name)
-    // - [Field Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml)
-    headers: [] Param,
-
-    // Received content, expected to be in form of `Content-Type` header.
-    content: [] byte,
-}
-
-Param :: struct {
-    name    : string,
-    value   : union { i64, f64, string },
-}
-
-Content :: union {
-    [] Param,
-    [] byte,
-    string,
-}
 
 Content_Type_Binary :: "application/octet-stream"
 Content_Type_Params :: "application/x-www-form-urlencoded; charset=UTF-8"
@@ -130,51 +34,9 @@ destroy :: proc () {
     platform_destroy()
 }
 
-// Sends the request.
-//
-// - `res` should be deleted via `delete_response()` regardless of `ok` and `res.error`
-// - `ok == true` if response was received successfully and `res.status` is in range `2xx`
-// - `ok == false` if there was an error, which can be one of:
-//      - `Allocator_Error`: only `res.error` is valid
-//      - `Network_Error`: only `res.error` and `res.error_msg` are valid
-//      - `Status_Code`: all `res` members are valid
-send :: proc (req: Request, allocator := context.allocator) -> (res: Response, ok: bool) {
-    fmt.println(#procedure)
-    fmt.println("req", req)
-
-    res.allocator = allocator
-
-    start := time.now()
-    platform_send(req, &res)
-    res.time = time.since(start)
-
-    // if no allocator error and no network error -- check http status
-    if res.error == nil && status_code_category(res.status) != .successful {
-        res.error = res.status
-    }
-
-    ok = res.error == nil
-    return
-}
-
-delete_response :: proc (res: Response) -> (err: mem.Allocator_Error) {
-    context.allocator = res.allocator
-
-    for h in res.headers {
-        delete(h.name) or_return
-        if v, ok := h.value.(string); ok do delete(v) or_return
-    }
-
-    delete(res.error_msg) or_return
-    delete(res.headers) or_return
-    delete(res.content) or_return
-
-    return
-}
-
 @private
 create_headers_from_text :: proc (text: string, allocator: mem.Allocator) -> (headers: [] Param, err: mem.Allocator_Error) {
-    headers_temp := make([dynamic] Param, context.temp_allocator) or_return
+    headers_temp := make_([dynamic] Param, context.temp_allocator) or_return
 
     for line in strings.split_lines(text, context.temp_allocator) or_return {
         if line == "" do continue
