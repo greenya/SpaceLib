@@ -135,7 +135,7 @@ destroy :: proc () {
 // - `res` should be deleted via `delete_response()` regardless of `ok` and `res.error`
 // - `ok == true` if response was received successfully and `res.status` is in range `2xx`
 // - `ok == false` if there was an error, which can be one of:
-//      - `Allocator_Error`: any `res` member can be invalid
+//      - `Allocator_Error`: only `res.error` is valid
 //      - `Network_Error`: only `res.error` and `res.error_msg` are valid
 //      - `Status_Code`: all `res` members are valid
 send :: proc (req: Request, allocator := context.allocator) -> (res: Response, ok: bool) {
