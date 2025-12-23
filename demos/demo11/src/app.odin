@@ -25,6 +25,11 @@ app_tick :: proc () {
     if rl.IsKeyPressed(.ONE) {
         http_send_request()
     }
+
+    if rl.IsKeyPressed(.TWO) {
+        scores, _ := pt_get_scores(context.temp_allocator)
+        fmt.println("SCORES", scores)
+    }
 }
 
 app_draw :: proc () {
