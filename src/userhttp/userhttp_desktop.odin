@@ -31,7 +31,6 @@ platform_send :: proc (req: ^Request) {
     }
 }
 
-// TODO: use req.content
 _curl_send :: proc (req: ^Request) -> (err: Error) {
     context.allocator = context.temp_allocator
 
@@ -80,14 +79,25 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
 
     // setup content
 
-    if req.content != nil do switch v in req.content {
-    case [] Param:
-        encoded := _percent_encoded_params(v) or_return
-        encoded_cstr := strings.clone_to_cstring(encoded) or_return
-        curl.easy_setopt(cu, .POSTFIELDS, encoded_cstr) or_return
+    if req.content != nil {
+        post_fields: [] byte
 
-    case [] byte:   // TODO: impl
-    case string:    // TODO: impl
+        switch v in req.content {
+        case [] Param:
+            encoded := _percent_encoded_params(v) or_return
+            post_fields = transmute ([] byte) encoded
+
+        case [] byte:
+            post_fields = v
+
+        case string:
+            post_fields = transmute ([] byte) v
+        }
+
+        if post_fields != nil {
+            curl.easy_setopt(cu, .POSTFIELDS, raw_data(post_fields)) or_return
+            curl.easy_setopt(cu, .POSTFIELDSIZE, c.long(len(post_fields))) or_return
+        }
     }
 
     // setup extra details

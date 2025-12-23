@@ -26,9 +26,10 @@ http_send_request :: proc () {
         url="https://httpbin.org/post",
         query={{"a",1},{"b","+!%"}},
         headers={{"c","d"}/*,{"content-type",userhttp.Content_Type_Binary}*/},
-        content=[] userhttp.Param {{"e",7},{"f","g+"}},
+        // content=[] userhttp.Param {{"e",7},{"f","g+"}},
         // content=[] byte {1,2,3,4,5,6,7,8,9,10},
         // content="This is some plain text.",
+        content="{\"f\":3.1415,\"s\":\"STRING\"}",
         timeout=5*time.Second,
     })
 

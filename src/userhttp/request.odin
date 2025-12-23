@@ -105,7 +105,8 @@ Response :: struct {
 // If `content != nil` and no "Content-Type" `header` is set, it will be auto-added with value:
 // - `Content_Type_Params` for content of type `[] Param`
 // - `Content_Type_Binary` for content of type `[] byte`
-// - `Content_Type_Text` for content of type `string`
+// - `Content_Type_JSON` for content of type `string` starts with `{` character
+// - `Content_Type_Text` for content of type `string` (anything else)
 make :: proc (init: Request, allocator := context.allocator) -> (req: Request, err: mem.Allocator_Error) #optional_allocator_error {
     context.allocator = allocator
 
@@ -115,10 +116,17 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
     }
 
     content_type: string
-    if param(init.headers, "Content-Type") == nil do switch _ in init.content {
-    case [] Param   : content_type = Content_Type_Params
-    case [] byte    : content_type = Content_Type_Binary
-    case string     : content_type = Content_Type_Text
+    if param(init.headers, "Content-Type") == nil do switch v in init.content {
+    case [] Param:
+        content_type = Content_Type_Params
+    case [] byte:
+        content_type = Content_Type_Binary
+    case string:
+        if strings.has_prefix(strings.trim_left(v, "\n\t "), "{") {
+            content_type = Content_Type_JSON
+        } else {
+            content_type = Content_Type_Text
+        }
     }
 
     req.allocator   = allocator
