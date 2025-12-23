@@ -31,7 +31,6 @@ platform_send :: proc (req: ^Request) {
     }
 }
 
-// TODO: use req.headers
 // TODO: use req.content
 _curl_send :: proc (req: ^Request) -> (err: Error) {
     context.allocator = context.temp_allocator
@@ -55,7 +54,7 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
         curl.easy_setopt(cu, .CUSTOMREQUEST, custom_request_cstr) or_return
     }
 
-    // setup request details
+    // setup url and query params
 
     query_params_encoded := _percent_encoded_params(req.query) or_return
     url := len(query_params_encoded) > 0\
@@ -64,7 +63,22 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
     url_cstr := strings.clone_to_cstring(url) or_return
 
     curl.easy_setopt(cu, .URL, url_cstr) or_return
-    curl.easy_setopt(cu, .FOLLOWLOCATION, c.long(1)) or_return // allow auto process redirects (3xx status codes)
+
+    // setup headers
+
+    cu_headers: ^curl.slist
+    defer if cu_headers != nil do curl.slist_free_all(cu_headers)
+
+    for p in req.headers {
+        cstr := fmt.ctprintf("%s: %s", p.name, p.value)
+        cu_headers = curl.slist_append(cu_headers, cast ([^] byte) cstr)
+    }
+
+    if cu_headers != nil {
+        curl.easy_setopt(cu, .HTTPHEADER, cu_headers)
+    }
+
+    // setup content
 
     if req.content != nil do switch v in req.content {
     case [] Param:
@@ -75,6 +89,10 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
     case [] byte:   // TODO: impl
     case string:    // TODO: impl
     }
+
+    // setup extra details
+
+    curl.easy_setopt(cu, .FOLLOWLOCATION, c.long(1)) or_return // allow auto process redirects (3xx status codes)
 
     if req.timeout > 0 {
         // if timeout is set, use at least 1ms, so its not rounded to 0 and have no effect
