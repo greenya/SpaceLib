@@ -64,6 +64,11 @@ Request :: struct {
     //
     // Only valid if call was successful or the `error` is a `Status_Code` error.
     response: Response,
+
+    // Maximum time allowed for the request.
+    //
+    // If `0`, no timeout will be set (not recommended).
+    timeout: time.Duration,
 }
 
 Response :: struct {
@@ -116,12 +121,13 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
     case string     : content_type = Content_Type_Text
     }
 
-    req.allocator = allocator
-    req.method  = strings.clone(init_method) or_return
-    req.url     = strings.clone(init.url) or_return
-    req.query   = clone_params(init.query) or_return
-    req.headers = clone_params(init.headers, append_content_type=content_type) or_return
-    req.content = clone_content(init.content) or_return
+    req.allocator   = allocator
+    req.method      = strings.clone(init_method) or_return
+    req.url         = strings.clone(init.url) or_return
+    req.query       = clone_params(init.query) or_return
+    req.headers     = clone_params(init.headers, append_content_type=content_type) or_return
+    req.content     = clone_content(init.content) or_return
+    req.timeout     = init.timeout
 
     return
 }

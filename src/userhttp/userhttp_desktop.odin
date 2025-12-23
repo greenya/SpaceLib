@@ -8,6 +8,7 @@ import "core:fmt"
 import "core:mem"
 import "core:slice"
 import "core:strings"
+import "core:time"
 import "vendor:curl"
 
 Network_Error :: curl.code
@@ -71,8 +72,15 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
         encoded_cstr := strings.clone_to_cstring(encoded) or_return
         curl.easy_setopt(cu, .POSTFIELDS, encoded_cstr) or_return
 
-    case [] byte:
-    case string:
+    case [] byte:   // TODO: impl
+    case string:    // TODO: impl
+    }
+
+    if req.timeout > 0 {
+        // if timeout is set, use at least 1ms, so its not rounded to 0 and have no effect
+        timeout_ms := max(1, time.duration_milliseconds(req.timeout))
+        curl.easy_setopt(cu, .TIMEOUT_MS, c.long(timeout_ms)) or_return
+        curl.easy_setopt(cu, .CONNECTTIMEOUT_MS, c.long(min(timeout_ms, 5000))) or_return
     }
 
     // setup buffer for response header block

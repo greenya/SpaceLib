@@ -20,13 +20,16 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
 
     {
         req_ct := param(req.headers, "content-type")
-        req_ct_str := req_ct != nil ? req_ct.(string) : "" // expect string only
+        req_ct_str, _ := req_ct.(string) // expect only string, other type is ignored
+        req_timeout_str := req.timeout > 0 ? fmt.tprint(req.timeout) : "-"
+
         fmt.sbprintln       (&sb, "--------------------------------------------------[request]")
         fmt.sbprintfln      (&sb, "-----------[method] %s", req.method)
         fmt.sbprintfln      (&sb, "--------------[url] %s", req.url)
         sbprint_params      (&sb, "------------[query]", req.query) or_return
         sbprint_params      (&sb, "----------[headers]", req.headers) or_return
         sbprint_req_content (&sb, "----------[content]", req.content, req_ct_str, .req_content in options) or_return
+        fmt.sbprintfln      (&sb, "----------[timeout] %s", req_timeout_str)
     }
 
     if req.error != nil {
@@ -39,10 +42,11 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
 
     if req.response.status != .None {
         res_ct := param(req.response.headers, "content-type")
-        res_ct_str := res_ct != nil ? res_ct.(string) : "" // expect string only
+        res_ct_str, _ := res_ct.(string) // expect only string, other type is ignored
+
         fmt.sbprintln       (&sb, "-------------------------------------------------[response]")
-        fmt.sbprintfln      (&sb, "-----------[status] %i %v", int(req.response.status), req.response.status)
         fmt.sbprintfln      (&sb, "-------------[time] %v", req.response.time)
+        fmt.sbprintfln      (&sb, "-----------[status] %i %v", int(req.response.status), req.response.status)
         sbprint_params      (&sb, "----------[headers]", req.response.headers) or_return
         sbprint_res_content (&sb, "----------[content]", req.response.content, res_ct_str, .res_content in options)
     }

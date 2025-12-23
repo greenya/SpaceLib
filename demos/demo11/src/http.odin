@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:time"
 import "spacelib:userhttp"
 
 http_init :: proc () {
@@ -23,11 +24,12 @@ http_send_request :: proc () {
     req := userhttp.make({
         // url="https://www.google.com/test/for/404",
         url="https://httpbin.org/post",
-        query={{"id",555},{"action","a+b=c"}},
-        headers={{"color","green"}/*,{"content-type",userhttp.Content_Type_Binary}*/},
-        content=[] userhttp.Param {{"aaa",123},{"bbb",456}},
+        query={{"a",1},{"b","+!%"}},
+        headers={{"c","d"}/*,{"content-type",userhttp.Content_Type_Binary}*/},
+        content=[] userhttp.Param {{"e",7},{"f","g+"}},
         // content=[] byte {1,2,3,4,5,6,7,8,9,10},
         // content="This is some plain text.",
+        timeout=5*time.Second,
     })
 
     userhttp.send(&req)
