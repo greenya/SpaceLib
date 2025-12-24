@@ -1,6 +1,5 @@
 package userhttp
 
-import "core:mem"
 import "core:slice"
 import "core:strings"
 
@@ -11,7 +10,7 @@ Content :: union {
 }
 
 @private
-clone_content :: proc (content: Content) -> (result: Content, err: mem.Allocator_Error) {
+clone_content :: proc (content: Content) -> (result: Content, err: Allocator_Error) {
     switch v in content {
     case [] Param   : result = clone_params(v) or_return
     case [] byte    : result = slice.clone(v) or_return
@@ -21,7 +20,7 @@ clone_content :: proc (content: Content) -> (result: Content, err: mem.Allocator
 }
 
 @private
-delete_content :: proc (content: Content) -> (err: mem.Allocator_Error) {
+delete_content :: proc (content: Content) -> (err: Allocator_Error) {
     switch v in content {
     case [] Param   : delete_params(v) or_return
     case [] byte    : delete_(v) or_return

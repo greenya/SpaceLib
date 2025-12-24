@@ -1,7 +1,6 @@
 package userhttp
 
 import "core:fmt"
-import "core:mem"
 import "core:slice"
 import "core:strings"
 
@@ -15,12 +14,11 @@ print_report :: proc (req: Request, options: bit_set [Report_Option] = ~{}) {
     fmt.println(rep)
 }
 
-report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) #optional_allocator_error {
+report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator := context.allocator) -> (result: string, err: Allocator_Error) #optional_allocator_error {
     sb := strings.builder_make(allocator) or_return
 
     {
-        req_ct := param(req.headers, "content-type")
-        req_ct_str, _ := req_ct.(string) // expect only string, other type is ignored
+        req_ct_str := param_as_string(req.headers, "content-type", context.temp_allocator) or_return
         req_timeout_str := req.timeout > 0 ? fmt.tprint(req.timeout) : "-"
 
         fmt.sbprintln       (&sb, "--------------------------------------------------[request]")
@@ -41,8 +39,7 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
     }
 
     if req.response.status != .None {
-        res_ct := param(req.response.headers, "content-type")
-        res_ct_str, _ := res_ct.(string) // expect only string, other type is ignored
+        res_ct_str := param_as_string(req.response.headers, "content-type", context.temp_allocator) or_return
 
         fmt.sbprintln       (&sb, "-------------------------------------------------[response]")
         fmt.sbprintfln      (&sb, "-------------[time] %v", req.response.time)
@@ -58,7 +55,7 @@ report :: proc (req: Request, options: bit_set [Report_Option] = ~{}, allocator 
 }
 
 @private
-sbprint_params :: proc (sb: ^strings.Builder, prefix: string, params: [] Param) -> (err: mem.Allocator_Error) {
+sbprint_params :: proc (sb: ^strings.Builder, prefix: string, params: [] Param) -> (err: Allocator_Error) {
     result := "-"
 
     if params != nil {
@@ -74,7 +71,7 @@ sbprint_params :: proc (sb: ^strings.Builder, prefix: string, params: [] Param) 
 }
 
 @private
-sbprint_req_content :: proc (sb: ^strings.Builder, prefix: string, content: Content, content_type: string, should_dump: bool) -> (err: mem.Allocator_Error) {
+sbprint_req_content :: proc (sb: ^strings.Builder, prefix: string, content: Content, content_type: string, should_dump: bool) -> (err: Allocator_Error) {
     switch v in content {
     case [] Param:
         sbprint_params(sb, prefix, v) or_return
@@ -106,14 +103,4 @@ sbprint_res_content :: proc (sb: ^strings.Builder, prefix: string, content: [] b
         fmt.sbprintfln(sb, "%s %M", prefix, 0)
     }
     return
-}
-
-@private
-error_type_name :: proc (error: Error) -> string {
-    switch v in error {
-    case mem.Allocator_Error: return "Allocator Error"
-    case Network_Error      : return "Network Error"
-    case Status_Code        : return "HTTP Error"
-    case                    : unimplemented()
-    }
 }

@@ -103,11 +103,12 @@ Response :: struct {
 // - "POST" if `content != nil`
 //
 // If `content != nil` and no "Content-Type" `header` is set, it will be auto-added with value:
-// - `Content_Type_Params` for content of type `[] Param`
-// - `Content_Type_Binary` for content of type `[] byte`
-// - `Content_Type_JSON` for content of type `string` starts with `{` character
-// - `Content_Type_Text` for content of type `string` (anything else)
-make :: proc (init: Request, allocator := context.allocator) -> (req: Request, err: mem.Allocator_Error) #optional_allocator_error {
+// - `Content_Type_Params` for `content` of type `[] Param`
+// - `Content_Type_Binary` for `content` of type `[] byte`
+// - `Content_Type_JSON` for `content` of type `string` starts with `{` character
+// - `Content_Type_XML` for `content` of type `string` starts with `<` character
+// - `Content_Type_Text` for `content` of type `string` otherwise
+make :: proc (init: Request, allocator := context.allocator) -> (req: Request, err: Allocator_Error) #optional_allocator_error {
     context.allocator = allocator
 
     init_method := init.method
@@ -116,16 +117,15 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
     }
 
     content_type: string
-    if param(init.headers, "Content-Type") == nil do switch v in init.content {
-    case [] Param:
-        content_type = Content_Type_Params
-    case [] byte:
-        content_type = Content_Type_Binary
+    if !param_exists(init.headers, "Content-Type") do switch v in init.content {
+    case [] Param                               : content_type = Content_Type_Params
+    case [] byte                                : content_type = Content_Type_Binary
     case string:
-        if strings.has_prefix(strings.trim_left(v, "\n\t "), "{") {
-            content_type = Content_Type_JSON
-        } else {
-            content_type = Content_Type_Text
+        v_trimmed := strings.trim_left(v, "\n\t ")
+        switch {
+        case strings.has_prefix(v_trimmed, "{") : content_type = Content_Type_JSON
+        case strings.has_prefix(v_trimmed, "<") : content_type = Content_Type_XML
+        case                                    : content_type = Content_Type_Text
         }
     }
 
@@ -141,7 +141,7 @@ make :: proc (init: Request, allocator := context.allocator) -> (req: Request, e
 }
 
 // Deallocates request instance previously allocated by `make()`.
-delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
+delete :: proc (req: Request) -> (err: Allocator_Error) {
     delete_         (req.method)            or_return
     delete_         (req.url)               or_return
     delete_params   (req.query)             or_return
@@ -153,44 +153,45 @@ delete :: proc (req: Request) -> (err: mem.Allocator_Error) {
     return
 }
 
-// Sends the request.
+// Sends the request. Also cleans up previous error and response details of the `req`.
 //
-// - On success, `ok == true` and `content == req.response.content`
-// - On failure, `ok == false` and `content == nil`; additionally:
-//      - the `req.error_msg` will be set in case error is a `Network_Error`
-//      - the `req.response` will be set in case error is a `Status_Code` error
-//
-// Note: Returned `content` is the same slice as `req.response.content`, and it will be
-// deallocated on `delete(req)`, so clone it in case you need to keep it.
-send :: proc (req: ^Request) -> (content: [] byte, ok: bool) #optional_ok {
-    // clean up previous response and error (ignore allocator errors)
-
-    delete_params(req.response.headers)
-    delete_(req.response.content)
-    req.response = {}
-
-    delete_(req.error_msg)
-    req.error_msg = ""
-    req.error = nil
-
-    // perform the request
+// - On success, `err == nil` and `content == req.response.content`
+// - On failure, `err != nil` and `content == nil`; additionally:
+//      - `req.error == err`
+//      - `req.error_msg` will be set in case error is a `Network_Error`
+//      - `req.response` will be set in case error is a `Status_Code` error
+send :: proc (req: ^Request) -> (content: [] byte, err: Error) {
+    err = clean_up_previous_response(req)
+    if err != nil {
+        req.error = err
+        return
+    }
 
     start := time.now()
     platform_send(req)
 
     if req.error == nil {
         req.response.time = time.since(start)
-        // if no allocator error and no network error -- check http status
-        if status_code_category(req.response.status) != .successful {
-            assert(req.response.status != .None)
+        assert(req.response.status != .None)
+        if status_code_category(req.response.status) != .Successful {
             req.error = req.response.status
         }
     }
 
-    // setup return values
+    return\
+        req.error == nil ? req.response.content : nil,
+        req.error
+}
 
-    ok = req.error == nil
-    content = ok ? req.response.content : nil
+@private
+clean_up_previous_response :: proc (req: ^Request) -> (err: Error) {
+    delete_params(req.response.headers) or_return
+    delete_(req.response.content) or_return
+    req.response = {}
+
+    delete_(req.error_msg) or_return
+    req.error_msg = ""
+    req.error = nil
 
     return
 }

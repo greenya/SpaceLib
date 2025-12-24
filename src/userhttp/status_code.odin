@@ -111,22 +111,22 @@ Status_Code :: enum {
 }
 
 Status_Code_Category :: enum {
-    none,
-    informational,
-    successful,
-    redirection,
-    client_error,
-    server_error,
+    None,
+    Informational,
+    Successful,
+    Redirection,
+    Client_Error,
+    Server_Error,
 }
 
 status_code_category :: proc (status_code: Status_Code) -> (cat: Status_Code_Category) {
     code := int(status_code)
     switch {
-    case code>=100 && code<=199: cat = .informational
-    case code>=200 && code<=299: cat = .successful
-    case code>=300 && code<=399: cat = .redirection
-    case code>=400 && code<=499: cat = .client_error
-    case code>=500 && code<=599: cat = .server_error
+    case code>=100 && code<=199: cat = .Informational
+    case code>=200 && code<=299: cat = .Successful
+    case code>=300 && code<=399: cat = .Redirection
+    case code>=400 && code<=499: cat = .Client_Error
+    case code>=500 && code<=599: cat = .Server_Error
     }
     return
 }

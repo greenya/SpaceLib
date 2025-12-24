@@ -10,13 +10,13 @@ foreign userhttp {
 }
 
 Network_Error :: enum {
-    ok,
-    error,
+    None,
+    Error,
 }
 
 platform_init :: proc () -> Network_Error {
     // nothing
-    return .ok
+    return .None
 }
 
 platform_destroy :: proc () {

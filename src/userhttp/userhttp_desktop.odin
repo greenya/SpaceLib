@@ -5,7 +5,6 @@ package userhttp
 import "base:runtime"
 import "core:c"
 import "core:fmt"
-import "core:mem"
 import "core:slice"
 import "core:strings"
 import "core:time"
@@ -144,7 +143,7 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
     return
 }
 
-_curl_escape :: proc (s: string, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) {
+_curl_escape :: proc (s: string, allocator := context.allocator) -> (result: string, err: Allocator_Error) {
     // Since 7.82.0, the cURL handle (1st parameter) is ignored.
     cstr := curl.easy_escape(nil, cstring(raw_data(s)), c.int(len(s)))
     result = strings.clone_from_cstring(cstr, allocator) or_return
@@ -152,7 +151,7 @@ _curl_escape :: proc (s: string, allocator := context.allocator) -> (result: str
     return
 }
 
-_percent_encoded_params :: proc (params: [] Param, allocator := context.allocator) -> (result: string, err: mem.Allocator_Error) {
+_percent_encoded_params :: proc (params: [] Param, allocator := context.allocator) -> (result: string, err: Allocator_Error) {
     if len(params) == 0 do return "", .None
 
     context.allocator = context.temp_allocator

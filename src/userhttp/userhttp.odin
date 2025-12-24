@@ -3,24 +3,9 @@ package userhttp
 import "base:builtin"
 import "core:mem"
 
-@private make_      :: builtin.make
-@private delete_    :: builtin.delete
-
-Error :: union #shared_nil {
-    // Memory allocation error.
-    mem.Allocator_Error,
-
-    // Network error:
-    // - on the desktop, it equals to cURL's Error Code
-    // - on the web, it is a simple enum with `.ok` and `.error`
-    //
-    // `Response.error_msg` contains the details on this type of error.
-    Network_Error,
-
-    // HTTP error (status code):
-    // Status codes 200-299 are not used here and considered to be "no error" codes.
-    Status_Code,
-}
+@private make_              :: builtin.make
+@private delete_            :: builtin.delete
+@private Allocator_Error    :: mem.Allocator_Error
 
 init :: proc () -> Network_Error {
     return platform_init()

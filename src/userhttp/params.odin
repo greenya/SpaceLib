@@ -1,8 +1,14 @@
 package userhttp
 
+import "core:fmt"
 import "core:mem"
 import "core:slice"
 import "core:strings"
+
+// TODO: ? maybe rework params to keep values as strings, only allow to pass `any` in `make()`
+// for convenience; because we still transmit all key-value pairs as strings (query params and
+// headers), and we always have strings in the received response headers;
+// p.s.: this change would simplify code greatly: no value switches, no need for param_as_string()
 
 Param :: struct {
     name    : string,
@@ -21,8 +27,21 @@ param :: proc (params: [] Param, name: string) -> Param_Value {
     return nil
 }
 
+// `name` is case-insensitive.
+param_as_string :: proc (params: [] Param, name: string, allocator := context.allocator) -> (result: string, err: Allocator_Error) #optional_allocator_error {
+    value := param(params, name)
+    result = fmt.aprint(value, allocator=allocator)
+    return
+}
+
+// `name` is case-insensitive.
+param_exists :: proc (params: [] Param, name: string) -> bool {
+    for p in params do if strings.equal_fold(name, p.name) do return true
+    return false
+}
+
 @private
-clone_params :: proc (params: [] Param, append_content_type := "") -> (result: [] Param, err: mem.Allocator_Error) {
+clone_params :: proc (params: [] Param, append_content_type := "") -> (result: [] Param, err: Allocator_Error) {
     count := len(params) + (append_content_type != "" ? 1 : 0)
 
     result = make_([] Param, count) or_return
@@ -45,7 +64,7 @@ clone_params :: proc (params: [] Param, append_content_type := "") -> (result: [
 }
 
 @private
-delete_params :: proc (params: [] Param) -> (err: mem.Allocator_Error) {
+delete_params :: proc (params: [] Param) -> (err: Allocator_Error) {
     for p in params {
         delete_(p.name)
         switch v in p.value {
@@ -58,7 +77,7 @@ delete_params :: proc (params: [] Param) -> (err: mem.Allocator_Error) {
 }
 
 @private
-create_headers_from_text :: proc (text: string, allocator: mem.Allocator) -> (headers: [] Param, err: mem.Allocator_Error) {
+create_headers_from_text :: proc (text: string, allocator: mem.Allocator) -> (headers: [] Param, err: Allocator_Error) {
     headers_temp := make_([dynamic] Param, context.temp_allocator) or_return
 
     for line in strings.split_lines(text, context.temp_allocator) or_return {
