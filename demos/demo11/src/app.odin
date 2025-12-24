@@ -27,8 +27,9 @@ app_tick :: proc () {
     }
 
     if rl.IsKeyPressed(.TWO) {
-        scores, _ := pt_get_scores(context.temp_allocator)
-        fmt.println("SCORES", scores)
+        scores, err := pt_get_scores(limit=20, allocator=context.temp_allocator)
+        if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
+        else            do fmt.printfln("scores: %#v", scores)
     }
 }
 

@@ -1,21 +1,34 @@
 package main
 
-// PurpleToken API: https://purpletoken.com/api.php
+// docs: https://purpletoken.com/api.php
 
 import "core:encoding/base64"
 import "core:encoding/json"
 import "core:crypto/hash"
 import "core:fmt"
+import "core:mem"
 import "core:strconv"
 import "core:strings"
 import "core:time"
 import "spacelib:userhttp"
 
+// ------------------------- config -------------------------
+
 PT_API_URL      :: "https://purpletoken.com/update/v3"
 PT_API_SECRET   :: "A secret pass phrase goes here"
 PT_GAME_KEY     :: "65ca329ff0f6dc94e3391cab956c02607d5b2271"
 
-PT_Error :: enum {
+// ------------------------- core -------------------------
+
+Pt_Error :: union {
+    mem.Allocator_Error,
+    userhttp.Error,
+    json.Unmarshal_Error,
+    Pt_Api_Error,
+    Pt_Parse_Error,
+}
+
+Pt_Api_Error :: enum {
     ERROR_UNKNOWN               = -1,
     ERROR_SUCCESS               = 1,
     ERROR_NAME_LENGTH           = 2,
@@ -26,41 +39,46 @@ PT_Error :: enum {
     ERROR_INTEGRITY_CHECK_FAIL  = 7,
 }
 
-@rodata
-PT_Error_Hint := #sparse [PT_Error] string {
-    .ERROR_UNKNOWN              = "???",
-    .ERROR_SUCCESS              = "Score was added successfully",
-    .ERROR_NAME_LENGTH          = "Name length exceeded 32 characters",
-    .ERROR_GAMEKEY_NOT_FOUND    = "Invalid gamekey was given",
-    .ERROR_LOW_SCORE            = "Score too low for top 20",
-    .ERROR_MISSING_REQ          = "Missing requirement",
-    .ERROR_INSUFFICIENT_RIGHTS  = "Trying to delete a score when key hasn't been granted delete permission",
-    .ERROR_INTEGRITY_CHECK_FAIL = "Signature did not much up with payload",
+Pt_Parse_Error :: enum {
+    Content_Is_Empty,       // successful response with empty content
+    Content_Is_Unsupported, // successful response with non-json and non-parsable error code
 }
 
-pt_params :: proc (args: string, allocator := context.allocator) -> (payload, sig: string) {
+pt_params :: proc (args: string, allocator := context.allocator) -> (payload, sig: string, err: mem.Allocator_Error) {
     context.allocator = context.temp_allocator
 
     params := fmt.tprintf("gamekey=%s&%s", PT_GAME_KEY, args)
-    payload = base64.encode(transmute ([]byte) params, allocator=allocator)
+    payload = base64.encode(transmute ([]byte) params, allocator=allocator) or_return
 
     sig_digest := hash.hash_string(.SHA256, fmt.tprintf("%s%s", payload, PT_API_SECRET))
-    sig_sb := strings.builder_make(allocator=allocator)
+    sig_sb := strings.builder_make(allocator=allocator) or_return
     for b in sig_digest do fmt.sbprintf(&sig_sb, "%2x", b)
     sig = strings.to_string(sig_sb)
 
     return
 }
 
-pt_print_error :: proc (content: string) {
-    err, ok := strconv.parse_int(string(content))
-    pt_err := PT_Error(err)
-    pt_err_hint := PT_Error_Hint[pt_err]
-    if ok   do fmt.println("PT API Error:", pt_err, pt_err_hint)
-    else    do fmt.println("PT API Error (raw):", string(content))
+pt_parse_content :: proc (content: [] byte, ptr: ^$T, allocator := context.allocator) -> (err: Pt_Error) {
+    if content == nil do return .Content_Is_Empty
+
+    assert(len(content) > 0)
+    if content[0] != '{' {
+        // not a JSON, must be an error code (an integer)
+        code, code_ok := strconv.parse_int(string(content))
+        if code_ok {
+            return Pt_Api_Error(code)
+        } else {
+            fmt.println("[content]", content)
+            return .Content_Is_Unsupported
+        }
+    }
+
+    json.unmarshal(content, ptr, allocator=allocator) or_return
+
+    return
 }
 
-// ------------------------- GET SCORES -------------------------
+// ------------------------- get scores -------------------------
 
 Pt_Get_Scores_Result :: struct {
     scores: [] struct {
@@ -70,47 +88,25 @@ Pt_Get_Scores_Result :: struct {
     },
 }
 
-pt_get_scores :: proc (allocator := context.allocator) -> (result: Pt_Get_Scores_Result, ok: bool) {
-    fmt.println(#procedure)
+// `limit`: Number of scores to return.
+pt_get_scores :: proc (limit: int, allocator := context.allocator) -> (result: Pt_Get_Scores_Result, err: Pt_Error) {
     context.allocator = context.temp_allocator
 
-    payload, sig := pt_params("format=json&dates=yes&limit=20")
+    params := fmt.tprintf("format=json&dates=yes&limit=%i", limit)
+    payload, sig := pt_params(params) or_return
 
     req := userhttp.make({
         url     = PT_API_URL + "/get",
         content = [] userhttp.Param { {"payload",payload}, {"sig",sig} },
         timeout = 10 * time.Second,
-    })
+    }) or_return
 
-    defer userhttp.delete(req)
-
-    content := userhttp.send(&req)
-
-    if content != nil {
-        if len(content) > 0 {
-            if content[0] == '{' {
-                err := json.unmarshal(content, &result, allocator=allocator)
-                if err == nil {
-                    ok = true
-                } else {
-                    fmt.println("Failed to json.unmarshal():", err)
-                }
-            } else {
-                pt_print_error(string(content))
-            }
-        } else {
-            fmt.println("Failed to receive content")
-        }
-    } else {
-        fmt.println("Failed to userhttp.send():", req.error, req.error_msg)
-        if req.response.status != .None {
-            fmt.println("HTTP Response Status:", req.response.status)
-        }
-    }
+    content := userhttp.send(&req) or_return
+    pt_parse_content(content, &result, allocator=allocator) or_return
 
     return
 }
 
-// ------------------------- SUBMIT SCORE -------------------------
+// ------------------------- submit score -------------------------
 
 // TODO: impl
