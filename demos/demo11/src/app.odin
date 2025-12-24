@@ -31,6 +31,12 @@ app_tick :: proc () {
         if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
         else            do fmt.printfln("scores: %#v", scores)
     }
+
+    if rl.IsKeyPressed(.THREE) {
+        err := pt_submit_score(player="TestPlayerTwo", score=4002)
+        if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
+        else            do fmt.printfln("score submitted")
+    }
 }
 
 app_draw :: proc () {
