@@ -58,6 +58,20 @@ Request :: struct {
     //
     // Only used with `Network_Error`, and contains platform dependent details (error message).
     // For other errors (`Allocator_Error`, `Status_Code`) this value is empty.
+    //
+    // On the web (Fetch API), this value might be very general, like "TypeError: Failed to fetch",
+    // which might indicate variety of issues:
+    // - CORS rejection
+    // - DNS failure
+    // - TLS failure
+    // - Network unreachable
+    // - Connection refused
+    // - Mixed content block
+    // - Ad blocker / extension interference
+    //
+    // The issue itself can only be seen in the browser console (e.g. "net::ERR_NAME_NOT_RESOLVED").
+    //
+    // More: [Window: fetch() method](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch)
     error_msg: string,
 
     // Received response after `send()` call.
@@ -160,6 +174,11 @@ delete :: proc (req: Request) -> (err: Allocator_Error) {
 //      - `req.error == err`
 //      - `req.error_msg` will be set in case error is a `Network_Error`
 //      - `req.response` will be set in case error is a `Status_Code` error
+//
+// On the web (Fetch API), requests are subject to browser CORS rules. Requests that succeed
+// on native platforms may fail or be unreadable in browsers.
+//
+// More: [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
 send :: proc (req: ^Request) -> (content: [] byte, err: Error) {
     err = clean_up_previous_response(req)
     if err != nil {
