@@ -10,9 +10,14 @@ import "core:strings"
 import "core:time"
 import "vendor:curl"
 
-Network_Error :: curl.code
+Platform_Error :: curl.code
 
-platform_init :: proc () -> Network_Error {
+Platform_Handle :: struct {
+    easy    : ^curl.CURL,
+    multi   : ^curl.CURLM,
+}
+
+platform_init :: proc () -> Platform_Error {
     return curl.global_init(curl.GLOBAL_DEFAULT)
 }
 
@@ -23,7 +28,7 @@ platform_destroy :: proc () {
 platform_send :: proc (req: ^Request) {
     req.error = _curl_send(req)
 
-    if err_net, ok := req.error.(Network_Error); ok {
+    if err_net, ok := req.error.(Platform_Error); ok {
         assert(err_net != .E_OK)
         cstr := curl.easy_strerror(err_net)
         req.error_msg = strings.clone_from(cstr, req.allocator) // ignore allocator error

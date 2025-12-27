@@ -6,12 +6,12 @@ Error :: union #shared_nil {
     // Memory allocation error.
     Allocator_Error,
 
-    // Network error:
+    // Platform error:
     // - on the desktop, it equals to cURL's Error Code
-    // - on the web, it is a simple enum with `.None` and `.Error`
+    // - on the web, it is a simple enum
     //
     // `Response.error_msg` contains the details on this type of error.
-    Network_Error,
+    Platform_Error,
 
     // HTTP error (status code):
     // Status codes 200-299 are not used here and considered to be "no error" codes.
@@ -33,7 +33,7 @@ print_error :: proc (error: Error, error_msg := "") {
 error_type_name :: proc (error: Error) -> string {
     switch v in error {
     case Allocator_Error    : return "Allocator Error"
-    case Network_Error      : return "Network Error"
+    case Platform_Error     : return "Platform Error"
     case Status_Code        : return "HTTP Error"
     case                    : unimplemented()
     }

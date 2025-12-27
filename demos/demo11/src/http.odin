@@ -15,13 +15,18 @@ http_destroy :: proc () {
 http_send_request :: proc () {
     fmt.println(#procedure)
 
-    req := userhttp.make({
+    userhttp.send_request({
         url="https://api.github.com/repos/odin-lang/Odin",
         headers={{"user-agent","userhttp"}}, // GitHub API requires User-Agent header set
+        ready = proc (req: ^userhttp.Request) {
+            userhttp.print_report(req^)
+            userhttp.destroy_request(req)
+        },
     })
-    userhttp.send(&req)
-    userhttp.print_report(req)
-    userhttp.delete(req)
+
+    // userhttp.send(&req)
+    // userhttp.print_report(req)
+    // userhttp.delete(req)
 
     // res, ok := userhttp.send({ url="https://www.google.com/test/for/404" })
     // defer userhttp.delete_response(res)

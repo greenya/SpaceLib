@@ -2,23 +2,29 @@
 #+private
 package userhttp
 
+import "base:runtime"
 import "core:encoding/json"
 import "core:fmt"
 // import "core:mem"
-import "core:time"
+import "core:strings"
+// import "core:time"
 
 foreign import "userhttp"
 
 @(default_calling_convention="contextless")
 foreign userhttp {
-    userhttp_fetch  :: proc (req_id: i32, req: [] byte)     ---
-    userhttp_state  :: proc (req_id: i32) -> i32            ---
-    userhttp_get    :: proc (req_id: i32, res: [] byte)     ---
+    userhttp_fetch  :: proc (fetch_id: i32, input: [] byte)   ---
+    userhttp_size   :: proc (fetch_id: i32) -> i32            ---
+    userhttp_pop    :: proc (fetch_id: i32, output: [] byte)  ---
 }
 
-Network_Error :: enum {
+Platform_Error :: enum {
     None,
     Error,
+}
+
+Platform_Handle :: struct {
+    fetch_id: i32,
 }
 
 _Input :: struct {
@@ -37,10 +43,9 @@ _Output :: struct {
     content_base64  : string,
 }
 
-// TODO: make this tread safe?
-_next_request_id := i32(12340001)
+_next_fetch_id := i32(70001)
 
-platform_init :: proc () -> Network_Error {
+platform_init :: proc () -> Platform_Error {
     // nothing
     return .None
 }
@@ -52,72 +57,6 @@ platform_destroy :: proc () {
 platform_send :: proc (req: ^Request) {
     context.allocator = context.temp_allocator
 
-    state: i32
-    req_id := _fetch(req)
-
-    for _ in 0..<10 {
-        state := userhttp_state(req_id)
-        if state != 0 do break
-        time.sleep(100*time.Millisecond)
-    }
-
-    if state <= 0 {
-        req.error = .Error
-        req.error_msg = fmt.aprint("xxxxx")
-        return
-    }
-
-    buffer := make_([] byte, state)
-    userhttp_get(req_id, buffer)
-
-    fmt.println(#procedure, "buffer len", len(buffer))
-    fmt.println(#procedure, "buffer (bytes)", buffer)
-    fmt.println(#procedure, "buffer (string)", string(buffer))
-
-    // TODO: handle the result -- req.error, req.error_msg, req.response (status, headers, content)
-
-    // input, input_err := _request_to_input_tmp(req^)
-    // if input_err != nil {
-    //     req.error = input_err
-    //     return
-    // }
-
-    // input_bytes, json_err := json.marshal(input)
-    // if json_err != nil {
-    //     req.error = .Error
-    //     req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=req.allocator)
-    //     return
-    // }
-
-    // req_id := _next_request_id
-    // _next_request_id += 1
-
-    // userhttp_send(req_id, input_bytes)
-
-    // buffer := make_([] byte, 16*mem.Kilobyte)
-    // buffer_used := userhttp_send(args_bytes, buffer)
-    // fmt.println("buffer_used", buffer_used)
-
-    // if buffer_used < 0 {
-    //     // buffer too small, retry with exact needed size
-    //     buffer_size_needed := abs(buffer_used)
-    //     buffer = make_([] byte, buffer_size_needed)
-    //     buffer_used = userhttp_send(args_bytes, buffer)
-    // }
-
-    // if buffer_used < 0 {
-    //     req.error = .Error
-    //     req.error_msg = fmt.aprint("Failed to satisfy response buffer size", allocator=req.allocator)
-    //     return
-    // }
-
-    // ensure(int(buffer_used) < len(buffer))
-    // fmt.println(#procedure, "buffer len", len(buffer))
-    // fmt.println(#procedure, "buffer (bytes)", buffer)
-    // fmt.println(#procedure, "buffer (string)", string(buffer))
-}
-
-_fetch :: proc (req: ^Request) -> (req_id: i32) {
     input, input_err := _request_to_input_tmp(req^)
     if input_err != nil {
         req.error = input_err
@@ -131,12 +70,46 @@ _fetch :: proc (req: ^Request) -> (req_id: i32) {
         return
     }
 
-    req_id = _next_request_id
-    _next_request_id += 1
+    fetch_id := _next_fetch_id
+    _next_fetch_id += 1
 
-    userhttp_fetch(req_id, input_bytes)
+    req.handle.fetch_id = fetch_id
+    userhttp_fetch(fetch_id, input_bytes)
+}
 
-    return
+@export
+platform_userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
+    context = runtime.default_context()
+    fmt.println(#procedure, fetch_id, size)
+
+    assert(size > 0)
+    output_bytes := make_([] byte, size, context.temp_allocator)
+    userhttp_pop(fetch_id, output_bytes)
+
+    req, _ := find_request_by_handle({ fetch_id=fetch_id })
+    assert(req != nil)
+
+    output: _Output
+    json_err := json.unmarshal(output_bytes, &output, allocator=context.temp_allocator)
+    if json_err != nil {
+        req.error = .Error
+        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=req.allocator)
+        return
+    }
+
+    if output.error != "" {
+        req.error = .Error
+        req.error_msg = strings.clone(output.error, req.allocator)
+    } else {
+        req.response.status = Status_Code(output.status)
+        // TODO set from output.header_params
+        // req.response.headers = ...
+        // TODO set from output.content_base64
+        // req.response.content = ...
+    }
+
+    destroy_request_by_handle({ fetch_id=fetch_id })
+    if req.ready != nil do req.ready(req)
 }
 
 _request_to_input_tmp :: proc (req: Request) -> (input: _Input, err: Allocator_Error) {

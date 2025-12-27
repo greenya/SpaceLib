@@ -23,79 +23,86 @@ const userhttp = {
     memory  : null,
     imports : {
         userhttp_fetch,
-        userhttp_state,
-        userhttp_get,
-        // userhttp_send,
+        userhttp_size,
+        userhttp_pop,
     },
 }
 
 const requests = new Map()
+window.rrr = requests
 
-function userhttp_fetch(req_id, req_ptr, req_len) {
+function userhttp_fetch(fetch_id, req_ptr, req_len) {
     log("fetch", arguments)
+
+    const req_json = userhttp.memory.loadString(req_ptr, req_len)
+    const req = JSON.parse(req_json)
+    log("req", req)
+
+    const req_url = make_url(req.url, req.query_params)
+    log("req_url", req_url)
+
+    const req_headers = make_headers(req.header_params)
+    log("req_headers", req_headers)
+
+    const req_body = make_body(req.content_params, req.content_base64)
+    log("req_body", req_body)
+
+    requests.set(fetch_id, {})
+
+    fetch(req_url, {
+        method  : req.method,
+        headers : req_headers,
+        body    : req_body,
+    })
+    .then(r => handle_response(fetch_id, r))
+    .catch(e => handle_error(fetch_id, e))
 }
 
-function userhttp_state(req_id) {
-    log("state", arguments)
-    return -1
+function userhttp_size(fetch_id) {
+    log("size", arguments)
+
+    const data = requests.get(fetch_id)
+    return data.json_len ? data.json_len : 0
 }
 
-function userhttp_get(req_id, res_ptr, res_len) {
-    log("get", arguments)
+function userhttp_pop(fetch_id, res_ptr, res_len) {
+    log("pop", arguments)
+
+    const data = requests.get(fetch_id)
+    requests.delete(fetch_id)
+
+    if (res_len == data.json_len) {
+        userhttp.memory.storeString(res_ptr, data.json)
+    } else {
+        err(`res_len ${res_len} != json_len ${data.json_len}`)
+    }
 }
 
-// async function userhttp_send(req_ptr, req_len, res_ptr, res_len) {
-//     log("send", arguments)
+async function handle_response(fetch_id, response) {
+    const status = response.status
 
-//     const req_json = userhttp.memory.loadString(req_ptr, req_len)
-//     const req = JSON.parse(req_json)
-//     log("req", req)
+    const header_params = []
+    for (const [ name, value ] of response.headers.entries()) {
+        header_params.push([ name, value ])
+    }
 
-//     const req_url = make_url(req.url, req.query_params)
-//     log("req_url", req_url)
+    const content_bytes = await response.bytes()
+    const content_base64 = content_bytes.toBase64()
 
-//     const req_headers = make_headers(req.header_params)
-//     log("req_headers", req_headers)
+    request_ready(fetch_id, { status, header_params, content_base64 })
+}
 
-//     const req_body = make_body(req.content_params, req.content_base64)
-//     log("req_body", req_body)
+function handle_error(fetch_id, data) {
+    const error = String(data)
+    request_ready(fetch_id, { error })
+}
 
-//     const res = {}
-//     try {
-//         const response = await fetch(req_url, {
-//             method  : req.method,
-//             headers : req_headers,
-//             body    : req_body,
-//         })
-
-//         res.status = response.status
-
-//         res.header_params = []
-//         for (const [ name, value ] of response.headers.entries()) {
-//             res.header_params.push([ name, value ])
-//         }
-
-//         const res_content_bytes = await response.bytes()
-//         const res_content_string = String.fromCodePoint(...res_content_bytes)
-//         res.content_base64 = btoa(res_content_string)
-//     } catch (e) {
-//         res.error = e.toString()
-//     }
-
-//     const res_json = JSON.stringify(res)
-
-//     if (res_json.length <= res_len) {
-//         userhttp.memory.storeString(res_ptr, res_json)
-//         log("#### buffer ok")
-//         return res_json.length
-//     } else {
-//         // TODO: store res_json somewhere, and quickly return it when called again with large enough buffer;
-//         // a single value will not be enough (e.g. "last_response"), as multiple requests might be in progress
-//         // at the same time... maybe we need some request_id
-//         log("#### buffer too small")
-//         return -res_json.length
-//     }
-// }
+function request_ready(fetch_id, data) {
+    const json = JSON.stringify(data)
+    const json_len = json.length
+    requests.set(fetch_id, { json, json_len })
+    wasmExports.platform_userhttp_ready(fetch_id, json_len)
+}
 
 function make_url(url, query_params) {
     const result = new URL(url)

@@ -49,15 +49,15 @@ Pt_Get_Scores_Result :: struct {
 }
 
 pt_send :: proc (action: string, args: string, allocator := context.allocator) -> (content: [] byte, err: Pt_Error) {
-    payload, sig := pt_params(args, context.temp_allocator) or_return
+    // payload, sig := pt_params(args, context.temp_allocator) or_return
 
-    req := userhttp.make({
-        url     = fmt.tprintf("%s%s", PT_API_URL, action),
-        content = [] userhttp.Param { {"payload",payload}, {"sig",sig} },
-        timeout = 30 * time.Second,
-    }, allocator) or_return
+    // req := userhttp.make({
+    //     url     = fmt.tprintf("%s%s", PT_API_URL, action),
+    //     content = [] userhttp.Param { {"payload",payload}, {"sig",sig} },
+    //     timeout = 30 * time.Second,
+    // }, allocator) or_return
 
-    content = userhttp.send(&req) or_return
+    // content = userhttp.send(&req) or_return
 
     return
 }
