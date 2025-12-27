@@ -1,30 +1,35 @@
 package userhttp
 
-import "base:builtin"
-import "core:mem"
 import "core:strings"
-
-@private make_              :: builtin.make
-@private delete_            :: builtin.delete
-@private Allocator_Error    :: mem.Allocator_Error
 
 requests: [dynamic] ^Request
 
-init :: proc () -> Platform_Error {
-    return platform_init()
+init :: proc (allocator := context.allocator) -> (err: Error) {
+    requests = make([dynamic] ^Request, allocator) or_return
+    platform_init() or_return
+    return
 }
 
-destroy :: proc () {
+destroy :: proc () -> (err: Allocator_Error) {
     platform_destroy()
+    delete(requests) or_return
+    return
 }
 
-tick :: proc () {
-    // TODO: poll requests status
+tick :: proc () -> (err: Allocator_Error) {
+    #reverse for req, idx in requests {
+        if req.error != nil || req.response.status != .None {
+            if req.ready != nil {
+                req.ready(req)
+            }
+            unordered_remove(&requests, idx)
+            destroy_request(req) or_return
+        }
+    }
+    return
 }
 
-// Send the request.
-//
-// Allocates new request instance. Call `destroy_request()` to deallocate it later.
+// Sends the request.
 //
 // If `method` is empty, it will be auto-set to:
 // - "GET" if `content == nil`
@@ -36,8 +41,12 @@ tick :: proc () {
 // - `Content_Type_JSON` for `content` of type `string` starts with `{` character
 // - `Content_Type_XML` for `content` of type `string` starts with `<` character
 // - `Content_Type_Text` for `content` of type `string` otherwise
-send_request :: proc (init: Request, allocator := context.allocator) -> (req: ^Request, err: Allocator_Error) #optional_allocator_error {
-    context.allocator = allocator
+//
+// The request will be allocated and sent; the `tick()` call will update its progress, once
+// it is resolved (succeeded or failed), `req.ready()` callback will be called from `tick()`.
+// The request will be deallocated by `tick()` right after `req.ready()` returns.
+send_request :: proc (init: Request_Init) -> (err: Allocator_Error) {
+    context.allocator = requests.allocator
 
     init_method := init.method
     if init_method == "" {
@@ -57,32 +66,20 @@ send_request :: proc (init: Request, allocator := context.allocator) -> (req: ^R
         }
     }
 
-    req = new(Request)
+    req := new(Request)
     req^ = {
-        allocator   = allocator,
         method      = strings.clone(init_method) or_return,
         url         = strings.clone(init.url) or_return,
         query       = clone_params(init.query) or_return,
         headers     = clone_params(init.headers, append_content_type=content_type) or_return,
         content     = clone_content(init.content) or_return,
         timeout     = init.timeout,
+        ready       = init.ready,
     }
 
     append(&requests, req) or_return
     platform_send(req)
 
-    return
-}
-
-destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
-    delete_         (req.method)            or_return
-    delete_         (req.url)               or_return
-    delete_params   (req.query)             or_return
-    delete_params   (req.headers)           or_return
-    delete_content  (req.content)           or_return
-    delete_         (req.error_msg)         or_return
-    delete_params   (req.response.headers)  or_return
-    delete_         (req.response.content)  or_return
     return
 }
 
@@ -93,10 +90,14 @@ find_request_by_handle :: proc (handle: Platform_Handle) -> (req: ^Request, idx:
 }
 
 @private
-destroy_request_by_handle :: proc (handle: Platform_Handle) {
-    req, idx := find_request_by_handle(handle)
-    if req != nil && idx >= 0 {
-        unordered_remove(&requests, idx)
-        destroy_request(req)
-    }
+destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
+    delete          (req.method)            or_return
+    delete          (req.url)               or_return
+    delete_params   (req.query)             or_return
+    delete_params   (req.headers)           or_return
+    delete_content  (req.content)           or_return
+    delete          (req.error_msg)         or_return
+    delete_params   (req.response.headers)  or_return
+    delete          (req.response.content)  or_return
+    return
 }

@@ -1,6 +1,9 @@
 package userhttp
 
 import "core:fmt"
+import "core:mem"
+
+@private Allocator_Error :: mem.Allocator_Error
 
 Error :: union #shared_nil {
     // Memory allocation error.

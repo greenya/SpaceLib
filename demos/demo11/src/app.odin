@@ -2,11 +2,12 @@ package main
 
 import "core:fmt"
 import rl "vendor:raylib"
+import "spacelib:userhttp"
 
 app_startup :: proc () {
     fmt.println(#procedure)
 
-    http_init()
+    userhttp.init()
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
@@ -18,12 +19,20 @@ app_shutdown :: proc () {
 
     rl.CloseWindow()
 
-    http_destroy()
+    userhttp.destroy()
 }
 
 app_tick :: proc () {
+    userhttp.tick()
+
     if rl.IsKeyPressed(.ONE) {
-        http_send_request()
+        userhttp.send_request({
+            url     = "https://api.github.com/repos/odin-lang/Odin",
+            headers = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
+            ready   = proc (req: ^userhttp.Request) {
+                userhttp.print_request(req)
+            },
+        })
     }
 
     if rl.IsKeyPressed(.TWO) {

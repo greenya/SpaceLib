@@ -1,14 +1,8 @@
 package userhttp
 
-import "core:mem"
-// import "core:strings"
 import "core:time"
 
-Request :: struct {
-    allocator: mem.Allocator,
-
-    handle: Platform_Handle,
-
+Request_Init :: struct {
     // Request method.
     //
     // - `GET`
@@ -41,6 +35,20 @@ Request :: struct {
 
     // The content.
     content: Content,
+
+    // Maximum time allowed for the request. `0` for no timeout (not recommended).
+    timeout: time.Duration,
+
+    // Optional callback. Called from `tick()` when request is resolved (succeeded or failed).
+    // Once this callback is finished, `tick()` will deallocated the request automatically.
+    ready: proc (req: ^Request),
+}
+
+Request :: struct {
+    handle: Platform_Handle,
+
+    // Init part of the `Request` struct.
+    using init: Request_Init,
 
     // Error of the `send()` call.
     //
@@ -80,13 +88,6 @@ Request :: struct {
     //
     // Only valid if call was successful or the `error` is a `Status_Code` error.
     response: Response,
-
-    // Maximum time allowed for the request.
-    //
-    // If `0`, no timeout will be set (not recommended).
-    timeout: time.Duration,
-
-    ready: proc (req: ^Request),
 }
 
 Response :: struct {
@@ -106,62 +107,10 @@ Response :: struct {
     // Received content, expected to be in form of "Content-Type" header.
     content: [] byte,
 
-    // Total time taken by `send()`.
-    //
-    // This includes sending the request and receiving the very last byte of the response.
-    // This value is set only after response is received. It will not be set on any
-    // `Allocator_Error` or `Platform_Error`.
-    time: time.Duration,
+    // // Total time taken by `send()`.
+    // //
+    // // This includes sending the request and receiving the very last byte of the response.
+    // // This value is set only after response is received. It will not be set on any
+    // // `Allocator_Error` or `Platform_Error`.
+    // time: time.Duration,
 }
-
-// Sends the request. Also cleans up previous error and response details of the `req`.
-//
-// - On success, `err == nil` and `content == req.response.content`
-// - On failure, `err != nil` and `content == nil`; additionally:
-//      - `req.error == err`
-//      - `req.error_msg` will be set in case error is a `Platform_Error`
-//      - `req.response` will be set in case error is a `Status_Code` error
-//
-// On the web (Fetch API), requests are subject to browser CORS rules. Requests that succeed
-// on native platforms may fail or be unreadable in browsers.
-//
-// More: [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
-// send :: proc (req: ^Request) {
-//     err := reset_request(req)
-//     if err != nil {
-//         req.error = err
-//         return
-//     }
-
-//     platform_send(req)
-
-//     // start := time.now()
-//     // platform_send(req)
-
-//     // if req.error == nil {
-//     //     req.response.time = time.since(start)
-//     //     assert(req.response.status != .None)
-//     //     if status_code_category(req.response.status) != .Successful {
-//     //         req.error = req.response.status
-//     //     }
-//     // }
-
-//     // return\
-//     //     req.error == nil ? req.response.content : nil,
-//     //     req.error
-// }
-
-// @private
-// reset_request :: proc (req: ^Request) -> (err: Error) {
-//     delete_params(req.response.headers) or_return
-//     delete_(req.response.content) or_return
-//     req.response = {}
-
-//     delete_(req.error_msg) or_return
-//     req.error_msg = ""
-//     req.error = nil
-
-//     req.handle = {}
-
-//     return
-// }

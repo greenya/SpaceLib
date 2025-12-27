@@ -2,8 +2,8 @@
 
 (function() {
 
-function log(...args) { console.log("[userhttp]", ...args) }
-function err(...args) { console.error("[userhttp]", ...args) }
+function log(...args) { console.log("[userhttp.js]", ...args) }
+function err(...args) { console.error("[userhttp.js]", ...args) }
 
 const fetch         = window.fetch
 const JSON          = window.JSON
@@ -101,7 +101,7 @@ function request_ready(fetch_id, data) {
     const json = JSON.stringify(data)
     const json_len = json.length
     requests.set(fetch_id, { json, json_len })
-    wasmExports.platform_userhttp_ready(fetch_id, json_len)
+    wasmExports.userhttp_ready(fetch_id, json_len)
 }
 
 function make_url(url, query_params) {

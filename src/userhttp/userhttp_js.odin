@@ -66,50 +66,46 @@ platform_send :: proc (req: ^Request) {
     input_bytes, json_err := json.marshal(input)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=req.allocator)
+        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=requests.allocator)
         return
     }
 
     fetch_id := _next_fetch_id
     _next_fetch_id += 1
 
-    req.handle.fetch_id = fetch_id
+    req.handle = { fetch_id=fetch_id }
     userhttp_fetch(fetch_id, input_bytes)
 }
 
 @export
-platform_userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
+userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     context = runtime.default_context()
     fmt.println(#procedure, fetch_id, size)
 
-    assert(size > 0)
-    output_bytes := make_([] byte, size, context.temp_allocator)
+    ensure(size > 0)
+    output_bytes := make([] byte, size, context.temp_allocator)
     userhttp_pop(fetch_id, output_bytes)
 
     req, _ := find_request_by_handle({ fetch_id=fetch_id })
-    assert(req != nil)
+    ensure(req != nil)
 
     output: _Output
     json_err := json.unmarshal(output_bytes, &output, allocator=context.temp_allocator)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=req.allocator)
+        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=requests.allocator)
         return
     }
 
     if output.error != "" {
         req.error = .Error
-        req.error_msg = strings.clone(output.error, req.allocator)
+        req.error_msg = strings.clone(output.error, requests.allocator)
     } else {
         req.response.status = Status_Code(output.status)
-        // TODO set from output.header_params
-        // req.response.headers = ...
+        req.response.headers, _ = create_params_from_pairs(output.header_params, requests.allocator) // ignore allocator error
         // TODO set from output.content_base64
         // req.response.content = ...
     }
-
-    destroy_request_by_handle({ fetch_id=fetch_id })
-    if req.ready != nil do req.ready(req)
 }
 
 _request_to_input_tmp :: proc (req: Request) -> (input: _Input, err: Allocator_Error) {
@@ -129,7 +125,7 @@ _request_to_input_tmp :: proc (req: Request) -> (input: _Input, err: Allocator_E
         { dst=&input.content_params, src=req_content_params },
     }) {
         if pp.src == nil do continue
-        pp.dst^ = make_([] [2] string, len(pp.src)) or_return
+        pp.dst^ = make([] [2] string, len(pp.src)) or_return
         for p, i in pp.src {
             n := p.name
             v := fmt.tprint(p.value)

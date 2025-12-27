@@ -31,7 +31,7 @@ platform_send :: proc (req: ^Request) {
     if err_net, ok := req.error.(Platform_Error); ok {
         assert(err_net != .E_OK)
         cstr := curl.easy_strerror(err_net)
-        req.error_msg = strings.clone_from(cstr, req.allocator) // ignore allocator error
+        req.error_msg = strings.clone_from(cstr, requests.allocator) // ignore allocator error
     }
 }
 
@@ -117,14 +117,14 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
 
     // setup buffer for response header block
 
-    header := make_([dynamic] byte) or_return
+    header := make([dynamic] byte) or_return
 
     curl.easy_setopt(cu, .HEADERFUNCTION, _header_callback) or_return
     curl.easy_setopt(cu, .HEADERDATA, &header) or_return
 
     // setup buffer for response content block
 
-    content := make_([dynamic] byte) or_return
+    content := make([dynamic] byte) or_return
 
     curl.easy_setopt(cu, .WRITEFUNCTION, _write_callback) or_return
     curl.easy_setopt(cu, .WRITEDATA, &content) or_return
@@ -142,8 +142,8 @@ _curl_send :: proc (req: ^Request) -> (err: Error) {
 
     req.response = {}
     req.response.status = Status_Code(response_code)
-    req.response.headers = create_headers_from_text(string(header[:]), req.allocator) or_return
-    req.response.content = slice.clone(content[:], req.allocator) or_return
+    req.response.headers = create_headers_from_text(string(header[:]), requests.allocator) or_return
+    req.response.content = slice.clone(content[:], requests.allocator) or_return
 
     return
 }

@@ -23,8 +23,8 @@ clone_content :: proc (content: Content) -> (result: Content, err: Allocator_Err
 delete_content :: proc (content: Content) -> (err: Allocator_Error) {
     switch v in content {
     case [] Param   : delete_params(v) or_return
-    case [] byte    : delete_(v) or_return
-    case string     : delete_(v) or_return
+    case [] byte    : delete(v) or_return
+    case string     : delete(v) or_return
     }
     return
 }
