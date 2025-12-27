@@ -22,62 +22,80 @@ if (window.userhttp !== undefined) {
 const userhttp = {
     memory  : null,
     imports : {
-        userhttp_send,
+        userhttp_fetch,
+        userhttp_state,
+        userhttp_get,
+        // userhttp_send,
     },
 }
 
-async function userhttp_send(req_ptr, req_len, res_ptr, res_len) {
-    log("send", arguments)
+const requests = new Map()
 
-    const req_json = userhttp.memory.loadString(req_ptr, req_len)
-    const req = JSON.parse(req_json)
-    log("req", req)
-
-    const req_url = make_url(req.url, req.query_params)
-    log("req_url", req_url)
-
-    const req_headers = make_headers(req.header_params)
-    log("req_headers", req_headers)
-
-    const req_body = make_body(req.content_params, req.content_base64)
-    log("req_body", req_body)
-
-    const res = {}
-    try {
-        const response = await fetch(req_url, {
-            method  : req.method,
-            headers : req_headers,
-            body    : req_body,
-        })
-
-        res.status = response.status
-
-        res.header_params = []
-        for (const [ name, value ] of response.headers.entries()) {
-            res.header_params.push([ name, value ])
-        }
-
-        const res_content_bytes = await response.bytes()
-        const res_content_string = String.fromCodePoint(...res_content_bytes)
-        res.content_base64 = btoa(res_content_string)
-    } catch (e) {
-        res.error = e.toString()
-    }
-
-    const res_json = JSON.stringify(res)
-
-    if (res_json.length <= res_len) {
-        userhttp.memory.storeString(res_ptr, res_json)
-        log("#### buffer ok")
-        return res_json.length
-    } else {
-        // TODO: store res_json somewhere, and quickly return it when called again with large enough buffer;
-        // a single value will not be enough (e.g. "last_response"), as multiple requests might be in progress
-        // at the same time... maybe we need some request_id
-        log("#### buffer too small")
-        return -res_json.length
-    }
+function userhttp_fetch(req_id, req_ptr, req_len) {
+    log("fetch", arguments)
 }
+
+function userhttp_state(req_id) {
+    log("state", arguments)
+    return -1
+}
+
+function userhttp_get(req_id, res_ptr, res_len) {
+    log("get", arguments)
+}
+
+// async function userhttp_send(req_ptr, req_len, res_ptr, res_len) {
+//     log("send", arguments)
+
+//     const req_json = userhttp.memory.loadString(req_ptr, req_len)
+//     const req = JSON.parse(req_json)
+//     log("req", req)
+
+//     const req_url = make_url(req.url, req.query_params)
+//     log("req_url", req_url)
+
+//     const req_headers = make_headers(req.header_params)
+//     log("req_headers", req_headers)
+
+//     const req_body = make_body(req.content_params, req.content_base64)
+//     log("req_body", req_body)
+
+//     const res = {}
+//     try {
+//         const response = await fetch(req_url, {
+//             method  : req.method,
+//             headers : req_headers,
+//             body    : req_body,
+//         })
+
+//         res.status = response.status
+
+//         res.header_params = []
+//         for (const [ name, value ] of response.headers.entries()) {
+//             res.header_params.push([ name, value ])
+//         }
+
+//         const res_content_bytes = await response.bytes()
+//         const res_content_string = String.fromCodePoint(...res_content_bytes)
+//         res.content_base64 = btoa(res_content_string)
+//     } catch (e) {
+//         res.error = e.toString()
+//     }
+
+//     const res_json = JSON.stringify(res)
+
+//     if (res_json.length <= res_len) {
+//         userhttp.memory.storeString(res_ptr, res_json)
+//         log("#### buffer ok")
+//         return res_json.length
+//     } else {
+//         // TODO: store res_json somewhere, and quickly return it when called again with large enough buffer;
+//         // a single value will not be enough (e.g. "last_response"), as multiple requests might be in progress
+//         // at the same time... maybe we need some request_id
+//         log("#### buffer too small")
+//         return -res_json.length
+//     }
+// }
 
 function make_url(url, query_params) {
     const result = new URL(url)
