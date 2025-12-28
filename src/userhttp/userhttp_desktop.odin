@@ -62,7 +62,10 @@ platform_send :: proc (req: ^Request) {
 platform_tick :: proc () -> (err: Error) {
     running_handles: c.int // not used
     multi_err := curl.multi_perform(multi, &running_handles)
-    if multi_err != .OK do fmt.panicf("Failed to curl.multi_perform(): %v", multi_err)
+    #partial switch multi_err {
+    case .OK, .CALL_MULTI_PERFORM: // nothing
+    case: fmt.panicf("Failed to curl.multi_perform(): %v", multi_err)
+    }
 
     // we expect this proc to be called quite often, so we process only one message per call
 
@@ -248,14 +251,12 @@ curl_escape :: proc (s: string, allocator := context.allocator) -> (result: stri
 percent_encoded_params :: proc (params: [] Param, allocator := context.allocator) -> (result: string, err: Allocator_Error) {
     if len(params) == 0 do return "", .None
 
-    context.allocator = context.temp_allocator
-
     sb := strings.builder_make(allocator) or_return
 
     for p in params {
         separator := strings.builder_len(sb) > 0 ? "&" : ""
-        name_encoded := curl_escape(p.name) or_return
-        value_encoded := curl_escape(fmt.tprintf("%v", p.value)) or_return
+        name_encoded := curl_escape(p.name, context.temp_allocator) or_return
+        value_encoded := curl_escape(fmt.tprintf("%v", p.value), context.temp_allocator) or_return
         fmt.sbprintf(&sb, "%s%s=%s", separator, name_encoded, value_encoded)
     }
 
