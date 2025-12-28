@@ -3,11 +3,10 @@
 package userhttp
 
 import "base:runtime"
+import "core:encoding/base64"
 import "core:encoding/json"
 import "core:fmt"
-// import "core:mem"
 import "core:strings"
-// import "core:time"
 
 foreign import "userhttp"
 
@@ -103,8 +102,7 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     } else {
         req.response.status = Status_Code(output.status)
         req.response.headers, _ = create_params_from_pairs(output.header_params, requests.allocator) // ignore allocator error
-        // TODO set from output.content_base64
-        // req.response.content = ...
+        req.response.content = base64.decode(output.content_base64, allocator=requests.allocator) // ignore allocator error
     }
 }
 
@@ -143,7 +141,7 @@ _request_to_input_tmp :: proc (req: Request) -> (input: _Input, err: Allocator_E
     }
 
     if req_content_bytes != nil {
-        // TODO: set input.content_base64 as base64 of req_content_bytes
+        input.content_base64 = base64.encode(req_content_bytes)
     }
 
     return

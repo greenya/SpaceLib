@@ -29,7 +29,6 @@ const userhttp = {
 }
 
 const requests = new Map()
-window.rrr = requests
 
 function userhttp_fetch(fetch_id, req_ptr, req_len) {
     log("fetch", arguments)
@@ -45,7 +44,7 @@ function userhttp_fetch(fetch_id, req_ptr, req_len) {
     log("req_headers", req_headers)
 
     const req_body = make_body(req.content_params, req.content_base64)
-    log("req_body", req_body)
+    log("req_body (bytes)", req_body ? req_body.length : 0)
 
     requests.set(fetch_id, {})
 

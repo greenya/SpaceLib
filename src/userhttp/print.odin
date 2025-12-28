@@ -42,7 +42,7 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
         print_res_content   ("----------[content]", req.response.content, res_ct_str, .res_content in options)
     }
 
-    fmt.print("-----------------------------------------------------------")
+    fmt.println("-----------------------------------------------------------")
 }
 
 @private
