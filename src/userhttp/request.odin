@@ -48,10 +48,7 @@ Request :: struct {
     // Init part of the `Request` struct.
     using init: Request_Init,
 
-    // Error of the `send()` call.
-    //
-    // This is `nil` for no error. Meaning the `send()` call was successful and `response`
-    // contains the result.
+    // Error status.
     //
     // For `Platform_Error`, the value is platform dependent:
     // - on the desktop, it is `curl.code` and `error_msg` contains value from `curl.easy_strerror()`
@@ -62,7 +59,7 @@ Request :: struct {
     // see `response.status`.
     error: Error,
 
-    // Error message of the `send()` call.
+    // Error message.
     //
     // Only used with `Platform_Error`, and contains platform dependent details (error message).
     // For other errors (`Allocator_Error`, `Status_Code`) this value is empty.
@@ -82,26 +79,8 @@ Request :: struct {
     // More: [Window: fetch() method](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch)
     error_msg: string,
 
-    // Received response after `send()` call.
+    // Received response.
     //
-    // Only valid if call was successful or the `error` is a `Status_Code` error.
+    // Only valid if `error == nil` or it is a `Status_Code` error.
     response: Response,
-}
-
-Response :: struct {
-    // Received HTTP status code.
-    status: Status_Code,
-
-    // Received headers.
-    //
-    // - on the desktop, cURL returns all the headers
-    // - on the web, Fetch API doesn't return all the headers (e.g. `Set-Cookie`)
-    //
-    // More:
-    // - [Forbidden response header name](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_response_header_name)
-    // - [Field Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml)
-    headers: [] Param,
-
-    // Received content, expected to be in form of "Content-Type" header.
-    content: [] byte,
 }
