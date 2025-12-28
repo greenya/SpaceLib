@@ -19,11 +19,19 @@ destroy :: proc () -> (err: Allocator_Error) {
 tick :: proc () -> (err: Error) {
     platform_tick() or_return
 
-    #reverse for req, idx in requests {
+    // doing double-loop, as user can send_request() inside ready() callback,
+    // which modifies requests array
+
+    for req in requests {
         if req.error != nil || req.response.status != .None {
             if req.ready != nil {
                 req.ready(req)
             }
+        }
+    }
+
+    #reverse for req, idx in requests {
+        if req.error != nil || req.response.status != .None {
             unordered_remove(&requests, idx)
             destroy_request(req) or_return
         }
