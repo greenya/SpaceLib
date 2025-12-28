@@ -9,7 +9,6 @@ import "core:mem"
 import vmem "core:mem/virtual"
 import "core:slice"
 import "core:strings"
-import "core:time"
 import "vendor:curl"
 
 Platform_Error :: curl.code
@@ -147,11 +146,9 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
     // allow auto process redirects (3xx status codes)
     curl.easy_setopt(easy, .FOLLOWLOCATION, c.long(1)) or_return
 
-    if req.timeout > 0 {
-        // if timeout is set, use at least 1ms, so its not rounded to 0 and have no effect
-        timeout_ms := max(1, time.duration_milliseconds(req.timeout))
-        curl.easy_setopt(easy, .TIMEOUT_MS, c.long(timeout_ms)) or_return
-        curl.easy_setopt(easy, .CONNECTTIMEOUT_MS, c.long(min(timeout_ms, 10_000))) or_return
+    if req.timeout_ms > 0 {
+        curl.easy_setopt(easy, .TIMEOUT_MS, c.long(req.timeout_ms)) or_return
+        curl.easy_setopt(easy, .CONNECTTIMEOUT_MS, c.long(min(req.timeout_ms, 10_000))) or_return
     }
 
     // setup header and data buffers

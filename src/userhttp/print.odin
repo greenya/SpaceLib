@@ -13,7 +13,6 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
     context.allocator = context.temp_allocator
     {
         req_ct_str := param_as_string(req.headers, "content-type")
-        req_timeout_str := req.timeout > 0 ? fmt.tprint(req.timeout) : "-"
 
         fmt.println         ("--------------------------------------------------[request]")
         fmt.printfln        ("-----------[method] %s", req.method)
@@ -21,7 +20,7 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
         print_params        ("------------[query]", req.query)
         print_params        ("----------[headers]", req.headers)
         print_req_content   ("----------[content]", req.content, req_ct_str, .req_content in options)
-        fmt.printfln        ("----------[timeout] %s", req_timeout_str)
+        fmt.printfln        ("-------[timeout_ms] %i", req.timeout_ms)
     }
 
     if req.error != nil {
@@ -36,7 +35,6 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
         res_ct_str := param_as_string(req.response.headers, "content-type")
 
         fmt.println         ("-------------------------------------------------[response]")
-        // fmt.printfln        ("-------------[time] %v", req.response.time)
         fmt.printfln        ("-----------[status] %i %v", int(req.response.status), req.response.status)
         print_params        ("----------[headers]", req.response.headers)
         print_res_content   ("----------[content]", req.response.content, res_ct_str, .res_content in options)

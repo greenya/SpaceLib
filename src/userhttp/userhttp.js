@@ -5,12 +5,13 @@
 function log(...args) { console.log("[userhttp.js]", ...args) }
 function err(...args) { console.error("[userhttp.js]", ...args) }
 
-const fetch         = window.fetch
-const JSON          = window.JSON
-const Uint8Array    = window.Uint8Array
+const fetch             = window.fetch
+const JSON              = window.JSON
+const Uint8Array        = window.Uint8Array
+const AbortController   = window.AbortController
 
-if (!fetch || !Uint8Array) {
-    err("Fetch API, JSON API and Uint8Array must be supported")
+if (!fetch || !JSON || !Uint8Array || !AbortController) {
+    err("Fetch API, JSON API, Uint8Array and AbortController must be supported")
     return
 }
 
@@ -31,20 +32,25 @@ const userhttp = {
 const requests = new Map()
 
 function userhttp_fetch(fetch_id, req_ptr, req_len) {
-    log("fetch", arguments)
+    // log("fetch", arguments)
 
     const req_json = userhttp.memory.loadString(req_ptr, req_len)
     const req = JSON.parse(req_json)
-    log("req", req)
+    // log("req", req)
 
     const req_url = make_url(req.url, req.query_params)
-    log("req_url", req_url)
+    // log("req_url", req_url)
 
     const req_headers = make_headers(req.header_params)
-    log("req_headers", req_headers)
+    // log("req_headers", req_headers)
 
     const req_body = make_body(req.content_params, req.content_base64)
-    log("req_body (bytes)", req_body ? req_body.length : 0)
+    // log("req_body (bytes)", req_body ? req_body.length : 0)
+
+    const abort_controller = new AbortController()
+    const abort_timeout_id = req.timeout_ms > 0
+        ? setTimeout(() => abort_controller.abort(), req.timeout_ms)
+        : 0
 
     requests.set(fetch_id, {})
 
@@ -52,20 +58,26 @@ function userhttp_fetch(fetch_id, req_ptr, req_len) {
         method  : req.method,
         headers : req_headers,
         body    : req_body,
+        signal  : abort_controller.signal,
     })
     .then(r => handle_response(fetch_id, r))
     .catch(e => handle_error(fetch_id, e))
+    .finally(() => {
+        if (abort_timeout_id != 0) {
+            clearTimeout(abort_timeout_id)
+        }
+    })
 }
 
 function userhttp_size(fetch_id) {
-    log("size", arguments)
+    // log("size", arguments)
 
     const data = requests.get(fetch_id)
     return data.json_len ? data.json_len : 0
 }
 
 function userhttp_pop(fetch_id, res_ptr, res_len) {
-    log("pop", arguments)
+    // log("pop", arguments)
 
     const data = requests.get(fetch_id)
     requests.delete(fetch_id)

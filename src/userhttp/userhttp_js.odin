@@ -2,8 +2,6 @@
 #+private
 package userhttp
 
-// TODO: web: add support for Request.timeout via AbortController
-
 import "base:runtime"
 import "core:encoding/base64"
 import "core:encoding/json"
@@ -35,6 +33,7 @@ Input :: struct {
     header_params   : [] [2] string,
     content_params  : [] [2] string,
     content_base64  : string,
+    timeout_ms      : int,
 }
 
 Output :: struct {
@@ -152,6 +151,8 @@ request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Err
     if req_content_bytes != nil {
         input.content_base64 = base64.encode(req_content_bytes)
     }
+
+    input.timeout_ms = req.timeout_ms
 
     return
 }

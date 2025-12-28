@@ -1,7 +1,5 @@
 package userhttp
 
-import "core:time"
-
 Request_Init :: struct {
     // Request method.
     //
@@ -37,7 +35,7 @@ Request_Init :: struct {
     content: Content,
 
     // Maximum time allowed for the request. `0` for no timeout (not recommended).
-    timeout: time.Duration,
+    timeout_ms: int,
 
     // Optional callback. Called from `tick()` when request is resolved (succeeded or failed).
     // Once this callback is finished, `tick()` will deallocated the request automatically.
@@ -106,11 +104,4 @@ Response :: struct {
 
     // Received content, expected to be in form of "Content-Type" header.
     content: [] byte,
-
-    // // Total time taken by `send()`.
-    // //
-    // // This includes sending the request and receiving the very last byte of the response.
-    // // This value is set only after response is received. It will not be set on any
-    // // `Allocator_Error` or `Platform_Error`.
-    // time: time.Duration,
 }

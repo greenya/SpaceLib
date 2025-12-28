@@ -11,25 +11,9 @@
     /tweens                     - [planned] [maybe] tween manager
     /ui                         - ui manager
     /userfs                     - user file system: save/load a file in user data dir or localStorage
-    /userhttp                   - user HTTP: send HTTP requests using cURL or Fetch API
+    /userhttp                   - send HTTP requests using cURL or Fetch API
 
 ## TODOs
-
-TODO: userhttp: impl desktop targets using cURL (Windows, Mac, Linux)
-
-TODO: userhttp: impl wasm target using Fetch API (Web browsers)
-
-TODO: userhttp: expected to support:
-
-    - sending headers and content
-    - receiving http status, headers and content
-    - error reporting: allocation error, network error, http error; where network error is platform dependent:
-        - on desktop it is cURL's code and text from easy_strerror()
-        - on web it is some code (?) and the text from exception message
-    - avoid adding stuff that is only supported by cURL and not possible via Fetch API; examples:
-        - Fetch API returns only parsed map of headers (e.g. no access to the raw header block)
-        - Fetch API doesn't expose the Status Line (e.g. the very first line of the header block)
-        - Fetch API doesn't expose protocol version (e.g. "HTTP/1.1" or "HTTP/2")
 
 TODO: userfs: expose error status
 

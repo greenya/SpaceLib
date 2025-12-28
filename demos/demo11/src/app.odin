@@ -27,9 +27,10 @@ app_tick :: proc () {
 
     if rl.IsKeyPressed(.ONE) {
         userhttp.send_request({
-            url     = "https://api.github.com/repos/odin-lang/Odin",
-            headers = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
-            ready   = proc (req: ^userhttp.Request) {
+            url         = "https://api.github.com/repos/odin-lang/Odin",
+            headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
+            timeout_ms  = 5_000,
+            ready       = proc (req: ^userhttp.Request) {
                 userhttp.print_request(req)
             },
         })

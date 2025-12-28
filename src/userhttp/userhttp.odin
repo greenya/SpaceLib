@@ -18,7 +18,7 @@ destroy :: proc () -> (err: Allocator_Error) {
     return
 }
 
-// Checks requests status. The `Request.ready()` callback might be called by this proc.
+// Checks request status and calls `Request.ready()` callback.
 tick :: proc () -> (err: Error) {
     platform_tick() or_return
 
@@ -79,7 +79,7 @@ send_request :: proc (init: Request_Init) -> (err: Allocator_Error) {
         query       = clone_params(init.query) or_return,
         headers     = clone_params(init.headers, append_content_type=content_type) or_return,
         content     = clone_content(init.content) or_return,
-        timeout     = init.timeout,
+        timeout_ms  = init.timeout_ms,
         ready       = init.ready,
     }
 
@@ -111,6 +111,6 @@ destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
 
 @private
 allocator :: #force_inline proc () -> mem.Allocator {
-    assert(requests.allocator != {}, "Allocator not set. Did you forget to call `init()`?")
+    assert(requests.allocator != {}, "Allocator not set. Did you forget to call `userhttp.init()`?")
     return requests.allocator
 }
