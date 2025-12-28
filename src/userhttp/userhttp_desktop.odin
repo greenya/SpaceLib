@@ -28,13 +28,13 @@ buffers: map [^curl.CURL] ^Buffer
 
 multi: ^curl.CURLM
 
-platform_init :: proc () -> (err: Platform_Error) {
+platform_init :: proc (allocator := context.allocator) -> (err: Platform_Error) {
     curl.global_init(curl.GLOBAL_DEFAULT) or_return
 
     multi = curl.multi_init()
     if multi == nil do return .E_FAILED_INIT
 
-    buffers = make(map [^curl.CURL] ^Buffer, allocator())
+    buffers = make(map [^curl.CURL] ^Buffer, allocator)
 
     return
 }
@@ -55,7 +55,7 @@ platform_send :: proc (req: ^Request) {
     if err_net, ok := req.error.(Platform_Error); ok {
         assert(err_net != .E_OK)
         cstr := curl.easy_strerror(err_net)
-        req.error_msg = strings.clone_from(cstr, allocator()) or_else panic("allocator error")
+        req.error_msg = strings.clone_from(cstr, req.allocator) or_else panic("allocator error")
     }
 }
 
@@ -167,6 +167,16 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
 }
 
 curl_ready :: proc (easy: ^curl.CURL, code: curl.code) -> (err: Error) {
+    defer {
+        multi_err := curl.multi_remove_handle(multi, easy)
+        if multi_err != .OK {
+            fmt.panicf("Failed to curl.multi_remove_handle(): %v", multi_err)
+        }
+
+        curl.easy_cleanup(easy)
+        remove_buffer(easy)
+    }
+
     req, _ := find_request_by_handle({ easy=easy })
     assert(req != nil)
 
@@ -187,23 +197,15 @@ curl_ready :: proc (easy: ^curl.CURL, code: curl.code) -> (err: Error) {
 
             req.response = {
                 status  = Status_Code(response_code),
-                headers = create_headers_from_text(string(buf.header[:]), allocator()) or_return,
-                content = slice.clone(buf.content[:], allocator()) or_return,
+                headers = create_headers_from_text(string(buf.header[:]), req.allocator) or_return,
+                content = slice.clone(buf.content[:], req.allocator) or_return,
             }
         } else {
             req.error = code
             cstr := curl.easy_strerror(code)
-            req.error_msg = strings.clone_from(cstr, allocator()) or_else panic("allocator error")
+            req.error_msg = strings.clone_from(cstr, req.allocator) or_return
         }
     }
-
-    multi_err := curl.multi_remove_handle(multi, easy)
-    if multi_err != .OK {
-        fmt.panicf("Failed to curl.multi_remove_handle(): %v", multi_err)
-    }
-
-    curl.easy_cleanup(easy)
-    remove_buffer(easy)
 
     return
 }

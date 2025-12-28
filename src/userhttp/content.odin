@@ -10,11 +10,11 @@ Content :: union {
 }
 
 @private
-clone_content :: proc (content: Content) -> (result: Content, err: Allocator_Error) {
+clone_content :: proc (content: Content, allocator := context.allocator) -> (result: Content, err: Allocator_Error) {
     switch v in content {
-    case [] Param   : result = clone_params(v) or_return
-    case [] byte    : result = slice.clone(v) or_return
-    case string     : result = strings.clone(v) or_return
+    case [] Param   : result = clone_params(v, allocator=allocator) or_return
+    case [] byte    : result = slice.clone(v, allocator) or_return
+    case string     : result = strings.clone(v, allocator) or_return
     }
     return
 }

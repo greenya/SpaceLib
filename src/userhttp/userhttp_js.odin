@@ -45,7 +45,7 @@ Output :: struct {
 
 next_fetch_id := i32(70001)
 
-platform_init :: proc () -> (err: Platform_Error) {
+platform_init :: proc (allocator := context.allocator) -> (err: Platform_Error) {
     // nothing
     return
 }
@@ -55,18 +55,16 @@ platform_destroy :: proc () {
 }
 
 platform_send :: proc (req: ^Request) {
-    context.allocator = context.temp_allocator
-
     input, input_err := request_to_input_tmp(req^)
     if input_err != nil {
         req.error = input_err
         return
     }
 
-    input_bytes, json_err := json.marshal(input)
+    input_bytes, json_err := json.marshal(input, allocator=context.temp_allocator)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=allocator())
+        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=req.allocator)
         return
     }
 
@@ -78,7 +76,7 @@ platform_send :: proc (req: ^Request) {
 }
 
 platform_tick :: proc () -> (err: Error) {
-    // nothing to do here, as the JS part will be calling to userhttp_ready()
+    // nothing to do here; the JS part will be calling us via userhttp_ready()
     return
 }
 
@@ -100,17 +98,20 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     json_err := json.unmarshal(output_bytes, &output, allocator=context.temp_allocator)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=allocator())
+        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=req.allocator)
         return
     }
 
     if output.error != "" {
         req.error = .Error
-        req.error_msg = strings.clone(output.error, allocator())
-    } else {
-        req.response.status = Status_Code(output.status)
-        req.response.headers = create_params_from_pairs(output.header_params, allocator()) or_else panic("allocator error")
-        req.response.content = base64.decode(output.content_base64, allocator=allocator()) or_else panic("allocator error")
+        req.error_msg = strings.clone(output.error, req.allocator)
+        return
+    }
+
+    req.response = {
+        status  = Status_Code(output.status),
+        headers = create_params_from_pairs(output.header_params, req.allocator) or_else panic("allocator error"),
+        content = base64.decode(output.content_base64, allocator=req.allocator) or_else panic("allocator error"),
     }
 }
 

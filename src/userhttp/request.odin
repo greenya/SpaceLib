@@ -1,5 +1,8 @@
 package userhttp
 
+import "core:mem"
+import "core:strings"
+
 Request_Init :: struct {
     // Request method.
     //
@@ -39,14 +42,15 @@ Request_Init :: struct {
 
     // Optional callback. Called from `tick()` when request is resolved (succeeded or failed).
     // Once this callback is finished, `tick()` will deallocated the request automatically.
+    //
+    // IMPORTANT: Request pointer is only valid during ready(). Clone values if you need.
     ready: proc (req: ^Request),
 }
 
 Request :: struct {
-    handle: Platform_Handle,
-
-    // Init part of the `Request` struct.
-    using init: Request_Init,
+    allocator   : mem.Allocator,
+    handle      : Platform_Handle,
+    using init  : Request_Init,
 
     // Error status.
     //
@@ -83,4 +87,59 @@ Request :: struct {
     //
     // Only valid if `error == nil` or it is a `Status_Code` error.
     response: Response,
+}
+
+@private
+create_request :: proc (init: Request_Init, allocator := context.allocator) -> (req: ^Request, err: Allocator_Error) {
+    init_method := init.method
+    if init_method == "" {
+        init_method = init.content == nil ? "GET" : "POST"
+    }
+
+    auto_content_type: string
+    if !param_exists(init.headers, "Content-Type") do switch v in init.content {
+    case [] Param                               : auto_content_type = Content_Type_Params
+    case [] byte                                : auto_content_type = Content_Type_Binary
+    case string:
+        v_trimmed := strings.trim_left(v, "\n\t ")
+        switch {
+        case strings.has_prefix(v_trimmed, "{") : auto_content_type = Content_Type_JSON
+        case strings.has_prefix(v_trimmed, "<") : auto_content_type = Content_Type_XML
+        case                                    : auto_content_type = Content_Type_Text
+        }
+    }
+
+    req             = new(Request) or_return
+    req.allocator   = allocator
+    req.method      = strings.clone(init_method, allocator)
+    req.url         = strings.clone(init.url, allocator) or_return
+    req.query       = clone_params(init.query, allocator=allocator) or_return
+    req.headers     = clone_params(init.headers, append_content_type=auto_content_type, allocator=allocator) or_return
+    req.content     = clone_content(init.content, allocator) or_return
+    req.timeout_ms  = init.timeout_ms
+    req.ready       = init.ready
+
+    return
+}
+
+@private
+destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
+    // horrible list of deallocations of things that has same life time;
+    // i tried to use vmem.Arena but it doesn't work with web build
+
+    delete          (req.method)            or_return
+    delete          (req.url)               or_return
+    delete_params   (req.query)             or_return
+    delete_params   (req.headers)           or_return
+    delete_content  (req.content)           or_return
+    delete          (req.error_msg)         or_return
+    delete_params   (req.response.headers)  or_return
+    delete          (req.response.content)  or_return
+
+    req^ = {}   // zero memory, so if user stores pointer after ready(),
+                // it better crash as soon as possible
+
+    free            (req)                   or_return
+
+    return
 }

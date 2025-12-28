@@ -41,22 +41,22 @@ param_exists :: proc (params: [] Param, name: string) -> bool {
 }
 
 @private
-clone_params :: proc (params: [] Param, append_content_type := "") -> (result: [] Param, err: Allocator_Error) {
+clone_params :: proc (params: [] Param, append_content_type := "", allocator := context.allocator) -> (result: [] Param, err: Allocator_Error) {
     count := len(params) + (append_content_type != "" ? 1 : 0)
 
-    result = make([] Param, count) or_return
+    result = make([] Param, count, allocator) or_return
     for p, i in params {
-        result[i].name = strings.clone(p.name) or_return
+        result[i].name = strings.clone(p.name, allocator) or_return
         switch v in p.value {
         case i64, f64   : result[i].value = v
-        case string     : result[i].value = strings.clone(v) or_return
+        case string     : result[i].value = strings.clone(v, allocator) or_return
         }
     }
 
     if append_content_type != "" {
         result[count-1] = {
-            name    = strings.clone("Content-Type"),
-            value   = strings.clone(append_content_type),
+            name    = strings.clone("Content-Type", allocator),
+            value   = strings.clone(append_content_type, allocator),
         }
     }
 
