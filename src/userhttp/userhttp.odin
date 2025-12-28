@@ -1,5 +1,6 @@
 package userhttp
 
+import "core:mem"
 import "core:strings"
 
 requests: [dynamic] ^Request
@@ -17,7 +18,10 @@ destroy :: proc () -> (err: Allocator_Error) {
     return
 }
 
-tick :: proc () -> (err: Allocator_Error) {
+// Checks requests status. The `Request.ready()` callback might be called by this proc.
+tick :: proc () -> (err: Error) {
+    platform_tick() or_return
+
     #reverse for req, idx in requests {
         if req.error != nil || req.response.status != .None {
             if req.ready != nil {
@@ -27,6 +31,7 @@ tick :: proc () -> (err: Allocator_Error) {
             destroy_request(req) or_return
         }
     }
+
     return
 }
 
@@ -47,7 +52,7 @@ tick :: proc () -> (err: Allocator_Error) {
 // it is resolved (succeeded or failed), `req.ready()` callback will be called from `tick()`.
 // The request will be deallocated by `tick()` right after `req.ready()` returns.
 send_request :: proc (init: Request_Init) -> (err: Allocator_Error) {
-    context.allocator = requests.allocator
+    context.allocator = allocator()
 
     init_method := init.method
     if init_method == "" {
@@ -67,7 +72,7 @@ send_request :: proc (init: Request_Init) -> (err: Allocator_Error) {
         }
     }
 
-    req := new(Request)
+    req := new(Request) or_return
     req^ = {
         method      = strings.clone(init_method) or_return,
         url         = strings.clone(init.url) or_return,
@@ -100,5 +105,12 @@ destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
     delete          (req.error_msg)         or_return
     delete_params   (req.response.headers)  or_return
     delete          (req.response.content)  or_return
+    free            (req)                   or_return
     return
+}
+
+@private
+allocator :: #force_inline proc () -> mem.Allocator {
+    assert(requests.allocator != {}, "Allocator not set. Did you forget to call `init()`?")
+    return requests.allocator
 }

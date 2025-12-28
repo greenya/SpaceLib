@@ -2,6 +2,8 @@
 #+private
 package userhttp
 
+// TODO: web: add support for Request.timeout via AbortController
+
 import "base:runtime"
 import "core:encoding/base64"
 import "core:encoding/json"
@@ -26,7 +28,7 @@ Platform_Handle :: struct {
     fetch_id: i32,
 }
 
-_Input :: struct {
+Input :: struct {
     method          : string,
     url             : string,
     query_params    : [] [2] string,
@@ -35,18 +37,18 @@ _Input :: struct {
     content_base64  : string,
 }
 
-_Output :: struct {
+Output :: struct {
     error           : string,
     status          : int,
     header_params   : [] [2] string,
     content_base64  : string,
 }
 
-_next_fetch_id := i32(70001)
+next_fetch_id := i32(70001)
 
-platform_init :: proc () -> Platform_Error {
+platform_init :: proc () -> (err: Platform_Error) {
     // nothing
-    return .None
+    return
 }
 
 platform_destroy :: proc () {
@@ -56,7 +58,7 @@ platform_destroy :: proc () {
 platform_send :: proc (req: ^Request) {
     context.allocator = context.temp_allocator
 
-    input, input_err := _request_to_input_tmp(req^)
+    input, input_err := request_to_input_tmp(req^)
     if input_err != nil {
         req.error = input_err
         return
@@ -65,15 +67,20 @@ platform_send :: proc (req: ^Request) {
     input_bytes, json_err := json.marshal(input)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=requests.allocator)
+        req.error_msg = fmt.aprintf("Failed to json.marshal: %v", json_err, allocator=allocator())
         return
     }
 
-    fetch_id := _next_fetch_id
-    _next_fetch_id += 1
+    fetch_id := next_fetch_id
+    next_fetch_id += 1
 
     req.handle = { fetch_id=fetch_id }
     userhttp_fetch(fetch_id, input_bytes)
+}
+
+platform_tick :: proc () -> (err: Error) {
+    // nothing to do here, as the JS part will be calling to userhttp_ready()
+    return
 }
 
 @export
@@ -88,25 +95,27 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     req, _ := find_request_by_handle({ fetch_id=fetch_id })
     ensure(req != nil)
 
-    output: _Output
+    req.handle = {}
+
+    output: Output
     json_err := json.unmarshal(output_bytes, &output, allocator=context.temp_allocator)
     if json_err != nil {
         req.error = .Error
-        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=requests.allocator)
+        req.error_msg = fmt.aprintf("Failed to json.unmarshal: %v", json_err, allocator=allocator())
         return
     }
 
     if output.error != "" {
         req.error = .Error
-        req.error_msg = strings.clone(output.error, requests.allocator)
+        req.error_msg = strings.clone(output.error, allocator())
     } else {
         req.response.status = Status_Code(output.status)
-        req.response.headers = create_params_from_pairs(output.header_params, requests.allocator) or_else panic("allocator error")
-        req.response.content = base64.decode(output.content_base64, allocator=requests.allocator) or_else panic("allocator error")
+        req.response.headers = create_params_from_pairs(output.header_params, allocator()) or_else panic("allocator error")
+        req.response.content = base64.decode(output.content_base64, allocator=allocator()) or_else panic("allocator error")
     }
 }
 
-_request_to_input_tmp :: proc (req: Request) -> (input: _Input, err: Allocator_Error) {
+request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Error) {
     context.allocator = context.temp_allocator
 
     input.method    = req.method
