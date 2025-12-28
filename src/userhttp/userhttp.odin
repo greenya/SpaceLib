@@ -12,6 +12,7 @@ init :: proc (allocator := context.allocator) -> (err: Error) {
 
 destroy :: proc () -> (err: Allocator_Error) {
     platform_destroy()
+    for req in requests do destroy_request(req) or_return
     delete(requests) or_return
     return
 }

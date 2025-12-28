@@ -101,8 +101,8 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
         req.error_msg = strings.clone(output.error, requests.allocator)
     } else {
         req.response.status = Status_Code(output.status)
-        req.response.headers, _ = create_params_from_pairs(output.header_params, requests.allocator) // ignore allocator error
-        req.response.content = base64.decode(output.content_base64, allocator=requests.allocator) // ignore allocator error
+        req.response.headers = create_params_from_pairs(output.header_params, requests.allocator) or_else panic("allocator error")
+        req.response.content = base64.decode(output.content_base64, allocator=requests.allocator) or_else panic("allocator error")
     }
 }
 

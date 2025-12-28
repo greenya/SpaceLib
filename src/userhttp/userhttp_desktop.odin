@@ -31,7 +31,7 @@ platform_send :: proc (req: ^Request) {
     if err_net, ok := req.error.(Platform_Error); ok {
         assert(err_net != .E_OK)
         cstr := curl.easy_strerror(err_net)
-        req.error_msg = strings.clone_from(cstr, requests.allocator) // ignore allocator error
+        req.error_msg = strings.clone_from(cstr, requests.allocator) or_else panic("allocator error")
     }
 }
 
