@@ -8,6 +8,7 @@ app_startup :: proc () {
     fmt.println(#procedure)
 
     userhttp.init()
+    pt_init(api_secret="A secret pass phrase goes here", game_key="65ca329ff0f6dc94e3391cab956c02607d5b2271")
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
@@ -19,6 +20,7 @@ app_shutdown :: proc () {
 
     rl.CloseWindow()
 
+    pt_destroy()
     userhttp.destroy()
 }
 
@@ -37,16 +39,17 @@ app_tick :: proc () {
     }
 
     if rl.IsKeyPressed(.TWO) {
-        scores, err := pt_get_scores(limit=20, allocator=context.temp_allocator)
-        if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
-        else            do fmt.printfln("scores: %#v", scores)
+        pt_get_scores(limit=20, ready=proc (result: Pt_Get_Scores_Result, err: Pt_Error) {
+            if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
+            else            do fmt.printfln("scores: %#v", result)
+        })
     }
 
-    if rl.IsKeyPressed(.THREE) {
-        err := pt_submit_score(player="TestPlayerTwo", score=4002)
-        if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
-        else            do fmt.printfln("score submitted")
-    }
+    // if rl.IsKeyPressed(.THREE) {
+    //     err := pt_submit_score(player="TestPlayerTwo", score=4002)
+    //     if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
+    //     else            do fmt.printfln("score submitted")
+    // }
 }
 
 app_draw :: proc () {
