@@ -77,7 +77,7 @@ tick :: proc () -> (err: Error) {
 // it is resolved (succeeded or failed), `req.ready()` callback will be called from `tick()`.
 //
 // IMPORTANT: The request will be deallocated by `tick()` right after `req.ready()` returns.
-send_request :: proc (init: Request_Init) -> (req: ^Request, err: Allocator_Error) {
+send_request :: proc (init: Request_Init) -> (req: ^Request, err: Allocator_Error) #optional_allocator_error {
     req = create_request(init, requests.allocator) or_return
     append(&requests, req) or_return
     platform_send(req)
