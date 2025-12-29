@@ -109,6 +109,13 @@ create_request :: proc (init: Request_Init, allocator := context.allocator) -> (
         }
     }
 
+    if init.content != nil {
+        if  strings.equal_fold(init_method, "GET")\
+        ||  strings.equal_fold(init_method, "HEAD") {
+            panic("A request using the GET or HEAD method cannot have a content")
+        }
+    }
+
     req             = new(Request) or_return
     req.allocator   = allocator
     req.method      = strings.clone(init_method, allocator)
