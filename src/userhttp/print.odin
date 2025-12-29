@@ -80,7 +80,7 @@ print_res_content :: proc (prefix: string, content: [] byte, content_type: strin
         content_type_text := content_type != "" ? content_type : "[content type not set]"
         fmt.printfln("%s %M | %s", prefix, content_size, content_type_text)
         if should_dump {
-            MAX_LEN :: 1000
+            MAX_LEN :: 300
             is_textual := guess_content_type_is_textual(content_type)
             if len(content) > MAX_LEN {
                 fmt.printfln(is_textual ? "%s%s" : "%v%s", content[:MAX_LEN], "...[truncated]")
