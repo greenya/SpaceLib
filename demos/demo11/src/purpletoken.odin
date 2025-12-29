@@ -138,7 +138,7 @@ pt_get_scores :: proc (limit: int, ready: Pt_Get_Scores_Ready_Proc) -> (err: Pt_
     args := fmt.tprintf("format=json&dates=yes&limit=%i", limit)
 
     req := pt_send("/get", args, ready=proc (req: ^userhttp.Request) {
-        ready:= pt_requests_pop(req, Pt_Get_Scores_Ready_Proc)
+        ready := pt_requests_pop(req, Pt_Get_Scores_Ready_Proc)
         result: Pt_Get_Scores_Result
 
         err: Pt_Error = req.error
@@ -150,18 +150,30 @@ pt_get_scores :: proc (limit: int, ready: Pt_Get_Scores_Ready_Proc) -> (err: Pt_
     }) or_return
 
     pt_requests_push(req, ready)
-
     return
 }
 
 // -------------------------- submit score --------------------------
 
-// TODO: re-implement submit score to be async
+Pt_Submit_Score_Ready_Proc :: proc (err: Pt_Error)
 
-// pt_submit_score :: proc (player: string, score: int) -> (err: Pt_Error) {
-//     args := fmt.tprintf("player=%s&score=%i", player, score)
-//     content := pt_send("/submit", args, context.temp_allocator) or_return
-//     err = pt_content_parse_error(content)
-//     if err==.ERROR_SUCCESS || err==.ERROR_LOW_SCORE do err = nil
-//     return
-// }
+pt_submit_score :: proc (player: string, score: int, ready: Pt_Submit_Score_Ready_Proc) -> (err: Pt_Error) {
+    args := fmt.tprintf("player=%s&score=%i", player, score)
+
+    req := pt_send("/submit", args, ready=proc (req: ^userhttp.Request) {
+        ready := pt_requests_pop(req, Pt_Submit_Score_Ready_Proc)
+
+        err: Pt_Error = req.error
+        if err == nil {
+            err = pt_content_parse_error(req.response.content)
+            if err==.ERROR_SUCCESS || err==.ERROR_LOW_SCORE {
+                err = nil
+            }
+        }
+
+        ready(err=err)
+    }) or_return
+
+    pt_requests_push(req, ready)
+    return
+}
