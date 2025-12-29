@@ -12,8 +12,18 @@ Content_Type_Text   :: "text/plain; charset=UTF-8"
 
 @private
 guess_content_type_is_textual :: proc (content_type: string) -> bool {
+    if content_type == "" do return false
+
+    ct, err := strings.to_lower(content_type, context.temp_allocator)
+    if err != nil do return false
+
     return\
-        strings.contains(content_type, "charset=") ||
-        strings.has_prefix(content_type, "text/") ||
-        strings.has_prefix(content_type, "application/json")
+        strings.has_prefix  (ct, "text/") ||
+        strings.has_prefix  (ct, "application/json") ||
+        strings.has_prefix  (ct, "application/xml") ||
+        strings.contains    (ct, "charset=") ||
+        strings.contains    (ct, "+json") ||
+        strings.contains    (ct, "+xml") ||
+        strings.contains    (ct, "javascript") ||
+        strings.contains    (ct, "ecmascript")
 }
