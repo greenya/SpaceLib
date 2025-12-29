@@ -2,6 +2,26 @@ package userhttp
 
 requests: [dynamic] ^Request
 
+// Common usage:
+//
+//      import "spacelib:userhttp"
+//      main :: proc () {
+//          userhttp.init()
+//          for ...game loop is running ... {
+//              userhttp.tick()
+//              if ...should send request... {
+//                  userhttp.send_request({
+//                      url     = "https://some/url/goes/here",
+//                      ready   = proc (req: ^userhttp.Request) {
+//                          if req.error == nil { all good, use req.response }
+//                          you also can print all the request details using userhttp.print_request(req)
+//                      },
+//                  })
+//              }
+//          }
+//          userhttp.destroy()
+//      }
+
 init :: proc (allocator := context.allocator) -> (err: Error) {
     requests = make([dynamic] ^Request, allocator) or_return
     platform_init(allocator) or_return
@@ -55,9 +75,10 @@ tick :: proc () -> (err: Error) {
 //
 // The request will be allocated and sent; the `tick()` call will update its progress, once
 // it is resolved (succeeded or failed), `req.ready()` callback will be called from `tick()`.
-// The request will be deallocated by `tick()` right after `req.ready()` returns.
-send_request :: proc (init: Request_Init) -> (err: Allocator_Error) {
-    req := create_request(init, requests.allocator) or_return
+//
+// IMPORTANT: The request will be deallocated by `tick()` right after `req.ready()` returns.
+send_request :: proc (init: Request_Init) -> (req: ^Request, err: Allocator_Error) {
+    req = create_request(init, requests.allocator) or_return
     append(&requests, req) or_return
     platform_send(req)
     return

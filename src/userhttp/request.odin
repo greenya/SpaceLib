@@ -44,7 +44,7 @@ Request_Init :: struct {
     // Once this callback is finished, `tick()` will deallocated the request automatically.
     //
     // IMPORTANT: Request pointer is only valid during ready(). Clone values if you need.
-    ready: proc (req: ^Request),
+    ready: Ready_Proc,
 }
 
 Request :: struct {
@@ -88,6 +88,8 @@ Request :: struct {
     // Only valid if `error == nil` or it is a `Status_Code` error.
     response: Response,
 }
+
+Ready_Proc :: proc (req: ^Request)
 
 @private
 create_request :: proc (init: Request_Init, allocator := context.allocator) -> (req: ^Request, err: Allocator_Error) {

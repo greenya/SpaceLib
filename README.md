@@ -15,6 +15,11 @@
 
 ## TODOs
 
+TODO: userhttp: add abort_request(req: ^Request)
+
+    - user should be able to abort request by its pointer
+    - abort every running request on destroy()
+
 TODO: userfs: expose error status
 
     maybe not, as i hardly believe somebody would handle the error properly;
