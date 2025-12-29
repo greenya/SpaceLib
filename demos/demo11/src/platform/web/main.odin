@@ -1,7 +1,6 @@
 package main_web
 
 import "base:runtime"
-import "core:log"
 import "core:mem"
 
 import app "../.."
@@ -17,8 +16,6 @@ platform_init :: proc "c" () {
     // So this sets up an allocator that uses emscripten's malloc.
     context.allocator = emscripten_allocator()
     runtime.init_global_temporary_allocator(1*mem.Megabyte)
-
-    context.logger = log.create_console_logger()
 
     web_context = context
     app.app_startup()
