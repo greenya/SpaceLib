@@ -121,7 +121,7 @@ function request_ready(fetch_id, data) {
     const json = JSON.stringify(data)
     const json_len = json.length
     requests.set(fetch_id, { json, json_len })
-    wasmExports.userhttp_ready(fetch_id, json_len)
+    userhttp.memory.exports.userhttp_ready(fetch_id, json_len)
 }
 
 function make_url(url, query_params) {
