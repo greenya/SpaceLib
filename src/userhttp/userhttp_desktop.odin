@@ -84,6 +84,13 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
 
     buf, buf_allocator := add_buffer(easy) or_return
 
+    defer if err != nil {
+        // not calling curl.multi_remove_handle() as we expect that if err != nil,
+        // the easy handle was never added to multi or failed to do so
+        curl.easy_cleanup(easy)
+        remove_buffer(easy)
+    }
+
     // setup method
 
     req_method_lower := strings.to_lower(req.method, context.temp_allocator) or_return
@@ -164,7 +171,13 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
 
     // add "easy" handle to "multi" handle
 
-    curl.multi_add_handle(multi, easy)
+    // note: this call this should be the very last call in this proc, if you move it,
+    // consider reworking "defer if err != nil { ... }" logic, and maybe introduce some
+    // "easy_added_to_multi" flag and call curl.multi_remove_handle(), only when it was
+    // actually successfully added
+
+    multi_err := curl.multi_add_handle(multi, easy)
+    if multi_err != .OK do return .E_FAILED_INIT
 
     return
 }
@@ -182,32 +195,28 @@ curl_ready :: proc (easy: ^curl.CURL, code: curl.code) -> (err: Error) {
 
     req, _ := find_request_by_handle({ easy=easy })
     assert(req != nil)
+    assert(req.error == nil)
 
     req.handle = {}
 
     buf := buffers[easy]
 
-    if req.error != nil {
-        // the error was in the preparation phase, e.g. anything before curl.multi_add_handle() call;
-        // we do nothing here, only cleanup at the end; the error is unchanged for the user to check
-    } else {
-        if code == .E_OK {
-            assert(buf.header != nil)
-            assert(buf.content != nil)
+    if code == .E_OK {
+        assert(buf.header != nil)
+        assert(buf.content != nil)
 
-            response_code: c.long
-            curl.easy_getinfo(easy, .RESPONSE_CODE, &response_code) or_return
+        response_code: c.long
+        curl.easy_getinfo(easy, .RESPONSE_CODE, &response_code) or_return
 
-            req.response = {
-                status  = Status_Code(response_code),
-                headers = create_headers_from_text(string(buf.header[:]), req.allocator) or_return,
-                content = slice.clone(buf.content[:], req.allocator) or_return,
-            }
-        } else {
-            req.error = code
-            cstr := curl.easy_strerror(code)
-            req.error_msg = strings.clone_from(cstr, req.allocator) or_return
+        req.response = {
+            status  = Status_Code(response_code),
+            headers = create_headers_from_text(string(buf.header[:]), req.allocator) or_return,
+            content = slice.clone(buf.content[:], req.allocator) or_return,
         }
+    } else {
+        req.error = code
+        cstr := curl.easy_strerror(code)
+        req.error_msg = strings.clone_from(cstr, req.allocator) or_return
     }
 
     return
