@@ -2,8 +2,8 @@
 
 (function() {
 
-function log(...args) { console.log("[userhttp.js]", ...args) }
-function err(...args) { console.error("[userhttp.js]", ...args) }
+function log(...args) { console.log("[userhttp]", ...args) }
+function err(...args) { console.error("[userhttp]", ...args) }
 
 const fetch             = window.fetch
 const JSON              = window.JSON
@@ -52,21 +52,24 @@ function userhttp_fetch(fetch_id, req_ptr, req_len) {
         ? setTimeout(() => abort_controller.abort(), req.timeout_ms)
         : 0
 
-    requests.set(fetch_id, {})
+    requests.set(fetch_id, { pending: true })
 
-    fetch(req_url, {
-        method  : req.method,
-        headers : req_headers,
-        body    : req_body,
-        signal  : abort_controller.signal,
-    })
-    .then(r => handle_response(fetch_id, r))
-    .catch(e => handle_error(fetch_id, e))
-    .finally(() => {
-        if (abort_timeout_id != 0) {
-            clearTimeout(abort_timeout_id)
-        }
-    })
+    try {
+        fetch(req_url, {
+            method  : req.method,
+            headers : req_headers,
+            body    : req_body,
+            signal  : abort_controller.signal,
+        })
+        .then(r => handle_response(fetch_id, r))
+        .catch(e => handle_error(fetch_id, e))
+        .finally(() => {
+            if (abort_timeout_id) { clearTimeout(abort_timeout_id) }
+        })
+    } catch (e) {
+        handle_error(fetch_id, e)
+        if (abort_timeout_id) { clearTimeout(abort_timeout_id) }
+    }
 }
 
 function userhttp_size(fetch_id) {
@@ -97,8 +100,14 @@ async function handle_response(fetch_id, response) {
         header_params.push([ name, value ])
     }
 
-    const content_bytes = await response.bytes()
-    const content_base64 = content_bytes.toBase64()
+    let content_base64 = null
+    try {
+        const content_bytes = await response.bytes()
+        content_base64 = content_bytes.toBase64()
+    } catch (e) {
+        handle_error(fetch_id, e)
+        return
+    }
 
     request_ready(fetch_id, { status, header_params, content_base64 })
 }
@@ -139,7 +148,7 @@ function make_body(content_params, content_base64) {
         }
         return new TextEncoder().encode(result.toString())
     } else if (content_base64 && typeof content_base64 == "string" && content_base64.length > 0) {
-        return atob(content_base64)
+        return new TextEncoder().encode(atob(content_base64))
     } else {
         return null
     }
