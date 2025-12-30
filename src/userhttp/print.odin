@@ -10,18 +10,15 @@ Print_Option :: enum {
 }
 
 print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
-    context.allocator = context.temp_allocator
-    {
-        req_ct_str := param_as_string(req.headers, "content-type")
+    req_ct_str := param_as_string(req.headers, "content-type", allocator=context.temp_allocator)
 
-        fmt.println         ("--------------------------------------------------[request]")
-        fmt.printfln        ("-----------[method] %s", req.method)
-        fmt.printfln        ("--------------[url] %s", req.url)
-        print_params        ("------------[query]", req.query)
-        print_params        ("----------[headers]", req.headers)
-        print_req_content   ("----------[content]", req.content, req_ct_str, .req_content in options)
-        fmt.printfln        ("-------[timeout_ms] %i", req.timeout_ms)
-    }
+    fmt.println             ("--------------------------------------------------[request]")
+    fmt.printfln            ("-----------[method] %s", req.method)
+    fmt.printfln            ("--------------[url] %s", req.url)
+    print_params            ("------------[query]", req.query)
+    print_params            ("----------[headers]", req.headers)
+    print_req_content       ("----------[content]", req.content, req_ct_str, .req_content in options)
+    fmt.printfln            ("-------[timeout_ms] %i", req.timeout_ms)
 
     if req.error != nil {
         fmt.println         ("----------------------------------------------------[error]")
@@ -32,7 +29,7 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
     }
 
     if req.response.status != .None {
-        res_ct_str := param_as_string(req.response.headers, "content-type")
+        res_ct_str := param_as_string(req.response.headers, "content-type", allocator=context.temp_allocator)
 
         fmt.println         ("-------------------------------------------------[response]")
         fmt.printfln        ("-----------[status] %i %v", int(req.response.status), req.response.status)
@@ -40,7 +37,7 @@ print_request :: proc (req: ^Request, options: bit_set [Print_Option] = ~{}) {
         print_res_content   ("----------[content]", req.response.content, res_ct_str, .res_content in options)
     }
 
-    fmt.println("-----------------------------------------------------------")
+    fmt.println             ("-----------------------------------------------------------")
 }
 
 @private
@@ -50,8 +47,8 @@ print_params :: proc (prefix: string, params: [] Param) {
     if params != nil {
         list := slice.mapper(params, proc (param: Param) -> string {
             return fmt.tprintf("%s=%v", param.name, param.value)
-        })
-        result = strings.join(list[:], " | ")
+        }, context.temp_allocator)
+        result = strings.join(list[:], " | ", context.temp_allocator)
     }
 
     fmt.printfln("%s %s", prefix, result)

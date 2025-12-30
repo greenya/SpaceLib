@@ -119,9 +119,9 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     }
 }
 
+// Returned `input` DOES NOT clone `req` fields (references them directly),
+// and `context.temp_allocator` is used for necessary allocations.
 request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Error) {
-    context.allocator = context.temp_allocator
-
     input.method    = req.method
     input.url       = req.url
 
@@ -136,7 +136,7 @@ request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Err
         { dst=&input.content_params, src=req_content_params },
     }) {
         if pp.src == nil do continue
-        pp.dst^ = make([] [2] string, len(pp.src)) or_return
+        pp.dst^ = make([] [2] string, len(pp.src), context.temp_allocator) or_return
         for p, i in pp.src {
             n := p.name
             v := fmt.tprint(p.value)
@@ -154,7 +154,7 @@ request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Err
     }
 
     if req_content_bytes != nil {
-        input.content_base64 = base64.encode(req_content_bytes)
+        input.content_base64 = base64.encode(req_content_bytes, allocator=context.temp_allocator)
     }
 
     input.timeout_ms = req.timeout_ms
