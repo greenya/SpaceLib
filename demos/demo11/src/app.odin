@@ -2,29 +2,109 @@ package main
 
 import "core:fmt"
 import rl "vendor:raylib"
+import "spacelib:raylib/draw"
+import "spacelib:ui"
 import "spacelib:userhttp"
+import "res"
+
+App :: struct {
+    should_exit : bool,
+    should_debug: bool,
+
+    ui_tab_bar      : ^ui.Frame,
+    ui_tab_content  : ^ui.Frame,
+
+    ui: ^ui.UI,
+}
+
+app: App
 
 app_startup :: proc () {
-    fmt.println(#procedure)
-
-    userhttp.init()
-    pt_init(api_secret="A secret pass phrase goes here", game_key="65ca329ff0f6dc94e3391cab956c02607d5b2271")
+    log(#procedure)
+    log_build_info()
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
-    rl.InitWindow(400, 300, "SpaceLib Demo11")
+    rl.InitWindow(1280, 720, "SpaceLib Demo11")
+
+    // rl.SetExitKey(.KEY_NULL)
+
+    res.init()
+    userhttp.init()
+    pt_init(api_secret="A secret pass phrase goes here", game_key="65ca329ff0f6dc94e3391cab956c02607d5b2271")
+
+    app.ui = ui.create(
+        root_rect           = {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())},
+        scissor_set_proc    = proc (r: Rect) { rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h)) },
+        scissor_clear_proc  = proc () { rl.EndScissorMode() },
+        terse_draw_proc     = proc (f: ^ui.Frame) { draw_terse_frame(f) },
+        frame_overdraw_proc = ODIN_DEBUG\
+            ? proc (f: ^ui.Frame) { if app.should_debug do draw.debug_frame(f) }\
+            : nil,
+    )
+
+    panel := ui.add_frame(app.ui.root,
+        {},
+        { point=.top_left },
+        { point=.bottom_right },
+    )
+
+    app.ui_tab_bar = ui.add_frame(panel, {
+        layout=ui.Flow { dir=.down_center, gap=20 },
+        size={200,0},
+    },
+        { point=.top_left, offset=40 },
+        { point=.bottom_left, offset={40,-40} },
+    )
+
+    app.ui_tab_content = ui.add_frame(panel, {
+        flags={.scissor},
+        layout=ui.Flow { dir=.down, scroll={step=20} },
+        draw=draw_panel,
+    },
+        { point=.top_left, rel_point=.top_right, rel_frame=app.ui_tab_bar, offset={40,0} },
+        { point=.bottom_right, offset=-40 },
+    )
+
+    {
+        _, content := app_add_tab("About")
+        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>About content goes here" })
+    }
+
+    {
+        _, content := app_add_tab("Github")
+        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>Odin Github content goes here" })
+    }
+
+    {
+        _, content := app_add_tab("PurpleToken")
+        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>PurpleToken content goes here" })
+    }
+
+    ui.click(app.ui_tab_bar.children[0])
 }
 
 app_shutdown :: proc () {
-    fmt.println(#procedure)
+    log(#procedure)
 
-    rl.CloseWindow()
-
+    ui.destroy(app.ui)
     pt_destroy()
     userhttp.destroy()
+    res.destroy()
+    rl.CloseWindow()
 }
 
 app_tick :: proc () {
+    when ODIN_DEBUG {
+        app.should_debug = rl.IsKeyDown(.LEFT_CONTROL)
+    }
+
+    ui.tick(app.ui, {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())}, {
+        pos         = rl.GetMousePosition(),
+        lmb_down    = rl.IsMouseButtonDown(.LEFT),
+        wheel_dy    = rl.GetMouseWheelMove(),
+    })
+
     userhttp.tick()
 
     if rl.IsKeyPressed(.ONE) {
@@ -40,37 +120,60 @@ app_tick :: proc () {
 
     if rl.IsKeyPressed(.TWO) {
         pt_get_scores(limit=20, ready=proc (result: Pt_Get_Scores_Result, err: Pt_Error) {
-            if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
-            else            do fmt.printfln("scores: %#v", result)
+            if err != nil   do logf("[ERROR] (%i) %v", err, err)
+            else            do logf("scores: %#v", result)
         })
     }
 
     if rl.IsKeyPressed(.THREE) {
         pt_submit_score(player="TestPlayerTwo", score=4002, ready=proc (err: Pt_Error) {
-            if err != nil   do fmt.printfln("[ERROR] (%i) %v", err, err)
-            else            do fmt.println("Score successfully submitted")
+            if err != nil   do logf("[ERROR] (%i) %v", err, err)
+            else            do log("Score successfully submitted")
         })
     }
 }
 
 app_draw :: proc () {
     rl.BeginDrawing()
-    rl.ClearBackground({22,33,55,255})
+    rl.ClearBackground(res.color(.plum).rgba)
     x := rl.GetRandomValue(10, 15)
     y := rl.GetRandomValue(10, 15)
+    ui.draw(app.ui)
     rl.DrawFPS(x, y)
     rl.EndDrawing()
 }
 
 app_running :: proc () -> bool {
-    running := true
     when ODIN_OS != .JS {
-        if rl.WindowShouldClose() do running = false
+        app.should_exit |= rl.WindowShouldClose()
     }
-    return running
+    return !app.should_exit
 }
 
 app_resized :: proc (w, h: i32) {
-    fmt.println(#procedure, w, h)
+    log(#procedure, w, h)
     rl.SetWindowSize(w, h)
+}
+
+app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
+    assert(app.ui_tab_bar != nil)
+    assert(app.ui_tab_content != nil)
+
+    tab = ui.add_frame(app.ui_tab_bar, {
+        flags   = {.terse,.terse_height,.radio,.capture},
+        text    = fmt.tprintf("<pad=10,font=text_4r>%s", text),
+        draw    = draw_button,
+        click   = proc (f: ^ui.Frame) {
+            content := ui.user_ptr(f, ^ui.Frame)
+            ensure(content != nil)
+            ui.show(content, hide_siblings=true)
+        },
+    })
+
+    content = ui.add_frame(app.ui_tab_content,
+        { layout=ui.Flow { dir=.down, pad=20, align=.start, auto_size={.height} } },
+    )
+
+    ui.set_user_ptr(tab, content)
+    return
 }
