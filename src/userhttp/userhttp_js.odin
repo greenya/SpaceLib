@@ -113,6 +113,10 @@ userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
         headers = create_params_from_pairs(output.header_params, req.allocator) or_else panic("allocator error"),
         content = base64.decode(output.content_base64, allocator=req.allocator) or_else panic("allocator error"),
     }
+
+    if .Successful != status_code_category(req.response.status) {
+        req.error = req.response.status
+    }
 }
 
 request_to_input_tmp :: proc (req: Request) -> (input: Input, err: Allocator_Error) {

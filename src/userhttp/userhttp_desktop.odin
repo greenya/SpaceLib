@@ -213,6 +213,10 @@ curl_ready :: proc (easy: ^curl.CURL, code: curl.code) -> (err: Error) {
             headers = create_headers_from_text(string(buf.header[:]), req.allocator) or_return,
             content = slice.clone(buf.content[:], req.allocator) or_return,
         }
+
+        if .Successful != status_code_category(req.response.status) {
+            req.error = req.response.status
+        }
     } else {
         req.error = code
         cstr := curl.easy_strerror(code)
