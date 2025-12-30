@@ -29,7 +29,7 @@ apply_offset :: proc (terse: ^Terse, offset: Vec2) {
     }
 }
 
-text_escaped :: proc (text: string, allocator := context.allocator) -> (result: string, was_allocation: bool) {
+text_escaped :: proc (text: string, allocator := context.allocator) -> (result: string, was_allocation: bool) #optional_ok {
     old := strings.builder_make(context.temp_allocator)
     fmt.sbprint(&old, default_code_start_rune)
 
