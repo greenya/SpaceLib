@@ -654,7 +654,14 @@ click_by_frame :: proc (f: ^Frame) {
     if .check in f.flags    do f.selected ~= true
     if .radio in f.flags    do click_radio(f)
     if f.actor != nil       do click_actor(f)
-    if f.click != nil       do f.click(f)
+
+    if f.click != nil {
+        f.click(f)
+    } else {
+        if f.terse != nil && f.ui.terse_click_proc != nil {
+            f.ui.terse_click_proc(f)
+        }
+    }
 }
 
 click_by_path :: proc (parent: ^Frame, path: string) {

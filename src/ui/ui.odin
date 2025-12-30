@@ -57,6 +57,11 @@ UI :: struct {
     // Used when a frame does not have its own `draw` callback.
     terse_draw_proc: Frame_Proc,
 
+    // Fallback clicking callback for `.terse` frames.
+    // Used when a frame does not have its own `click` callback.
+    // Useful to handle clicks on groups in terse content, for example, navigation links.
+    terse_click_proc: Frame_Proc,
+
     // Callback for extra drawing for every frame.
     // Called after frame's `draw` and before drawing any children.
     frame_overdraw_proc: Frame_Proc,
@@ -101,6 +106,7 @@ create :: proc (
     scissor_set_proc        : Scissor_Set_Proc = nil,
     scissor_clear_proc      : Scissor_Clear_Proc = nil,
     terse_draw_proc         : Frame_Proc = nil,
+    terse_click_proc        : Frame_Proc = nil,
     frame_overdraw_proc     : Frame_Proc = nil,
 ) -> ^UI {
     ui := new(UI)
@@ -113,6 +119,7 @@ create :: proc (
         scissor_set_proc        = scissor_set_proc,
         scissor_clear_proc      = scissor_clear_proc,
         terse_draw_proc         = terse_draw_proc,
+        terse_click_proc        = terse_click_proc,
         frame_overdraw_proc     = frame_overdraw_proc,
     }
 
