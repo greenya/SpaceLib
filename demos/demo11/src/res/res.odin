@@ -6,6 +6,7 @@ ASSETS_PATH :: "../../assets"
 
 init :: proc () {
     create_colors()
+    create_data()
     create_fonts()
 
     terse.query_font    = proc (name: string) -> ^terse.Font    { return font_by_name(name) }
@@ -14,6 +15,7 @@ init :: proc () {
 
 destroy :: proc () {
     destroy_colors()
+    destroy_data()
     destroy_fonts()
 
     terse.query_font    = nil

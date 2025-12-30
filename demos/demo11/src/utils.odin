@@ -1,8 +1,10 @@
 package main
 
 import "core:fmt"
+import "core:strings"
 import rl "vendor:raylib"
 import "spacelib:core"
+import "res"
 
 Vec2    :: core.Vec2
 Vec3    :: core.Vec3
@@ -25,4 +27,11 @@ log_build_info :: proc () {
     log("ODIN_VERSION           :", ODIN_VERSION)
     log("raylib.VERSION         :", rl.VERSION)
     log("------------------------------------")
+}
+
+open_url :: proc (url_name: string) {
+    url := res.url(url_name, context.temp_allocator)
+    cstr := strings.clone_to_cstring(url, context.temp_allocator)
+    log(#procedure, cstr)
+    rl.OpenURL(cstr)
 }

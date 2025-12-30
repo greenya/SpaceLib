@@ -7,6 +7,11 @@ import "spacelib:ui"
 import "spacelib:userhttp"
 import "res"
 
+// The "Secret Pass Phrase" from https://purpletoken.com/profile.php
+PURPLETOKEN_API_SECRET :: "A secret pass phrase goes here"
+// The "Key" from one of the games from https://purpletoken.com/manage.php
+PURPLETOKEN_GAME_KEY :: "65ca329ff0f6dc94e3391cab956c02607d5b2271"
+
 App :: struct {
     should_exit : bool,
     should_debug: bool,
@@ -31,13 +36,14 @@ app_startup :: proc () {
 
     res.init()
     userhttp.init()
-    pt_init(api_secret="A secret pass phrase goes here", game_key="65ca329ff0f6dc94e3391cab956c02607d5b2271")
+    pt_init(api_secret=PURPLETOKEN_API_SECRET, game_key=PURPLETOKEN_GAME_KEY)
 
     app.ui = ui.create(
         root_rect           = {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())},
         scissor_set_proc    = proc (r: Rect) { rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h)) },
         scissor_clear_proc  = proc () { rl.EndScissorMode() },
         terse_draw_proc     = proc (f: ^ui.Frame) { draw_terse_frame(f) },
+        terse_click_proc    = proc (f: ^ui.Frame) { click_terse_frame(f) },
         frame_overdraw_proc = ODIN_DEBUG\
             ? proc (f: ^ui.Frame) { if app.should_debug do draw.debug_frame(f) }\
             : nil,
@@ -50,38 +56,45 @@ app_startup :: proc () {
     )
 
     app.ui_tab_bar = ui.add_frame(panel, {
-        layout=ui.Flow { dir=.down_center, gap=20 },
-        size={200,0},
+        size    = {200,0},
+        layout  = ui.Flow { dir=.down_center, gap=20 },
     },
-        { point=.top_left, offset=40 },
-        { point=.bottom_left, offset={40,-40} },
+        { point=.top_left, offset={40,0} },
+        { point=.bottom_left, offset={40,0} },
     )
 
     app.ui_tab_content = ui.add_frame(panel, {
-        flags={.scissor},
-        layout=ui.Flow { dir=.down, scroll={step=20} },
-        draw=draw_panel,
+        flags   = {.scissor},
+        layout  = ui.Flow { dir=.down, scroll={step=40} },
+        draw    = draw_panel,
     },
         { point=.top_left, rel_point=.top_right, rel_frame=app.ui_tab_bar, offset={40,0} },
-        { point=.bottom_right, offset=-40 },
+        { point=.bottom_right },
     )
 
+    ui.add_frame(app.ui_tab_bar, {
+        flags   = {.terse,.terse_size},
+        text    = "<font=text_6r,color=white>spacelib:\n<color=amber>userhttp",
+    },
+        { point=.top, offset={0,40} },
+    )
+
+    preselect_tab: ^ui.Frame
+
     {
-        _, content := app_add_tab("About")
+        content: ^ui.Frame
+        preselect_tab, content = app_add_tab("About")
         ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>About content goes here" })
     }
 
-    {
-        _, content := app_add_tab("Github")
-        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>Odin Github content goes here" })
-    }
+    github_page_add()
 
     {
         _, content := app_add_tab("PurpleToken")
         ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>PurpleToken content goes here" })
     }
 
-    ui.click(app.ui_tab_bar.children[0])
+    ui.click(preselect_tab)
 }
 
 app_shutdown :: proc () {
@@ -107,39 +120,39 @@ app_tick :: proc () {
 
     userhttp.tick()
 
-    if rl.IsKeyPressed(.ONE) {
-        userhttp.send_request({
-            url         = "https://api.github.com/repos/odin-lang/Odin",
-            headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
-            timeout_ms  = 5_000,
-            ready       = proc (req: ^userhttp.Request) {
-                userhttp.print_request(req)
-            },
-        })
-    }
+    // if rl.IsKeyPressed(.ONE) {
+    //     userhttp.send_request({
+    //         url         = "https://api.github.com/repos/odin-lang/Odin",
+    //         headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
+    //         timeout_ms  = 5_000,
+    //         ready       = proc (req: ^userhttp.Request) {
+    //             userhttp.print_request(req)
+    //         },
+    //     })
+    // }
 
-    if rl.IsKeyPressed(.TWO) {
-        pt_get_scores(limit=20, ready=proc (result: Pt_Get_Scores_Result, err: Pt_Error) {
-            if err != nil   do logf("[ERROR] (%i) %v", err, err)
-            else            do logf("scores: %#v", result)
-        })
-    }
+    // if rl.IsKeyPressed(.TWO) {
+    //     pt_get_scores(limit=20, ready=proc (result: Pt_Get_Scores_Result, err: Pt_Error) {
+    //         if err != nil   do logf("[ERROR] (%i) %v", err, err)
+    //         else            do logf("scores: %#v", result)
+    //     })
+    // }
 
-    if rl.IsKeyPressed(.THREE) {
-        pt_submit_score(player="TestPlayerTwo", score=4002, ready=proc (err: Pt_Error) {
-            if err != nil   do logf("[ERROR] (%i) %v", err, err)
-            else            do log("Score successfully submitted")
-        })
-    }
+    // if rl.IsKeyPressed(.THREE) {
+    //     pt_submit_score(player="TestPlayerTwo", score=4002, ready=proc (err: Pt_Error) {
+    //         if err != nil   do logf("[ERROR] (%i) %v", err, err)
+    //         else            do log("Score successfully submitted")
+    //     })
+    // }
 }
 
 app_draw :: proc () {
     rl.BeginDrawing()
     rl.ClearBackground(res.color(.plum).rgba)
-    x := rl.GetRandomValue(10, 15)
-    y := rl.GetRandomValue(10, 15)
     ui.draw(app.ui)
-    rl.DrawFPS(x, y)
+    // x := rl.GetRandomValue(10, 15)
+    // y := rl.GetRandomValue(10, 15)
+    // rl.DrawFPS(x, y)
     rl.EndDrawing()
 }
 
@@ -161,7 +174,7 @@ app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
 
     tab = ui.add_frame(app.ui_tab_bar, {
         flags   = {.terse,.terse_height,.radio,.capture},
-        text    = fmt.tprintf("<pad=10,font=text_4r>%s", text),
+        text    = fmt.tprintf("<wrap,pad=10,font=text_4r>%s", text),
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) {
             content := ui.user_ptr(f, ^ui.Frame)
@@ -170,9 +183,9 @@ app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
         },
     })
 
-    content = ui.add_frame(app.ui_tab_content,
-        { layout=ui.Flow { dir=.down, pad=20, align=.start, auto_size={.height} } },
-    )
+    content = ui.add_frame(app.ui_tab_content, {
+        layout = ui.Flow { dir=.down, pad={40,40,30,30}, gap=30, align=.start, auto_size={.height} },
+    })
 
     ui.set_user_ptr(tab, content)
     return

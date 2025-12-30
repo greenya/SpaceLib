@@ -7,6 +7,7 @@ import "spacelib:raylib/res"
 Font_ID :: enum {
     default,
     text_4r,
+    text_6r,
 }
 
 @private fonts      : [Font_ID] ^res.Font
@@ -23,6 +24,7 @@ create_fonts :: proc () {
     for id in Font_ID do switch id {
     case .default   : fonts[id] = res.create_font_from_default(height=20)
     case .text_4r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=26)
+    case .text_6r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=48)
     }
 }
 
