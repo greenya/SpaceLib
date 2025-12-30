@@ -1,5 +1,6 @@
 package userhttp
 
+import "core:fmt"
 import "core:mem"
 import "core:strings"
 
@@ -89,6 +90,13 @@ Request :: struct {
     response: Response,
 }
 
+Request_State :: enum {
+    None,
+    Processing,
+    Succeeded,
+    Failed,
+}
+
 Ready_Proc :: proc (req: ^Request)
 
 @private
@@ -151,4 +159,43 @@ destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
     free            (req)                   or_return
 
     return
+}
+
+request_state :: proc (req: ^Request) -> (state: Request_State) {
+    if req.error != nil {
+        state = .Failed
+    } else {
+        if req.response.status != .None {
+            assert(.Successful == status_code_category(req.response.status))
+            state = .Succeeded
+        } else {
+            if req.handle != {} {
+                state = .Processing
+            }
+        }
+    }
+    return
+}
+
+request_state_text :: proc (req: ^Request, allocator := context.allocator) -> string {
+    sb := strings.builder_make(allocator)
+
+    state := request_state(req)
+    fmt.sbprintf(&sb, "[%v]", state)
+
+    switch state {
+    case .None, .Processing:
+        // nothing
+
+    case .Succeeded:
+        fmt.sbprintf(&sb, " HTTP Status: (%i) %v", req.response.status, req.response.status)
+
+    case .Failed:
+        fmt.sbprintf(&sb, " %s: (%i) %v", error_type_name(req.error), req.error, req.error)
+        if req.error_msg != "" {
+            fmt.sbprintf(&sb, ": %s", req.error_msg)
+        }
+    }
+
+    return strings.to_string(sb)
 }

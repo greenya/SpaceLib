@@ -1,6 +1,5 @@
 package userhttp
 
-import "core:fmt"
 import "core:mem"
 
 @private Allocator_Error :: mem.Allocator_Error
@@ -19,17 +18,6 @@ Error :: union #shared_nil {
     // HTTP error (status code):
     // Status codes 200-299 are not used here and considered to be "no error" codes.
     Status_Code,
-}
-
-print_error :: proc (error: Error, error_msg := "") {
-    if error == nil do return
-
-    type_name := error_type_name(error)
-    if error_msg != "" {
-        fmt.printfln("%s: (%i) %v: %s", type_name, error, error, error_msg)
-    } else {
-        fmt.printfln("%s: (%i) %v", type_name, error, error)
-    }
 }
 
 @private
