@@ -39,31 +39,24 @@ draw_terse_frame :: proc (f: ^ui.Frame, offset := Vec2{}, color := Color{}) {
     }
 }
 
-click_terse_frame :: proc (f: ^ui.Frame) {
-    hit_group := terse.group_hit(f.terse, f.ui.mouse.pos)
-    if hit_group != nil && strings.has_prefix(hit_group.name, "link_") {
-        open_url(hit_group.name)
-    }
-}
-
 draw_panel :: proc (f: ^ui.Frame) {
-    draw.rect_gradient_horizontal(f.rect, res.color(.teal, a=f.opacity), res.color(.teal, a=0))
+    draw.rect_gradient_horizontal(f.rect, res.color(.teal), res.color(.teal, a=0))
     left_bar := core.rect_bar_left(f.rect, 3)
     draw.rect(left_bar, res.color(.turquoise))
 }
 
 draw_button :: proc (f: ^ui.Frame) {
     bg_rect := core.rect_inflated(f.rect, f.captured ? {1,1} : {-1,1})
-    draw.rect_rounded(bg_rect, .5, 8, res.color(.teal, a=f.opacity, b=-.3))
+    draw.rect_rounded(bg_rect, .5, 8, res.color(.teal, b=-.3))
 
     face_offset := Vec2 {0,-5}
 
     if .disabled in f.flags {
         face_rect := core.rect_moved(f.rect, face_offset)
-        face_color := res.color(.teal, a=f.opacity, b=-.2)
+        face_color := res.color(.teal, b=-.2)
         draw.rect_rounded(face_rect, .3, 8, face_color)
 
-        face_br_color := res.color(.turquoise, a=f.opacity, b=-.2)
+        face_br_color := res.color(.turquoise, b=-.2)
         draw.rect_rounded_lines(face_rect, .3, 8, 2, face_br_color)
 
         if .terse in f.flags {
@@ -71,7 +64,7 @@ draw_button :: proc (f: ^ui.Frame) {
         }
     } else {
         if f.entered {
-            draw.rect_rounded_lines(core.rect_inflated(f.rect, 3), .3, 8, 4, res.color(.amber, a=f.opacity))
+            draw.rect_rounded_lines(core.rect_inflated(f.rect, 3), .3, 8, 4, res.color(.amber))
         }
 
         if f.captured {
@@ -79,15 +72,28 @@ draw_button :: proc (f: ^ui.Frame) {
         }
 
         face_rect := core.rect_moved(f.rect, face_offset)
-        face_color := res.color(f.selected ? .magenta : .teal, a=f.opacity)
+        face_color := res.color(f.selected ? .magenta : .teal)
         draw.rect_rounded(face_rect, .3, 8, face_color)
 
-        face_br_color := res.color(.turquoise, a=f.opacity, b=-.2)
+        face_br_color := res.color(.turquoise, b=-.2)
         draw.rect_rounded_lines(face_rect, .3, 8, 2, face_br_color)
 
         if .terse in f.flags {
             draw_terse_frame(f, offset=face_offset, color=res.color(.white))
         }
+    }
+}
+
+draw_scrollbar_track :: proc (f: ^ui.Frame) {
+    if .disabled in f.children[0].flags do return
+    draw.rect(f.rect, res.color(.teal))
+}
+
+draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
+    if .disabled in f.flags do return
+    draw.rect_rounded(f.rect, .4, 8, res.color(.teal))
+    if f.entered || f.captured {
+        draw.rect_rounded_lines(f.rect, .4, 8, 2, res.color(.turquoise))
     }
 }
 

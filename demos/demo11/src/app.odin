@@ -64,9 +64,7 @@ app_startup :: proc () {
     )
 
     app.ui_tab_content = ui.add_frame(panel, {
-        flags   = {.scissor},
-        layout  = ui.Flow { dir=.down, scroll={step=40} },
-        draw    = draw_panel,
+        draw = draw_panel,
     },
         { point=.top_left, rel_point=.top_right, rel_frame=app.ui_tab_bar, offset={40,0} },
         { point=.bottom_right },
@@ -178,13 +176,45 @@ app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
             content := ui.user_ptr(f, ^ui.Frame)
             ensure(content != nil)
             ui.show(content, hide_siblings=true)
+            ui.update(content, include_hidden=true)
         },
     })
 
     content = ui.add_frame(app.ui_tab_content, {
-        layout = ui.Flow { dir=.down, pad={40,40,30,30}, gap=30, align=.start, auto_size={.height} },
-    })
+        flags   = {.scissor},
+        layout  = ui.Flow { dir=.down, pad={40,80,40,40}, gap=30, align=.start,
+                            auto_size={.height}, scroll={step=40} },
+    },
+        { point=.top_left },
+        { point=.bottom_right },
+    )
 
+    app_add_scrollbar(content)
     ui.set_user_ptr(tab, content)
+
+    return
+}
+
+app_add_scrollbar :: proc (target: ^ui.Frame) -> (track, thumb: ^ui.Frame) {
+    assert(.scissor in target.flags)
+
+    track = ui.add_frame(target, {
+        size    = {4,0},
+        draw    = draw_scrollbar_track,
+    },
+        { point=.top_left, rel_point=.top_right, offset={-40,40} },
+        { point=.bottom_left, rel_point=.bottom_right, offset={-40,-40} },
+    )
+
+    thumb = ui.add_frame(track, {
+        flags   = {.capture},
+        size    = {24,64},
+        draw    = draw_scrollbar_thumb,
+    },
+        { point=.top },
+    )
+
+    ui.setup_scrollbar_actors(target, thumb)
+
     return
 }

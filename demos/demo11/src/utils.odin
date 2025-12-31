@@ -4,6 +4,8 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import "spacelib:core"
+import "spacelib:terse"
+import "spacelib:ui"
 import "spacelib:userhttp"
 import "res"
 
@@ -47,4 +49,11 @@ open_url :: proc (url_name: string) {
     cstr := strings.clone_to_cstring(url, context.temp_allocator)
     log(#procedure, cstr)
     rl.OpenURL(cstr)
+}
+
+click_terse_frame :: proc (f: ^ui.Frame) {
+    hit_group := terse.group_hit(f.terse, f.ui.mouse.pos)
+    if hit_group != nil && strings.has_prefix(hit_group.name, "link_") {
+        open_url(hit_group.name)
+    }
 }
