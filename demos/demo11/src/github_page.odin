@@ -22,7 +22,7 @@ GitHub_Page :: struct {
 
 github_page: GitHub_Page
 
-github_page_add :: proc () {
+add_github_page :: proc () {
     _, page_content := app_add_tab("GitHub")
 
     ui.add_frame(page_content, {
@@ -61,7 +61,7 @@ github_page_add :: proc () {
     })
 }
 
-github_page_destroy :: proc () {
+destroy_github_page :: proc () {
     for user, avatar in github_page.user_avatars {
         delete(user)
         if avatar.texture.id != 0 {

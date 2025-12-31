@@ -77,8 +77,8 @@ app_startup :: proc () {
         { point=.top, offset={0,40} },
     )
 
-    about_page_add()
-    github_page_add()
+    add_about_page()
+    add_github_page()
 
     {
         _, content := app_add_tab("PurpleToken")
@@ -91,7 +91,7 @@ app_startup :: proc () {
 app_shutdown :: proc () {
     log(#procedure)
 
-    github_page_destroy()
+    destroy_github_page()
     ui.destroy(app.ui)
     pt_destroy()
     userhttp.destroy()

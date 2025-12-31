@@ -2,7 +2,7 @@ package main
 
 import "spacelib:ui"
 
-about_page_add :: proc () {
+add_about_page :: proc () {
     tab_button, page_content := app_add_tab("About")
     ui.set_name(tab_button, "about") // we set name to preselect this tab (click it by name)
 
