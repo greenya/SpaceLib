@@ -171,7 +171,7 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
 
     // add "easy" handle to "multi" handle
 
-    // note: this call this should be the very last call in this proc, if you move it,
+    // note: this call should be the very last call in this proc, if you move it,
     // consider reworking "defer if err != nil { ... }" logic, and maybe introduce some
     // "easy_added_to_multi" flag and call curl.multi_remove_handle(), only when it was
     // actually successfully added
@@ -284,7 +284,7 @@ header_function_callback :: proc "c" (buffer: [^] byte, size: c.size_t, n_items:
     stream := cast (^[dynamic] byte) outstream
 
     // Check if buffer starts with "HTTP/", so this is the beginning of a new response.
-    // There can be multiple headers, depends on redirects made by cURL automatically,
+    // There can be multiple header blocks, depends on redirects made by cURL automatically,
     // as we are using `FOLLOWLOCATION` option.
     if buffer_size>5 && buffer[0]=='H' && buffer[1]=='T' && buffer[2]=='T' && buffer[3]=='P' && buffer[4]=='/' {
         clear(stream)

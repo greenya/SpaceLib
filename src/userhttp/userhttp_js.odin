@@ -83,7 +83,7 @@ platform_tick :: proc () -> (err: Error) {
 @export
 userhttp_ready :: proc "c" (fetch_id: i32, size: i32) {
     context = runtime.default_context()
-    fmt.println(#procedure, fetch_id, size)
+    // fmt.println(#procedure, fetch_id, size)
 
     ensure(size > 0)
     output_bytes := make([] byte, size, context.temp_allocator)
