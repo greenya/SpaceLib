@@ -56,7 +56,7 @@ app_startup :: proc () {
     )
 
     app.ui_tab_bar = ui.add_frame(panel, {
-        size    = {200,0},
+        size    = {220,0},
         layout  = ui.Flow { dir=.down_center, gap=20 },
     },
         { point=.top_left, offset={40,0} },
@@ -100,6 +100,7 @@ app_startup :: proc () {
 app_shutdown :: proc () {
     log(#procedure)
 
+    github_page_destroy()
     ui.destroy(app.ui)
     pt_destroy()
     userhttp.destroy()
@@ -150,9 +151,6 @@ app_draw :: proc () {
     rl.BeginDrawing()
     rl.ClearBackground(res.color(.plum).rgba)
     ui.draw(app.ui)
-    // x := rl.GetRandomValue(10, 15)
-    // y := rl.GetRandomValue(10, 15)
-    // rl.DrawFPS(x, y)
     rl.EndDrawing()
 }
 

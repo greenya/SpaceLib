@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import "spacelib:core"
+import "spacelib:userhttp"
 import "res"
 
 Vec2    :: core.Vec2
@@ -27,6 +28,18 @@ log_build_info :: proc () {
     log("ODIN_VERSION           :", ODIN_VERSION)
     log("raylib.VERSION         :", rl.VERSION)
     log("------------------------------------")
+}
+
+log_request :: proc (req: ^userhttp.Request) {
+    // userhttp.print_request(req)
+    context.allocator = context.temp_allocator
+    logf("[request] %s %s %s [%s; %M]",
+        req.method,
+        req.url,
+        userhttp.request_state_text(req),
+        userhttp.param_as_string(req.response.headers, "content-type"),
+        len(req.response.content),
+    )
 }
 
 open_url :: proc (url_name: string) {
