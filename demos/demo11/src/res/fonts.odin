@@ -23,7 +23,7 @@ create_fonts :: proc () {
     assert(fonts == {})
     for id in Font_ID do switch id {
     case .default   : fonts[id] = res.create_font_from_default(height=20)
-    case .text_4r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=26)
+    case .text_4r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=28)
     case .text_6r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=48)
     }
 }

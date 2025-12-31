@@ -33,8 +33,8 @@ log_build_info :: proc () {
 }
 
 log_request :: proc (req: ^userhttp.Request) {
-    // userhttp.print_request(req)
     context.allocator = context.temp_allocator
+
     logf("[request] %s %s %s [%s; %M]",
         req.method,
         req.url,
@@ -42,6 +42,8 @@ log_request :: proc (req: ^userhttp.Request) {
         userhttp.param_as_string(req.response.headers, "content-type"),
         len(req.response.content),
     )
+
+    if req.error != nil do userhttp.print_request(req)
 }
 
 open_url :: proc (url_name: string) {

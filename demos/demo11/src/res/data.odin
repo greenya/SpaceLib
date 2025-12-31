@@ -12,9 +12,16 @@ Data :: struct {
 @private
 create_data :: proc () {
     data.urls = make(map [string] string)
+
+    data.urls["link_demo"]          = "https://github.com/greenya/SpaceLib/tree/main/demos/demo11"
+    data.urls["link_userhttp"]      = "https://github.com/greenya/SpaceLib/tree/main/src/userhttp"
+    data.urls["link_curl"]          = "https://github.com/odin-lang/Odin/tree/master/vendor/curl"
+    data.urls["link_fetch_api"]     = "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"
+
     data.urls["link_github_limits"] = "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api"
-    data.urls["link_font"]          = "https://fonts.google.com/specimen/Lustria"
-    data.urls["link_palette"]       = "https://lospec.com/palette-list/neon-space"
+
+    data.urls["link_asset_font"]    = "https://fonts.google.com/specimen/Lustria"
+    data.urls["link_asset_palette"] = "https://lospec.com/palette-list/neon-space"
 }
 
 @private

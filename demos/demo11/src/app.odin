@@ -77,14 +77,7 @@ app_startup :: proc () {
         { point=.top, offset={0,40} },
     )
 
-    preselect_tab: ^ui.Frame
-
-    {
-        content: ^ui.Frame
-        preselect_tab, content = app_add_tab("About")
-        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>About content goes here" })
-    }
-
+    about_page_add()
     github_page_add()
 
     {
@@ -92,7 +85,7 @@ app_startup :: proc () {
         ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>PurpleToken content goes here" })
     }
 
-    ui.click(preselect_tab)
+    ui.click(app.ui_tab_bar, "about")
 }
 
 app_shutdown :: proc () {
