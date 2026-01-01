@@ -79,7 +79,7 @@ draw_button :: proc (f: ^ui.Frame) {
         draw.rect_rounded_lines(face_rect, .3, 8, 2, face_br_color)
 
         if .terse in f.flags {
-            draw_terse_frame(f, offset=face_offset, color=res.color(.white))
+            draw_terse_frame(f, offset=face_offset)
         }
     }
 }

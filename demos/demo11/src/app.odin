@@ -5,12 +5,8 @@ import rl "vendor:raylib"
 import "spacelib:raylib/draw"
 import "spacelib:ui"
 import "spacelib:userhttp"
+import pt "purpletoken"
 import "res"
-
-// The "Secret Pass Phrase" from https://purpletoken.com/profile.php
-PURPLETOKEN_API_SECRET :: "A secret pass phrase goes here"
-// The "Key" from one of the games from https://purpletoken.com/manage.php
-PURPLETOKEN_GAME_KEY :: "65ca329ff0f6dc94e3391cab956c02607d5b2271"
 
 App :: struct {
     should_exit : bool,
@@ -36,7 +32,15 @@ app_startup :: proc () {
 
     res.init()
     userhttp.init()
-    pt_init(api_secret=PURPLETOKEN_API_SECRET, game_key=PURPLETOKEN_GAME_KEY)
+    pt.init({
+        // To run this demo with PurpleToken example working, you need to create
+        // PurpleToken account (free) and use your values below:
+        // - The "API Secret Pass Phrase" from https://purpletoken.com/profile.php
+        // - The "Game Key" from https://purpletoken.com/manage.php
+        api_secret          = "A secret pass phrase goes here",
+        game_key            = "65ca329ff0f6dc94e3391cab956c02607d5b2271",
+        request_ready_proc  = log_request,
+    })
 
     app.ui = ui.create(
         root_rect           = {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())},
@@ -78,12 +82,8 @@ app_startup :: proc () {
     )
 
     add_about_page()
+    add_purpletoken_page()
     add_github_page()
-
-    {
-        _, content := app_add_tab("PurpleToken")
-        ui.add_frame(content, { flags={.terse,.terse_height}, text="<top,left,wrap,font=text_4r,color=white>PurpleToken content goes here" })
-    }
 
     ui.click(app.ui_tab_bar, "about")
 }
@@ -93,7 +93,7 @@ app_shutdown :: proc () {
 
     destroy_github_page()
     ui.destroy(app.ui)
-    pt_destroy()
+    pt.destroy()
     userhttp.destroy()
     res.destroy()
     rl.CloseWindow()
@@ -104,38 +104,13 @@ app_tick :: proc () {
         app.should_debug = rl.IsKeyDown(.LEFT_CONTROL)
     }
 
+    userhttp.tick()
+
     ui.tick(app.ui, {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())}, {
         pos         = rl.GetMousePosition(),
         lmb_down    = rl.IsMouseButtonDown(.LEFT),
         wheel_dy    = rl.GetMouseWheelMove(),
     })
-
-    userhttp.tick()
-
-    // if rl.IsKeyPressed(.ONE) {
-    //     userhttp.send_request({
-    //         url         = "https://api.github.com/repos/odin-lang/Odin",
-    //         headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
-    //         timeout_ms  = 5_000,
-    //         ready       = proc (req: ^userhttp.Request) {
-    //             userhttp.print_request(req)
-    //         },
-    //     })
-    // }
-
-    // if rl.IsKeyPressed(.TWO) {
-    //     pt_get_scores(limit=20, ready=proc (result: Pt_Get_Scores_Result, err: Pt_Error) {
-    //         if err != nil   do logf("[ERROR] (%i) %v", err, err)
-    //         else            do logf("scores: %#v", result)
-    //     })
-    // }
-
-    // if rl.IsKeyPressed(.THREE) {
-    //     pt_submit_score(player="TestPlayerTwo", score=4002, ready=proc (err: Pt_Error) {
-    //         if err != nil   do logf("[ERROR] (%i) %v", err, err)
-    //         else            do log("Score successfully submitted")
-    //     })
-    // }
 }
 
 app_draw :: proc () {
@@ -163,7 +138,7 @@ app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
 
     tab = ui.add_frame(app.ui_tab_bar, {
         flags   = {.terse,.terse_height,.radio,.capture},
-        text    = fmt.tprintf("<wrap,pad=10,font=text_4r>%s", text),
+        text    = fmt.tprintf("<wrap,pad=10,font=text_4r,color=white>%s", text),
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) {
             content := ui.user_ptr(f, ^ui.Frame)

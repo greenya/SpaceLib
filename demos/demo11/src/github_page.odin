@@ -28,15 +28,17 @@ add_github_page :: proc () {
     ui.add_frame(page_content, {
         flags   = {.terse,.terse_height},
         text    = "<wrap,top,left,font=text_4r,color=white>" +
-                "This example shows usage of GitHub Rest API. When Reload is clicked, latest " +
-                "30 commits are loaded from Odin repository in a single request. Then we load " +
-                "avatar of each user simultaneously. Loaded avatars are not reloaded onces loaded." +
+                "This example demonstrates usage of the GitHub REST API. When Reload is clicked, " +
+                "the latest 30 commits are loaded from the Odin repository in a single request. " +
+                "Avatars for each user are then loaded simultaneously. Once loaded, avatars are " +
+                "not reloaded." +
                 "\n\n" +
-                "Please note, this example uses unauthenticated (public) access and the primary " +
-                "rate limit for unauthenticated requests is 60 requests per hour. So if you're " +
-                "getting errors, please try again later." +
+                "Please note that this example uses unauthenticated (public) access. The primary " +
+                "rate limit for unauthenticated requests is 60 requests per hour, so if you " +
+                "encounter errors, please try again later." +
                 "\n\n" +
-                "More at <group=link_github_limits>Rate limits for the REST API</group>.",
+                "See the <group=link_gh_limits>Rate limits for the REST API</group> documentation " +
+                "for details.",
     })
 
     github_page.ui_reload_state = ui.add_frame(page_content, {
@@ -49,7 +51,7 @@ add_github_page :: proc () {
     github_page.ui_reload = ui.add_frame(github_page.ui_reload_state, {
         flags   = {.terse,.terse_height,.capture},
         size    = {200,0},
-        text    = "<pad=10,font=text_4r>Reload commits",
+        text    = "<pad=10,font=text_4r,color=white>Reload commits",
         draw    = draw_button,
         click   = github_page_reload_click,
     },
@@ -89,8 +91,8 @@ github_page_reload_click :: proc (f: ^ui.Frame) {
         headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
         timeout_ms  = 10_000,
         ready       = proc (req: ^userhttp.Request) {
-            log_request(req)
             github_page.ui_reload.flags -= { .disabled }
+            log_request(req)
 
             ui.set_text(github_page.ui_reload_state, userhttp.request_state_text(req, context.temp_allocator))
             if req.error != nil do return
@@ -129,9 +131,9 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
     ui.add_frame(card, {
         flags   = {.terse,.terse_height},
         text    = fmt.tprintf("<wrap,top,left,font=text_4r>" +
-                "<color=amber,group=link_github_user_%s>%s</group,/color> " +
+                "<color=amber,group=link_gh_user_%s>%s</group,/color> " +
                 "<color=turquoise>committed %v ago " +
-                "<group=link_github_commit_%s>#%s</group>\n" +
+                "<group=link_gh_commit_%s>#%s</group>\n" +
                 "<gap=.5,color=white>%s",
                 user, user, time_dur, sha, sha[:7], message_escaped),
     })
@@ -141,7 +143,7 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
         size    = avatar_size,
         draw    = draw_github_user_avatar,
         click   = proc (f: ^ui.Frame) {
-            link := fmt.tprintf("link_github_user_%s", f.name)
+            link := fmt.tprintf("link_gh_user_%s", f.name)
             open_url(link)
         },
     },

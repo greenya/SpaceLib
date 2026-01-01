@@ -18,7 +18,9 @@ create_data :: proc () {
     data.urls["link_curl"]          = "https://github.com/odin-lang/Odin/tree/master/vendor/curl"
     data.urls["link_fetch_api"]     = "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"
 
-    data.urls["link_github_limits"] = "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api"
+    data.urls["link_pt"]            = "https://purpletoken.com/"
+
+    data.urls["link_gh_limits"]     = "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api"
 
     data.urls["link_asset_font"]    = "https://fonts.google.com/specimen/Lustria"
     data.urls["link_asset_palette"] = "https://lospec.com/palette-list/neon-space"
@@ -31,8 +33,8 @@ destroy_data :: proc () {
 
 url :: #force_inline proc (name: string, allocator := context.allocator) -> (result: string, was_allocation: bool) #optional_ok {
     for known_prefix in ([?] struct { prefix, url_template: string } {
-        { "link_github_user_"   , "https://github.com/%s" },
-        { "link_github_commit_" , "https://github.com/odin-lang/Odin/commit/%s" },
+        { "link_gh_user_"   , "https://github.com/%s" },
+        { "link_gh_commit_" , "https://github.com/odin-lang/Odin/commit/%s" },
     }) {
         if strings.has_prefix(name, known_prefix.prefix) {
             value := name[len(known_prefix.prefix):]
