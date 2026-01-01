@@ -13,22 +13,23 @@ Font_ID :: enum {
 @private fonts      : [Font_ID] ^res.Font
 @private font_names : map [string] Font_ID
 
-@private
-create_fonts :: proc () {
+// @private
+create_fonts :: proc (use_my_bytes: [] byte = nil) {
     assert(font_names == nil)
     font_names = core.map_enum_names_to_values(Font_ID)
 
-    lustria_regular_data := #load(ASSETS_PATH + "/Lustria-Regular.ttf")
+    lustria_regular_bytes := #load(ASSETS_PATH + "/Lustria-Regular.ttf")
+    bytes := use_my_bytes != nil ? use_my_bytes : lustria_regular_bytes
 
     assert(fonts == {})
     for id in Font_ID do switch id {
     case .default   : fonts[id] = res.create_font_from_default(height=20)
-    case .text_4r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=28)
-    case .text_6r   : fonts[id] = res.create_font_from_data(lustria_regular_data, height=48)
+    case .text_4r   : fonts[id] = res.create_font_from_data(bytes, height=28)
+    case .text_6r   : fonts[id] = res.create_font_from_data(bytes, height=48)
     }
 }
 
-@private
+// @private
 destroy_fonts :: proc () {
     delete(font_names)
     font_names = nil

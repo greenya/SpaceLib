@@ -6,8 +6,8 @@ import "spacelib:ui"
 import "spacelib:userhttp"
 
 Fontsource_Page :: struct {
-    ui_reload   : ^ui.Frame,
-    ui_fonts    : ^ui.Frame,
+    ui_reload       : ^ui.Frame,
+    ui_fonts        : ^ui.Frame,
 }
 
 fontsource_page: Fontsource_Page
@@ -21,11 +21,22 @@ add_fontsource_page :: proc () {
                 "This example demonstrates usage of the Fontsource REST API.",
     })
 
-    fontsource_page.ui_reload = ui.add_frame(page_content, {
+    bar := ui.add_frame(page_content, {
+        layout = ui.Flow { dir=.right, gap=20, auto_size={.height} },
+    })
+
+    fontsource_page.ui_reload = ui.add_frame(bar, {
         flags   = {.terse,.terse_size,.capture},
         text    = "<pad=20:10,font=text_4r,color=white>Reload font list",
         draw    = draw_button,
         click   = fontsource_page_reload_click,
+    })
+
+    ui.add_frame(bar, {
+        flags   = {.terse,.terse_size,.capture},
+        text    = "<pad=20:10,font=text_4r,color=white>Reset font",
+        draw    = draw_button,
+        click   = proc (f: ^ui.Frame) { reload_fonts() },
     })
 
     fontsource_page.ui_fonts = ui.add_frame(page_content, {
@@ -46,14 +57,13 @@ fontsource_page_reload_click :: proc (f: ^ui.Frame) {
     }
 
     userhttp.send_request({
-        url         = "https://api.fontsource.org/v1/fonts",
-        timeout_ms  = 10_000,
-        ready       = proc(req: ^userhttp.Request) {
+        url     = "https://api.fontsource.org/v1/fonts",
+        ready   = proc(req: ^userhttp.Request) {
             fontsource_page.ui_reload.flags -= { .disabled }
             log_request(req)
 
             if req.error != nil {
-                log("Getting fonts failed:", userhttp.request_state_text(req, context.temp_allocator))
+                log("Listing fonts failed:", userhttp.request_state_text(req, context.temp_allocator))
                 return
             }
 
@@ -77,7 +87,7 @@ fontsource_page_add_font_card :: proc (id, family, category: string) {
         name    = id,
         flags   = {.terse,.capture},
         text    = fmt.tprintf(
-            "<pad=16:8,wrap,font=text_4r,color=white>%s\n<color=turquoise>(%s)</>",
+            "<pad=12:8,wrap,font=text_4r,color=white>%s\n<color=turquoise>(%s)</>",
             family, category,
         ),
         draw    = draw_button,
@@ -101,13 +111,12 @@ fontsource_page_font_card_click :: proc (f: ^ui.Frame) {
     }
 
     userhttp.send_request({
-        url         = fmt.tprintf("https://api.fontsource.org/v1/fonts/%s", f.name),
-        timeout_ms  = 10_000,
-        ready       = proc(req: ^userhttp.Request) {
+        url     = fmt.tprintf("https://api.fontsource.org/v1/fonts/%s", f.name),
+        ready   = proc(req: ^userhttp.Request) {
             log_request(req)
 
             if req.error != nil {
-                log("Getting a font failed:", userhttp.request_state_text(req, context.temp_allocator))
+                log("Getting font failed:", userhttp.request_state_text(req, context.temp_allocator))
                 return
             }
 
@@ -129,9 +138,18 @@ fontsource_page_font_card_click :: proc (f: ^ui.Frame) {
     })
 }
 
-// TODO: load ttf font
-// TODO: add button "revert to default font" in case user loads some icons font (or unreadable)
-
 fontsource_page_load_ttf :: proc (ttf_url: string) {
-    // ....
+    userhttp.send_request({
+        url     = ttf_url,
+        ready   = proc (req: ^userhttp.Request) {
+            log_request(req)
+
+            if req.error != nil {
+                log("Getting TTF file failed:", userhttp.request_state_text(req, context.temp_allocator))
+                return
+            }
+
+            reload_fonts(use_my_bytes=req.response.content)
+        },
+    })
 }

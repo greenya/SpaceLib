@@ -10,9 +10,8 @@ import "spacelib:ui"
 import "spacelib:userhttp"
 
 GitHub_Page :: struct {
-    ui_reload       : ^ui.Frame,
-    ui_reload_state : ^ui.Frame,
-    ui_commits      : ^ui.Frame,
+    ui_reload   : ^ui.Frame,
+    ui_commits  : ^ui.Frame,
 
     user_avatars: map [string] struct {
         req     : ^userhttp.Request,
@@ -41,22 +40,12 @@ add_github_page :: proc () {
                 "for details.",
     })
 
-    github_page.ui_reload_state = ui.add_frame(page_content, {
-        flags       = {.terse,.terse_height},
-        text_format = "<pad=0:20,wrap,top,left,font=text_4r,color=peach><tab=220>%s",
-    })
-
-    ui.set_text(github_page.ui_reload_state, "Press the button")
-
-    github_page.ui_reload = ui.add_frame(github_page.ui_reload_state, {
-        flags   = {.terse,.terse_height,.capture},
-        size    = {200,0},
-        text    = "<pad=10,font=text_4r,color=white>Reload commits",
+    github_page.ui_reload = ui.add_frame(page_content, {
+        flags   = {.terse,.terse_size,.capture},
+        text    = "<pad=20:10,font=text_4r,color=white>Reload commits",
         draw    = draw_button,
         click   = github_page_reload_click,
-    },
-        { point=.right, rel_point=.left, offset={200,0} },
-    )
+    })
 
     github_page.ui_commits = ui.add_frame(page_content, {
         layout = ui.Flow { dir=.down, gap=30, align=.start, auto_size={.height} },
@@ -77,7 +66,6 @@ github_page_reload_click :: proc (f: ^ui.Frame) {
     assert(f == github_page.ui_reload)
 
     github_page.ui_reload.flags += { .disabled }
-    ui.set_text(github_page.ui_reload_state, "Wait...")
 
     Result      :: [] Result_Row
     Result_Row  :: struct {
@@ -87,15 +75,16 @@ github_page_reload_click :: proc (f: ^ui.Frame) {
     }
 
     userhttp.send_request({
-        url         = "https://api.github.com/repos/odin-lang/Odin/commits",
-        headers     = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
-        timeout_ms  = 10_000,
-        ready       = proc (req: ^userhttp.Request) {
+        url     = "https://api.github.com/repos/odin-lang/Odin/commits",
+        headers = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
+        ready   = proc (req: ^userhttp.Request) {
             github_page.ui_reload.flags -= { .disabled }
             log_request(req)
 
-            ui.set_text(github_page.ui_reload_state, userhttp.request_state_text(req, context.temp_allocator))
-            if req.error != nil do return
+            if req.error != nil {
+                log("Getting commits failed:", userhttp.request_state_text(req, context.temp_allocator))
+                return
+            }
 
             result: Result
             json_err := json.unmarshal(req.response.content, &result, allocator=context.temp_allocator)
@@ -155,9 +144,8 @@ github_page_load_user_avatar :: proc (user, avatar_url: string) {
     if user in github_page.user_avatars do return
 
     req := userhttp.send_request({
-        url         = avatar_url,
-        timeout_ms  = 10_000,
-        ready       = proc (req: ^userhttp.Request) {
+        url     = avatar_url,
+        ready   = proc (req: ^userhttp.Request) {
             log_request(req)
             if req.error != nil do return
 

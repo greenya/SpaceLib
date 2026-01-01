@@ -31,7 +31,7 @@ app_startup :: proc () {
     // rl.SetExitKey(.KEY_NULL)
 
     res.init()
-    userhttp.init()
+    userhttp.init({ default_timeout_ms=15_000 })
     pt.init({
         // To run this demo with PurpleToken example working, you need to create
         // PurpleToken account (free) and use your values below:

@@ -114,7 +114,7 @@ purpletoken_page_get_scores_click :: proc (f: ^ui.Frame) {
                 }
 
                 fmt.sbprintf(&sb,
-                    "<color=%s>%i.<tab=50>%s<tab=150>%s<tab=300>%v ago</>",
+                    "<color=%s>%i.<tab=60>%s<tab=200>%s<tab=350>%v ago</>",
                     color, pos, score_text, row.player, time_ago,
                 )
             }

@@ -53,6 +53,13 @@ open_url :: proc (url_name: string) {
     rl.OpenURL(cstr)
 }
 
+reload_fonts :: proc (use_my_bytes: [] byte = nil) {
+    res.destroy_fonts()
+    res.create_fonts(use_my_bytes=use_my_bytes)
+    ui.reset_terse(app.ui)
+    ui.update(app.ui.root)
+}
+
 click_terse_frame :: proc (f: ^ui.Frame) {
     hit_group := terse.group_hit(f.terse, f.ui.mouse.pos)
     if hit_group != nil && strings.has_prefix(hit_group.name, "link_") {
