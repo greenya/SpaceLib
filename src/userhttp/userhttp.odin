@@ -1,10 +1,12 @@
 package userhttp
 
 Init :: struct {
-    default_timeout_ms: int,
+    default_timeout_ms  : int,
+    pre_ready_proc      : Ready_Proc,
 }
 
 default_timeout_ms  : int
+pre_ready_proc      : Ready_Proc
 requests            : [dynamic] ^Request
 
 // Common usage:
@@ -28,8 +30,9 @@ requests            : [dynamic] ^Request
 //      }
 
 init :: proc (init := Init {}, allocator := context.allocator) -> (err: Error) {
-    default_timeout_ms = init.default_timeout_ms
-    requests = make([dynamic] ^Request, allocator) or_return
+    default_timeout_ms  = init.default_timeout_ms
+    pre_ready_proc      = init.pre_ready_proc
+    requests            = make([dynamic] ^Request, allocator) or_return
     platform_init(allocator) or_return
     return
 }
@@ -50,9 +53,8 @@ tick :: proc () -> (err: Error) {
 
     for req in requests {
         if req.error != nil || req.response.status != .None {
-            if req.ready != nil {
-                req.ready(req)
-            }
+            if pre_ready_proc != nil    do pre_ready_proc(req)
+            if req.ready != nil         do req.ready(req)
         }
     }
 
