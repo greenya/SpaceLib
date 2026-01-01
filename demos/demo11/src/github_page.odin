@@ -100,7 +100,7 @@ github_page_reload_click :: proc (f: ^ui.Frame) {
             result: Result
             json_err := json.unmarshal(req.response.content, &result, allocator=context.temp_allocator)
             if json_err != nil {
-                fmt.println(json_err)
+                log("Failed to json.unmarshal():", json_err)
                 return
             }
 

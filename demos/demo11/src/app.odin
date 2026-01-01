@@ -83,6 +83,7 @@ app_startup :: proc () {
 
     add_about_page()
     add_purpletoken_page()
+    add_fontsource_page()
     add_github_page()
 
     ui.click(app.ui_tab_bar, "about")
