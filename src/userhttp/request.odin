@@ -126,6 +126,10 @@ create_request :: proc (init: Request_Init, allocator := context.allocator) -> (
         }
     }
 
+    init_timeout_ms := init.timeout_ms > 0\
+        ? init.timeout_ms\
+        : default_timeout_ms
+
     req             = new(Request) or_return
     req.allocator   = allocator
     req.method      = strings.clone(init_method, allocator)
@@ -133,7 +137,7 @@ create_request :: proc (init: Request_Init, allocator := context.allocator) -> (
     req.query       = clone_params(init.query, allocator=allocator) or_return
     req.headers     = clone_params(init.headers, append_content_type=auto_content_type, allocator=allocator) or_return
     req.content     = clone_content(init.content, allocator) or_return
-    req.timeout_ms  = init.timeout_ms
+    req.timeout_ms  = init_timeout_ms
     req.ready       = init.ready
 
     return

@@ -1,12 +1,17 @@
 package userhttp
 
-requests: [dynamic] ^Request
+Init :: struct {
+    default_timeout_ms: int,
+}
+
+default_timeout_ms  : int
+requests            : [dynamic] ^Request
 
 // Common usage:
 //
 //      import "spacelib:userhttp"
 //      main :: proc () {
-//          userhttp.init()
+//          userhttp.init({ default_timeout_ms=10_000 })
 //          for ...game loop is running ... {
 //              userhttp.tick()
 //              if ...should send request... {
@@ -22,7 +27,8 @@ requests: [dynamic] ^Request
 //          userhttp.destroy()
 //      }
 
-init :: proc (allocator := context.allocator) -> (err: Error) {
+init :: proc (init := Init {}, allocator := context.allocator) -> (err: Error) {
+    default_timeout_ms = init.default_timeout_ms
     requests = make([dynamic] ^Request, allocator) or_return
     platform_init(allocator) or_return
     return
