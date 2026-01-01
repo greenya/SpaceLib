@@ -147,8 +147,9 @@ update_rect_for_children_of_grid :: proc (f: ^Frame) {
                 if .height in grid.auto_size    do f.size.y = lc_div0.rect.y+lc_div0.rect.h - fc.rect.y + grid.pad[T]+grid.pad[B]
             }
         } else {
-            if .width in grid.auto_size     do f.size.x = 0
-            if .height in grid.auto_size    do f.size.y = 0
+            // we set ".1" to avoid issues when this grid is a child of some container which treat 0 as "auto"
+            if .width in grid.auto_size     do f.size.x = .1
+            if .height in grid.auto_size    do f.size.y = .1
         }
     }
 }
