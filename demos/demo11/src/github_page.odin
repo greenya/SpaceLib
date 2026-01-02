@@ -36,7 +36,7 @@ add_github_page :: proc () {
                 "rate limit for unauthenticated requests is 60 requests per hour, so if you " +
                 "encounter errors, please try again later." +
                 "\n\n" +
-                "See the <group=link_gh_limits>Rate limits for the REST API</group> documentation " +
+                "See the <group=link_gh_limits>Rate limits for the REST API</> documentation " +
                 "for details.",
     })
 
@@ -121,7 +121,7 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
         text    = fmt.tprintf("<wrap,top,left,font=text_4r>" +
                 "<color=amber,group=link_gh_user_%s>%s</group,/color> " +
                 "<color=turquoise>committed %v ago " +
-                "<group=link_gh_commit_%s>#%s</group>\n" +
+                "<group=link_gh_commit_%s>#%s</>\n" +
                 "<gap=.5,color=white>%s",
                 user, user, time_dur, sha, sha[:7], message_escaped),
     })

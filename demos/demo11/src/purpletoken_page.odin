@@ -25,7 +25,7 @@ add_purpletoken_page :: proc () {
     ui.add_frame(page_content, {
         flags   = {.terse,.terse_height},
         text    = "<wrap,top,left,font=text_4r,color=white>" +
-                "This example demonstrates usage of the <group=link_pt>PurpleToken</group> " +
+                "This example demonstrates usage of the <group=link_pt>PurpleToken</> " +
                 "REST API. Clicking Get Scores reloads the list of the top 20 highest scores. " +
                 "You can also submit a result yourself: generate username and a score, then click " +
                 "Submit Score. If the submitted score is high enough to enter the top 20, it will " +

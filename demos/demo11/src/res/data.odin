@@ -19,7 +19,7 @@ create_data :: proc () {
     data.urls["link_fetch_api"]     = "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API"
 
     data.urls["link_pt"]            = "https://purpletoken.com/"
-
+    data.urls["link_fs"]            = "https://fontsource.org/"
     data.urls["link_gh_limits"]     = "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api"
 
     data.urls["link_asset_font"]    = "https://fonts.google.com/specimen/Lustria"

@@ -18,7 +18,10 @@ add_fontsource_page :: proc () {
     ui.add_frame(page_content, {
         flags   = {.terse,.terse_height},
         text    = "<wrap,top,left,font=text_4r,color=white>" +
-                "This example demonstrates usage of the Fontsource REST API.",
+                "This example demonstrates usage of the <group=link_fs>Fontsource</> REST API. " +
+                "Click Reload to load the list of fonts. Then select one of the displayed fonts " +
+                "to load its TTF file and apply it as the application's main font. Use Reset to " +
+                "revert to the initial font.",
     })
 
     bar := ui.add_frame(page_content, {
