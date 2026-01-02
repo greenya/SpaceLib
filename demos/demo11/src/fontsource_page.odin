@@ -60,7 +60,6 @@ fontsource_page_reload_click :: proc (f: ^ui.Frame) {
         url     = "https://api.fontsource.org/v1/fonts",
         ready   = proc(req: ^userhttp.Request) {
             fontsource_page.ui_reload.flags -= { .disabled }
-            log_request(req)
 
             if req.error != nil {
                 log("Listing fonts failed:", userhttp.request_state_text(req, context.temp_allocator))
@@ -113,8 +112,6 @@ fontsource_page_font_card_click :: proc (f: ^ui.Frame) {
     userhttp.send_request({
         url     = fmt.tprintf("https://api.fontsource.org/v1/fonts/%s", f.name),
         ready   = proc(req: ^userhttp.Request) {
-            log_request(req)
-
             if req.error != nil {
                 log("Getting font failed:", userhttp.request_state_text(req, context.temp_allocator))
                 return
@@ -142,8 +139,6 @@ fontsource_page_load_ttf :: proc (ttf_url: string) {
     userhttp.send_request({
         url     = ttf_url,
         ready   = proc (req: ^userhttp.Request) {
-            log_request(req)
-
             if req.error != nil {
                 log("Getting TTF file failed:", userhttp.request_state_text(req, context.temp_allocator))
                 return

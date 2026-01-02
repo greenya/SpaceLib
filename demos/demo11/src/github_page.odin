@@ -79,7 +79,6 @@ github_page_reload_click :: proc (f: ^ui.Frame) {
         headers = { {"user-agent","userhttp"} }, // GitHub API requires User-Agent header set
         ready   = proc (req: ^userhttp.Request) {
             github_page.ui_reload.flags -= { .disabled }
-            log_request(req)
 
             if req.error != nil {
                 log("Getting commits failed:", userhttp.request_state_text(req, context.temp_allocator))
@@ -146,7 +145,6 @@ github_page_load_user_avatar :: proc (user, avatar_url: string) {
     req := userhttp.send_request({
         url     = avatar_url,
         ready   = proc (req: ^userhttp.Request) {
-            log_request(req)
             if req.error != nil do return
 
             format: struct {

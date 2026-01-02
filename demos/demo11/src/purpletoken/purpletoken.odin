@@ -46,41 +46,31 @@ Init :: struct {
 
     // The `Game Key` from [My Games](https://purpletoken.com/manage.php)
     game_key: string,
-
-    // Optional global `Request.ready` notify callback
-    request_ready_proc: userhttp.Ready_Proc,
 }
 
+api_secret  : string
+game_key    : string
+requests    : map [rawptr] rawptr
+
 init :: proc (init: Init, allocator := context.allocator) {
-    ensure(init.api_secret != "" && init.game_key != "",
-        "Failed to init PurpleToken: `init.api_secret` and `init.game_key` cannot be empty.\n" +
-        "- The `API Secret Pass Phrase` from https://purpletoken.com/profile.php\n" +
-        "- The `Game Key` from https://purpletoken.com/manage.php\n",
-    )
+    if init.api_secret == "" || init.game_key == "" {
+        fmt.println("[purpletoken] `api_secret` and `game_key` cannot be empty.")
+        fmt.println("* Look for the `API Secret Pass Phrase` at https://purpletoken.com/profile.php")
+        fmt.println("* Look for the `Game Key` at https://purpletoken.com/manage.php")
+    }
 
-    assert(api_secret=="" && game_key=="" && request_ready_proc==nil && requests==nil)
+    assert(api_secret=="" && game_key=="" && requests==nil)
 
-    api_secret          = strings.clone(init.api_secret, allocator)
-    game_key            = strings.clone(init.game_key, allocator)
-    request_ready_proc  = init.request_ready_proc
-    requests            = make(map [rawptr] rawptr, allocator)
+    api_secret  = strings.clone(init.api_secret, allocator)
+    game_key    = strings.clone(init.game_key, allocator)
+    requests    = make(map [rawptr] rawptr, allocator)
 }
 
 destroy :: proc () {
-    delete(api_secret)
-    delete(game_key)
-    delete(requests)
-
-    api_secret          = ""
-    game_key            = ""
-    request_ready_proc  = nil
-    requests            = nil
+    delete(api_secret)  ; api_secret  = ""
+    delete(game_key)    ; game_key    = ""
+    delete(requests)    ; requests    = nil
 }
-
-@(private) api_secret           : string
-@(private) game_key             : string
-@(private) request_ready_proc   : userhttp.Ready_Proc
-@(private) requests             : map [rawptr] rawptr
 
 @(private)
 requests_push :: proc (req: ^userhttp.Request, ready: $T) {
@@ -93,7 +83,6 @@ requests_pop :: proc (req: ^userhttp.Request, $T: typeid) -> T {
     ensure(req in requests)
     value := cast (T) requests[req]
     delete_key(&requests, req)
-    if request_ready_proc != nil do request_ready_proc(req)
     return value
 }
 

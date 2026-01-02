@@ -31,15 +31,17 @@ app_startup :: proc () {
     // rl.SetExitKey(.KEY_NULL)
 
     res.init()
-    userhttp.init({ default_timeout_ms=15_000 })
+    userhttp.init({
+        default_timeout_ms  = 15_000,
+        pre_ready_proc      = log_request,
+    })
     pt.init({
         // To run this demo with PurpleToken example working, you need to create
         // PurpleToken account (free) and use your values below:
         // - The "API Secret Pass Phrase" from https://purpletoken.com/profile.php
         // - The "Game Key" from https://purpletoken.com/manage.php
-        api_secret          = "A secret pass phrase goes here",
-        game_key            = "65ca329ff0f6dc94e3391cab956c02607d5b2271",
-        request_ready_proc  = log_request,
+        api_secret  = "A secret pass phrase goes here",
+        game_key    = "65ca329ff0f6dc94e3391cab956c02607d5b2271",
     })
 
     app.ui = ui.create(
