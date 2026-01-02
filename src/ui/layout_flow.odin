@@ -178,19 +178,18 @@ update_rect_for_children_of_flow :: proc (f: ^Frame) {
 
     full_content_size, dir_content_size, dir_rect_size := flow_content_size(f, vis_children)
 
-    if flow.auto_size != {} {
-        if .width in flow.auto_size {
-            f.size.x = full_content_size.x
-            if f.size_max.x > 0 && f.size.x > f.size_max.x do f.size.x = f.size_max.x
-            // FIX FOR infinite grow issue: when one flow with no children is a child of another flow
-            if f.size.x == 0 && len(vis_children) == 0 do f.size.x = .1
-        }
-        if .height in flow.auto_size {
-            f.size.y = full_content_size.y
-            if f.size_max.y > 0 && f.size.y > f.size_max.y do f.size.y = f.size_max.y
-            // fixes same issue as above (see f.size.x logic)
-            if f.size.y == 0 && len(vis_children) == 0 do f.size.y = .1
-        }
+    if .width in flow.auto_size {
+        f.size.x = full_content_size.x
+        if f.size_max.x > 0 && f.size.x > f.size_max.x do f.size.x = f.size_max.x
+        // FIX FOR infinite grow issue: when one flow with no children is a child of another flow
+        if f.size.x == 0 && len(vis_children) == 0 do f.size.x = .1
+    }
+
+    if .height in flow.auto_size {
+        f.size.y = full_content_size.y
+        if f.size_max.y > 0 && f.size.y > f.size_max.y do f.size.y = f.size_max.y
+        // fixes same issue as above (see f.size.x logic)
+        if f.size.y == 0 && len(vis_children) == 0 do f.size.y = .1
     }
 
     scroll := layout_scroll(f)
