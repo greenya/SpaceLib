@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:strings"
+import "core:time"
 import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:terse"
@@ -54,10 +55,12 @@ open_url :: proc (url_name: string) {
 }
 
 reload_fonts :: proc (use_my_bytes: [] byte = nil) {
+    start := time.tick_now()
     res.destroy_fonts()
     res.create_fonts(use_my_bytes=use_my_bytes)
     ui.reset_terse(app.ui)
     ui.update(app.ui.root)
+    logf("Font applied in %v", time.tick_since(start))
 }
 
 click_terse_frame :: proc (f: ^ui.Frame) {
