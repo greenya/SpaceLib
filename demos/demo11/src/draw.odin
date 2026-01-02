@@ -59,7 +59,7 @@ draw_button :: proc (f: ^ui.Frame) {
         face_br_color := res.color(.turquoise, b=-.2)
         draw.rect_rounded_lines(face_rect, .3, 8, 2, face_br_color)
 
-        if .terse in f.flags {
+        if f.terse != nil {
             draw_terse_frame(f, offset=face_offset, color=res.color(.cyan))
         }
     } else {
@@ -78,7 +78,7 @@ draw_button :: proc (f: ^ui.Frame) {
         face_br_color := res.color(.turquoise, b=-.2)
         draw.rect_rounded_lines(face_rect, .3, 8, 2, face_br_color)
 
-        if .terse in f.flags {
+        if f.terse != nil {
             draw_terse_frame(f, offset=face_offset)
         }
     }
@@ -108,4 +108,21 @@ draw_github_user_avatar :: proc (f: ^ui.Frame) {
 
     br_color := f.entered ? res.color(.amber) : res.color(.turquoise)
     draw.rect_lines(f.rect, 2, br_color)
+}
+
+draw_animation_panel :: proc (f: ^ui.Frame) {
+    count       :: 40
+    speed       :: 40
+    color_from  := res.color(.teal)
+    color_to    := res.color(.amber)
+    center      := core.rect_center(f.rect)
+    dt          := app.ui.clock.time
+    for i in 0..<count {
+        orbit_radius := f32(count-i)*1.456 + f32(count)/2.345
+        draw.circle(
+            center  = core.vec_orbited_around_vec(center+{0,orbit_radius}, center, speed, dt),
+            radius  = f32(i/2) + 5,
+            color   = core.ease_color(color_from, color_to, f32(i)/count),
+        )
+    }
 }

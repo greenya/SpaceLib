@@ -28,7 +28,7 @@ app_startup :: proc () {
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })
     rl.InitWindow(1280, 720, "SpaceLib Demo11")
 
-    // rl.SetExitKey(.KEY_NULL)
+    rl.SetExitKey(ODIN_DEBUG ? .ESCAPE : .KEY_NULL)
 
     res.init()
     userhttp.init({
@@ -62,17 +62,17 @@ app_startup :: proc () {
     )
 
     app.ui_tab_bar = ui.add_frame(panel, {
-        size    = {220,0},
-        layout  = ui.Flow { dir=.down_center, gap=20 },
+        size    = {260,0},
+        layout  = ui.Flow { dir=.down_center, align=.center, gap=20 },
     },
-        { point=.top_left, offset={40,0} },
-        { point=.bottom_left, offset={40,0} },
+        { point=.top_left },
+        { point=.bottom_left },
     )
 
     app.ui_tab_content = ui.add_frame(panel, {
         draw = draw_panel,
     },
-        { point=.top_left, rel_point=.top_right, rel_frame=app.ui_tab_bar, offset={40,0} },
+        { point=.top_left, rel_point=.top_right, rel_frame=app.ui_tab_bar },
         { point=.bottom_right },
     )
 
@@ -81,6 +81,12 @@ app_startup :: proc () {
         text    = "<font=text_6r,color=white>spacelib:\n<color=amber>userhttp",
     },
         { point=.top, offset={0,40} },
+    )
+
+    ui.add_frame(app.ui_tab_bar, {
+        draw = draw_animation_panel,
+    },
+        { point=.bottom, offset={0,-100} },
     )
 
     add_about_page()
@@ -140,8 +146,8 @@ app_add_tab :: proc (text: string) -> (tab, content: ^ui.Frame) {
     assert(app.ui_tab_content != nil)
 
     tab = ui.add_frame(app.ui_tab_bar, {
-        flags   = {.terse,.terse_height,.radio,.capture},
-        text    = fmt.tprintf("<wrap,pad=10,font=text_4r,color=white>%s", text),
+        flags   = {.terse,.terse_size,.radio,.capture},
+        text    = fmt.tprintf("<wrap,pad=20:10,font=text_4r,color=white>%s", text),
         draw    = draw_button,
         click   = proc (f: ^ui.Frame) {
             content := ui.user_ptr(f, ^ui.Frame)
