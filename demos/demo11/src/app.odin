@@ -40,8 +40,8 @@ app_startup :: proc () {
         // PurpleToken account (free) and use your values below:
         // - The "API Secret Pass Phrase" from https://purpletoken.com/profile.php
         // - The "Game Key" from https://purpletoken.com/manage.php
-        api_secret  = "A secret pass phrase goes here",
-        game_key    = "65ca329ff0f6dc94e3391cab956c02607d5b2271",
+        api_secret  = "",
+        game_key    = "",
     })
 
     app.ui = ui.create(
