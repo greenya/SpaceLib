@@ -54,9 +54,9 @@ requests    : map [rawptr] rawptr
 
 init :: proc (init: Init, allocator := context.allocator) {
     if init.api_secret == "" || init.game_key == "" {
-        fmt.println("[purpletoken] `api_secret` and `game_key` cannot be empty.")
-        fmt.println("* Look for the `API Secret Pass Phrase` at https://purpletoken.com/profile.php")
-        fmt.println("* Look for the `Game Key` at https://purpletoken.com/manage.php")
+        fmt.println("[purpletoken] api_secret and game_key cannot be empty.")
+        fmt.println("* Look for the API Secret Pass Phrase at https://purpletoken.com/profile.php")
+        fmt.println("* Look for the Game Key at https://purpletoken.com/manage.php")
     }
 
     assert(api_secret=="" && game_key=="" && requests==nil)
