@@ -28,7 +28,8 @@ Check **SpaceLib Demo 11** to see it [in action](https://spacemad.itch.io/spacel
                     url     = "https://some/url/goes/here",
                     ready   = proc (req: ^userhttp.Request) {
                         if req.error == nil { /* all good, use req.response */ }
-                        // you also can print all the request details any time regardless of its state using userhttp.print_request(req)
+                        // you also can print all the request details any time
+                        // regardless of its state using userhttp.print_request(req)
                     },
                 })
             }
@@ -59,3 +60,7 @@ Check **SpaceLib Demo 11** to see it [in action](https://spacemad.itch.io/spacel
         - `odinMemory` is an instance of `odin.WasmMemoryInterface`
         - `odinImports` is from `odin.setupDefaultImports(odinMemory)`
         - __Note__: this must be done before instantiating web assembly (`index.wasm`).
+
+## Notes
+
+Currently, sent requests cannot be aborted manually. This may be added in the future.
