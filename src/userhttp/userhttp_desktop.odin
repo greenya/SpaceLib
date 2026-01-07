@@ -121,7 +121,7 @@ curl_send :: proc (req: ^Request) -> (err: Error) {
 
     for p in req.headers {
         cstr := fmt.ctprintf("%s: %s", p.name, p.value)
-        buf.headers_list = curl.slist_append(buf.headers_list, cast ([^] byte) cstr)
+        buf.headers_list = curl.slist_append(buf.headers_list, cstr)
     }
 
     if buf.headers_list != nil {
