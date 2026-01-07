@@ -30,10 +30,14 @@ text_by_tr_font :: #force_inline proc (
     font    : ^terse.Font,
     tint    : Color,
 ) -> (actual_pos: Vec2) {
-    font_rl := font.font_ptr != nil\
-        ? (cast (^rl.Font) font.font_ptr)^\
-        : rl.GetFontDefault()
-    return text_by_rl_font(str, pos, align, font_rl, font.height, font.rune_spacing, tint)
+    if font!=nil && font.font_ptr!=nil {
+        font_rl := (cast (^rl.Font) font.font_ptr)^
+        return text_by_rl_font(str, pos, align, font_rl, font.height, font.rune_spacing, tint)
+    } else {
+        default := &terse.default_font
+        font_rl := rl.GetFontDefault()
+        return text_by_rl_font(str, pos, align, font_rl, default.height, default.rune_spacing, tint)
+    }
 }
 
 // `align` - alignment point ratio, examples:
