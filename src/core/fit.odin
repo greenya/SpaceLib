@@ -109,13 +109,15 @@ fit_rect_src_into_dst :: #force_inline proc (src, dst: ^Rect, fit: Rect_Fit, ali
 //      )
 //
 // or keep as a shortcut.
-fit_size_into_size :: proc (screen_size: Vec2, target_size: Vec2) -> (render_scale: f32, render_rect: Rect) {
-    render_scale = min(screen_size.x/target_size.x, screen_size.y/target_size.y)
-    render_w, render_h := target_size.x*render_scale, target_size.y*render_scale
-    return render_scale, {
-        (screen_size.x - render_w)/2,
-        (screen_size.y - render_h)/2,
-        render_w,
-        render_h,
+fit_size_into_rect :: proc (src_size: Vec2, dst_rect: Rect) -> (fit_rect: Rect, fit_scale: f32) {
+    fit_scale = min(dst_rect.w/src_size.x, dst_rect.h/src_size.y)
+    fit_w := src_size.x * fit_scale
+    fit_h := src_size.y * fit_scale
+    fit_rect = {
+        dst_rect.x + (dst_rect.w - fit_w)/2,
+        dst_rect.y + (dst_rect.h - fit_h)/2,
+        fit_w,
+        fit_h,
     }
+    return
 }

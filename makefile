@@ -14,7 +14,7 @@ checker_args 	= -strict-style -vet -vet-cast -vet-style -vet-semicolon -warnings
 debug_args 		= ${collection_args} ${checker_args} -keep-executable -o:none -debug
 release_args 	= ${collection_args} ${checker_args} -keep-executable -o:speed
 
-run: demo10
+run: demo12
 
 mkdir:
 	$(call os_mkdir_build)
@@ -57,3 +57,6 @@ demo10_web:
 
 demo11: mkdir
 	@echo "Demo11 uses own makefile, please nav to demos/demo11 and 'make' from there."
+
+demo12: mkdir
+	@odin run demos/demo12 -out:build/demo12${os_ext} ${debug_args}
