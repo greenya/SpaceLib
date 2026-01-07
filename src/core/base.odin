@@ -309,14 +309,3 @@ lines_intersection :: proc (start1, end1, start2, end2: Vec2) -> (pos: Vec2, ok:
 
     return start1 + r*t, true
 }
-
-fit_target_size :: #force_inline proc (screen_size: Vec2, target_size: Vec2) -> (render_scale: f32, render_rect: Rect) {
-    render_scale = min(screen_size.x/target_size.x, screen_size.y/target_size.y)
-    render_w, render_h := target_size.x*render_scale, target_size.y*render_scale
-    return render_scale, {
-        (screen_size.x - render_w)/2,
-        (screen_size.y - render_h)/2,
-        render_w,
-        render_h,
-    }
-}

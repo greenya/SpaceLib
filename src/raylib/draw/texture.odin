@@ -4,48 +4,19 @@ import "core:math"
 import rl "vendor:raylib"
 import "../../core"
 
-// https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
-Texture_Fit :: enum {
-    // aspect-ratio unaware scaling fit:
-    // - src fills dst
-    fill,
-
-    // aspect-ratio aware scaling fit:
-    // - whole src will be shown inside dst
-    // - the align defines part of dst to stick to
-    contain,
-
-    // aspect-ratio aware scaling fit:
-    // - whole dst gets covered by src
-    // - the align defines which part of src should stay in dst (will not be truncated)
-    cover,
-
-    // aspect-ratio aware unscaling fit:
-    // - src placed in the center of dst
-    // - src parts get truncated when outside of dst
-    none,
-}
-
-// extra alignment for .contain and .cover only
-Texture_Fit_Align :: enum {
-    center,
-    start,
-    end,
-}
-
 texture :: proc (
-    tex         : rl.Texture,
-    dst         : Rect,
-    src         : Rect,
-    fit         := Texture_Fit.fill,
-    fit_align   := Texture_Fit_Align.center,
-    tint        := core.white,
+    tex     : rl.Texture,
+    dst     : Rect,
+    src     : Rect,
+    fit     := core.Rect_Fit.fill,
+    align   := core.Rect_Fit_Align.center,
+    tint    := core.white,
 ) {
     dst := dst
     src := src
 
     if fit != .fill {
-        fit_src_to_dst(&src, &dst, fit, fit_align)
+        core.fit_rect_src_into_dst(&src, &dst, fit, align)
     }
 
     dst_rl := transmute (rl.Rectangle) dst
@@ -127,73 +98,4 @@ texture_all :: proc (
     if flip_src_h do src_rl.height = -src_rl.height
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
-}
-
-@private
-fit_src_to_dst :: #force_inline proc (src, dst: ^Rect, fit: Texture_Fit, fit_align: Texture_Fit_Align) {
-    if src.w < 1 || src.h < 1 || dst.w < 1 || dst.h < 1 do return
-
-    switch fit {
-    case .fill:
-        // nothing to do
-
-    case .contain:
-        src_aspect := src.w/src.h
-        dst_aspect := dst.w/dst.h
-        if dst_aspect > src_aspect {
-            dst_w := dst.w / dst_aspect
-            switch fit_align {
-            case .center    : dst.x += (dst.w-dst_w)/2
-            case .start     : // already aligned
-            case .end       : dst.x += dst.w-dst_w
-            }
-            dst.w = dst_w
-        } else {
-            dst_h := dst.h * dst_aspect
-            switch fit_align {
-            case .center    : dst.y += (dst.h-dst_h)/2
-            case .start     : // already aligned
-            case .end       : dst.y += dst.h-dst_h
-            }
-            dst.h = dst_h
-        }
-
-    case .cover:
-        src_aspect := src.w/src.h
-        dst_aspect := dst.w/dst.h
-        if src_aspect > dst_aspect {
-            src_w := src.w * dst_aspect
-            switch fit_align {
-            case .center    : src.x += (src.w-src_w)/2
-            case .start     : // already aligned
-            case .end       : src.x += src.w-src_w
-            }
-            src.w = src_w
-        } else {
-            src_h := src.h / dst_aspect
-            switch fit_align {
-            case .center    : src.y += (src.h-src_h)/2
-            case .start     : // already aligned
-            case .end       : src.y += src.h-src_h
-            }
-            src.h = src_h
-        }
-
-    case .none:
-        dst_center := core.rect_center(dst^)
-        src_proj := core.rect_from_center(dst_center, { src.w, src.h })
-        dst_proj := core.rect_intersection(dst^, src_proj)
-
-        proj_dh := (src.h-dst_proj.h)/2
-        proj_dx := (src.w-dst_proj.w)/2
-        dst^ = core.rect_inflated(dst_proj, {proj_dx,proj_dh})
-
-        off_w_half_neg := min(0, (dst_proj.w-src.w)/2)
-        off_h_half_neg := min(0, (dst_proj.h-src.h)/2)
-        if off_w_half_neg < 0 || off_h_half_neg < 0 {
-            off_size := Vec2 { off_w_half_neg, off_h_half_neg }
-            src^ = core.rect_inflated(src^, off_size)
-            dst^ = core.rect_inflated(dst^, off_size)
-        }
-    }
 }

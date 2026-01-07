@@ -30,11 +30,11 @@ draw_text :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Col
     draw.text(text, pos, align, &font.font_tr, color)
 }
 
-draw_sprite :: proc (name: string, rect: Rect, fit := draw.Texture_Fit.fill, fit_align := draw.Texture_Fit_Align.center, tint := core.white) {
+draw_sprite :: proc (name: string, rect: Rect, fit := core.Rect_Fit.fill, align := core.Rect_Fit_Align.center, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
     case Rect   : if sprite.wrap    do draw.texture_wrap    (sprite.texture, rect, info, tint=tint)
-                  else              do draw.texture         (sprite.texture, rect, info, fit=fit, fit_align=fit_align, tint=tint)
+                  else              do draw.texture         (sprite.texture, rect, info, fit=fit, align=align, tint=tint)
     case Patch  :                      draw.texture_patch   (sprite.texture, rect, info, tint=tint)
     }
 }
@@ -388,7 +388,7 @@ draw_codex_section_item :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 
     sp_rect := core.rect_moved(f.rect, {-f.rect.w/20,0})
-    draw_sprite("book-pile", sp_rect, fit=.contain, fit_align=.end, tint=colors.get(.primary, brightness=-.4))
+    draw_sprite("book-pile", sp_rect, fit=.contain, align=.end, tint=colors.get(.primary, brightness=-.4))
 
     draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
     draw_terse(f, drop_shadow=true)
