@@ -79,8 +79,15 @@ Measure_Text_Proc   :: proc (font: ^Font, text: string) -> Vec2
 Query_Font_Proc     :: proc (name: string) -> ^Font
 Query_Color_Proc    :: proc (name: string) -> Color
 
-query_font : Query_Font_Proc
-query_color: Query_Color_Proc
+// By default, we use `default_font` for any font `name`.
+//
+// Assign your handler to provide your font resolution logic.
+query_font: Query_Font_Proc = default_query_font
+
+// By default, we can parse hex color format, and we return "red" for any color `name` otherwise.
+//
+// Assign your handler to provide your color resolution logic.
+query_color: Query_Color_Proc = default_query_color
 
 create :: proc (text: string, rect: Rect, should_clone_text := true, allocator := context.allocator) -> ^Terse {
     ensure(query_font != nil)

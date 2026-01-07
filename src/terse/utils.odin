@@ -9,6 +9,44 @@ import "../core"
 @private Rect :: core.Rect
 @private Color :: core.Color
 
+// Default font, used when `query_font` callback is not overridden.
+// If you don't change it, the `measure_text()` proc is very rough, if you want it be precise,
+// provide your measurement proc, for example:
+//
+//      import "spacelib:raylib/res"
+//      terse.default_font.measure_text = proc (font: ^terse.Font, text: string) -> Vec2 {
+//          return res.measure_text(rl.GetFontDefault(), font.height, font.rune_spacing, text)
+//      }
+//
+// You also can use `rl.MeasureTextEx()` directly and skip using "raylib/res" helper.
+//
+// Note: You can change font height with `default_font.height=...` or other values directly.
+default_font := Font {
+    font_ptr        = nil,
+    height          = 20,
+    line_spacing    = 0,
+    rune_spacing    = 2, // e.g. height/10
+    measure_text    = proc (font: ^Font, text: string) -> Vec2 {
+        // some default rough measure text logic,
+        // just so we don't crash if user doesn't provide anything at all
+        return {
+            f32(core.longest_line_len(text)),
+            f32(1 + strings.count(text, "\n")),
+        } * { font.height/2, font.height }
+    },
+}
+
+default_query_font :: proc (name: string) -> ^Font {
+    return &default_font
+}
+
+default_query_color :: proc (name: string) -> Color {
+    fmt.println(#procedure, name)
+    return len(name)>0 && name[0] == '#'\
+        ? core.color_from_hex(name)\
+        : core.red
+}
+
 apply_offset :: proc (terse: ^Terse, offset: Vec2) {
     assert(terse != nil)
 
