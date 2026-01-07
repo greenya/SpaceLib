@@ -94,3 +94,16 @@ format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.al
 format_f32_tmp :: proc (value: f32, max_decimal_digits: int) -> string {
     return format_f32(value, max_decimal_digits, context.temp_allocator)
 }
+
+longest_line_len :: proc (text: string) -> int {
+    cur_len, max_len := 0, 0
+    for c in text {
+        if c == '\n' {
+            max_len = max(max_len, cur_len)
+            cur_len = 0
+        } else {
+            cur_len += 1
+        }
+    }
+    return max(max_len, cur_len)
+}
