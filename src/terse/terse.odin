@@ -184,12 +184,12 @@ create :: proc (text: string, rect: Rect, should_clone_text := true, allocator :
                     case "middle"   : builder.terse.valign = .middle
                     case "bottom"   : builder.terse.valign = .bottom
 
-                    case "/font":
+                    case "/font", "/f":
                         ensure(!core.stack_is_empty(fonts_stack), "Fonts stack underflow")
                         core.stack_drop(&fonts_stack)
                         last_opened_command = .none
 
-                    case "/color":
+                    case "/color", "/c":
                         ensure(!core.stack_is_empty(colors_stack), "Colors stack underflow")
                         core.stack_drop(&colors_stack)
                         last_opened_command = .none
@@ -221,7 +221,7 @@ create :: proc (text: string, rect: Rect, should_clone_text := true, allocator :
                             case "brightness":
                                 brightness = parse_f32(command_value)
 
-                            case "font":
+                            case "font", "f":
                                 ensure(!core.stack_is_full(fonts_stack), "Fonts stack overflow")
                                 font := query_font(command_value)
                                 ensure(font.measure_text != nil, "Font.measure_text must be set")
@@ -229,7 +229,7 @@ create :: proc (text: string, rect: Rect, should_clone_text := true, allocator :
                                 line.rect.h = line._word_count > 0 ? max(line.rect.h, font.height) : font.height
                                 last_opened_command = .font
 
-                            case "color":
+                            case "color", "c":
                                 ensure(!core.stack_is_full(colors_stack), "Colors stack overflow")
                                 color := command_value[0] == '#' ? core.color_from_hex(command_value) : query_color(command_value)
                                 core.stack_push(&colors_stack, color)
