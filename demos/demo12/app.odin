@@ -4,33 +4,59 @@ import "core:fmt"
 import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:raylib/draw"
-// import "spacelib:raylib/res"
-// import "spacelib:terse"
+import "spacelib:raylib/res"
+import "spacelib:terse"
 import "spacelib:ui"
 
 Vec2 :: core.Vec2
 Rect :: core.Rect
 
+src_color :: core.aqua
+dst_color :: core.magenta
+fit_color :: core.yellow
+
 @rodata
 Src_Sizes := [?] Vec2 {
-    { 1000, 200 },
-    { 1000, 500 },
-    { 1000, 750 },
-    { 1000, 1000 },
-    { 750, 1000 },
-    { 500, 1000 },
-    { 200, 1000 },
+    { 512*2, 512*2 },
+    { 512, 512 },
+    { 512/2, 512/2 },
+    { 512/4, 512/4 },
+    { 512/8, 512/8 },
+    { 512, 512/2 },
+    { 512, 512/4 },
+    { 512, 512/8 },
+    { 512/8, 512 },
+    { 512/4, 512 },
+    { 512/2, 512 },
+}
+
+@rodata
+Dst_Sizes := [?] Vec2 {
+    { 600, 300 },
+    { 600, 400 },
+    { 600, 500 },
+    { 600, 600 },
+    { 500, 600 },
+    { 400, 600 },
+    { 300, 600 },
+    { 200, 600 },
+    { 100, 600 },
+    { 1280, 720 },
+    { 1280/2, 720/2 },
+    { 1280/4, 720/4 },
+    { 1280/8, 720/8 },
 }
 
 App :: struct {
-    should_debug: bool,
-
-    src_size: Vec2,
-
-    ui: ^ui.UI,
+    should_debug    : bool,
+    src_size_idx    : int,
+    dst_size_idx    : int,
+    dst_use_scissor : bool,
+    dst_frame       : ^ui.Frame,
+    ui              : ^ui.UI,
 }
 
-app := App { src_size={2000,1000} }
+app: App
 
 app_startup :: proc () {
     fmt.println(#procedure)
@@ -39,9 +65,9 @@ app_startup :: proc () {
     rl.SetConfigFlags({ .VSYNC_HINT })
     rl.InitWindow(1280, 720, "spacelib demo 12")
 
-    // terse.default_font.measure_text = proc (font: ^terse.Font, text: string) -> Vec2 {
-    //     return res.measure_text(rl.GetFontDefault(), font.height, font.rune_spacing, text)
-    // }
+    terse.default_font.measure_text = proc (font: ^terse.Font, text: string) -> Vec2 {
+        return res.measure_text(rl.GetFontDefault(), font.height, font.rune_spacing, text)
+    }
 
     app.ui = ui.create(
         root_rect           = {0,0,f32(rl.GetScreenWidth()),f32(rl.GetScreenHeight())},
@@ -53,37 +79,67 @@ app_startup :: proc () {
             : nil,
     )
 
-    // action_bar := ui.add_frame(app.ui.root, {
-    //     layout = ui.Flow {}
-    // })
+    src_bar := add_selector_bar(app.ui.root, "SRC SIZE", Src_Sizes[:], app.src_size_idx,
+        draw    = draw_src_button,
+        click   = proc (f: ^ui.Frame) {
+            app.src_size_idx = ui.index(f) - 1 // -1 to skip the title
+        },
+    )
 
-    // ui.add_frame(app.ui.root, {
-    //     flags={.terse,.terse_size},
-    //     text="<pad=20,c=#8bf>Hello World!",
-    // },
-    //     { point=.left },
-    // )
+    ui.set_anchors(src_bar, { point=.top_left, offset=40 })
 
-    ui.add_frame(app.ui.root, {
-        size = {500,300},
+    dst_bar := add_selector_bar(app.ui.root, "DST SIZE", Dst_Sizes[:], app.dst_size_idx,
+        draw    = draw_dst_button,
+        click   = proc (f: ^ui.Frame) {
+            app.dst_size_idx = ui.index(f) - 1 // -1 to skip the title
+            app.dst_frame.size = Dst_Sizes[app.dst_size_idx]
+        },
+    )
+
+    ui.set_anchors(dst_bar, { point=.top_right, offset={-40,40} })
+
+    ui.add_frame(dst_bar)
+    ui.add_frame(dst_bar, {
+        flags   = {.terse,.check},
+        text    = "SCISSOR",
+        draw    = draw_dst_button,
+        click   = proc (f: ^ui.Frame) {
+            app.dst_use_scissor = f.selected
+        },
+    })
+
+    app.dst_frame = ui.add_frame(app.ui.root, {
+        size = Dst_Sizes[app.dst_size_idx],
         draw = proc (f: ^ui.Frame) {
             dst_rect := f.rect
-            // draw.rect(dst_rect, core.gray2)
-            draw.rect_lines(dst_rect, 2, core.magenta)
-            text := fmt.tprintf("%.0f x %.0f", dst_rect.w, dst_rect.h)
-            draw.text(text, {dst_rect.x,dst_rect.y}, {0,1}, nil, core.magenta)
+            draw.rect_lines(dst_rect, 2, dst_color)
 
-            // ui.push_scissor_rect(app.ui, dst_rect)
+            if app.dst_use_scissor do ui.push_scissor_rect(app.ui, dst_rect)
 
-            src_size := Vec2 { 2000, 1000 }
-            // dst_size := Vec2 { dst_rect.w, dst_rect.h }
+            src_size := Src_Sizes[app.src_size_idx]
+            src_rect := core.rect_from_center(core.rect_center(dst_rect), src_size)
+            draw.rect(src_rect, core.alpha(src_color, .1))
+            draw.rect_lines(src_rect, 2, src_color)
+
+            // TODO: maybe fit_size_into_rect() should take "fit" arg of enum like:
+            // Fit_Alignment: enum {
+            //      contain_start,
+            //      contain_center (default),
+            //      contain_end cover,
+            //      cover_start,
+            //      cover_center,
+            //      cover_end,
+            // }
+            // p.s: no need for "none" and "fill", they are trivial
+
             fit_rect, fit_scale := core.fit_size_into_rect(src_size, dst_rect)
-            // core.rect_move(&fit_rect, {dst_rect.x+10,dst_rect.y+10})
-            draw.rect_lines(fit_rect, 8, core.yellow)
-            text2 := fmt.tprintf("FIT RECT: %.0f x %.0f\nFIT SCALE: %.3f", fit_rect.w, fit_rect.h, fit_scale)
-            draw.text(text2, core.rect_center(fit_rect), .5, nil, core.yellow)
+            draw.rect(fit_rect, core.alpha(fit_color, .1))
+            draw.rect_lines(fit_rect, 4, fit_color)
 
-            // ui.pop_scissor_rect(app.ui)
+            fit_text := fmt.tprintf("FIT RECT: %.0f x %.0f\nFIT SCALE: %.3f", fit_rect.w, fit_rect.h, fit_scale)
+            draw.text(fit_text, core.rect_center(fit_rect), .5, nil, fit_color)
+
+            if app.dst_use_scissor do ui.pop_scissor_rect(app.ui)
         },
     },
         { point=.center },
@@ -116,4 +172,40 @@ app_draw :: proc () {
     rl.ClearBackground(core.gray1.rgba)
     ui.draw(app.ui)
     rl.EndDrawing()
+}
+
+add_selector_bar :: proc (parent: ^ui.Frame, title: string, items: [] Vec2, selected_idx: int, draw, click: ui.Frame_Proc) -> (bar: ^ui.Frame) {
+    bar = ui.add_frame(parent, {
+        order   = 1,
+        layout  = ui.Flow { dir=.down, size={200,40}, auto_size={.width} },
+    })
+
+    ui.add_frame(bar, {
+        flags   = {.terse},
+        text    = fmt.tprintf("<c=#888>%s", title),
+    })
+
+    for it, i in items {
+        ui.add_frame(bar, {
+            flags       = {.terse,.radio},
+            selected    = i == selected_idx,
+            text        = fmt.tprintf("<c=#888>%.0f x %.0f", it.x, it.y),
+            draw        = draw,
+            click       = click,
+        })
+    }
+
+    return
+}
+
+draw_src_button :: proc (f: ^ui.Frame) {
+    if f.selected do draw.rect(f.rect, src_color)
+    color := f.selected ? core.black : src_color
+    draw.terse(f.terse, color=color)
+}
+
+draw_dst_button :: proc (f: ^ui.Frame) {
+    if f.selected do draw.rect(f.rect, dst_color)
+    color := f.selected ? core.black : dst_color
+    draw.terse(f.terse, color=color)
 }
