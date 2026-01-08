@@ -30,12 +30,21 @@ draw_text :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Col
     draw.text(text, pos, align, &font.font_tr, color)
 }
 
-draw_sprite :: proc (name: string, rect: Rect, fit := core.Rect_Fit.fill, align := core.Rect_Fit_Align.center, tint := core.white) {
+draw_sprite :: proc (name: string, rect: Rect, fit: Maybe(core.Rect_Fit) = nil, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
-    case Rect   : if sprite.wrap    do draw.texture_wrap    (sprite.texture, rect, info, tint=tint)
-                  else              do draw.texture         (sprite.texture, rect, info, fit=fit, align=align, tint=tint)
-    case Patch  :                      draw.texture_patch   (sprite.texture, rect, info, tint=tint)
+    case Rect:
+        if sprite.wrap {
+            draw.texture_wrap(sprite.texture, rect, info, tint)
+        } else {
+            if fit != nil {
+                draw.texture_fit(sprite.texture, rect, info, fit.(core.Rect_Fit), tint)
+            } else {
+                draw.texture(sprite.texture, rect, info, tint)
+            }
+        }
+    case Patch:
+        draw.texture_patch(sprite.texture, rect, info, tint=tint)
     }
 }
 
@@ -388,7 +397,7 @@ draw_codex_section_item :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, bg_color)
 
     sp_rect := core.rect_moved(f.rect, {-f.rect.w/20,0})
-    draw_sprite("book-pile", sp_rect, fit=.contain, align=.end, tint=colors.get(.primary, brightness=-.4))
+    draw_sprite("book-pile", sp_rect, fit=.contain_end, tint=colors.get(.primary, brightness=-.4))
 
     draw.rect_lines(f.rect, 1, colors.get(.primary, brightness=f.entered ? .2 : -.4))
     draw_terse(f, drop_shadow=true)
@@ -415,7 +424,7 @@ draw_codex_topic_item :: proc (f: ^ui.Frame) {
     draw.rect(f.rect, colors.get(.primary, brightness=-.8))
 
     sp_rect := core.rect_inflated(f.rect, -f.rect.h/20)
-    draw_sprite("book-cover", sp_rect, fit=.contain, tint=colors.get(.primary, brightness=-.4))
+    draw_sprite("book-cover", sp_rect, fit=.contain_center, tint=colors.get(.primary, brightness=-.4))
 
     hv_ratio := ui.hover_ratio(f, .Linear, .111, .Cubic_Out, .333)
 
@@ -641,8 +650,8 @@ draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
 
     icon := slot.item.icon != "" ? slot.item.icon : "question_mark"
     icon_rect := core.rect_scaled(rect, .8)
-    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain, tint=colors.get(.bg1, alpha=opacity))
-    draw_sprite(icon, icon_rect, fit=.contain, tint=core.alpha(core.white, opacity))
+    draw_sprite(icon, core.rect_moved(icon_rect, {3,4}), fit=.contain_center, tint=colors.get(.bg1, alpha=opacity))
+    draw_sprite(icon, icon_rect, fit=.contain_center, tint=core.alpha(core.white, opacity))
 }
 
 draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
