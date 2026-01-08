@@ -124,7 +124,7 @@ main :: proc () {
 }
 
 draw_terse :: proc (tr: ^terse.Terse) {
-    draw.terse(tr, draw_terse_icon)
+    draw.terse(tr, draw_icon_proc=draw_terse_icon)
 }
 
 draw_sprite :: proc (name: string, rect: Rect, tint := core.white) {

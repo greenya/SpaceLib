@@ -2,6 +2,7 @@ package spacelib_raylib_draw
 
 import "core:strings"
 import rl "vendor:raylib"
+import "../../core"
 import "../../terse"
 
 @private
@@ -51,13 +52,30 @@ text :: proc {
     text_by_rl_font,
 }
 
-terse :: proc (t: ^terse.Terse, draw_icon_proc: proc (word: ^terse.Word) = nil) {
-    for &word in t.words {
-        if word.is_icon {
-            if draw_icon_proc != nil do draw_icon_proc(&word)
-            else                     do rect_lines(word.rect, 2, word.color)
-        } else {
-            text(word.text, { word.rect.x, word.rect.y }, 0, word.font, word.color)
+terse :: proc (
+    terse_          : ^terse.Terse,
+    offset          := Vec2 {},
+    color           := Color {},
+    opacity         := f32(1),
+    scissor         := Rect {},
+    draw_icon_proc  : proc (word: ^terse.Word) = nil,
+) {
+    for &line in terse_.lines {
+        if scissor!={} && !core.rects_intersect(line.rect, scissor) do continue
+
+        for &word in line.words {
+            rect := offset!={} ? core.rect_moved(word.rect, offset) : word.rect
+            if scissor!={} && !core.rects_intersect(rect, scissor) do continue
+
+            word_color := color.a!=0 ? color : word.color
+            if opacity!=1 do word_color = core.alpha(word_color, opacity)
+
+            if word.is_icon {
+                if draw_icon_proc!=nil  do draw_icon_proc(&word)
+                else                    do rect_lines(word.rect, 2, word_color)
+            } else {
+                text(word.text, { word.rect.x, word.rect.y }, 0, word.font, word_color)
+            }
         }
     }
 }
