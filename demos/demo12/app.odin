@@ -1,6 +1,8 @@
 package demo12
 
+import "base:intrinsics"
 import "core:fmt"
+import "core:reflect"
 import rl "vendor:raylib"
 import "spacelib:core"
 import "spacelib:raylib/draw"
@@ -8,9 +10,11 @@ import "spacelib:raylib/res"
 import "spacelib:terse"
 import "spacelib:ui"
 
-Vec2 :: core.Vec2
-Rect :: core.Rect
+Vec2    :: core.Vec2
+Rect    :: core.Rect
+Color   :: core.Color
 
+elem_size :: Vec2 {200,40}
 src_color :: core.aqua
 dst_color :: core.magenta
 fit_color :: core.yellow
@@ -52,17 +56,18 @@ App :: struct {
     src_size_idx    : int,
     dst_size_idx    : int,
     dst_use_scissor : bool,
+    rect_fit        : core.Rect_Fit,
     dst_frame       : ^ui.Frame,
     ui              : ^ui.UI,
 }
 
-app: App
+app := App { rect_fit=.contain_center }
 
 app_startup :: proc () {
     fmt.println(#procedure)
 
     rl.SetTraceLogLevel(.WARNING)
-    rl.SetConfigFlags({ .VSYNC_HINT })
+    rl.SetConfigFlags({ .VSYNC_HINT, .WINDOW_RESIZABLE })
     rl.InitWindow(1280, 720, "spacelib demo 12")
 
     terse.default_font.measure_text = proc (font: ^terse.Font, text: string) -> Vec2 {
@@ -79,24 +84,24 @@ app_startup :: proc () {
             : nil,
     )
 
-    src_bar := add_selector_bar(app.ui.root, "SRC SIZE", Src_Sizes[:], app.src_size_idx,
+    src_bar := add_size_selector_flow(app.ui.root, "SRC SIZE", Src_Sizes[:], app.src_size_idx,
         draw    = draw_src_button,
         click   = proc (f: ^ui.Frame) {
-            app.src_size_idx = ui.index(f) - 1 // -1 to skip the title
+            app.src_size_idx = f.user_idx
         },
     )
 
-    ui.set_anchors(src_bar, { point=.top_left, offset=40 })
+    ui.set_anchors(src_bar, { point=.top_left, offset={40,60} })
 
-    dst_bar := add_selector_bar(app.ui.root, "DST SIZE", Dst_Sizes[:], app.dst_size_idx,
+    dst_bar := add_size_selector_flow(app.ui.root, "DST SIZE", Dst_Sizes[:], app.dst_size_idx,
         draw    = draw_dst_button,
         click   = proc (f: ^ui.Frame) {
-            app.dst_size_idx = ui.index(f) - 1 // -1 to skip the title
+            app.dst_size_idx = f.user_idx
             app.dst_frame.size = Dst_Sizes[app.dst_size_idx]
         },
     )
 
-    ui.set_anchors(dst_bar, { point=.top_right, offset={-40,40} })
+    ui.set_anchors(dst_bar, { point=.top_right, offset={-40,60} })
 
     ui.add_frame(dst_bar)
     ui.add_frame(dst_bar, {
@@ -108,38 +113,37 @@ app_startup :: proc () {
         },
     })
 
+    fit_bar := add_enum_selector_grid(app.ui.root, "FIT", app.rect_fit, wrap=3,
+        draw    = draw_fit_button,
+        click   = proc (f: ^ui.Frame) {
+            app.rect_fit = core.Rect_Fit(f.user_idx)
+        },
+    )
+
+    ui.set_anchors(fit_bar, { point=.top, offset={0,60} })
+
     app.dst_frame = ui.add_frame(app.ui.root, {
         size = Dst_Sizes[app.dst_size_idx],
         draw = proc (f: ^ui.Frame) {
             dst_rect := f.rect
-            draw.rect_lines(dst_rect, 2, dst_color)
 
             if app.dst_use_scissor do ui.push_scissor_rect(app.ui, dst_rect)
 
             src_size := Src_Sizes[app.src_size_idx]
             src_rect := core.rect_from_center(core.rect_center(dst_rect), src_size)
             draw.rect(src_rect, core.alpha(src_color, .1))
-            draw.rect_lines(src_rect, 2, src_color)
+            draw.rect_lines(src_rect, 4, src_color)
 
-            // TODO: maybe fit_size_into_rect() should take "fit" arg of enum like:
-            // Fit_Alignment: enum {
-            //      contain_start,
-            //      contain_center (default),
-            //      contain_end cover,
-            //      cover_start,
-            //      cover_center,
-            //      cover_end,
-            // }
-            // p.s: no need for "none" and "fill", they are trivial
-
-            fit_rect, fit_scale := core.fit_size_into_rect(src_size, dst_rect)
+            fit_rect, fit_scale := core.fit_size_into_rect(src_size, dst_rect, app.rect_fit)
             draw.rect(fit_rect, core.alpha(fit_color, .1))
-            draw.rect_lines(fit_rect, 4, fit_color)
+            draw.rect_lines(fit_rect, 8, fit_color)
 
-            fit_text := fmt.tprintf("FIT RECT: %.0f x %.0f\nFIT SCALE: %.3f", fit_rect.w, fit_rect.h, fit_scale)
+            fit_text := fmt.tprintf("FIT SIZE: %.0f x %.0f\nFIT SCALE: %.3f", fit_rect.w, fit_rect.h, fit_scale)
             draw.text(fit_text, core.rect_center(fit_rect), .5, nil, fit_color)
 
             if app.dst_use_scissor do ui.pop_scissor_rect(app.ui)
+
+            draw.rect_lines(dst_rect, 2, dst_color)
         },
     },
         { point=.center },
@@ -174,22 +178,26 @@ app_draw :: proc () {
     rl.EndDrawing()
 }
 
-add_selector_bar :: proc (parent: ^ui.Frame, title: string, items: [] Vec2, selected_idx: int, draw, click: ui.Frame_Proc) -> (bar: ^ui.Frame) {
+add_size_selector_flow :: proc (parent: ^ui.Frame, title: string, items: [] Vec2, selected_idx: int, draw, click: ui.Frame_Proc) -> (bar: ^ui.Frame) {
     bar = ui.add_frame(parent, {
         order   = 1,
-        layout  = ui.Flow { dir=.down, size={200,40}, auto_size={.width} },
+        layout  = ui.Flow { dir=.down, size=elem_size, auto_size={.width} },
     })
 
     ui.add_frame(bar, {
         flags   = {.terse},
+        size    = elem_size,
         text    = fmt.tprintf("<c=#888>%s", title),
-    })
+    },
+        { point=.bottom, rel_point=.top },
+    )
 
     for it, i in items {
         ui.add_frame(bar, {
             flags       = {.terse,.radio},
+            user_idx    = i,
             selected    = i == selected_idx,
-            text        = fmt.tprintf("<c=#888>%.0f x %.0f", it.x, it.y),
+            text        = fmt.tprintf("%.0f x %.0f", it.x, it.y),
             draw        = draw,
             click       = click,
         })
@@ -198,14 +206,40 @@ add_selector_bar :: proc (parent: ^ui.Frame, title: string, items: [] Vec2, sele
     return
 }
 
-draw_src_button :: proc (f: ^ui.Frame) {
-    if f.selected do draw.rect(f.rect, src_color)
-    color := f.selected ? core.black : src_color
-    draw.terse(f.terse, color=color)
+add_enum_selector_grid :: proc (parent: ^ui.Frame, title: string, selected: $T, wrap: int, draw, click: ui.Frame_Proc) -> (bar: ^ui.Frame) where intrinsics.type_is_enum(T) {
+    bar = ui.add_frame(parent, {
+        order   = 1,
+        layout  = ui.Grid { dir=.right_down, size=elem_size, wrap=wrap, auto_size={.width} },
+    })
+
+    ui.add_frame(bar, {
+        flags   = {.terse,.check},
+        size    = elem_size,
+        text    = fmt.tprintf("<c=#888>%s", title),
+    },
+        { point=.bottom, rel_point=.top },
+    )
+
+    for f in reflect.enum_fields_zipped(T) {
+        ui.add_frame(bar, {
+            flags       = {.terse,.radio},
+            user_idx    = int(f.value),
+            selected    = T(f.value) == selected,
+            text        = fmt.tprint(f.name),
+            draw        = draw,
+            click       = click,
+        })
+    }
+
+    return
 }
 
-draw_dst_button :: proc (f: ^ui.Frame) {
-    if f.selected do draw.rect(f.rect, dst_color)
-    color := f.selected ? core.black : dst_color
-    draw.terse(f.terse, color=color)
+draw_button :: proc (f: ^ui.Frame, color: Color) {
+    if f.selected do draw.rect(f.rect, color)
+    tx_color := f.selected ? core.black : color
+    draw.terse(f.terse, color=tx_color)
 }
+
+draw_src_button :: proc (f: ^ui.Frame) { draw_button(f, src_color) }
+draw_dst_button :: proc (f: ^ui.Frame) { draw_button(f, dst_color) }
+draw_fit_button :: proc (f: ^ui.Frame) { draw_button(f, fit_color) }
