@@ -42,6 +42,8 @@ UI :: struct {
     //
     // This value may change between frame `draw` calls, and represents the intersection of all parent scissors,
     // defining the actual visible area on screen for the frame currently being drawn.
+    //
+    // You can apply extra scissor rects via pair `push_scissor_rect()` and `pop_scissor_rect()`.
     scissor_rect: Rect,
 
     // Current stack of all scissor absolute rectangles.
@@ -279,7 +281,7 @@ draw :: proc (ui: ^UI) {
         ui.stats.draw_time = time.tick_since(phase_started)
     }
 
-    assert(ui.scissor_rects.size == 0)
+    assert(ui.scissor_rects.size == 0, "Mismatched push/pop_scissor_rect() calls")
     ui.scissor_rect = ui.root.rect
 
     draw_frame_tree(ui.root)
