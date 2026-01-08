@@ -8,18 +8,23 @@ texture :: proc (
     tex     : rl.Texture,
     dst     : Rect,
     src     : Rect,
-    fit     := core.Rect_Fit.fill,
-    align   := core.Rect_Fit_Align.center,
     tint    := core.white,
 ) {
-    dst := dst
-    src := src
-
-    if fit != .fill {
-        core.fit_rect_src_into_dst(&src, &dst, fit, align)
-    }
-
     dst_rl := transmute (rl.Rectangle) dst
+    src_rl := transmute (rl.Rectangle) src
+    tint_rl := rl.Color(tint)
+    rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
+}
+
+texture_fit :: proc (
+    tex     : rl.Texture,
+    dst     : Rect,
+    src     : Rect,
+    fit     : core.Rect_Fit,
+    tint    := core.white,
+) {
+    fit_rect, _ := core.fit_size_into_rect({src.w,src.h}, dst, fit)
+    dst_rl := transmute (rl.Rectangle) fit_rect
     src_rl := transmute (rl.Rectangle) src
     tint_rl := rl.Color(tint)
     rl.DrawTexturePro(tex, src_rl, dst_rl, {}, 0, tint_rl)
