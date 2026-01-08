@@ -41,7 +41,6 @@ default_query_font :: proc (name: string) -> ^Font {
 }
 
 default_query_color :: proc (name: string) -> Color {
-    fmt.println(#procedure, name)
     return len(name)>0 && name[0] == '#'\
         ? core.color_from_hex(name)\
         : core.red
