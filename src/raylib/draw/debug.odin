@@ -216,18 +216,18 @@ _debug_frame_color :: proc (f: ^ui.Frame) -> Color {
 }
 
 @private
-_debug_anchor_point_pos :: proc (point: ui.Anchor_Point, using rect: Rect) -> Vec2 {
+_debug_anchor_point_pos :: proc (point: ui.Anchor_Point, rect: Rect) -> Vec2 {
     #partial switch point {
     case .mouse         : return rl.GetMousePosition()
-    case .top_left      : return { x, y }
-    case .top           : return { x+w/2, y }
-    case .top_right     : return { x+w, y }
-    case .left          : return { x, y+h/2 }
-    case .center        : return { x+w/2, y+h/2 }
-    case .right         : return { x+w, y+h/2 }
-    case .bottom_left   : return { x, y+h }
-    case .bottom        : return { x+w/2, y+h }
-    case .bottom_right  : return { x+w, y+h }
+    case .top_left      : return { rect.x, rect.y }
+    case .top           : return { rect.x+rect.w/2, rect.y }
+    case .top_right     : return { rect.x+rect.w, rect.y }
+    case .left          : return { rect.x, rect.y+rect.h/2 }
+    case .center        : return { rect.x+rect.w/2, rect.y+rect.h/2 }
+    case .right         : return { rect.x+rect.w, rect.y+rect.h/2 }
+    case .bottom_left   : return { rect.x, rect.y+rect.h }
+    case .bottom        : return { rect.x+rect.w/2, rect.y+rect.h }
+    case .bottom_right  : return { rect.x+rect.w, rect.y+rect.h }
     case                : return {}
     }
 }
