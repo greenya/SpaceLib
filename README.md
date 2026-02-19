@@ -2,7 +2,7 @@
 
     /core                       - core types and utilities
         /stack_trace            - debug stack trace
-        /timed_scope            - evaluate scope execution time
+        /time_tracker           - measure execution time
         /tracking_allocator     - memory allocation tracker
     /events                     - [planned] [maybe] event bus
     /raylib                     - helpers when using Raylib

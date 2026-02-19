@@ -1,13 +1,13 @@
 package main_desktop
 
 import "spacelib:core/stack_trace"
-import "spacelib:core/timed_scope"
+import "spacelib:core/time_tracker"
 import "spacelib:core/tracking_allocator"
 
 import app "../.."
 
 _ :: stack_trace
-_ :: timed_scope
+_ :: time_tracker
 _ :: tracking_allocator
 
 main :: proc () {
@@ -21,7 +21,10 @@ main :: proc () {
             defer stack_trace.destroy()
         }
 
-        defer timed_scope.print(.by_avg_dur)
+        defer {
+            time_tracker.print(.by_max)
+            time_tracker.destroy()
+        }
     }
 
     app.app_startup()
