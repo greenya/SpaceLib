@@ -71,9 +71,7 @@ print :: proc (order: Print_Order) {
     }
 
     tbl: table.Table
-    table.init(&tbl)
-    defer table.destroy(&tbl)
-
+    table.init(&tbl, table_allocator=context.temp_allocator)
     table.caption(&tbl, fmt.tprintf("Time Tracker (order=%v)", order))
     table.padding(&tbl, 1, 1)
 
@@ -86,19 +84,6 @@ print :: proc (order: Print_Order) {
     }
 
     table.write_plain_table(table.stdio_writer(), &tbl)
-
-    // fmt.println("[TT] -------------- Report --------------")
-
-    // for e in entries {
-    //     name := e.key
-    //     track := e.value
-    //     fmt.printfln(
-    //         "[TT] %s\t| %v (∑ %v) ×%i",
-    //         name, track.max, track.total, track.calls,
-    //     )
-    // }
-
-    // fmt.println("[TT] ------------------------------------")
 }
 
 @private
