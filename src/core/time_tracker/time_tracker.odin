@@ -72,7 +72,7 @@ print :: proc (order: Print_Order) {
 
     tbl: table.Table
     table.init(&tbl, table_allocator=context.temp_allocator)
-    table.caption(&tbl, fmt.tprintf("Time Tracker (order=%v)", order))
+    table.caption(&tbl, fmt.tprintf("Time Tracker (order=%v, -o:%v)", order, ODIN_OPTIMIZATION_MODE))
     table.padding(&tbl, 1, 1)
 
     table.header(&tbl, "Name", "Max", "Total", "Calls")
