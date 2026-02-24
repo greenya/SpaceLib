@@ -71,7 +71,7 @@ stop :: proc (name: string) {
 }
 
 @(deferred_out=scope_end)
-scope :: proc (name: string, hot := false) -> string {
+scope :: proc (name: string) -> string {
     #force_inline start(name)
     return name
 }
