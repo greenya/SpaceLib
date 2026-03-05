@@ -21,6 +21,17 @@ Print_Order :: enum {
 
 tracks: map [string] Track
 
+when "off" == #config(TIME_TRACKER, "on") {
+
+init    :: proc (skip_ms: int) {}
+destroy :: proc () {}
+start   :: proc (name: string) {}
+stop    :: proc (name: string) {}
+scope   :: proc (name: string) {}
+print   :: proc (order: Print_Order) {}
+
+} else {
+
 @private tick_init: time.Tick
 @private tick_skip_until: time.Tick
 
@@ -35,6 +46,8 @@ tracks: map [string] Track
 //          }
 //          ...
 //      }
+//
+// Note: `-define:TIME_TRACKER=off` disables all the time tracking code.
 
 init :: proc (skip_ms: int) {
     tick_init = time.tick_now()
@@ -130,3 +143,5 @@ cmp_track_entries_by_calls :: proc (a, b: slice.Map_Entry(string, Track)) -> boo
 cmp_track_entries_by_max :: proc (a, b: slice.Map_Entry(string, Track)) -> bool {
     return a.value.max > b.value.max
 }
+
+} // end of "else" of "when #config..."
