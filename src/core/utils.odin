@@ -124,7 +124,7 @@ int_to_abc_base :: proc (n: int, b: ^strings.Builder, abc: string, min_len: int)
         strings.write_byte(b, abc[0])
     }
 
-    for _ in strings.builder_len(b^) ..< min_len {
+    for len(b.buf) < min_len {
         strings.write_byte(b, abc[0])
     }
 
