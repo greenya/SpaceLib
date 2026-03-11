@@ -107,3 +107,44 @@ longest_line_len :: proc (text: string) -> int {
     }
     return max(max_len, cur_len)
 }
+
+int_to_abc_base :: proc (n: int, b: ^strings.Builder, abc: string, min_len: int) -> string #no_bounds_check {
+    base := len(abc)
+    assert(base >= 2)
+    assert(min_len >= 1)
+
+    strings.builder_reset(b)
+
+    if n > 0 {
+        for r := n; r > 0; r /= base {
+            i := r % base
+            strings.write_byte(b, abc[i])
+        }
+    } else {
+        strings.write_byte(b, abc[0])
+    }
+
+    for _ in strings.builder_len(b^) ..< min_len {
+        strings.write_byte(b, abc[0])
+    }
+
+    slice.reverse(b.buf[:])
+    return strings.to_string(b^)
+}
+
+abc_base_to_int :: proc (s: string, abc: string) -> (result: int, ok: bool) #no_bounds_check {
+    base := len(abc)
+    assert(base >= 2)
+
+    m := 1
+    i := len(s) - 1
+    for i >= 0 {
+        j := strings.index_byte(abc, s[i])
+        if j < 0 do return 0, false
+        result += m * j
+        m *= base
+        i -= 1
+    }
+
+    return result, true
+}
