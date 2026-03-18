@@ -4,7 +4,7 @@ package userfs
 
 import "core:fmt"
 import "core:path/filepath"
-import os "core:os/os2"
+import "core:os"
 
 @private
 _app_name: string
@@ -70,5 +70,6 @@ _abs_path :: proc (key: string, allocator := context.allocator) -> string {
         ? { user_data_dir, _app_name, key }\
         : { user_data_dir, _app_name }
 
-    return filepath.join(parts[:], allocator)
+    result, _ := filepath.join(parts[:], allocator)
+    return result
 }
