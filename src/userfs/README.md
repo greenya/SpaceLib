@@ -2,6 +2,8 @@
 
 A way to save and load small files in the web browser and a desktop environment. If you don't do a web build, you probably don't need this package. On desktop, it uses `os.user_data_dir()` as the base path, while on the web it relies on the browser's `localStorage`.
 
+Check **SpaceLib Demo 10** to see it [in action](https://spacemad.itch.io/spacelib-demo-10) and [its source](https://github.com/greenya/SpaceLib/tree/main/demos/demo10).
+
 ## Usage
 
 - In Odin, import the package and call it's members, e.g. `userfs.init()`, `userfs.read()` etc.

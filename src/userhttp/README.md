@@ -2,7 +2,7 @@
 
 A way to send HTTP requests both in a web browser and in a desktop environment. On desktop, it uses `cURL`, while on the web it relies on the browser's `Fetch API`.
 
-Check **SpaceLib Demo 11** to see it [in action](https://spacemad.itch.io/spacelib-demo-11) and [it's source](https://github.com/greenya/SpaceLib/tree/main/demos/demo11).
+Check **SpaceLib Demo 11** to see it [in action](https://spacemad.itch.io/spacelib-demo-11) and [its source](https://github.com/greenya/SpaceLib/tree/main/demos/demo11).
 
 ## Usage
 
