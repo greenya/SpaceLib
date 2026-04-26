@@ -2,16 +2,21 @@ package spacelib_core
 
 import "core:math/ease"
 
-ease_vec :: #force_inline proc "contextless" (from, to: Vec2, ratio: f32, easing := ease.Ease.Linear) -> Vec2 {
-    ratio := easing != .Linear ? #force_inline ease.ease(easing, ratio) : ratio
+ease_f32 :: proc (from, to, ratio: f32, easing := ease.Ease.Linear) -> f32 {
+    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
+    return from + (to - from) * ratio
+}
+
+ease_vec :: proc (from, to: Vec2, ratio: f32, easing := ease.Ease.Linear) -> Vec2 {
+    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
     return {
         from.x + (to.x - from.x) * ratio,
         from.y + (to.y - from.y) * ratio,
     }
 }
 
-ease_rect :: #force_inline proc "contextless" (from, to: Rect, ratio: f32, easing := ease.Ease.Linear) -> Rect {
-    ratio := easing != .Linear ? #force_inline ease.ease(easing, ratio) : ratio
+ease_rect :: proc (from, to: Rect, ratio: f32, easing := ease.Ease.Linear) -> Rect {
+    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
     return {
         from.x + (to.x - from.x) * ratio,
         from.y + (to.y - from.y) * ratio,
@@ -20,8 +25,8 @@ ease_rect :: #force_inline proc "contextless" (from, to: Rect, ratio: f32, easin
     }
 }
 
-ease_color :: #force_inline proc "contextless" (from, to: Color, ratio: f32, easing := ease.Ease.Linear) -> Color {
-    ratio := easing != .Linear ? #force_inline ease.ease(easing, ratio) : ratio
+ease_color :: proc (from, to: Color, ratio: f32, easing := ease.Ease.Linear) -> Color {
+    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
     return {
         u8(f32(from[0]) + (f32(to[0]) - f32(from[0])) * ratio),
         u8(f32(from[1]) + (f32(to[1]) - f32(from[1])) * ratio),
