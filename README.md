@@ -5,6 +5,7 @@
         /time_tracker           - measure execution time
         /tracking_allocator     - memory allocation tracker
     /events                     - [planned] [maybe] event bus
+    /hi                         - ui manager (another try)
     /raylib                     - helpers when using Raylib
     /sdl2 (3?)                  - [planned] helpers when using SDL
     /terse                      - text layout calculation
