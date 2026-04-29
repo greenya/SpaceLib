@@ -6,8 +6,6 @@ package hi
 
 // TODO: Support .scissor flag
 
-// TODO: Add View.computed.pos calculation
-
 ID :: distinct i32
 
 View :: struct {
@@ -119,12 +117,6 @@ last_child :: proc (ctx: ^Context, id: ID) -> ID {
 //         }
 //     }
 //     return child_id
-// }
-
-// view_pos :: proc (placement: Placement, size: [2] f32, rel_pos: [2] f32, rel_size: [2] f32) -> [2] f32 {
-//     anchor_point := rel_pos + (rel_size * placement.anchor)
-//     pivot_offset := size * placement.pivot
-//     return anchor_point - pivot_offset + placement.offset
 // }
 
 // TODO: add shortcuts for setting the padding

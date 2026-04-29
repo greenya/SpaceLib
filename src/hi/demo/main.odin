@@ -6,7 +6,7 @@ import hi ".."
 
 main :: proc () {
     ctx := hi.create_context({
-        ref_size = {320,180},
+        ref_size = 2 * {320,180},
         ref_font_height = 16,
         align_center = true,
     })
@@ -21,6 +21,7 @@ main :: proc () {
             content = "All unsaved progress will be lost. Proceed?",
             button1 = "Yes",
             button2 = "No",
+            button3 = "Maybe",
             with_header_close_button = true,
         )
 

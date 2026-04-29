@@ -12,8 +12,8 @@ solve_view_tree :: proc (ctx: ^Context) {
 
 // Bottom-up solver for `.fit_*` and fixed sizes.
 // Updates following properties for the non-root `id`:
-// - `computed.size` updated only if `fit_*` or fixed size
-// - `computed.child_count` updated
+// - `computed.size` only if `fit_*` or fixed size
+// - `computed.child_count`
 solve_view_fit_and_fixed_size :: proc(ctx: ^Context, id: ID) {
     v := &ctx.views[id]
 
@@ -49,8 +49,8 @@ solve_view_fit_and_fixed_size :: proc(ctx: ^Context, id: ID) {
 
 // Top-down solver for `.fill_*` and `ratio_*` sizes.
 // Updates following properties for the children of `parent_id`:
-// - `computed.size` updated only if `fill_*` or `ratio_*` size
-// - `computed.pos` updated
+// - `computed.size` only if `fill_*` or `ratio_*` size
+// - `computed.pos`
 solve_children_fill_and_ratio_size :: proc (ctx: ^Context, parent_id: ID) {
     v := &ctx.views[parent_id]
 
@@ -131,16 +131,61 @@ solve_children_fill_and_ratio_size :: proc (ctx: ^Context, parent_id: ID) {
         }
     }
 
-    // TODO: update children computed.pos
+    // Recurse to children last with position calculation
+    if v.first_child > 0 {
+        cursor := v.computed.pos + { v.padding[0], v.padding[1] } + v.layout.offset
 
-    // Recurse to children last
-    child_id = v.first_child
-    for child_id > 0 {
-        child := &ctx.views[child_id]
-        if .hidden not_in child.flags && child.first_child > 0 {
-            solve_children_fill_and_ratio_size(ctx, child_id)
+        // Offset cursor according to main axis alignment (layout.justify)
+        if v.layout.justify != .start {
+            if v.layout.dir == .row && child_count_fill_x == 0 {
+                d := v_size_x_avail_no_gaps - children_non_fill_x_width
+                if v.layout.justify == .center do d /= 2
+                cursor.x += d
+            } else if v.layout.dir == .column && child_count_fill_y == 0 {
+                d := v_size_y_avail_no_gaps - children_non_fill_y_height
+                if v.layout.justify == .center do d /= 2
+                cursor.y += d
+            }
         }
-        child_id = child.next_sibling
+
+        child_id = v.first_child
+        for child_id > 0 {
+            child := &ctx.views[child_id]
+            defer child_id = child.next_sibling
+            if .hidden in child.flags do continue
+
+            switch v.layout.dir {
+            case .none:
+                child.computed.pos = placement_pos(
+                    placement   = child.placement,
+                    size        = child.computed.size,
+                    rel_pos     = cursor,
+                    rel_size    = {v_size_x_avail, v_size_y_avail},
+                )
+            case .row:
+                child.computed.pos = cursor
+                // Offset child by Y axis, e.g. cross-axis alignment (layout.align)
+                if v.layout.align != .start {
+                    d := v_size_y_avail - child.computed.size.y
+                    if v.layout.align == .center do d /= 2
+                    child.computed.pos.y += d
+                }
+                cursor.x += child.computed.size.x + v.layout.gap
+            case .column:
+                child.computed.pos = cursor
+                // Offset child by X axis, e.g. cross-axis alignment (layout.align)
+                if v.layout.align != .start {
+                    d := v_size_x_avail - child.computed.size.x
+                    if v.layout.align == .center do d /= 2
+                    child.computed.pos.x += d
+                }
+                cursor.y += child.computed.size.y + v.layout.gap
+            }
+
+            if child.first_child > 0 {
+                solve_children_fill_and_ratio_size(ctx, child_id)
+            }
+        }
     }
 }
 
@@ -190,4 +235,10 @@ view_content_fit :: proc (ctx: ^Context, id: ID) -> (child_count: int, fit_size:
     }
 
     return
+}
+
+placement_pos :: proc (placement: Placement, size, rel_pos, rel_size: [2] f32) -> [2] f32 {
+    anchor_point := rel_pos + (rel_size * placement.anchor)
+    pivot_offset := size * placement.pivot
+    return anchor_point - pivot_offset + placement.offset
 }

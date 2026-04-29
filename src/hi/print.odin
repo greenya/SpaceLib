@@ -20,12 +20,12 @@ print_view :: proc (ctx: Context, id: ID, _depth := 0) {
 
     fmt.sbprintf(&sb, "#%d \"%s\"", id, v.name)
 
-    if .hidden in v.flags do fmt.sbprint(&sb, " .hidden")
-
     if v.computed != {} {
         c := &v.computed
         fmt.sbprintf(&sb, " <%v,%v:%vx%v>", c.pos.x, c.pos.y, c.size.x, c.size.y)
     }
+
+    for f in Flag do if f in v.flags do fmt.sbprintf(&sb, " .%v", f)
 
     if v.size != {} do fmt.sbprintf(&sb, " size={{%v,%v}}", v.size.x, v.size.y)
 
