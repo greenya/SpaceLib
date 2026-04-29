@@ -5,9 +5,10 @@ import "core:strings"
 
 print_tree :: proc (ctx: Context, id := ID(0), _depth := 0) {
     print_view(ctx, id, _depth)
-    for child_id := ctx.views[id].first_child; child_id > 0; /**/ {
+    for child_id := ctx.views[id].first_child;
+        child_id > 0;
+        child_id = ctx.views[child_id].next_sibling {
         print_tree(ctx, child_id, _depth + 1)
-        child_id = ctx.views[child_id].next_sibling
     }
 }
 
@@ -18,7 +19,9 @@ print_view :: proc (ctx: Context, id: ID, _depth := 0) {
 
     for _ in 0..<_depth do strings.write_string(&sb, "\t")
 
-    fmt.sbprintf(&sb, "#%d \"%s\"", id, v.name)
+    fmt.sbprintf(&sb, "#%d", id)
+
+    if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
     if v.computed != {} {
         c := &v.computed
@@ -58,6 +61,12 @@ print_view :: proc (ctx: Context, id: ID, _depth := 0) {
         case:
             fmt.sbprintf(&sb, " padding={{%v,%v,%v,%v}}", l, t, r, b)
         }
+    }
+
+    if v.scroll != {} {
+        s := &v.scroll
+        if s.x == s.y   do fmt.sbprintf(&sb, " scroll=%v", s.x)
+        else            do fmt.sbprintf(&sb, " scroll={{%v,%v}}", s.x, s.y)
     }
 
     if v.layout.dir != .none {

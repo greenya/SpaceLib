@@ -133,7 +133,7 @@ solve_children_fill_and_ratio_size :: proc (ctx: ^Context, parent_id: ID) {
 
     // Recurse to children last with position calculation
     if v.first_child > 0 {
-        cursor := v.computed.pos + { v.padding[0], v.padding[1] } + v.layout.offset
+        cursor := v.computed.pos + { v.padding[0], v.padding[1] } + v.scroll
 
         // Offset cursor according to main axis alignment (layout.justify)
         if v.layout.justify != .start {

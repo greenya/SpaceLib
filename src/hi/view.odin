@@ -18,8 +18,9 @@ View :: struct {
 
     placement   : Placement,// Used only if parent `layout.dir == .none`
     size        : [2] f32,  // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
-    padding     : [4] f32,  // Padding around the outermost children in order: 0=left, 1=top, 2=right, 3=bottom
-    layout      : Layout,   // Layout rules for the children
+    padding     : [4] f32,  // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
+    scroll      : [2] f32,  // Offset for the children
+    layout      : Layout,   // Layout for the children
 
     // Solver result in ref units. Not updated for invisible views.
     computed: struct {
@@ -61,7 +62,6 @@ Layout :: struct {
     dir     : Layout_Direction, // Direction of the main axis
     justify : Layout_Alignment, // Alignment along the main axis
     align   : Layout_Alignment, // Alignment along the cross axis
-    offset  : [2] f32,          // Offset for all the children for scrolling
     gap     : f32,              // Spacing between adjacent children
 }
 
