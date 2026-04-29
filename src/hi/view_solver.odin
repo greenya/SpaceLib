@@ -2,35 +2,30 @@
 package hi
 
 solve_view_tree :: proc (ctx: ^Context) {
-    solve_sizes_for_fit_and_fixed(ctx, 0)
-    solve_sizes_for_fill_and_ratio(ctx, 0)
-    // solve_positions(ctx, 0)
+    // Root is special: always takes whole ref size, ignoring `flags`, `size`, `padding` and `layout`;
+    // also `computed.pos` and `computed.child_count` are zeroed
+    ctx.views[0].computed = { size=ctx.ref_size }
+
+    solve_view_fit_and_fixed_size(ctx, 0)
+    solve_children_fill_and_ratio_size(ctx, 0)
 }
 
-// Bottom-up solver for `.fit_*` and fixed sizes
-solve_sizes_for_fit_and_fixed :: proc(ctx: ^Context, id: ID) {
+// Bottom-up solver for `.fit_*` and fixed sizes.
+// Updates following properties for the non-root `id`:
+// - `computed.size` updated only if `fit_*` or fixed size
+// - `computed.child_count` updated
+solve_view_fit_and_fixed_size :: proc(ctx: ^Context, id: ID) {
     v := &ctx.views[id]
 
     // Recurse to children first
     child_id := v.first_child
     for child_id > 0 {
         child := &ctx.views[child_id]
-        if .hidden not_in child.flags do solve_sizes_for_fit_and_fixed(ctx, child_id)
+        if .hidden not_in child.flags do solve_view_fit_and_fixed_size(ctx, child_id)
         child_id = child.next_sibling
     }
 
-    if id == 0 {
-        // Root always takes whole ref size, ignoring `size` and `flags`
-        // ? Maybe we should support .ratio_* flags, e.g. size={0.5,1} flags={.ratio_x,ratio_y} to allow only left part of the screen?
-        // ? Maybe calc actual root child_count (needed if root can have layout with gaps and such)
-        // ? Currently, these both cases can be solved with an extra child, e.g. do not use root as View with full support
-        v.computed = {
-            pos = 0,
-            size = ctx.ref_size,
-            child_count = 0,
-        }
-        return
-    }
+    if id == 0 do return
 
     child_count, fit_size := view_content_fit(ctx, id)
     v.computed.child_count = child_count
@@ -52,10 +47,12 @@ solve_sizes_for_fit_and_fixed :: proc(ctx: ^Context, id: ID) {
     }
 }
 
-// Top-down solver for `.fill_*` and `ratio_*` sizes
-// TODO: maybe this pass should also solve positions (so no extra pass)
-solve_sizes_for_fill_and_ratio :: proc (ctx: ^Context, id: ID) {
-    v := &ctx.views[id]
+// Top-down solver for `.fill_*` and `ratio_*` sizes.
+// Updates following properties for the children of `parent_id`:
+// - `computed.size` updated only if `fill_*` or `ratio_*` size
+// - `computed.pos` updated
+solve_children_fill_and_ratio_size :: proc (ctx: ^Context, parent_id: ID) {
+    v := &ctx.views[parent_id]
 
     v_size_x_avail := max(0, v.computed.size.x - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.computed.size.y - (v.padding[1] + v.padding[3]))
@@ -134,17 +131,21 @@ solve_sizes_for_fill_and_ratio :: proc (ctx: ^Context, id: ID) {
         }
     }
 
+    // TODO: update children computed.pos
+
     // Recurse to children last
     child_id = v.first_child
     for child_id > 0 {
         child := &ctx.views[child_id]
-        if .hidden not_in child.flags do solve_sizes_for_fill_and_ratio(ctx, child_id)
+        if .hidden not_in child.flags && child.first_child > 0 {
+            solve_children_fill_and_ratio_size(ctx, child_id)
+        }
         child_id = child.next_sibling
     }
 }
 
 // - `child_count` Number of non-`.hidden` children
-// - `fit_size` The size to fit those children according to `dir`, `pad` and `gap` of the layout
+// - `fit_size` The size to fit those children according to `padding`, `layout.dir` and `layout.gap`
 view_content_fit :: proc (ctx: ^Context, id: ID) -> (child_count: int, fit_size: [2] f32) {
     v := &ctx.views[id]
 
