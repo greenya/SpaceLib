@@ -116,14 +116,18 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
     time_dur        := time.duration_truncate(time.since(time_val), time.Second)
     message_escaped := terse.text_escaped(message, context.temp_allocator)
 
+    user_name_str := user != ""\
+        ? fmt.tprintf("<color=amber,group=link_gh_user_%s>%s</group,/color>", user, user)\
+        : "<color=amber>Unknown User</>"
+
     ui.add_frame(card, {
         flags   = {.terse,.terse_height},
         text    = fmt.tprintf("<wrap,top,left,font=text_4r>" +
-                "<color=amber,group=link_gh_user_%s>%s</group,/color> " +
+                "%s " +
                 "<color=turquoise>committed %v ago " +
                 "<group=link_gh_commit_%s>#%s</>\n" +
                 "<gap=.5,color=white>%s",
-                user, user, time_dur, sha, sha[:7], message_escaped),
+                user_name_str, time_dur, sha, sha[:7], message_escaped),
     })
 
     ui.add_frame(card, {
@@ -131,6 +135,7 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
         size    = avatar_size,
         draw    = draw_github_user_avatar,
         click   = proc (f: ^ui.Frame) {
+            if f.name == "" do return
             link := fmt.tprintf("link_gh_user_%s", f.name)
             open_url(link)
         },
@@ -140,6 +145,10 @@ github_page_add_commit_card :: proc (sha, user, message, date: string) {
 }
 
 github_page_load_user_avatar :: proc (user, avatar_url: string) {
+    // do not try to load empty user and/or avatar url (maybe private profile)
+    if user == "" || avatar_url == "" do return
+
+    // do not reload avatar if it was loaded before
     if user in github_page.user_avatars do return
 
     req := userhttp.send_request({

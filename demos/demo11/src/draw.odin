@@ -98,15 +98,13 @@ draw_scrollbar_thumb :: proc (f: ^ui.Frame) {
 }
 
 draw_github_user_avatar :: proc (f: ^ui.Frame) {
-    assert(f.name != "")
-    assert(f.name in github_page.user_avatars)
-    texture := github_page.user_avatars[f.name].texture
-
-    if texture.id != 0 {
-        draw.texture_all(texture, f.rect)
+    br_color := res.color(.turquoise)
+    if f.name != "" {
+        assert(f.name in github_page.user_avatars)
+        texture := github_page.user_avatars[f.name].texture
+        if texture.id != 0 do draw.texture_all(texture, f.rect)
+        if f.entered do br_color = res.color(.amber)
     }
-
-    br_color := f.entered ? res.color(.amber) : res.color(.turquoise)
     draw.rect_lines(f.rect, 2, br_color)
 }
 
