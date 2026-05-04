@@ -20,7 +20,7 @@ texture_fit :: proc (
     tex     : rl.Texture,
     dst     : Rect,
     src     : Rect,
-    fit     : core.Rect_Fit,
+    fit     : core.Fit_Strategy,
     tint    := core.white,
 ) {
     fit_rect, _ := core.fit_size_into_rect({src.w,src.h}, dst, fit)

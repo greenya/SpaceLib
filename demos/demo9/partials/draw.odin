@@ -30,7 +30,7 @@ draw_text :: proc (text: string, pos, align: Vec2, font: ^fonts.Font, color: Col
     draw.text(text, pos, align, &font.font_tr, color)
 }
 
-draw_sprite :: proc (name: string, rect: Rect, fit: Maybe(core.Rect_Fit) = nil, tint := core.white) {
+draw_sprite :: proc (name: string, rect: Rect, fit: Maybe(core.Fit_Strategy) = nil, tint := core.white) {
     sprite := sprites.get(name)
     switch info in sprite.info {
     case Rect:
@@ -38,7 +38,7 @@ draw_sprite :: proc (name: string, rect: Rect, fit: Maybe(core.Rect_Fit) = nil, 
             draw.texture_wrap(sprite.texture, rect, info, tint)
         } else {
             if fit != nil {
-                draw.texture_fit(sprite.texture, rect, info, fit.(core.Rect_Fit), tint)
+                draw.texture_fit(sprite.texture, rect, info, fit.(core.Fit_Strategy), tint)
             } else {
                 draw.texture(sprite.texture, rect, info, tint)
             }
@@ -611,7 +611,7 @@ draw_slot_volume :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32, 
     rect = Rect { rect.x+pad, rect.y+rect.h-bar_h-pad, bar_w, bar_h }
 
     if in_tooltip {
-        volume_text := core.format_f32_tmp(volume, 3)
+        volume_text := core.format_f32(volume, 3, allocator=context.temp_allocator)
         text := fmt.tprintf("%sV", volume_text)
         text_pos := core.rect_bottom_right(rect) + {4,6}
         text_font := fonts.get(.text_4l)
@@ -657,7 +657,7 @@ draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
 draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     if slot.count < 1 do return
 
-    text := core.format_int_tmp(slot.count)
+    text := core.format_int(slot.count, allocator=context.temp_allocator)
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
     text_color := colors.get(.primary, alpha=opacity)

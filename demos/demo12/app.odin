@@ -56,7 +56,7 @@ App :: struct {
     src_size_idx    : int,
     dst_size_idx    : int,
     dst_use_scissor : bool,
-    rect_fit        : core.Rect_Fit,
+    rect_fit        : core.Fit_Strategy,
     dst_frame       : ^ui.Frame,
     ui              : ^ui.UI,
 }
@@ -116,7 +116,7 @@ app_startup :: proc () {
     fit_bar := add_enum_selector_grid(app.ui.root, "FIT", app.rect_fit, wrap=3,
         draw    = draw_fit_button,
         click   = proc (f: ^ui.Frame) {
-            app.rect_fit = core.Rect_Fit(f.user_idx)
+            app.rect_fit = core.Fit_Strategy(f.user_idx)
         },
     )
 

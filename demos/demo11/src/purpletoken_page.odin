@@ -69,7 +69,7 @@ add_purpletoken_page :: proc () {
         draw        = draw_button,
         click       = proc (f: ^ui.Frame) {
             purpletoken_page.rolled_score = rand.int_max(1_000_000)
-            score_text := core.format_int_tmp(purpletoken_page.rolled_score)
+            score_text := core.format_int(purpletoken_page.rolled_score, allocator=context.temp_allocator)
             ui.set_text(f, score_text)
         },
     })
@@ -102,7 +102,7 @@ purpletoken_page_get_scores_click :: proc (f: ^ui.Frame) {
                 if strings.builder_len(sb) > 0 do strings.write_string(&sb, "\n")
 
                 pos         := i+1
-                score_text  := core.format_int_tmp(row.score)
+                score_text  := core.format_int(row.score, allocator=context.temp_allocator)
                 time_ago    := time.duration_truncate(time.since(row.date_as_time), time.Second)
 
                 color: string
