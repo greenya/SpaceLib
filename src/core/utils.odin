@@ -9,13 +9,7 @@ import "core:strings"
 _ :: reflect
 _ :: slice
 
-is_consumed :: #force_inline proc (flag: ^bool) -> bool {
-    if !flag^ do return false
-    flag^ = false
-    return true
-}
-
-string_prefix_from_slice :: #force_inline proc (s: string, prefixes: [] string) -> string {
+string_prefix_from_slice :: proc (s: string, prefixes: [] string) -> string {
     for prefix in prefixes {
         assert(prefix != "")
         if strings.has_prefix(s, prefix) do return prefix
@@ -23,7 +17,7 @@ string_prefix_from_slice :: #force_inline proc (s: string, prefixes: [] string) 
     return ""
 }
 
-string_suffix_from_slice :: #force_inline proc (s: string, suffixes: [] string) -> string {
+string_suffix_from_slice :: proc (s: string, suffixes: [] string) -> string {
     for suffix in suffixes {
         assert(suffix != "")
         if strings.has_suffix(s, suffix) do return suffix
@@ -31,7 +25,7 @@ string_suffix_from_slice :: #force_inline proc (s: string, suffixes: [] string) 
     return ""
 }
 
-map_keys_sorted :: proc (m: $M/map[$K]$V, allocator := context.allocator) -> [] string {
+map_keys_sorted :: proc (m: $M / map [$K] $V, allocator := context.allocator) -> [] string {
     keys, _ := slice.map_keys(m, context.temp_allocator)
     slice.sort(keys)
     return keys
@@ -69,15 +63,11 @@ format_int :: proc (value: int, thousands_separator := ",", allocator := context
     return strings.to_string(sb)
 }
 
-format_int_tmp :: proc (value: int, thousands_separator := ",") -> string {
-    return format_int(value, thousands_separator, context.temp_allocator)
-}
-
 // cuts-off all `0` decimal digits from the right side;
 // examples:
-// - 123.211100, max=3 -> 123.211
-// - 123.210000, max=3 -> 123.21
-// - 123.000000, max=3 -> 123
+// - `123.211100`, `max=3` -> `123.211`
+// - `123.210000`, `max=3` -> `123.21`
+// - `123.000000`, `max=3` -> `123`
 format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.allocator) -> string {
     format := fmt.tprintf("%%.%if", max_decimal_digits)
     text := fmt.aprintf(format, value, allocator=allocator)
@@ -91,24 +81,15 @@ format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.al
     return text
 }
 
-format_f32_tmp :: proc (value: f32, max_decimal_digits: int) -> string {
-    return format_f32(value, max_decimal_digits, context.temp_allocator)
-}
-
-longest_line_len :: proc (text: string) -> int {
-    cur_len, max_len := 0, 0
-    for c in text {
-        if c == '\n' {
-            max_len = max(max_len, cur_len)
-            cur_len = 0
-        } else {
-            cur_len += 1
-        }
-    }
-    return max(max_len, cur_len)
-}
-
-int_to_abc_base :: proc (n: int, b: ^strings.Builder, abc: string, min_len: int) -> string #no_bounds_check {
+// Converts given `int` to `string` using provided alphabet base.
+// The alphabet should consist of unique chars and be 2+ chars long.
+//
+// Examples:
+// - input: `n=1000`, `abc="0123456789ABCDEF"`, `min_len=8`; output: `000003E8`
+// - input: `n=1000`, `abc="STRING"`; output: `SSNINN`
+//
+// Note: `abc_base_to_int()` converts result back from `string` to `int`.
+int_to_abc_base :: proc (n: int, b: ^strings.Builder, abc: string, min_len := 1) -> string #no_bounds_check {
     base := len(abc)
     assert(base >= 2)
     assert(min_len >= 1)
@@ -132,6 +113,7 @@ int_to_abc_base :: proc (n: int, b: ^strings.Builder, abc: string, min_len: int)
     return strings.to_string(b^)
 }
 
+// Converts given `string` (produced by `int_to_abc_base()`) back to `int`.
 abc_base_to_int :: proc (s: string, abc: string) -> (result: int, ok: bool) #no_bounds_check {
     base := len(abc)
     assert(base >= 2)

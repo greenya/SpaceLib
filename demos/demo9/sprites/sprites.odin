@@ -6,7 +6,7 @@ import "spacelib:raylib/res"
 
 @private atlas: ^res.Atlas
 
-texture :: #force_inline proc () -> rl.Texture { return atlas.texture }
+texture :: proc () -> rl.Texture { return atlas.texture }
 
 create :: proc (scale := f32(1), filter := rl.TextureFilter.BILINEAR) {
     assert(atlas == nil)
@@ -22,7 +22,7 @@ destroy :: proc () {
     atlas = nil
 }
 
-get :: #force_inline proc (name: string) -> ^res.Sprite {
+get :: proc (name: string) -> ^res.Sprite {
     fmt.assertf(name in atlas.sprites, "Unknown sprite: \"%s\"", name)
     return atlas.sprites[name]
 }

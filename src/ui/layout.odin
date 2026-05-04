@@ -26,7 +26,7 @@ Layout_Auto_Size :: enum {
 }
 
 @private
-layout_scroll :: #force_inline proc (f: ^Frame) -> ^Layout_Scroll {
+layout_scroll :: proc (f: ^Frame) -> ^Layout_Scroll {
     #partial switch &l in f.layout {
     case Flow: if l.scroll.step != 0 do return &l.scroll
     }
@@ -34,7 +34,7 @@ layout_scroll :: #force_inline proc (f: ^Frame) -> ^Layout_Scroll {
 }
 
 @private
-layout_apply_scroll :: #force_inline proc (f: ^Frame, dy: f32, is_absolute := false) -> (scrolled: bool) {
+layout_apply_scroll :: proc (f: ^Frame, dy: f32, is_absolute := false) -> (scrolled: bool) {
     scroll := layout_scroll(f)
     if scroll != nil {
         new_offset := is_absolute ? dy : scroll.offset - dy * scroll.step
@@ -60,7 +60,7 @@ layout_visible_children :: proc (f: ^Frame, allocator := context.allocator) -> [
 }
 
 @private
-is_layout_dir_vertical :: #force_inline proc (f: ^Frame) -> bool {
+is_layout_dir_vertical :: proc (f: ^Frame) -> bool {
     switch l in f.layout {
     case Flow:
         switch l.dir {

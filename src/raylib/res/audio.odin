@@ -69,7 +69,7 @@ set_sound_pitch     :: proc (audio: ^Audio, pitch: f32) { rl.SetSoundPitch(rl_so
 set_sound_pan       :: proc (audio: ^Audio, pan: f32)   { rl.SetSoundPan(rl_sound(audio), pan) }
 
 @private
-rl_music :: #force_inline proc (audio: ^Audio) -> rl.Music {
+rl_music :: proc (audio: ^Audio) -> rl.Music {
     #partial switch info in audio.info {
     case rl.Music   : return info
     case            : panic("Audio is not music")
@@ -77,7 +77,7 @@ rl_music :: #force_inline proc (audio: ^Audio) -> rl.Music {
 }
 
 @private
-rl_sound :: #force_inline proc (audio: ^Audio) -> rl.Sound {
+rl_sound :: proc (audio: ^Audio) -> rl.Sound {
     #partial switch info in audio.info {
     case rl.Sound   : return info
     case            : panic("Audio is not sound")

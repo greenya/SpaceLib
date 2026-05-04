@@ -30,7 +30,7 @@ default_font := Font {
         // some default rough measure text logic,
         // just so we don't crash if user doesn't provide anything at all
         return {
-            f32(core.longest_line_len(text)),
+            f32(longest_line_len(text)),
             f32(1 + strings.count(text, "\n")),
         } * { font.height/2, font.height }
     },
@@ -125,7 +125,7 @@ size_of_terse :: proc (terse: ^Terse) -> (total: int) {
 }
 
 @private
-builder_line_words :: #force_inline proc (builder: Builder, line: Line) -> [] Word {
+builder_line_words :: proc (builder: Builder, line: Line) -> [] Word {
     if line._word_count > 0 {
         low := line._word_start_idx
         high := line._word_start_idx + line._word_count
@@ -136,7 +136,7 @@ builder_line_words :: #force_inline proc (builder: Builder, line: Line) -> [] Wo
 }
 
 @private
-builder_group_words :: #force_inline proc (builder: Builder, group: Group) -> [] Word {
+builder_group_words :: proc (builder: Builder, group: Group) -> [] Word {
     if group._word_count > 0 {
         low := group._word_start_idx
         high := group._word_start_idx + group._word_count
@@ -229,4 +229,18 @@ parse_int :: proc (text: string) -> int {
     }
 
     return sign * result
+}
+
+@private
+longest_line_len :: proc (text: string) -> int {
+    cur_len, max_len := 0, 0
+    for c in text {
+        if c == '\n' {
+            max_len = max(max_len, cur_len)
+            cur_len = 0
+        } else {
+            cur_len += 1
+        }
+    }
+    return max(max_len, cur_len)
 }

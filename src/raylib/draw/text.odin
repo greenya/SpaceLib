@@ -6,7 +6,7 @@ import "../../core"
 import "../../terse"
 
 @private
-text_by_rl_font :: #force_inline proc (
+text_by_rl_font :: proc (
     str             : string,
     pos             : Vec2,
     align           : Vec2,
@@ -24,7 +24,7 @@ text_by_rl_font :: #force_inline proc (
 }
 
 @private
-text_by_tr_font :: #force_inline proc (
+text_by_tr_font :: proc (
     str     : string,
     pos     : Vec2,
     align   : Vec2,

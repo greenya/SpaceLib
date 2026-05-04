@@ -24,11 +24,16 @@ gray7 :: Color {175,175,175,255}
 gray8 :: Color {200,200,200,255}
 gray9 :: Color {225,225,225,255}
 
-color_from_vec3 :: #force_inline proc (vec: Vec3) -> Color {
+color_from_vec3 :: proc (vec: Vec3) -> Color {
     return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), 255 }
 }
 
-// Supports: #rgb, #rgba, #rrggbb, #rrggbbaa
+color_from_vec4 :: proc (vec: Vec4) -> Color {
+    return { u8(vec.r*255), u8(vec.g*255), u8(vec.b*255), u8(vec.a*255) }
+}
+
+// Supported formats: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`.
+// Returns color `{255,0,255,254}` for unsupported formats.
 color_from_hex :: proc (text: string) -> Color {
     assert(len(text) > 0 && text[0] == '#')
 
@@ -71,12 +76,13 @@ color_from_hex :: proc (text: string) -> Color {
     }
 }
 
-// Returns: #rrggbbaa or #rrggbb when alpha is 0xff
+// Returns: `#rrggbbaa` or `#rrggbb` when alpha is `0xff`.
 color_to_hex :: proc (c: Color, allocator := context.allocator) -> string {
     if c.a != 0xff  do return fmt.aprintf("#%02x%02x%02x%02x", c.r, c.g, c.b, c.a, allocator=allocator)
     else            do return fmt.aprintf("#%02x%02x%02x", c.r, c.g, c.b, allocator=allocator)
 }
 
+// Converts HSL color into `Vec3`. If you need `Color`, use `vec3_to_color()` after.
 // - `hue` from 0 to 1 (color wheel: 0 - red, 1/6 - yellow, 2/6 - green, 3/6 - cyan, 4/6 - blue, 5/6 - magenta)
 // - `saturation` from 0 to 1 (0 - grayscale, 1 - no change)
 // - `lightness` from 0 to 1 (0 - full black, .5 - no change, 1 - full white)
@@ -111,14 +117,14 @@ hsl_to_vec3 :: proc (hue: f32, saturation := f32(1), lightness := f32(.5)) -> Ve
 }
 
 // `ratio`: multiplier for current alpha, e.g. `0.0` (fully transparent) -> `1.0` (unchanged)
-alpha :: #force_inline proc (c: Color, ratio: f32) -> Color {
+alpha :: proc (c: Color, ratio: f32) -> Color {
     c := c
     c.a = u8(f32(c.a)*ratio)
     return c
 }
 
 // `factor`: `-1.0` (black) -> `0.0` (unchanged) -> `+1.0` (white)
-brightness :: #force_inline proc (c: Color, factor: f32) -> Color {
+brightness :: proc (c: Color, factor: f32) -> Color {
     r, g, b := f32(c.r), f32(c.g), f32(c.b)
     if factor > 0 {
         return {
@@ -139,7 +145,7 @@ brightness :: #force_inline proc (c: Color, factor: f32) -> Color {
 }
 
 // `factor`: `-1.0` (grayscale) -> `0.0` (unchanged) -> `+1.0` (saturated)
-saturation :: #force_inline proc (c: Color, factor: f32) -> Color {
+saturation :: proc (c: Color, factor: f32) -> Color {
     r, g, b := f32(c.r)/255, f32(c.g)/255, f32(c.b)/255
     gray := 0.299*r + 0.587*g + 0.114*b // https://en.wikipedia.org/wiki/Luma_(video)
     r += (r - gray) * factor

@@ -87,14 +87,14 @@ main :: proc () {
     rl.CloseWindow()
 }
 
-terse_query_font :: #force_inline proc (name: string) -> ^terse.Font {
+terse_query_font :: proc (name: string) -> ^terse.Font {
     if name == terse.default_font_name do return &font_default.font_tr
     for &font in fonts do if font.name == name do return &font.font_tr
     fmt.eprintfln("[!] Font not found: \"%v\"", name)
     return &font_default.font_tr
 }
 
-terse_query_color :: #force_inline proc (name: string) -> core.Color {
+terse_query_color :: proc (name: string) -> core.Color {
     if name[0] == '#' do return core.color_from_hex(name)
     if name == terse.default_color_name do return colors[.white].val
     for &color in colors do if color.name == name do return color.val

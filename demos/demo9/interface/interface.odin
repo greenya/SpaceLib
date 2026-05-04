@@ -35,16 +35,16 @@ create :: proc () {
 
     ui_ = ui.create(
         root_rect = { 0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight()) },
-        terse_draw_proc = #force_inline proc (f: ^ui.Frame) {
+        terse_draw_proc = proc (f: ^ui.Frame) {
             partials.draw_terse(f)
         },
-        scissor_set_proc = #force_inline proc (r: core.Rect) {
+        scissor_set_proc = proc (r: core.Rect) {
             if !rl.IsKeyDown(.LEFT_CONTROL) do rl.BeginScissorMode(i32(r.x), i32(r.y), i32(r.w), i32(r.h))
         },
-        scissor_clear_proc = #force_inline proc () {
+        scissor_clear_proc = proc () {
             if !rl.IsKeyDown(.LEFT_CONTROL) do rl.EndScissorMode()
         },
-        frame_overdraw_proc = #force_inline proc (f: ^ui.Frame) {
+        frame_overdraw_proc = proc (f: ^ui.Frame) {
             if !rl.IsKeyDown(.LEFT_CONTROL) do return
             draw.debug_frame(f)
         },

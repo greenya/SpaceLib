@@ -31,7 +31,7 @@ destroy_data :: proc () {
     delete(data.urls)
 }
 
-url :: #force_inline proc (name: string, allocator := context.allocator) -> (result: string, was_allocation: bool) #optional_ok {
+url :: proc (name: string, allocator := context.allocator) -> (result: string, was_allocation: bool) #optional_ok {
     for known_prefix in ([?] struct { prefix, url_template: string } {
         { "link_gh_user_"   , "https://github.com/%s" },
         { "link_gh_commit_" , "https://github.com/odin-lang/Odin/commit/%s" },

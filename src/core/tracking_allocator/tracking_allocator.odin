@@ -54,8 +54,6 @@ print :: proc (verbosity := Print_Verbosity.full_always, max_rows := 10) {
 
 @private
 print_stats :: proc () {
-    fmt_i64 :: proc (i: i64) -> string { return core.format_int_tmp(int(i)) }
-
     tbl: table.Table
     table.init(&tbl, table_allocator=context.temp_allocator)
     table.caption(&tbl, "Tracking Allocator Stats")
@@ -119,5 +117,13 @@ print_bad_frees :: proc (max_rows: int) {
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
 
-@private fmt_int :: proc (i: int) -> string { return core.format_int_tmp(i) }
-@private fmt_i64 :: proc (i: i64) -> string { assert(i==i64(int(i))); return core.format_int_tmp(int(i)) }
+@private
+fmt_int :: proc (i: int) -> string {
+    return core.format_int(i, allocator=context.temp_allocator)
+}
+
+@private
+fmt_i64 :: proc (i: i64) -> string {
+    assert(i == i64(int(i)))
+    return core.format_int(int(i), allocator=context.temp_allocator)
+}

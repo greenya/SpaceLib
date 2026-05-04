@@ -13,7 +13,6 @@ Font_ID :: enum {
 @private fonts      : [Font_ID] ^res.Font
 @private font_names : map [string] Font_ID
 
-// @private
 create_fonts :: proc (use_my_bytes: [] byte = nil) {
     assert(font_names == nil)
     font_names = core.map_enum_names_to_values(Font_ID)
@@ -29,7 +28,6 @@ create_fonts :: proc (use_my_bytes: [] byte = nil) {
     }
 }
 
-// @private
 destroy_fonts :: proc () {
     delete(font_names)
     font_names = nil
@@ -38,11 +36,11 @@ destroy_fonts :: proc () {
     fonts = {}
 }
 
-font :: #force_inline proc (id: Font_ID) -> ^res.Font {
+font :: proc (id: Font_ID) -> ^res.Font {
     return fonts[id]
 }
 
-font_by_name :: #force_inline proc (name: string) -> ^res.Font {
+font_by_name :: proc (name: string) -> ^res.Font {
     fmt.assertf(name in font_names, "Unknown font \"%s\"", name)
     return font(font_names[name])
 }

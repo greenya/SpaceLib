@@ -102,7 +102,7 @@ app_res_create_sprites :: proc () {
     )
 }
 
-color :: #force_inline proc (name: string, a := f32(1), b := f32(0)) -> Color {
+color :: proc (name: string, a := f32(1), b := f32(0)) -> Color {
     fmt.assertf(name in app.res.colors, "Unknown color \"%s\"", name)
     result := app.res.colors[name]
     if a != 1 do result = core.alpha(result, a)
@@ -110,12 +110,12 @@ color :: #force_inline proc (name: string, a := f32(1), b := f32(0)) -> Color {
     return result
 }
 
-font :: #force_inline proc (name: string) -> ^Font {
+font :: proc (name: string) -> ^Font {
     fmt.assertf(name in app.res.fonts, "Unknown font \"%s\"", name)
     return app.res.fonts[name]
 }
 
-sprite :: #force_inline proc (name: string) -> ^Sprite {
+sprite :: proc (name: string) -> ^Sprite {
     fmt.assertf(name in app.res.atlas.sprites, "Unknown sprite \"%s\"", name)
     return app.res.atlas.sprites[name]
 }

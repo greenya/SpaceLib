@@ -62,11 +62,11 @@ destroy :: proc () {
     fonts = {}
 }
 
-get :: #force_inline proc (id: ID) -> ^Font {
+get :: proc (id: ID) -> ^Font {
     return fonts[id]
 }
 
-get_by_name :: #force_inline proc (name: string) -> ^Font {
+get_by_name :: proc (name: string) -> ^Font {
     fmt.assertf(name in names, "Unknown font \"%s\"", name)
     return get(names[name])
 }

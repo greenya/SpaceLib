@@ -85,13 +85,13 @@ stop :: proc (name: string) {
 
 @(deferred_out=scope_end)
 scope :: proc (name: string) -> string {
-    #force_inline start(name)
+    start(name)
     return name
 }
 
 @private
 scope_end :: proc (name: string) {
-    #force_inline stop(name)
+    stop(name)
 }
 
 print :: proc (order: Print_Order) {

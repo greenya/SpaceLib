@@ -578,7 +578,7 @@ draw_slot_origin :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) 
     assert(slot.item != nil)
 
     t, b: Color
-    clr :: #force_inline proc (id: colors.ID, b, a: f32) -> Color { return colors.get(id, brightness=b, alpha=a) }
+    clr :: proc (id: colors.ID, b, a: f32) -> Color { return colors.get(id, brightness=b, alpha=a) }
     switch slot.item.origin {
     case .none      : t=clr(.primary, -.9, opacity)   ; b=clr(.primary, -.7, opacity)
     case .imperial  : t=clr(.imperial, -.9, opacity)  ; b=clr(.imperial, -.4, opacity)

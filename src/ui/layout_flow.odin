@@ -61,7 +61,7 @@ Flow_Alignment :: enum {
     end,
 }
 
-layout_flow :: #force_inline proc (f: ^Frame) -> ^Flow {
+layout_flow :: proc (f: ^Frame) -> ^Flow {
     #partial switch &l in f.layout {
     case Flow: return &l
     }

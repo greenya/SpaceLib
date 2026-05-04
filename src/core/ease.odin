@@ -7,22 +7,19 @@ ease_f32 :: proc (from, to, ratio: f32, easing := ease.Ease.Linear) -> f32 {
     return from + (to - from) * ratio
 }
 
-ease_vec :: proc (from, to: Vec2, ratio: f32, easing := ease.Ease.Linear) -> Vec2 {
+ease_f64 :: proc (from, to, ratio: f64, easing := ease.Ease.Linear) -> f64 {
     ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
-    return {
-        from.x + (to.x - from.x) * ratio,
-        from.y + (to.y - from.y) * ratio,
-    }
+    return from + (to - from) * ratio
+}
+
+// Ease a value of `f32`, `Vec2/3/4` or any `[?] f32`.
+ease_ :: proc (from, to: $T, ratio: f32, easing := ease.Ease.Linear) -> T {
+    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
+    return from + (to - from) * ratio
 }
 
 ease_rect :: proc (from, to: Rect, ratio: f32, easing := ease.Ease.Linear) -> Rect {
-    ratio := easing != .Linear ? ease.ease(easing, ratio) : ratio
-    return {
-        from.x + (to.x - from.x) * ratio,
-        from.y + (to.y - from.y) * ratio,
-        from.w + (to.w - from.w) * ratio,
-        from.h + (to.h - from.h) * ratio,
-    }
+    return transmute (Rect) ease_(transmute (Vec4) from, transmute (Vec4) to, ratio, easing)
 }
 
 ease_color :: proc (from, to: Color, ratio: f32, easing := ease.Ease.Linear) -> Color {

@@ -127,13 +127,13 @@ Listener :: proc (args: Args)
 @private events: map [ID] ^Event
 
 @private
-get :: #force_inline proc (id: ID) -> ^Event {
+get :: proc (id: ID) -> ^Event {
     assert(id in events)
     return events[id]
 }
 
 @private
-send :: #force_inline proc (id: ID, args: Args = nil) {
+send :: proc (id: ID, args: Args = nil) {
     // fmt.printfln("[send] %v |%i| %#v", id, len(events[id].listeners), args)
     for l in events[id].listeners do l(args)
 }

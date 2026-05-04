@@ -192,19 +192,19 @@ assets_unload :: proc () {
     }
 }
 
-assets_color :: #force_inline proc (name: string) -> ^Color {
+assets_color :: proc (name: string) -> ^Color {
     if name == terse.default_color_name do return &colors[.undefined]
     for &color in colors do if color.name == name do return &color
     fmt.panicf("[!] Color not found: \"%v\"", name)
 }
 
-assets_font :: #force_inline proc (name: string) -> ^Font {
+assets_font :: proc (name: string) -> ^Font {
     if name == terse.default_font_name do return &fonts[.anaheim_bold_32]
     for &font in fonts do if font.name == name do return &font
     fmt.panicf("[!] Font not found: \"%v\"", name)
 }
 
-assets_sprite_id :: #force_inline proc (name: string) -> Sprite_ID {
+assets_sprite_id :: proc (name: string) -> Sprite_ID {
     for sprite, id in sprites do if sprite.name == name do return id
     fmt.panicf("[!] Sprite not found: \"%v\"", name)
 }

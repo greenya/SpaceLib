@@ -132,7 +132,7 @@ play_sound :: proc (name: string) {
     res.play_sound(audio)
 }
 
-color :: #force_inline proc (name: string, a := f32(1), b := f32(0)) -> Color {
+color :: proc (name: string, a := f32(1), b := f32(0)) -> Color {
     if name[0] == '#' do return core.color_from_hex(name)
 
     fmt.assertf(name in colors, "Unknown color \"%s\"", name)
@@ -142,20 +142,20 @@ color :: #force_inline proc (name: string, a := f32(1), b := f32(0)) -> Color {
     return result
 }
 
-font :: #force_inline proc (name: string) -> ^Font {
+font :: proc (name: string) -> ^Font {
     fmt.assertf(name in fonts, "Unknown font \"%s\"", name)
     return fonts[name]
 }
 
-sprite :: #force_inline proc (name: string) -> ^Sprite {
+sprite :: proc (name: string) -> ^Sprite {
     fmt.assertf(name in atlas.sprites, "Unknown sprite \"%s\"", name)
     return atlas.sprites[name]
 }
 
-audio :: #force_inline proc (name: string) -> ^Audio {
+audio :: proc (name: string) -> ^Audio {
     fmt.assertf(name in audios, "Unknown audio \"%s\"", name)
     return audios[name]
 }
 
-music_played    :: #force_inline proc () -> f32 { return res.music_played(music_thread.audio) }
-music_len       :: #force_inline proc () -> f32 { return res.music_len(music_thread.audio) }
+music_played    :: proc () -> f32 { return res.music_played(music_thread.audio) }
+music_len       :: proc () -> f32 { return res.music_len(music_thread.audio) }

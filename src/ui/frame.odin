@@ -370,20 +370,20 @@ add_frame :: proc (parent: ^Frame, init: Frame_Init = {}, anchors: ..Anchor) -> 
     return f
 }
 
-index :: #force_inline proc (child: ^Frame) -> int {
+index :: proc (child: ^Frame) -> int {
     assert(child.parent != nil)
-    i, _ := #force_inline slice.linear_search(child.parent.children[:], child)
+    i, _ := slice.linear_search(child.parent.children[:], child)
     assert(i >= 0, "Invalid child state. The frame has a parent, but is not listed among the parent's children. Use set_parent() to re-parent correctly.")
     return i
 }
 
-depth :: #force_inline proc (f: ^Frame) -> int {
+depth :: proc (f: ^Frame) -> int {
     c := 0
     for i:=f; i!=nil; i=i.parent do c += 1
     return c
 }
 
-path :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
+path :: proc (f: ^Frame, allocator := context.allocator) -> [] ^Frame {
     list := make([] ^Frame, depth(f), allocator)
     j := 0
     for i:=f; i!=nil; i=i.parent {
@@ -393,7 +393,7 @@ path :: #force_inline proc (f: ^Frame, allocator := context.allocator) -> [] ^Fr
     return list
 }
 
-path_string :: #force_inline proc (f: ^Frame, include_root := true, include_self := true, allocator := context.allocator) -> string {
+path_string :: proc (f: ^Frame, include_root := true, include_self := true, allocator := context.allocator) -> string {
     frames := path(f, context.temp_allocator)
 
     if !include_self do frames = frames[1:]
@@ -459,12 +459,12 @@ set_text_format :: proc (f: ^Frame, text_format: string) {
     f.text_format = text_format != "" ? strings.clone(text_format) : ""
 }
 
-set_user_ptr :: #force_inline proc (f: ^Frame, ptr: $T) where intrinsics.type_is_pointer(T) {
+set_user_ptr :: proc (f: ^Frame, ptr: $T) where intrinsics.type_is_pointer(T) {
     f.user_ptr = ptr
     f.user_ptr_typeid = type_of(ptr)
 }
 
-user_ptr :: #force_inline proc (f: ^Frame, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
+user_ptr :: proc (f: ^Frame, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
     return f!=nil && f.user_ptr!=nil && f.user_ptr_typeid==T ? cast (T) f.user_ptr : nil
 }
 
@@ -501,11 +501,11 @@ end_animation :: proc (f: ^Frame) {
     f.anim = {}
 }
 
-animating :: #force_inline proc (f: ^Frame) -> bool {
+animating :: proc (f: ^Frame) -> bool {
     return f.anim.tick != nil
 }
 
-hover_ratio :: #force_inline proc (f: ^Frame, enter_ease: ease.Ease, enter_dur: f32, leave_ease: ease.Ease, leave_dur: f32) -> f32 {
+hover_ratio :: proc (f: ^Frame, enter_ease: ease.Ease, enter_dur: f32, leave_ease: ease.Ease, leave_dur: f32) -> f32 {
     if f.entered {
         leave_interrupted_dur := f.entered_time - f.left_time
         leftover_ratio := leave_interrupted_dur<leave_dur ? 1-(leave_interrupted_dur/leave_dur) : 0
@@ -533,7 +533,7 @@ scroll_abs :: proc (f: ^Frame, new_offset: f32) -> (scrolled: bool) {
     return
 }
 
-prev_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
+prev_sibling :: proc (f: ^Frame) -> ^Frame {
     if f.parent != nil {
         prev_idx := index(f) - 1
         if prev_idx >= 0 {
@@ -543,7 +543,7 @@ prev_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
     return nil
 }
 
-next_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
+next_sibling :: proc (f: ^Frame) -> ^Frame {
     if f.parent != nil {
         next_idx := index(f) + 1
         if next_idx < len(f.parent.children) {
@@ -553,22 +553,22 @@ next_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
     return nil
 }
 
-first_selected_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+first_selected_child :: proc (parent: ^Frame) -> ^Frame {
     for child in parent.children do if child.selected do return child
     return nil
 }
 
-first_visible_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+first_visible_child :: proc (parent: ^Frame) -> ^Frame {
     for child in parent.children do if .hidden not_in child.flags do return child
     return nil
 }
 
-first_visible_sibling :: #force_inline proc (f: ^Frame) -> ^Frame {
+first_visible_sibling :: proc (f: ^Frame) -> ^Frame {
     if f.parent != nil do for child in f.parent.children do if .hidden not_in child.flags do return child
     return nil
 }
 
-first_hidden_child :: #force_inline proc (parent: ^Frame) -> ^Frame {
+first_hidden_child :: proc (parent: ^Frame) -> ^Frame {
     for child in parent.children do if .hidden in child.flags do return child
     return nil
 }
@@ -717,17 +717,17 @@ select_prev_child :: proc (parent: ^Frame, allow_rotation := false) {
     }
 }
 
-hidden :: #force_inline proc (f: ^Frame) -> bool {
+hidden :: proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .hidden in i.flags do return true
     return false
 }
 
-disabled :: #force_inline proc (f: ^Frame) -> bool {
+disabled :: proc (f: ^Frame) -> bool {
     for i:=f; i!=nil; i=i.parent do if .disabled in i.flags do return true
     return false
 }
 
-passing :: #force_inline proc (f: ^Frame) -> bool {
+passing :: proc (f: ^Frame) -> bool {
     if .pass_self in f.flags do return true
     for i:=f; i!=nil; i=i.parent do if .pass in i.flags do return true
     return false
@@ -795,7 +795,7 @@ find_by_rule :: proc (f: ^Frame, rule: string) -> ^Frame {
 }
 
 @private
-selectable :: #force_inline proc (f: ^Frame) -> bool {
+selectable :: proc (f: ^Frame) -> bool {
     return (.radio in f.flags) && (f.flags & {.hidden,.disabled} == {})
 }
 
@@ -814,8 +814,8 @@ drag :: proc (f: ^Frame, info: Drag_Info) {
 }
 
 @private
-sort_children :: #force_inline proc (parent: ^Frame) {
-    slice.stable_sort_by(parent.children[:], less=#force_inline proc (f1, f2: ^Frame) -> bool {
+sort_children :: proc (parent: ^Frame) {
+    slice.stable_sort_by(parent.children[:], less=proc (f1, f2: ^Frame) -> bool {
         return f1.order < f2.order
     })
 }

@@ -50,7 +50,7 @@ Grid_Direction :: enum {
     // up_left,
 }
 
-layout_grid :: #force_inline proc (f: ^Frame) -> ^Grid {
+layout_grid :: proc (f: ^Frame) -> ^Grid {
     #partial switch &l in f.layout {
     case Grid: return &l
     }

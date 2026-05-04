@@ -72,14 +72,14 @@ destroy :: proc () {
     color_vars = nil
 }
 
-get :: #force_inline proc (id: ID, brightness := f32(0), alpha := f32(1)) -> Color {
+get :: proc (id: ID, brightness := f32(0), alpha := f32(1)) -> Color {
     color := colors[id]
     if brightness != 0  do color = core.brightness(color, brightness)
     if alpha != 1       do color = core.alpha(color, alpha)
     return color
 }
 
-get_by_name :: #force_inline proc (name: string, alpha := f32(1)) -> Color {
+get_by_name :: proc (name: string, alpha := f32(1)) -> Color {
     color: Color
 
     if len(name) > 0 && name[0] == '#' {
@@ -130,7 +130,7 @@ set_by_name :: proc (name: string, color: Color) {
 }
 
 @private
-set_color_var :: #force_inline proc (name: string, color: Color) {
+set_color_var :: proc (name: string, color: Color) {
     name := name
     if name not_in color_vars do name = strings.clone(name)
     color_vars[name] = color
