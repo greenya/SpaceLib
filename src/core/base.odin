@@ -254,6 +254,14 @@ vec_moved_towards_vec :: #force_inline proc (current_vec, target_vec: Vec2, spee
     return current_vec + dir * speed * dt
 }
 
+vec_moved_towards_vec_smooth :: proc (current_vec: Vec2, target_vec: Vec2, sharpness: f32, dt: f32) -> (new_vec: Vec2) {
+    t := 1.0 - math.exp(-sharpness * dt)
+    return current_vec + {
+        (target_vec[0] - current_vec[0]) * t,
+        (target_vec[1] - current_vec[1]) * t,
+    }
+}
+
 vec_orbited_around_vec :: #force_inline proc (vec, center_vec: Vec2, speed, dt: f32, is_clockwise := true) -> (new_vec: Vec2) {
     radius := linalg.distance(center_vec, vec)
     angle := linalg.atan2(vec.y-center_vec.y, vec.x-center_vec.x)
