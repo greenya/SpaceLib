@@ -42,7 +42,7 @@ Request_Init :: struct {
     timeout_ms: int,
 
     // Optional callback. Called from `tick()` when request is resolved (succeeded or failed).
-    // Once this callback is finished, `tick()` will deallocated the request automatically.
+    // Once this callback is finished, `tick()` will deallocate the request automatically.
     //
     // IMPORTANT: Request pointer is only valid during ready(). Clone values if you need.
     ready: Ready_Proc,
@@ -50,6 +50,7 @@ Request_Init :: struct {
 
 Request :: struct {
     allocator   : mem.Allocator,
+    arena       : mem.Dynamic_Arena,
     handle      : Platform_Handle,
     using init  : Request_Init,
 
@@ -130,13 +131,16 @@ create_request :: proc (init: Request_Init, allocator := context.allocator) -> (
         ? init.timeout_ms\
         : default_timeout_ms
 
-    req             = new(Request) or_return
-    req.allocator   = allocator
-    req.method      = strings.clone(init_method, allocator)
-    req.url         = strings.clone(init.url, allocator) or_return
-    req.query       = clone_params(init.query, allocator=allocator) or_return
-    req.headers     = clone_params(init.headers, append_content_type=auto_content_type, allocator=allocator) or_return
-    req.content     = clone_content(init.content, allocator) or_return
+    req = new(Request) or_return
+
+    mem.dynamic_arena_init(&req.arena, block_allocator=allocator, array_allocator=allocator)
+    req.allocator = mem.dynamic_arena_allocator(&req.arena)
+
+    req.method      = strings.clone(init_method, req.allocator)
+    req.url         = strings.clone(init.url, req.allocator) or_return
+    req.query       = clone_params(init.query, allocator=req.allocator) or_return
+    req.headers     = clone_params(init.headers, append_content_type=auto_content_type, allocator=req.allocator) or_return
+    req.content     = clone_content(init.content, req.allocator) or_return
     req.timeout_ms  = init_timeout_ms
     req.ready       = init.ready
 
@@ -145,23 +149,8 @@ create_request :: proc (init: Request_Init, allocator := context.allocator) -> (
 
 @private
 destroy_request :: proc (req: ^Request) -> (err: Allocator_Error) {
-    // horrible list of deallocations of things that has same life time;
-    // i tried to use vmem.Arena but it doesn't work with web build
-
-    delete          (req.method)            or_return
-    delete          (req.url)               or_return
-    delete_params   (req.query)             or_return
-    delete_params   (req.headers)           or_return
-    delete_content  (req.content)           or_return
-    delete          (req.error_msg)         or_return
-    delete_params   (req.response.headers)  or_return
-    delete          (req.response.content)  or_return
-
-    req^ = {}   // zero memory, so if user stores pointer after ready(),
-                // it better crash as soon as possible
-
-    free            (req)                   or_return
-
+    mem.dynamic_arena_destroy(&req.arena)
+    free(req) or_return
     return
 }
 

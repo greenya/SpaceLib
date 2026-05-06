@@ -64,19 +64,6 @@ clone_params :: proc (params: [] Param, append_content_type := "", allocator := 
 }
 
 @private
-delete_params :: proc (params: [] Param) -> (err: Allocator_Error) {
-    for p in params {
-        delete(p.name)
-        switch v in p.value {
-        case i64, f64   : // nothing
-        case string     : delete(v) or_return
-        }
-    }
-    delete(params) or_return
-    return
-}
-
-@private
 create_headers_from_text :: proc (text: string, allocator: mem.Allocator) -> (headers: [] Param, err: Allocator_Error) {
     headers_temp := make([dynamic] Param, context.temp_allocator) or_return
 

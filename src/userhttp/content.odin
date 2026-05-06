@@ -18,13 +18,3 @@ clone_content :: proc (content: Content, allocator := context.allocator) -> (res
     }
     return
 }
-
-@private
-delete_content :: proc (content: Content) -> (err: Allocator_Error) {
-    switch v in content {
-    case [] Param   : delete_params(v) or_return
-    case [] byte    : delete(v) or_return
-    case string     : delete(v) or_return
-    }
-    return
-}
