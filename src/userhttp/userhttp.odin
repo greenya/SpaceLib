@@ -48,24 +48,18 @@ destroy :: proc () -> (err: Allocator_Error) {
 tick :: proc () -> (err: Error) {
     platform_tick() or_return
 
-    is_ready :: proc (req: ^Request) -> bool {
-        return req.error != nil || req.response.status != .None
-    }
-
-    // we store initial length so if user send_request() from a callback,
-    // we don't go over new items (not critical, just unnecessary)
+    // store initial length so if user send_request() from a callback, we ignore new items
     req_len := len(requests)
-    for i := 0; i < req_len; i += 1 {
-        req := requests[i]
-        if is_ready(req) {
-            if pre_ready_proc != nil    do pre_ready_proc(req)
-            if req.ready != nil         do req.ready(req)
-        }
-    }
 
     // go in reverse order for safe unordered_remove()
-    #reverse for req, i in requests {
-        if is_ready(req) {
+    for i := req_len - 1; i >= 0; i -= 1 {
+        req := requests[i]
+        if req.error != nil || req.response.status != .None {
+            // user callbacks
+            if pre_ready_proc != nil    do pre_ready_proc(req)
+            if req.ready != nil         do req.ready(req)
+
+            // cleanup
             unordered_remove(&requests, i)
             destroy_request(req) or_return
         }
