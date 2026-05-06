@@ -31,7 +31,7 @@ Context :: struct {
     // If `true`, the `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
-    screen_size: [2] int,
+    screen_size: [2] f32,
     screen_pixel_scale: f32,
     screen_top_left: [2] f32,
     screen_font_height: int,
@@ -49,6 +49,8 @@ Context :: struct {
 
     views: [dynamic] View,
     scoped_views_stack: [dynamic; SCOPED_VIEWS_STACK_MAX] ID,
+
+    on_draw_view: proc (v: ^View),
 }
 
 Mouse_Input :: struct {
@@ -94,7 +96,7 @@ destroy_context :: proc (ctx: ^Context) {
     ctx^ = {}
 }
 
-update_context :: proc (ctx: ^Context, screen_size: [2] int, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
+update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
     set_screen_size(ctx, screen_size)
 
     // TODO: consider adding some kind of "is_dirty" to the Context; add if no changes detected, skip this step
@@ -120,6 +122,8 @@ update_context :: proc (ctx: ^Context, screen_size: [2] int, mouse_input: Mouse_
 }
 
 draw_context :: proc (ctx: Context) {
+    draw_children(ctx, 0)
+
     // rel_pos: [2] f32
     // rel_size: ctx.ref_size
 
@@ -133,11 +137,10 @@ draw_context :: proc (ctx: Context) {
     // }
 }
 
-set_screen_size :: proc (ctx: ^Context, new_size: [2] int) {
+set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
     if new_size == ctx.screen_size do return
 
-    new_size_f32 := [2] f32 { f32(new_size.x), f32(new_size.y) }
-    new_scale := new_size_f32 / ctx.ref_size
+    new_scale := new_size / ctx.ref_size
 
     new_pixel_scale := ctx.aspect_ratio_matching < 0\
         ? min(new_scale.x, new_scale.y)\
@@ -150,7 +153,7 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] int) {
     new_pixel_scale = max(new_pixel_scale, max(ctx.min_pixel_scale, 0.001))
 
     ctx.screen_top_left = ctx.align_center\
-        ? 0.5 * (new_size_f32 - ctx.ref_size * new_pixel_scale)\
+        ? 0.5 * (new_size - ctx.ref_size * new_pixel_scale)\
         : {}
 
     if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {

@@ -9,7 +9,6 @@ package hi
 ID :: distinct i32
 
 View :: struct {
-    name        : string,
     flags       : bit_set [Flag; u32],
 
     parent      : ID,       // `>= 0`, where `0` is root; and `root.parent == 0`
@@ -33,7 +32,8 @@ View :: struct {
     // on_mouse: proc (v: ^View, event: Mouse_Event),
     // on_draw: proc (v: ^View),
 
-    // USER DATA -- SKIP FOR NOW
+    // USER DATA
+    name: string,
     // user_idx: int,
     // user_ptr: rawptr,
 }
@@ -105,21 +105,13 @@ last_child :: proc (ctx: ^Context, id: ID) -> ID {
     return child_id
 }
 
-// Returns 0 on error
-// ? Maybe just add View.prev_sibling field?
-// prev_sibling :: proc (ctx: ^Context, id: ID) -> ID {
-//     child_id := ctx.views[ctx.views[id].parent].first_child
-//     if child_id == id do return 0 // we are the first child, no prev sibling
-//     if child_id > 0 {
-//         for ctx.views[child_id].next_sibling > 0 {
-//             if id == ctx.views[child_id].next_sibling do break
-//             child_id = ctx.views[child_id].next_sibling
-//         }
-//     }
-//     return child_id
-// }
-
-// TODO: add shortcuts for setting the padding
-// set_padding(v, 10) // this one is almost useless, as padding=10 does it
-// set_padding_vh(v, vertical=5, horizontal=10)
-// set_padding_ltrb(v, left=10, top=5, right=10, bottom=5)
+draw_children :: proc (ctx: Context, parent_id: ID) {
+    child_id := ctx.views[parent_id].first_child
+    for child_id > 0 {
+        child := &ctx.views[child_id]
+        defer child_id = child.next_sibling
+        if .hidden in child.flags do continue
+        if ctx.on_draw_view != nil do ctx.on_draw_view(child)
+        if child.first_child > 0 do draw_children(ctx, child_id)
+    }
+}
