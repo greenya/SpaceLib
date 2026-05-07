@@ -3,9 +3,7 @@ package hi
 import "core:math"
 import "core:math/linalg"
 
-SCOPED_VIEWS_STACK_MAX :: 20
-
-Context :: struct {
+Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
     ref_size: [2] f32,
 
@@ -31,13 +29,39 @@ Context :: struct {
     // If `true`, the `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
-    screen_size: [2] f32,
-    screen_pixel_scale: f32,
-    screen_top_left: [2] f32,
-    screen_font_height: int,
+    // If `true`, the `update_context()` will automatically re-solve the view tree.
+    // Otherwise, solving of the view tree is only performed on explicit `solve_context()` call.
+    // When different `screen_size` value passed to the `update_context()`, the view tree will be
+    // re-solved regardless of this setting.
+    //
+    // Recommendations:
+    // - Use `true`:
+    //      * for small view tree, when performance is not an issue
+    //      * for In-Game Context with many animations
+    // - Use `false` for Debug Context with no animations and visible large view tree,
+    //   you need to call `solve_context()` after making changes to the view tree
+    continuous_solving: bool,
+
+    // Optional debug rectangle drawing callback.
+    // Used to overdraw view with `.debug` flag.
+    debug_draw_rect: Debug_Draw_Rect_Proc,
+}
+
+Context :: struct {
+    views       : [dynamic] View,       // The view tree
+    views_stack : [dynamic; 64] ID,     // Current views stack
+
+    using init: Context_Init,
 
     time_dt: f32,
     time_total: f32,
+
+    screen: struct {
+        size        : [2] f32,
+        pixel_scale : f32,
+        top_left    : [2] f32,
+        font_height : int,
+    },
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
@@ -46,11 +70,6 @@ Context :: struct {
         lmb_pressed     : bool,         // For this frame only
         consumed        : bool,         // For this frame only
     },
-
-    views: [dynamic] View,
-    scoped_views_stack: [dynamic; SCOPED_VIEWS_STACK_MAX] ID,
-
-    on_draw_view: proc (v: ^View),
 }
 
 Mouse_Input :: struct {
@@ -72,42 +91,41 @@ Mouse_Event_Type :: enum {
     // left,
 }
 
-create_context :: proc (init: Context, views_init_cap := 64, allocator := context.allocator) -> Context {
-    ctx := init
+Rect :: struct { x, y, w, h: f32 }
+
+Debug_Draw_Rect_Proc :: proc (rect: Rect, thick: f32, color: [4] u8)
+
+create_context :: proc (init: Context_Init, views_init_cap := 64, allocator := context.allocator) -> ^Context {
+    ctx := new(Context, allocator)
+    ctx.init = init
+
     ctx.views = make([dynamic] View, len=0, cap=views_init_cap, allocator=allocator)
     append(&ctx.views, View { name="root" })
-
-    // example of root with safe margins of 2.5% on all sides:
-    /*
-    append(&ctx.views, View {
-        name="root",
-        flags={ .ratio_x, .ratio_y },
-        sizing=.fixed_ratio,
-        size=.95,
-        placement={ anchor=.5, pivot=.5 },
-    })
-    */
 
     return ctx
 }
 
 destroy_context :: proc (ctx: ^Context) {
     delete(ctx.views)
-    ctx^ = {}
 }
 
 update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
-    set_screen_size(ctx, screen_size)
+    screen_size_changed := screen_size != ctx.screen.size
 
-    // TODO: consider adding some kind of "is_dirty" to the Context; add if no changes detected, skip this step
-    solve_view_tree(ctx)
+    if screen_size_changed {
+        set_screen_size(ctx, screen_size)
+    }
+
+    if screen_size_changed || ctx.continuous_solving {
+        solve_context(ctx)
+    }
 
     ctx.time_dt = dt
     ctx.time_total += dt
 
     ctx.mouse = {
         input = mouse_input,
-        ref_pos = screen_to_ref(ctx^, mouse_input.screen_pos),
+        ref_pos = screen_pos_to_ref(ctx, mouse_input.screen_pos),
         lmb_down_prev = ctx.mouse.lmb_down,
         lmb_pressed = !ctx.mouse.lmb_down && mouse_input.lmb_down,
     }
@@ -121,25 +139,27 @@ update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_
     return ctx.mouse.consumed
 }
 
-draw_context :: proc (ctx: Context) {
-    draw_children(ctx, 0)
+draw_context :: proc (ctx: ^Context) {
+    if .hidden in ctx.views[0].flags do return
 
-    // rel_pos: [2] f32
-    // rel_size: ctx.ref_size
+    debug := .debug in ctx.views[0].flags
+    if debug do debug_draw_view(ctx, 0)
 
-    // for v, i in ctx.views {
-    //     if i == 0 do continue
-
-        // pos := view_pos(v.placement, v.size, rel_pos, rel_size)
-        // v.draw_pos
-        // v.draw_size
-
-    // }
+    draw_view_children(ctx, 0, debug)
 }
 
-set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
-    if new_size == ctx.screen_size do return
+solve_context :: proc (ctx: ^Context) {
+    solve_root_view(ctx)
+    solve_view_fit_and_fixed_size(ctx, 0)
+    solve_children_fill_and_ratio_size(ctx, 0)
+}
 
+print_context :: proc (ctx: ^Context) {
+    debug_print_tree(ctx, 0)
+}
+
+@private
+set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
     new_scale := new_size / ctx.ref_size
 
     new_pixel_scale := ctx.aspect_ratio_matching < 0\
@@ -152,35 +172,59 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
 
     new_pixel_scale = max(new_pixel_scale, max(ctx.min_pixel_scale, 0.001))
 
-    ctx.screen_top_left = ctx.align_center\
+    ctx.screen.top_left = ctx.align_center\
         ? 0.5 * (new_size - ctx.ref_size * new_pixel_scale)\
         : {}
 
-    if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {
+    if 0.001 < abs(new_pixel_scale-ctx.screen.pixel_scale) {
         new_font_height := int(f32(ctx.ref_font_height) * new_pixel_scale)
-        if new_font_height != ctx.screen_font_height {
+        if new_font_height != ctx.screen.font_height {
             // TODO: Reload fonts using new_font_height
             // .....
-            ctx.screen_font_height = new_font_height
+            ctx.screen.font_height = new_font_height
         }
     }
 
-    ctx.screen_size = new_size
-    ctx.screen_pixel_scale = new_pixel_scale
+    ctx.screen.size = new_size
+    ctx.screen.pixel_scale = new_pixel_scale
 }
 
-screen_to_ref :: proc (ctx: Context, screen_pos: [2] f32) -> [2] f32 {
-    return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
+screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: [2] f32) -> [2] f32 {
+    return (screen_pos-ctx.screen.top_left) / ctx.screen.pixel_scale
 }
 
-ref_to_screen :: proc (ctx: Context, ref_pos: [2] f32) -> [2] f32 {
-    return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
+screen_size_to_ref :: proc (ctx: ^Context, screen_size: [2] f32) -> [2] f32 {
+    return screen_size / ctx.screen.pixel_scale
 }
 
-get_anchor_root :: proc (ctx: Context) -> (pos: [2] f32, size: [2] f32) {
-    if ctx.aspect_ratio_matching < 0 {
-        return ctx.screen_top_left, ctx.ref_size * ctx.screen_pixel_scale
-    } else {
-        return {0,0}, { f32(ctx.screen_size.x), f32(ctx.screen_size.y) }
+ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: [2] f32) -> [2] f32 {
+    return ctx.screen.top_left + (ref_pos * ctx.screen.pixel_scale)
+}
+
+ref_size_to_screen :: proc (ctx: ^Context, ref_size: [2] f32) -> [2] f32 {
+    return ref_size * ctx.screen.pixel_scale
+}
+
+ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
+    return {
+        expand_values(ref_pos_to_screen(ctx, { ref_rect.x, ref_rect.y })),
+        expand_values(ref_size_to_screen(ctx, { ref_rect.w, ref_rect.h })),
     }
+}
+
+ref_view_to_screen :: proc (ctx: ^Context, v: ^View) -> Rect {
+    return {
+        expand_values(ref_pos_to_screen(ctx, v.computed.pos)),
+        expand_values(ref_size_to_screen(ctx, v.computed.size)),
+    }
+}
+
+ref_id_to_screen :: proc (ctx: ^Context, id: ID) -> Rect {
+    return ref_view_to_screen(ctx, &ctx.views[id])
+}
+
+// Translates `view.computed` rect into screen rect
+ref_to_screen :: proc {
+    ref_view_to_screen,
+    ref_id_to_screen,
 }

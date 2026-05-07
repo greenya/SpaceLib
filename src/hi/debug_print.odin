@@ -1,18 +1,19 @@
+#+private
 package hi
 
 import "core:fmt"
 import "core:strings"
 
-print_tree :: proc (ctx: Context, id := ID(0), _depth := 0) {
-    print_view(ctx, id, _depth)
+debug_print_tree :: proc (ctx: ^Context, id: ID, _depth := 0) {
+    debug_print_view(ctx, id, _depth)
     for child_id := ctx.views[id].first_child;
         child_id > 0;
         child_id = ctx.views[child_id].next_sibling {
-        print_tree(ctx, child_id, _depth + 1)
+        debug_print_tree(ctx, child_id, _depth + 1)
     }
 }
 
-print_view :: proc (ctx: Context, id: ID, _depth := 0) {
+debug_print_view :: proc (ctx: ^Context, id: ID, _depth := 0) {
     v := &ctx.views[id]
     buf: [200] byte
     sb := strings.builder_from_bytes(buf[:])

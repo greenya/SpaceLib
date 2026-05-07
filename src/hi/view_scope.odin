@@ -20,14 +20,14 @@ package hi
 // hi.end_scope()
 // ```
 begin_scope :: proc (ctx: ^Context, parent := ID(0)) -> (user_ptr: rawptr) {
-    n := append(&ctx.scoped_views_stack, parent)
-    assert(n == 1, "SCOPED_VIEWS_STACK_MAX overflow")
+    n := append(&ctx.views_stack, parent)
+    assert(n == 1, "Context.views_stack overflow")
     return ctx
 }
 
 end_scope :: proc () {
     ctx := current_context()
-    pop(&ctx.scoped_views_stack)
+    pop(&ctx.views_stack)
 }
 
 current_context :: proc () -> ^Context {
@@ -36,17 +36,17 @@ current_context :: proc () -> ^Context {
 }
 
 current_parent :: proc (ctx: ^Context) -> ID {
-    return len(ctx.scoped_views_stack) > 0\
-        ? ctx.scoped_views_stack[-1 + len(ctx.scoped_views_stack)]\
+    return len(ctx.views_stack) > 0\
+        ? ctx.views_stack[-1 + len(ctx.views_stack)]\
         : 0
 }
 
-add_view :: proc (init: View) -> ID {
+add_view :: proc (init: View_Init) -> ID {
     c := current_context()
     return append_view(c, current_parent(c), init)
 }
 
-begin_view :: proc (init: View) -> ID {
+begin_view :: proc (init: View_Init) -> ID {
     c := current_context()
     id := append_view(c, current_parent(c), init)
     begin_scope(c, id)

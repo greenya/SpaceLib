@@ -1,13 +1,12 @@
 #+private
 package hi
 
-solve_view_tree :: proc (ctx: ^Context) {
-    // Root is special: always takes whole ref size, ignoring `flags`, `size`, `padding` and `layout`;
-    // also `computed.pos` and `computed.child_count` are zeroed
+// Updates root view:
+// - Ignores `flags`, `size`, `padding` and `layout`
+// - Does only: `computed = { size=ctx.ref_size }`
+// - Note that `computed.child_count` is not valid (always 0)
+solve_root_view :: proc (ctx: ^Context) {
     ctx.views[0].computed = { size=ctx.ref_size }
-
-    solve_view_fit_and_fixed_size(ctx, 0)
-    solve_children_fill_and_ratio_size(ctx, 0)
 }
 
 // Bottom-up solver for `.fit_*` and fixed sizes.
