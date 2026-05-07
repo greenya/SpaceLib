@@ -1,6 +1,5 @@
 package main
 
-import "core:fmt"
 import hi ".."
 import k2 "../../../../karl2d"
 
@@ -15,10 +14,15 @@ main :: proc () {
         align_center = true,
         aspect_ratio_matching = -1,
         continuous_solving = true,
-        debug_draw_rect = proc (rect: hi.Rect, thick: f32, color: [4] u8) {
-            k2.draw_rect_outline(k2.Rect(rect), thick, color)
+        debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
+            k2.draw_line(from, to, thick, color)
+        },
+        debug_draw_text = proc (text: string, pos: [2] f32, color: [4] u8) {
+            k2.draw_text(text, pos, 20, color)
         },
     })
+
+    ctx.views[0].flags += { .debug }
 
     context.user_ptr = hi.begin_scope(ctx)
     add_dialog(
@@ -49,24 +53,23 @@ main_update :: proc () -> (keep_running: bool) {
 
     dt := k2.get_frame_time()
     screen_size := k2.get_screen_size()
-    if k2.key_is_held(.Left_Control) do ctx.views[0].flags += { .debug }; else do ctx.views[0].flags -= { .debug }
-    hi.update_context(ctx, screen_size, {}, dt)
+    mouse_input := hi.Mouse_Input {
+        lmb_down = k2.mouse_button_is_held(.Left),
+        screen_pos = k2.get_mouse_position(),
+        wheel_delta = k2.get_mouse_wheel_delta(),
+    }
+    hi.update_context(ctx, screen_size, mouse_input, dt)
 
     return
 }
 
 main_draw :: proc () {
     k2.clear(k2.DARK_GRAY)
-
     hi.draw_context(ctx)
-
-    k2.draw_text(fmt.tprintf("time: %.3f", k2.get_time()), {10,10}, 20, k2.LIGHT_GRAY)
-    k2.draw_text(fmt.tprintf("dt: %.3f", k2.get_frame_time()), {10,30}, 20, k2.LIGHT_GRAY)
     k2.present()
 }
 
 on_draw_view :: proc (v: ^hi.View) {
     rect := k2.Rect(hi.ref_to_screen(ctx, v))
     k2.draw_rect(rect, {180,220,250,80})
-    k2.draw_rect_outline(rect, 3, {180,220,250,80})
 }

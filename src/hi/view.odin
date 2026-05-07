@@ -112,7 +112,7 @@ Layout_Alignment :: enum u8 {
     center,
 }
 
-View_Draw_Proc :: #type proc (v: ^View /*, is_after := false*/) // TODO: maybe add .draw_after flag, if set, this proc will be called extra time with is_after=true
+View_Draw_Proc :: #type proc (v: ^View /*, is_after := false*/) // TODO: maybe add .draw_after flag, if set, this proc will be called extra time with is_after=true; if we figure out "strata" approach, the "is_after" will not be needed
 
 append_view :: proc (ctx: ^Context, parent: ID, init: View_Init) -> ID {
     n, err := append(&ctx.views, View { init=init })
@@ -159,7 +159,7 @@ draw_view_children :: proc (ctx: ^Context, parent_id: ID, debug: bool) {
 }
 
 @private
-view_scissor_rect :: proc (ctx: ^Context, v: ^View) -> Rect {
+view_content_rect :: proc (ctx: ^Context, v: ^View) -> Rect {
     return {
         v.solved.pos.x + v.padding[0],
         v.solved.pos.y + v.padding[1],

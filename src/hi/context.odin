@@ -42,9 +42,10 @@ Context_Init :: struct {
     //   you need to call `solve_context()` after making changes to the view tree
     continuous_solving: bool,
 
-    // Optional debug rectangle drawing callback.
-    // Used to overdraw view with `.debug` flag.
-    debug_draw_rect: Debug_Draw_Rect_Proc,
+    // Optional debug drawing callbacks. Used with `.debug` views.
+    // All positions and sizes are in screen space.
+    debug_draw_line: Debug_Draw_Line_Proc,
+    debug_draw_text: Debug_Draw_Text_Proc,
 }
 
 Context :: struct {
@@ -53,15 +54,13 @@ Context :: struct {
 
     using init: Context_Init,
 
-    time_dt: f32,
-    time_total: f32,
+    dt: f32,
+    time: f32,
 
-    screen: struct {
-        size        : [2] f32,
-        pixel_scale : f32,
-        top_left    : [2] f32,
-        font_height : int,
-    },
+    screen_size         : [2] f32,
+    screen_pixel_scale  : f32,
+    screen_top_left     : [2] f32,
+    screen_font_height  : int,
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
@@ -75,7 +74,7 @@ Context :: struct {
 Mouse_Input :: struct {
     screen_pos  : [2] f32,
     lmb_down    : bool,
-    scroll_delta: f32,
+    wheel_delta : f32,
 }
 
 Mouse_Event :: struct {
@@ -93,7 +92,8 @@ Mouse_Event_Type :: enum {
 
 Rect :: struct { x, y, w, h: f32 }
 
-Debug_Draw_Rect_Proc :: proc (rect: Rect, thick: f32, color: [4] u8)
+Debug_Draw_Line_Proc :: proc (from, to: [2] f32, thick: f32, color: [4] u8)
+Debug_Draw_Text_Proc :: proc (text: string, pos: [2] f32, color: [4] u8)
 
 create_context :: proc (init: Context_Init, views_init_cap := 64, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
@@ -110,7 +110,7 @@ destroy_context :: proc (ctx: ^Context) {
 }
 
 update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
-    screen_size_changed := screen_size != ctx.screen.size
+    screen_size_changed := screen_size != ctx.screen_size
 
     if screen_size_changed {
         set_screen_size(ctx, screen_size)
@@ -120,8 +120,8 @@ update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_
         solve_context(ctx)
     }
 
-    ctx.time_dt = dt
-    ctx.time_total += dt
+    ctx.dt = dt
+    ctx.time += dt
 
     ctx.mouse = {
         input = mouse_input,
@@ -172,37 +172,37 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
 
     new_pixel_scale = max(new_pixel_scale, max(ctx.min_pixel_scale, 0.001))
 
-    ctx.screen.top_left = ctx.align_center\
+    ctx.screen_top_left = ctx.align_center\
         ? 0.5 * (new_size - ctx.ref_size * new_pixel_scale)\
         : {}
 
-    if 0.001 < abs(new_pixel_scale-ctx.screen.pixel_scale) {
+    if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {
         new_font_height := int(f32(ctx.ref_font_height) * new_pixel_scale)
-        if new_font_height != ctx.screen.font_height {
+        if new_font_height != ctx.screen_font_height {
             // TODO: Reload fonts using new_font_height
             // .....
-            ctx.screen.font_height = new_font_height
+            ctx.screen_font_height = new_font_height
         }
     }
 
-    ctx.screen.size = new_size
-    ctx.screen.pixel_scale = new_pixel_scale
+    ctx.screen_size = new_size
+    ctx.screen_pixel_scale = new_pixel_scale
 }
 
 screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: [2] f32) -> [2] f32 {
-    return (screen_pos-ctx.screen.top_left) / ctx.screen.pixel_scale
+    return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
 }
 
 screen_size_to_ref :: proc (ctx: ^Context, screen_size: [2] f32) -> [2] f32 {
-    return screen_size / ctx.screen.pixel_scale
+    return screen_size / ctx.screen_pixel_scale
 }
 
 ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: [2] f32) -> [2] f32 {
-    return ctx.screen.top_left + (ref_pos * ctx.screen.pixel_scale)
+    return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
 }
 
 ref_size_to_screen :: proc (ctx: ^Context, ref_size: [2] f32) -> [2] f32 {
-    return ref_size * ctx.screen.pixel_scale
+    return ref_size * ctx.screen_pixel_scale
 }
 
 ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {

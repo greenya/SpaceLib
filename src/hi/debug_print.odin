@@ -25,8 +25,8 @@ debug_print_view :: proc (ctx: ^Context, id: ID, _depth := 0) {
     if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
     if v.solved != {} {
-        c := &v.solved
-        fmt.sbprintf(&sb, " <%v,%v:%vx%v>", c.pos.x, c.pos.y, c.size.x, c.size.y)
+        s := &v.solved
+        fmt.sbprintf(&sb, " <%v,%v:%vx%v>", s.pos.x, s.pos.y, s.size.x, s.size.y)
     }
 
     for f in Flag do if f in v.flags do fmt.sbprintf(&sb, " .%v", f)
