@@ -29,7 +29,7 @@ View :: struct {
     first_child : ID,       // `>0` if set, and `0` when not used
 
     // Solver result in ref units. Not updated for invisible views.
-    computed: struct {
+    solved: struct {
         pos         : [2] f32,
         size        : [2] f32,
         child_count : int,  // Visible child count
@@ -39,9 +39,9 @@ View :: struct {
 Flag :: enum u8 {
     // Core
 
-    hidden,     // The view and all its children are hidden. `View.computed` is not updated for `.hidden` views.
+    hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`.
-    scissor,    // [NOT IMPLEMENTED] The view clips its children. The scissor rect is defined by the `computed` rect reduced by `padding`. // TODO: should affect drawing and mouse hit test
+    scissor,    // [NOT IMPLEMENTED] The view clips its children. The scissor rect is defined by the `solved` rect reduced by `padding`. // TODO: should affect drawing and mouse hit test
 
     // Events
 
@@ -81,10 +81,10 @@ Flag :: enum u8 {
 
     ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent
     ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent
-    fit_x,      // `computed.size.x` is set to fit children width
-    fit_y,      // `computed.size.y` is set to fit children height
-    fill_x,     // `computed.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` views.
-    fill_y,     // `computed.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` views.
+    fit_x,      // `solved.size.x` is set to fit children width
+    fit_y,      // `solved.size.y` is set to fit children height
+    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` views.
+    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` views.
 }
 
 Placement :: struct {
@@ -161,9 +161,9 @@ draw_view_children :: proc (ctx: ^Context, parent_id: ID, debug: bool) {
 @private
 view_scissor_rect :: proc (ctx: ^Context, v: ^View) -> Rect {
     return {
-        v.computed.pos.x + v.padding[0],
-        v.computed.pos.y + v.padding[1],
-        max(0, v.computed.size.x - (v.padding[0] + v.padding[2])),
-        max(0, v.computed.size.y - (v.padding[1] + v.padding[3])),
+        v.solved.pos.x + v.padding[0],
+        v.solved.pos.y + v.padding[1],
+        max(0, v.solved.size.x - (v.padding[0] + v.padding[2])),
+        max(0, v.solved.size.y - (v.padding[1] + v.padding[3])),
     }
 }

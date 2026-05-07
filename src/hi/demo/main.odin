@@ -12,7 +12,7 @@ main :: proc () {
     })
 
     {
-        context.user_ptr = hi.begin_scope(&ctx)
+        context.user_ptr = hi.begin_scope(ctx)
         defer hi.end_scope()
 
         /*dialog_id :=*/ add_dialog(
@@ -45,7 +45,7 @@ main :: proc () {
 
     // hi.print_tree(ctx)
 
-    hi.update_context(&ctx,
+    hi.update_context(ctx,
         screen_size = { 1280, 720 },
         mouse_input = {
             screen_pos = {1280/2,720/2},
@@ -55,7 +55,7 @@ main :: proc () {
         dt = .016,
     )
 
-    hi.print_tree(ctx)
+    hi.print_context(ctx)
 }
 
 // **** NOTES ****
@@ -98,14 +98,14 @@ add_dialog :: proc (name, title, content, button1: string, button2 := "", button
     hi.end_view()
 
     // When layout direction is not set, and fit_* is set, we still wrap max dimension
-    // The "fit_layout_none" below should have computed.size={120,170}, e.g. 100x150 + pad
+    // The "fit_layout_none" below should have solved.size={120,170}, e.g. 100x150 + pad
     hi.begin_view({ name="fit_layout_none", flags={.fit_x,.fit_y}, padding=10 })
         hi.add_view({ name="box_100x20", size={100,20} })
         hi.add_view({ name="box_1000x1000_hidden", size=1000, flags={.hidden} })
         hi.add_view({ name="box_20x150", size={20,150} })
     hi.end_view()
 
-    // Test 50% columns with pad and gap. Each column should have same computed.size
+    // Test 50% columns with pad and gap. Each column should have same solved.size
     // and they should fit into parent with pad and gap
     hi.begin_view({ name="column_ratio_pad_gap", flags={.fill_x}, size={0,40}, padding=5, layout={dir=.row,gap=10} })
         hi.add_view({ name="col_left", flags={.fill_x,.fill_y}, size={.5,0} })
@@ -113,7 +113,7 @@ add_dialog :: proc (name, title, content, button1: string, button2 := "", button
     hi.end_view()
 
     // Test if we subtract gaps only on main axis when children uses ratio_*.
-    // Each row below should have computed.size.x=170, e.g. 180 - pad
+    // Each row below should have solved.size.x=170, e.g. 180 - pad
     hi.begin_view({ name="cross_axis_no_gaps", flags={.fill_x,.fit_y}, padding=5, layout={dir=.column,gap=10} })
         hi.add_view({ name="row_20", flags={.ratio_x}, size={1,20} })
         hi.add_view({ name="row_30", flags={.ratio_x}, size={1,30} })
@@ -139,7 +139,7 @@ add_text_button :: proc (name, text: string) {
     hi.add_view({ name=name, size={60,20} })
 }
 
-// This panel tests `fit_*` without layout, the panel computed size updated to fit all children,
+// This panel tests `fit_*` without layout, the panel solved size updated to fit all children,
 // which are positioned directly via `placement`
 // **** NOT SUPPORTED AT THE MOMENT ****
 // add_tooltip :: proc (name: string) -> (id: hi.ID) {

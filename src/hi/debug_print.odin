@@ -24,8 +24,8 @@ debug_print_view :: proc (ctx: ^Context, id: ID, _depth := 0) {
 
     if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
-    if v.computed != {} {
-        c := &v.computed
+    if v.solved != {} {
+        c := &v.solved
         fmt.sbprintf(&sb, " <%v,%v:%vx%v>", c.pos.x, c.pos.y, c.size.x, c.size.y)
     }
 

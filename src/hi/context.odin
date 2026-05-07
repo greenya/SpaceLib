@@ -214,8 +214,8 @@ ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
 
 ref_view_to_screen :: proc (ctx: ^Context, v: ^View) -> Rect {
     return {
-        expand_values(ref_pos_to_screen(ctx, v.computed.pos)),
-        expand_values(ref_size_to_screen(ctx, v.computed.size)),
+        expand_values(ref_pos_to_screen(ctx, v.solved.pos)),
+        expand_values(ref_size_to_screen(ctx, v.solved.size)),
     }
 }
 
@@ -223,7 +223,7 @@ ref_id_to_screen :: proc (ctx: ^Context, id: ID) -> Rect {
     return ref_view_to_screen(ctx, &ctx.views[id])
 }
 
-// Translates `view.computed` rect into screen rect
+// Translates `view.solved` rect into screen rect
 ref_to_screen :: proc {
     ref_view_to_screen,
     ref_id_to_screen,
