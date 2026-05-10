@@ -1,6 +1,6 @@
 package hi
 
-ID :: distinct i32
+import "../core"
 
 View_Init :: struct {
     flags: bit_set [Flag; u32],
@@ -12,8 +12,9 @@ View_Init :: struct {
     layout      : Layout,   // Layout for the children
 
     on_draw: View_Draw_Proc,
-    // on_state: (show/hide/selected/unselected)
+    // on_state: (show/hide/select/deselect)
     // on_mouse: (status: enter/leave), (action: click/wheel/drag)
+    // TODO: maybe combine all events into on_event, the pro: less callbacks and less size of View, the con: more false calls
 
     // USER DATA
     name: string,
@@ -24,9 +25,12 @@ View_Init :: struct {
 View :: struct {
     using init: View_Init,
 
-    parent      : ID,       // `>= 0`, where `0` is root; and `root.parent == 0`
-    next_sibling: ID,       // `>0` if set, and `0` when not used
-    first_child : ID,       // `>0` if set, and `0` when not used
+    ctx : ^Context,
+    id  : int,
+
+    parent      : ^View,
+    next_sibling: ^View,
+    first_child : ^View,
 
     // Solver result in ref units. Not updated for invisible views.
     solved: struct {
@@ -114,52 +118,45 @@ Layout_Alignment :: enum u8 {
 
 View_Draw_Proc :: #type proc (v: ^View /*, is_after := false*/) // TODO: maybe add .draw_after flag, if set, this proc will be called extra time with is_after=true; if we figure out "strata" approach, the "is_after" will not be needed
 
-append_view :: proc (ctx: ^Context, parent: ID, init: View_Init) -> ID {
-    n, err := append(&ctx.views, View { init=init })
-    assert(n == 1 && err == nil)
+add_view :: proc (parent: ^View, init: View_Init) -> ^View {
+    view_id, view := core.sparse_array_add(&parent.ctx.views, View { init=init })
+    view.id = view_id
+    view.ctx = parent.ctx
+    view.parent = parent
 
-    id := ID(-1 + len(ctx.views))
-    ctx.views[id].parent = parent
-
-    parent_last_child := last_child(ctx, parent)
-    if parent_last_child > 0 {
-        ctx.views[parent_last_child].next_sibling = id
+    parent_last_child := last_child(parent)
+    if parent_last_child != nil {
+        parent_last_child.next_sibling = view
     } else {
-        ctx.views[parent].first_child = id
+        parent.first_child = view
     }
 
-    return id
+    view.ctx.dirty = true
+    return view
 }
 
-// Returns `0` if no children
-last_child :: proc (ctx: ^Context, id: ID) -> ID {
-    child_id := ctx.views[id].first_child
-    if child_id > 0 {
-        for ctx.views[child_id].next_sibling > 0 {
-            child_id = ctx.views[child_id].next_sibling
-        }
+last_child :: proc (v: ^View) -> ^View {
+    for child := v.first_child; child != nil; child = child.next_sibling {
+        if child.next_sibling == nil do return child
     }
-    return child_id
+    return nil
 }
 
 @private
-draw_view_children :: proc (ctx: ^Context, parent_id: ID, debug: bool) {
-    child_id := ctx.views[parent_id].first_child
-    for child_id > 0 {
-        child := &ctx.views[child_id]
-        defer child_id = child.next_sibling
+draw_view_children :: proc (parent: ^View, debug: bool) {
+    for child := parent.first_child; child != nil; child = child.next_sibling {
         if .hidden in child.flags do continue
 
         child_debug := debug || .debug in child.flags
 
         if child.on_draw != nil     do child->on_draw()
-        if child.first_child > 0    do draw_view_children(ctx, child_id, child_debug)
-        if child_debug              do debug_draw_view(ctx, child_id)
+        if child.first_child != nil do draw_view_children(child, child_debug)
+        if child_debug              do debug_draw_view(child)
     }
 }
 
 @private
-view_content_rect :: proc (ctx: ^Context, v: ^View) -> Rect {
+view_content_rect :: proc (v: ^View) -> Rect {
     return {
         v.solved.pos.x + v.padding[0],
         v.solved.pos.y + v.padding[1],

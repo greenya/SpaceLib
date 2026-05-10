@@ -2,6 +2,9 @@ package hi
 
 import "core:math"
 import "core:math/linalg"
+import "../core"
+
+VIEWS_MAX :: 2000
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -16,8 +19,6 @@ Context_Init :: struct {
     //      - `0.0` Full width
     //      - `0.5` Average
     //      - `1.0` Full height
-    //
-    // Note: Root anchoring is performed to ref space for "Fixed", and to screen space for "Adaptive".
     aspect_ratio_matching: f32,
 
     // The lower bound for `screen_pixel_scale`
@@ -29,28 +30,20 @@ Context_Init :: struct {
     // If `true`, the `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
-    // If `true`, the `update_context()` will automatically re-solve the view tree.
-    // Otherwise, solving of the view tree is only performed on explicit `solve_context()` call.
-    // When different `screen_size` value passed to the `update_context()`, the view tree will be
-    // re-solved regardless of this setting.
-    //
-    // Recommendations:
-    // - Use `true`:
-    //      * for small view tree, when performance is not an issue
-    //      * for In-Game Context with many animations
-    // - Use `false` for Debug Context with no animations and visible large view tree,
-    //   you need to call `solve_context()` after making changes to the view tree
-    continuous_solving: bool,
+    // Callback to be notified when `screen_font_height` gets changed
+    on_screen_font_height_changed: Context_Proc,
 
-    // Optional debug drawing callbacks. Used with `.debug` views.
+    // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
     debug_draw_line: Debug_Draw_Line_Proc,
     debug_draw_text: Debug_Draw_Text_Proc,
 }
 
 Context :: struct {
-    views       : [dynamic] View,       // The view tree
-    views_stack : [dynamic; 64] ID,     // Current views stack
+    views       : core.Sparse_Array(View, VIEWS_MAX), // TODO: make Sparse Array size to be a parameter somehow (now its hardcoded)
+    // views_stack : [dynamic; 64] ^View,
+    root        : ^View,
+    dirty       : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically
 
     using init: Context_Init,
 
@@ -92,21 +85,25 @@ Mouse_Event_Type :: enum {
 
 Rect :: struct { x, y, w, h: f32 }
 
+Context_Proc :: proc (ctx: ^Context)
 Debug_Draw_Line_Proc :: proc (from, to: [2] f32, thick: f32, color: [4] u8)
 Debug_Draw_Text_Proc :: proc (text: string, pos: [2] f32, color: [4] u8)
 
-create_context :: proc (init: Context_Init, views_init_cap := 64, allocator := context.allocator) -> ^Context {
+create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
-    ctx.init = init
+    ctx^ = { init=init, dirty=true }
 
-    ctx.views = make([dynamic] View, len=0, cap=views_init_cap, allocator=allocator)
-    append(&ctx.views, View { name="root" })
+    core.sparse_array_init(&ctx.views)
+
+    root_id, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
+    assert(root_id == ROOT_VIEW_ID)
+    ctx.root = root
 
     return ctx
 }
 
 destroy_context :: proc (ctx: ^Context) {
-    delete(ctx.views)
+    free(ctx)
 }
 
 update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
@@ -114,9 +111,10 @@ update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_
 
     if screen_size_changed {
         set_screen_size(ctx, screen_size)
+        ctx.dirty = true
     }
 
-    if screen_size_changed || ctx.continuous_solving {
+    if ctx.dirty {
         solve_context(ctx)
     }
 
@@ -131,31 +129,32 @@ update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_
     }
 
     // TODO: Process input tree using hi.mouse, return true if input was consumed
-    // hi.mouse.consumed = process_input_tree(hi.root_view)
+    // ctx.mouse.consumed = process_input_tree(ctx.root)
 
     // TODO: Animate and layout tree
-    // animate_and_layout_tree(hi.root_view, dt)
+    // animate_and_layout_tree(ctx.root, dt)
 
     return ctx.mouse.consumed
 }
 
 draw_context :: proc (ctx: ^Context) {
-    if .hidden in ctx.views[0].flags do return
+    if .hidden in ctx.root.flags do return
 
-    debug := .debug in ctx.views[0].flags
-    if debug do debug_draw_view(ctx, 0)
+    debug := .debug in ctx.root.flags
+    if debug do debug_draw_view(ctx.root)
 
-    draw_view_children(ctx, 0, debug)
+    draw_view_children(ctx.root, debug)
 }
 
 solve_context :: proc (ctx: ^Context) {
-    solve_root_view(ctx)
-    solve_view_fit_and_fixed_size(ctx, 0)
-    solve_children_fill_and_ratio_size(ctx, 0)
+    ctx.root.solved = { size=ctx.ref_size }
+    solve_view_fit_and_fixed_size(ctx.root)
+    solve_children_fill_and_ratio_size(ctx.root)
+    ctx.dirty = false
 }
 
 print_context :: proc (ctx: ^Context) {
-    debug_print_tree(ctx, 0)
+    debug_print_tree(ctx.root)
 }
 
 @private
@@ -179,9 +178,10 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
     if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {
         new_font_height := int(f32(ctx.ref_font_height) * new_pixel_scale)
         if new_font_height != ctx.screen_font_height {
-            // TODO: Reload fonts using new_font_height
-            // .....
             ctx.screen_font_height = new_font_height
+            if ctx.on_screen_font_height_changed != nil {
+                ctx->on_screen_font_height_changed()
+            }
         }
     }
 
@@ -212,19 +212,9 @@ ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
     }
 }
 
-ref_view_to_screen :: proc (ctx: ^Context, v: ^View) -> Rect {
+ref_view_to_screen :: proc (v: ^View) -> Rect {
     return {
-        expand_values(ref_pos_to_screen(ctx, v.solved.pos)),
-        expand_values(ref_size_to_screen(ctx, v.solved.size)),
+        expand_values(ref_pos_to_screen(v.ctx, v.solved.pos)),
+        expand_values(ref_size_to_screen(v.ctx, v.solved.size)),
     }
-}
-
-ref_id_to_screen :: proc (ctx: ^Context, id: ID) -> Rect {
-    return ref_view_to_screen(ctx, &ctx.views[id])
-}
-
-// Translates `view.solved` rect into screen rect
-ref_to_screen :: proc {
-    ref_view_to_screen,
-    ref_id_to_screen,
 }

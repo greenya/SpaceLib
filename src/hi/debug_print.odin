@@ -4,23 +4,20 @@ package hi
 import "core:fmt"
 import "core:strings"
 
-debug_print_tree :: proc (ctx: ^Context, id: ID, _depth := 0) {
-    debug_print_view(ctx, id, _depth)
-    for child_id := ctx.views[id].first_child;
-        child_id > 0;
-        child_id = ctx.views[child_id].next_sibling {
-        debug_print_tree(ctx, child_id, _depth + 1)
+debug_print_tree :: proc (v: ^View, _depth := 0) {
+    debug_print_view(v, _depth)
+    for child := v.first_child; child != nil; child = child.next_sibling {
+        debug_print_tree(child, _depth + 1)
     }
 }
 
-debug_print_view :: proc (ctx: ^Context, id: ID, _depth := 0) {
-    v := &ctx.views[id]
+debug_print_view :: proc (v: ^View, _depth := 0) {
     buf: [200] byte
     sb := strings.builder_from_bytes(buf[:])
 
     for _ in 0..<_depth do strings.write_string(&sb, "\t")
 
-    fmt.sbprintf(&sb, "#%d", id)
+    fmt.sbprintf(&sb, "#%d", v.id)
 
     if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
