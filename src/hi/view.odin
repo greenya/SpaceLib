@@ -137,6 +137,10 @@ add_view :: proc (parent: ^View, init: View_Init) -> ^View {
     v.ctx = parent.ctx
     v.parent = parent
 
+    if v.strata == {} {
+        v.strata = v.parent.strata
+    }
+
     parent_last_child := last_child(parent)
     if parent_last_child != nil {
         parent_last_child.next_sibling = v
