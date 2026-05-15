@@ -8,6 +8,7 @@ import "../core"
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
 // TODO: the view layout solver should skip children whose strata don't match with the parent (the positioning should work, but not the fit/fill mechanic)
+// TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
 
 VIEWS_MAX :: 2000
 STRATA_BUCKET_VIEWS_MAX :: VIEWS_MAX / 2
@@ -50,7 +51,7 @@ Context :: struct {
     strata_buckets  : [Strata] [dynamic; STRATA_BUCKET_VIEWS_MAX] View_ID,
     // views_stack     : [dynamic; 64] ^View,
     root            : ^View,
-    dirty           : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically
+    solved          : bool, // if `false`, the `update_context()` will do `solve_context()` automatically
 
     using init: Context_Init,
 
@@ -102,7 +103,6 @@ Context_Event_Type :: enum {
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
     ctx.init = init
-    ctx.dirty = true
 
     core.sparse_array_init(&ctx.views)
 
@@ -122,10 +122,10 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 
     if screen_size_changed {
         _set_screen_size(ctx, screen_size)
-        ctx.dirty = true
+        ctx.solved = false
     }
 
-    if ctx.dirty {
+    if !ctx.solved {
         solve_context(ctx)
     }
 
@@ -158,6 +158,9 @@ draw_context :: proc (ctx: ^Context) {
     }
 }
 
+// - Re-solves `View.solved` for every non-`.hidden` view
+// - Rebuilds `Context.strata_buckets`
+// - Sets `Context.solved`
 solve_context :: proc (ctx: ^Context) {
     for &bucket in ctx.strata_buckets do clear(&bucket)
 
@@ -168,7 +171,7 @@ solve_context :: proc (ctx: ^Context) {
     _solve_children_fill_and_ratio_size(ctx.root)
     _sort_strata_buckets(ctx)
 
-    ctx.dirty = false
+    ctx.solved = true
 }
 
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {

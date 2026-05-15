@@ -148,7 +148,7 @@ add_view :: proc (parent: ^View, init: View_Init) -> ^View {
         parent.first_child = v
     }
 
-    v.ctx.dirty = true
+    v.ctx.solved = false
     return v
 }
 
@@ -176,7 +176,7 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
         child.strata = strata
         if child.first_child != nil do set_strata(child, strata, { .children })
     }
-    v.ctx.dirty = true
+    v.ctx.solved = false
 }
 
 content_rect :: proc (v: ^View) -> Rect {

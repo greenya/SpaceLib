@@ -113,26 +113,30 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         add_icon_button(header, name="button_close", icon="close")
     }
 
-    content := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
+    /* content := */ hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
 
-    options_menu := hi.add_view(content, { name="options_menu", size={100,0}, placement={anchor=.5}, layout={dir=.column}, strata=.overlay })
-    hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
-    hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
-    hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
-    hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
+    // options_menu := hi.add_view(content, { name="options_menu", size={100,0}, placement={anchor=.5}, layout={dir=.column}, strata=.overlay })
+    // hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
+    // hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
+    // hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
+    // hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
 
     footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })
     if button1 != "" do add_text_button(footer, name="button1", text=button1)
     if button2 != "" do add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
+    // FIX: different strata -- tooltip should be not part of the layout
+    tooltip := hi.add_view(footer, { name="tooltip", size={100,40}, placement={pivot={0,1},offset={0,-2}}, strata=.tooltip })
+    hi.add_view(tooltip, { name="icon", placement={offset=5}, size=20 })
+
     return
 }
 
-add_icon_button :: proc (parent: ^hi.View, name, icon: string) {
-    hi.add_view(parent, { name=name, size={20,20}, on_draw=on_draw_view })
+add_icon_button :: proc (parent: ^hi.View, name, icon: string) -> ^hi.View {
+    return hi.add_view(parent, { name=name, size={20,20}, on_draw=on_draw_view })
 }
 
-add_text_button :: proc (parent: ^hi.View, name, text: string) {
-    hi.add_view(parent, { name=name, size={60,20}, on_draw=on_draw_view })
+add_text_button :: proc (parent: ^hi.View, name, text: string) -> ^hi.View {
+    return hi.add_view(parent, { name=name, size={60,20}, on_draw=on_draw_view })
 }
