@@ -2,16 +2,23 @@ package hi
 
 import "../core"
 
+View_ID :: distinct int
+
 View_Init :: struct {
-    flags: bit_set [Flag; u32],
+    flags: bit_set [Flag; u16],
+
+    using bits: bit_field u16 {
+        level   : int       | 14,   // Order within `strata`, 14 bits, approx. range -8000..+8000
+        strata  : Strata    | 2,    // Drawing layer
+    },
 
     placement   : Placement,// Used only if parent `layout.dir == .none`
-    size        : [2] f32,  // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
-    padding     : [4] f32,  // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
-    scroll      : [2] f32,  // Offset for the children
+    size        : Vec2,  // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
+    padding     : Vec4,  // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
+    scroll      : Vec2,  // Offset for the children
     layout      : Layout,   // Layout for the children
 
-    on_draw: View_Draw_Proc,
+    on_draw: proc (v: ^View),
     // on_state: (show/hide/select/deselect)
     // on_mouse: (status: enter/leave), (action: click/wheel/drag)
     // TODO: maybe combine all events into on_event, the pro: less callbacks and less size of View, the con: more false calls
@@ -26,7 +33,7 @@ View :: struct {
     using init: View_Init,
 
     ctx : ^Context,
-    id  : int,
+    id  : View_ID,
 
     parent      : ^View,
     next_sibling: ^View,
@@ -34,8 +41,8 @@ View :: struct {
 
     // Solver result in ref units. Not updated for invisible views.
     solved: struct {
-        pos         : [2] f32,
-        size        : [2] f32,
+        pos         : Vec2,
+        size        : Vec2,
         child_count : int,  // Visible child count
     },
 }
@@ -45,9 +52,18 @@ Flag :: enum u8 {
 
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`.
-    scissor,    // [NOT IMPLEMENTED] The view clips its children. The scissor rect is defined by the `solved` rect reduced by `padding`. // TODO: should affect drawing and mouse hit test
+    scissor,    // FIX: [NOT IMPLEMENTED] The view clips its children of the equal `strata`. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
 
-    // Events
+    // Sizing
+
+    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent
+    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent
+    fit_x,      // `solved.size.x` is set to fit children width
+    fit_y,      // `solved.size.y` is set to fit children height
+    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` views.
+    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` views.
+
+    // Behavior
 
     // TODO: All events should be given from the top visible view to the bottom (root)
     // - if view doesn't have on_*, the event keeps propagation to the next (bottom) view
@@ -58,10 +74,11 @@ Flag :: enum u8 {
     //               Maybe instead of return bool, this can be done via extra Flag, e.g. ".observer"
     //      With this approach we don't need "pass" or "pass_self" or "block_wheel" flags (like spacelib:ui does)
 
-    disabled,   // [NOT IMPLEMENTED] The view is disabled, it will not receive Mouse Action Events (click, wheel, drag)
-    capture,    // [NOT IMPLEMENTED] The view can capture mouse when clicked; the click event will be fired on mouse button release
-    check,      // [NOT IMPLEMENTED] The view inverts `.selected` when clicked
-    radio,      // [NOT IMPLEMENTED] The view sets own `.selected` when clicked and clears it for all `.radio` siblings
+    disabled,   // FIX: [NOT IMPLEMENTED] The view is disabled, it will not receive Mouse Action Events (click, wheel, drag)
+    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse when clicked; the click event will be fired on mouse button release
+    selected,   // The view is "selected". It is up to the `View.on_draw()` to respect this state. The state toggling can be automated using `.check` or `.ratio` flags
+    check,      // FIX: [NOT IMPLEMENTED] The view inverts `.selected` when clicked
+    radio,      // FIX: [NOT IMPLEMENTED] The view sets own `.selected` when clicked and clears it for all `.radio` siblings
     // auto_hide // TODO: think more on auto_hide flag.
     //              In spacelib:ui, this flag was intended to be used for dropdown menus and similar popups
     //              which should be closed if clicked outside; the task apparently wasn't that simple and
@@ -80,21 +97,19 @@ Flag :: enum u8 {
     //
     //              Maybe consider ways of building plain list of visible views ordered in a draw-order (painter algorithm), so
     //              draw_context() becomes trivial, and all the mouse hit tests can benefit from this list.
+}
 
-    // Sizing
-
-    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent
-    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent
-    fit_x,      // `solved.size.x` is set to fit children width
-    fit_y,      // `solved.size.y` is set to fit children height
-    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` views.
-    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` views.
+Strata :: enum u8 {
+    base,       // For the most views, e,g. panels, buttons, health bars, action bars, non-modal dialogs
+    high,       // For priority views, e.g. menus and dropdowns; `high` view never clipped by its `base` parent
+    overlay,    // For screen non-interactive views like popup messages and notifications. For screen interactive views requiring immediate attention, like system menus and modal dialogs, often with screen darkening layer to focus attention and block input.
+    tooltip,    // For topmost and generally non-interactive transient views like tooltips and system messages
 }
 
 Placement :: struct {
-    anchor  : [2] f32, // Parent point (0 to 1)
-    pivot   : [2] f32, // Local point (0 to 1)
-    offset  : [2] f32, // Extra offset
+    anchor  : Vec2, // Parent point (0 to 1)
+    pivot   : Vec2, // Local point (0 to 1)
+    offset  : Vec2, // Extra offset
 }
 
 Layout :: struct {
@@ -116,23 +131,21 @@ Layout_Alignment :: enum u8 {
     center,
 }
 
-View_Draw_Proc :: #type proc (v: ^View /*, is_after := false*/) // TODO: maybe add .draw_after flag, if set, this proc will be called extra time with is_after=true; if we figure out "strata" approach, the "is_after" will not be needed
-
 add_view :: proc (parent: ^View, init: View_Init) -> ^View {
-    view_id, view := core.sparse_array_add(&parent.ctx.views, View { init=init })
-    view.id = view_id
-    view.ctx = parent.ctx
-    view.parent = parent
+    v_id, v := core.sparse_array_add(&parent.ctx.views, View { init=init })
+    v.id = View_ID(v_id)
+    v.ctx = parent.ctx
+    v.parent = parent
 
     parent_last_child := last_child(parent)
     if parent_last_child != nil {
-        parent_last_child.next_sibling = view
+        parent_last_child.next_sibling = v
     } else {
-        parent.first_child = view
+        parent.first_child = v
     }
 
-    view.ctx.dirty = true
-    return view
+    v.ctx.dirty = true
+    return v
 }
 
 last_child :: proc (v: ^View) -> ^View {
@@ -142,21 +155,27 @@ last_child :: proc (v: ^View) -> ^View {
     return nil
 }
 
-@private
-draw_view_children :: proc (parent: ^View, debug: bool) {
-    for child := parent.first_child; child != nil; child = child.next_sibling {
-        if .hidden in child.flags do continue
+Set_Filter :: bit_set [enum { self, children }]
 
-        child_debug := debug || .debug in child.flags
-
-        if child.on_draw != nil     do child->on_draw()
-        if child.first_child != nil do draw_view_children(child, child_debug)
-        if child_debug              do debug_draw_view(child)
+set_debug :: proc (v: ^View, on: bool, filter: bit_set [enum { self, children }] = ~{}) {
+    set :: proc (v: ^View, on: bool) { if on { v.flags+={.debug} } else { v.flags-={.debug} } }
+    if .self in filter do set(v, on)
+    if .children in filter do for child := v.first_child; child != nil; child = child.next_sibling {
+        set(child, on)
+        if child.first_child != nil do set_debug(child, on, { .children })
     }
 }
 
-@private
-view_content_rect :: proc (v: ^View) -> Rect {
+set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
+    if .self in filter do v.strata = strata
+    if .children in filter do for child := v.first_child; child != nil; child = child.next_sibling {
+        child.strata = strata
+        if child.first_child != nil do set_strata(child, strata, { .children })
+    }
+    v.ctx.dirty = true
+}
+
+content_rect :: proc (v: ^View) -> Rect {
     return {
         v.solved.pos.x + v.padding[0],
         v.solved.pos.y + v.padding[1],

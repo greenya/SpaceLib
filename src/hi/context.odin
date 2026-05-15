@@ -2,16 +2,18 @@ package hi
 
 import "core:math"
 import "core:math/linalg"
+import "core:slice"
 import "../core"
 
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
+// TODO: the view layout solver should skip children whose strata don't match with the parent (the positioning should work, but not the fit/fill mechanic)
 
 VIEWS_MAX :: 1000
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
-    ref_size: [2] f32,
+    ref_size: Vec2,
 
     // Reference font height, e.g. 8, 10, 16 etc.
     ref_font_height: int,
@@ -34,33 +36,34 @@ Context_Init :: struct {
     align_center: bool,
 
     // Event callback
-    on_event: Context_Event_Proc,
+    on_event: proc (ctx: ^Context, event: Context_Event),
 
     // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
-    debug_draw_line: Debug_Draw_Line_Proc,
-    debug_draw_text: Debug_Draw_Text_Proc,
+    debug_draw_line: proc (from, to: Vec2, thick: f32, color: Color),
+    debug_draw_text: proc (text: string, pos: Vec2, color: Color),
 }
 
 Context :: struct {
-    views       : core.Sparse_Array(View, VIEWS_MAX),
-    // views_stack : [dynamic; 64] ^View,
-    root        : ^View,
-    dirty       : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically
+    views           : core.Sparse_Array(View, VIEWS_MAX),
+    strata_buckets  : [Strata] [dynamic; VIEWS_MAX] View_ID,
+    // views_stack     : [dynamic; 64] ^View,
+    root            : ^View,
+    dirty           : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically
 
     using init: Context_Init,
 
     dt: f32,
     time: f32,
 
-    screen_size         : [2] f32,
+    screen_size         : Vec2,
     screen_pixel_scale  : f32,
-    screen_top_left     : [2] f32,
+    screen_top_left     : Vec2,
     screen_font_height  : int,
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
-        ref_pos         : [2] f32,
+        ref_pos         : Vec2,
         lmb_down_prev   : bool,
         lmb_pressed     : bool,         // For this frame only
         consumed        : bool,         // For this frame only
@@ -68,7 +71,7 @@ Context :: struct {
 }
 
 Mouse_Input :: struct {
-    screen_pos  : [2] f32,
+    screen_pos  : Vec2,
     lmb_down    : bool,
     wheel_delta : f32,
 }
@@ -86,8 +89,6 @@ Mouse_Event_Type :: enum {
     // left,
 }
 
-Rect :: struct { x, y, w, h: f32 }
-
 Context_Event :: struct {
     type: Context_Event_Type,
 }
@@ -97,10 +98,6 @@ Context_Event_Type :: enum {
     screen_font_height_changed,
 }
 
-Context_Event_Proc :: proc (ctx: ^Context, event: Context_Event)
-Debug_Draw_Line_Proc :: proc (from, to: [2] f32, thick: f32, color: [4] u8)
-Debug_Draw_Text_Proc :: proc (text: string, pos: [2] f32, color: [4] u8)
-
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
     ctx^ = { init=init, dirty=true }
@@ -108,7 +105,7 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
     core.sparse_array_init(&ctx.views)
 
     root_id, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
-    assert(root_id == ROOT_VIEW_ID)
+    ensure(root_id == _ROOT_VIEW_ID)
     ctx.root = root
 
     return ctx
@@ -118,11 +115,11 @@ destroy_context :: proc (ctx: ^Context) {
     free(ctx)
 }
 
-update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
+update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
     screen_size_changed := screen_size != ctx.screen_size
 
     if screen_size_changed {
-        set_screen_size(ctx, screen_size)
+        _set_screen_size(ctx, screen_size)
         ctx.dirty = true
     }
 
@@ -150,27 +147,29 @@ update_context :: proc (ctx: ^Context, screen_size: [2] f32, mouse_input: Mouse_
 }
 
 draw_context :: proc (ctx: ^Context) {
-    if .hidden in ctx.root.flags do return
-
-    debug := .debug in ctx.root.flags
-    if debug do debug_draw_view(ctx.root)
-
-    draw_view_children(ctx.root, debug)
+    for bucket in ctx.strata_buckets {
+        for v_id in bucket {
+            v := &ctx.views.items[v_id]
+            if v.on_draw != nil     do v->on_draw()
+            if .debug in v.flags    do _debug_draw_view(v)
+        }
+    }
 }
 
 solve_context :: proc (ctx: ^Context) {
+    for &bucket in ctx.strata_buckets do clear(&bucket)
+
     ctx.root.solved = { size=ctx.ref_size }
-    solve_view_fit_and_fixed_size(ctx.root)
-    solve_children_fill_and_ratio_size(ctx.root)
+    append(&ctx.strata_buckets[ctx.root.strata], ctx.root.id)
+
+    _solve_view_fit_and_fixed_size(ctx.root)
+    _solve_children_fill_and_ratio_size(ctx.root)
+    _sort_strata_buckets(ctx)
+
     ctx.dirty = false
 }
 
-print_context :: proc (ctx: ^Context) {
-    debug_print_tree(ctx.root)
-}
-
-@private
-set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
+_set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     new_scale := new_size / ctx.ref_size
 
     new_pixel_scale := ctx.aspect_ratio_matching < 0\
@@ -205,19 +204,31 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
     }
 }
 
-screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: [2] f32) -> [2] f32 {
+_sort_strata_buckets :: proc (ctx: ^Context) {
+    context.user_ptr = ctx
+    for &bucket in ctx.strata_buckets {
+        slice.sort_by(bucket[:], less=proc (i, j: View_ID) -> bool {
+            ctx := cast (^Context) context.user_ptr
+            return ctx.views.items[i].level != ctx.views.items[j].level\
+                 ? ctx.views.items[i].level  < ctx.views.items[j].level\
+                 : i < j
+        })
+    }
+}
+
+screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: Vec2) -> Vec2 {
     return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
 }
 
-screen_size_to_ref :: proc (ctx: ^Context, screen_size: [2] f32) -> [2] f32 {
+screen_size_to_ref :: proc (ctx: ^Context, screen_size: Vec2) -> Vec2 {
     return screen_size / ctx.screen_pixel_scale
 }
 
-ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: [2] f32) -> [2] f32 {
+ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: Vec2) -> Vec2 {
     return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
 }
 
-ref_size_to_screen :: proc (ctx: ^Context, ref_size: [2] f32) -> [2] f32 {
+ref_size_to_screen :: proc (ctx: ^Context, ref_size: Vec2) -> Vec2 {
     return ref_size * ctx.screen_pixel_scale
 }
 

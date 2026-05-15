@@ -1,7 +1,6 @@
-#+private
 package hi
 
-ROOT_VIEW_ID :: 0
+_ROOT_VIEW_ID :: 0
 
 // Bottom-up solver for `.fit_*` and fixed sizes.
 //
@@ -10,16 +9,16 @@ ROOT_VIEW_ID :: 0
 // - `solved.child_count`
 //
 // Note: The root view `flags`, `size`, `padding` and `layout` are ignored.
-solve_view_fit_and_fixed_size :: proc(v: ^View) {
+_solve_view_fit_and_fixed_size :: proc(v: ^View) {
     // Recurse to children first
     for child := v.first_child; child != nil; child = child.next_sibling {
-        if .hidden not_in child.flags do solve_view_fit_and_fixed_size(child)
+        if .hidden not_in child.flags do _solve_view_fit_and_fixed_size(child)
     }
 
-    child_count, fit_size := view_content_fit(v)
+    child_count, fit_size := _view_content_fit(v)
     v.solved.child_count = child_count
 
-    if v.id == ROOT_VIEW_ID {
+    if v.id == _ROOT_VIEW_ID {
         return
     }
 
@@ -45,7 +44,9 @@ solve_view_fit_and_fixed_size :: proc(v: ^View) {
 // The children of the given view get:
 // - `solved.size` only if `fill_*` or `ratio_*` size
 // - `solved.pos`
-solve_children_fill_and_ratio_size :: proc (v: ^View) {
+//
+// Also adds visible children to the `ctx.strata_buckets`.
+_solve_children_fill_and_ratio_size :: proc (v: ^View) {
     v_size_x_avail := max(0, v.solved.size.x - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved.size.y - (v.padding[1] + v.padding[3]))
 
@@ -136,9 +137,11 @@ solve_children_fill_and_ratio_size :: proc (v: ^View) {
         for child := v.first_child; child != nil; child = child.next_sibling {
             if .hidden in child.flags do continue
 
+            append(&v.ctx.strata_buckets[child.strata], child.id)
+
             switch v.layout.dir {
             case .none:
-                child.solved.pos = placement_pos(
+                child.solved.pos = _placement_pos(
                     placement   = child.placement,
                     size        = child.solved.size,
                     rel_pos     = cursor,
@@ -165,7 +168,7 @@ solve_children_fill_and_ratio_size :: proc (v: ^View) {
             }
 
             if child.first_child != nil {
-                solve_children_fill_and_ratio_size(child)
+                _solve_children_fill_and_ratio_size(child)
             }
         }
     }
@@ -173,9 +176,9 @@ solve_children_fill_and_ratio_size :: proc (v: ^View) {
 
 // - `child_count` Number of non-`.hidden` children
 // - `fit_size` The size to fit those children according to `padding`, `layout.dir` and `layout.gap`
-view_content_fit :: proc (v: ^View) -> (child_count: int, fit_size: [2] f32) {
-    cs_sum: [2] f32
-    cs_max: [2] f32
+_view_content_fit :: proc (v: ^View) -> (child_count: int, fit_size: Vec2) {
+    cs_sum: Vec2
+    cs_max: Vec2
 
     for child := v.first_child; child != nil; child = child.next_sibling {
         if .hidden not_in child.flags {
@@ -214,7 +217,7 @@ view_content_fit :: proc (v: ^View) -> (child_count: int, fit_size: [2] f32) {
     return
 }
 
-placement_pos :: proc (placement: Placement, size, rel_pos, rel_size: [2] f32) -> [2] f32 {
+_placement_pos :: proc (placement: Placement, size, rel_pos, rel_size: Vec2) -> Vec2 {
     anchor_point := rel_pos + (rel_size * placement.anchor)
     pivot_offset := size * placement.pivot
     return anchor_point - pivot_offset + placement.offset

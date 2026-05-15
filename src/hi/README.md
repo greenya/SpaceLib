@@ -2,6 +2,21 @@
 
 ----------
 
+[?] 6 stratas idea for more granular layer control. Do we need it? For now lets keep 4.
+
+```odin
+Strata :: enum {
+    background  = -2,   // For background and generally non-interactive views, e.g. HUD, world object labels, decorations and ground art
+    low         = -1,   // For underlying views, e.g. backdrop art, a child of `medium` which needs to be drawn below and skip the scissor
+    medium      = 0,    // For the most views, e,g. panels, buttons, health bars, action bars, non-modal dialogs
+    high        = 1,    // For priority views, e.g. menus, dropdowns, a child of `medium` which needs to be draw above and skip the scissor
+    overlay     = 2,    // For screen non-interactive views like popup auto-hiding messages and notifications. For screen interactive views requiring immediate attention, like system menus and modal dialogs, often with screen darkening layer to focus attention and block input.
+    tooltip     = 3,    // For topmost and generally non-interactive transient views like tooltips, system messages
+}
+```
+
+----------
+
 [?] Maybe remove view_scoped.odin, and Context.scoped_views_stack, as this value is very temporary, but lives in Context for all time. So instead, we can maybe do like
 
 ```odin

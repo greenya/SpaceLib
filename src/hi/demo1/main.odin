@@ -48,10 +48,18 @@ main :: proc () {
         with_header_close_button = true,
     )
 
-    ctx.root.flags += { .debug }
+    hi.set_debug(ctx.root, true)
 
     hi.solve_context(ctx)
-    hi.print_context(ctx)
+    hi.print_view_tree(ctx.root)
+
+    for bucket, strata in ctx.strata_buckets {
+        fmt.printfln("================================================[ %v ]", strata)
+        for v_id in bucket {
+            v := &ctx.views.items[v_id]
+            fmt.printfln("\tL%d\t#%d\t%s", v.level, v.id, v.name)
+        }
+    }
 
     for main_update() {
         main_draw()
@@ -105,7 +113,14 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         add_icon_button(header, name="button_close", icon="close")
     }
 
-    hi.add_view(root, { name="content", flags={.fill_x}, size={0,80} })
+    content := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
+
+    options_menu := hi.add_view(content, { name="options_menu", size={100,0}, placement={anchor=.5}, layout={dir=.column} })
+    hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
+    hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
+    hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
+    hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
+    hi.set_strata(options_menu, .high)
 
     footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })
     if button1 != "" do add_text_button(footer, name="button1", text=button1)

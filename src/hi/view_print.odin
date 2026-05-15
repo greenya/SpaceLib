@@ -1,17 +1,16 @@
-#+private
 package hi
 
 import "core:fmt"
 import "core:strings"
 
-debug_print_tree :: proc (v: ^View, _depth := 0) {
-    debug_print_view(v, _depth)
+print_view_tree :: proc (v: ^View, _depth := 0) {
+    print_view(v, _depth)
     for child := v.first_child; child != nil; child = child.next_sibling {
-        debug_print_tree(child, _depth + 1)
+        print_view_tree(child, _depth + 1)
     }
 }
 
-debug_print_view :: proc (v: ^View, _depth := 0) {
+print_view :: proc (v: ^View, _depth := 0) {
     buf: [200] byte
     sb := strings.builder_from_bytes(buf[:])
 
