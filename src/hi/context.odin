@@ -100,7 +100,8 @@ Context_Event_Type :: enum {
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
-    ctx^ = { init=init, dirty=true }
+    ctx.init = init
+    ctx.dirty = true
 
     core.sparse_array_init(&ctx.views)
 
