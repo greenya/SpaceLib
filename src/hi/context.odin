@@ -4,7 +4,10 @@ import "core:math"
 import "core:math/linalg"
 import "../core"
 
-VIEWS_MAX :: 2000
+// TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
+// TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
+
+VIEWS_MAX :: 1000
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -30,8 +33,8 @@ Context_Init :: struct {
     // If `true`, the `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
-    // Callback to be notified when `screen_font_height` gets changed
-    on_screen_font_height_changed: Context_Proc,
+    // Event callback
+    on_event: Context_Event_Proc,
 
     // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
@@ -40,7 +43,7 @@ Context_Init :: struct {
 }
 
 Context :: struct {
-    views       : core.Sparse_Array(View, VIEWS_MAX), // TODO: make Sparse Array size to be a parameter somehow (now its hardcoded)
+    views       : core.Sparse_Array(View, VIEWS_MAX),
     // views_stack : [dynamic; 64] ^View,
     root        : ^View,
     dirty       : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically
@@ -85,7 +88,16 @@ Mouse_Event_Type :: enum {
 
 Rect :: struct { x, y, w, h: f32 }
 
-Context_Proc :: proc (ctx: ^Context)
+Context_Event :: struct {
+    type: Context_Event_Type,
+}
+
+Context_Event_Type :: enum {
+    screen_size_changed,
+    screen_font_height_changed,
+}
+
+Context_Event_Proc :: proc (ctx: ^Context, event: Context_Event)
 Debug_Draw_Line_Proc :: proc (from, to: [2] f32, thick: f32, color: [4] u8)
 Debug_Draw_Text_Proc :: proc (text: string, pos: [2] f32, color: [4] u8)
 
@@ -179,14 +191,18 @@ set_screen_size :: proc (ctx: ^Context, new_size: [2] f32) {
         new_font_height := int(f32(ctx.ref_font_height) * new_pixel_scale)
         if new_font_height != ctx.screen_font_height {
             ctx.screen_font_height = new_font_height
-            if ctx.on_screen_font_height_changed != nil {
-                ctx->on_screen_font_height_changed()
+            if ctx.on_event != nil {
+                ctx->on_event({ type=.screen_font_height_changed })
             }
         }
     }
 
     ctx.screen_size = new_size
     ctx.screen_pixel_scale = new_pixel_scale
+
+    if ctx.on_event != nil {
+        ctx->on_event({ type=.screen_size_changed })
+    }
 }
 
 screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: [2] f32) -> [2] f32 {

@@ -19,6 +19,9 @@ main :: proc () {
         ref_font_height = 16,
         align_center = true,
         aspect_ratio_matching = -1,
+        on_event = proc (ctx: ^hi.Context, event: hi.Context_Event) {
+            fmt.println("[ctx.on_event]", event)
+        },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
             k2.draw_line(from, to, thick, color)
         },
