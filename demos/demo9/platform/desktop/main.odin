@@ -12,8 +12,11 @@ _ :: tracking_allocator
 
 main :: proc () {
     when ODIN_DEBUG {
-        context.allocator = tracking_allocator.init()
-        defer tracking_allocator.print(.minimal_unless_issues)
+        context.allocator = tracking_allocator.init(verbosity=.minimal)
+        defer {
+            tracking_allocator.print()
+            tracking_allocator.destroy()
+        }
 
         // Only for Windows, as it requires "stdc++_libbacktrace" on Mac and Linux
         when ODIN_OS == .Windows {

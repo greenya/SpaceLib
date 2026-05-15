@@ -27,8 +27,11 @@ file_font_regular   := #load("res/Gauge-Regular.ttf")
 file_font_heavy     := #load("res/Gauge-Heavy.ttf")
 
 main :: proc () {
-    context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print(.minimal_unless_issues)
+    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    defer {
+        tracking_allocator.print()
+        tracking_allocator.destroy()
+    }
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })

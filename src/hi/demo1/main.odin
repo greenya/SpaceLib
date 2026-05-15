@@ -1,12 +1,19 @@
 package main
 
 import "core:fmt"
+import "../../core/tracking_allocator"
 import hi ".."
 import k2 "../../../../karl2d"
 
 ctx: ^hi.Context
 
 main :: proc () {
+    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    defer {
+        tracking_allocator.print()
+        tracking_allocator.destroy()
+    }
+
     fmt.println("-----------------------")
     fmt.println("Context size   :", size_of(hi.Context))
     fmt.println("View size      :", size_of(hi.View))

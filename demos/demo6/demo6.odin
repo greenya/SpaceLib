@@ -17,8 +17,11 @@ Rect :: core.Rect
 Color :: core.Color
 
 main :: proc () {
-    context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print(.minimal_unless_issues)
+    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    defer {
+        tracking_allocator.print()
+        tracking_allocator.destroy()
+    }
 
     rl.SetTraceLogLevel(.WARNING)
     rl.SetConfigFlags({ .WINDOW_RESIZABLE, .VSYNC_HINT })

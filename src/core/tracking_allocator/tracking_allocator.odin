@@ -5,13 +5,14 @@ import "core:mem"
 import "core:text/table"
 import "../../core"
 
-Print_Verbosity :: enum {
-    full_always,
-    minimal_unless_issues,
-    silent_unless_issues,
+Verbosity :: enum {
+    full,       // Full
+    minimal,    // Minimal, unless issues
+    silent,     // Silent, unless issues
 }
 
-track: mem.Tracking_Allocator
+_track: mem.Tracking_Allocator
+_verbosity: Verbosity
 
 // Common usage:
 //
@@ -25,26 +26,27 @@ track: mem.Tracking_Allocator
 //          ...
 //      }
 
-init :: proc () -> mem.Allocator {
-    mem.tracking_allocator_init(&track, context.allocator)
-    fmt.println("[TA] Initialized")
-    return mem.tracking_allocator(&track)
+init :: proc (verbosity := Verbosity.full) -> mem.Allocator {
+    _verbosity = verbosity
+    mem.tracking_allocator_init(&_track, context.allocator)
+    if _verbosity != .silent do fmt.println("[TA] Initialized")
+    return mem.tracking_allocator(&_track)
 }
 
 destroy :: proc () {
-    mem.tracking_allocator_destroy(&track)
-    track = {}
+    mem.tracking_allocator_destroy(&_track)
+    _track = {}
 }
 
-print :: proc (verbosity := Print_Verbosity.full_always, max_rows := 10) {
+print :: proc (max_rows := 10) {
     has_issues :=\
-        len(track.allocation_map) > 0 ||
-        len(track.bad_free_array) > 0
+        len(_track.allocation_map) > 0 ||
+        len(_track.bad_free_array) > 0
 
-    if !has_issues do switch verbosity {
-    case .full_always           : // nothing
-    case .minimal_unless_issues : fmt.println("[TA] No issues"); return
-    case .silent_unless_issues  : return // silence goes here
+    if !has_issues do switch _verbosity {
+    case .full      : // nothing
+    case .minimal   : fmt.println("[TA] No issues"); return
+    case .silent    : return // silence goes here
     }
 
     print_stats()
@@ -59,19 +61,19 @@ print_stats :: proc () {
     table.caption(&tbl, "Tracking Allocator Stats")
     table.padding(&tbl, 1, 1)
 
-    table.row(&tbl, "Current memory allocated"  , fmt_i64(track.current_memory_allocated))
-    table.row(&tbl, "Peak memory allocated"     , fmt_i64(track.peak_memory_allocated))
-    table.row(&tbl, "Total memory allocated"    , fmt_i64(track.total_memory_allocated))
-    table.row(&tbl, "Total memory freed"        , fmt_i64(track.total_memory_freed))
-    table.row(&tbl, "Total allocation count"    , fmt_i64(track.total_allocation_count))
-    table.row(&tbl, "Total free count"          , fmt_i64(track.total_free_count))
+    table.row(&tbl, "Current memory allocated"  , fmt_i64(_track.current_memory_allocated))
+    table.row(&tbl, "Peak memory allocated"     , fmt_i64(_track.peak_memory_allocated))
+    table.row(&tbl, "Total memory allocated"    , fmt_i64(_track.total_memory_allocated))
+    table.row(&tbl, "Total memory freed"        , fmt_i64(_track.total_memory_freed))
+    table.row(&tbl, "Total allocation count"    , fmt_i64(_track.total_allocation_count))
+    table.row(&tbl, "Total free count"          , fmt_i64(_track.total_free_count))
 
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
 
 @private
 print_not_freed_allocations :: proc (max_rows: int) {
-    allocation_map_len := len(track.allocation_map)
+    allocation_map_len := len(_track.allocation_map)
     if allocation_map_len == 0 do return
 
     tbl: table.Table
@@ -81,7 +83,7 @@ print_not_freed_allocations :: proc (max_rows: int) {
 
     table.header(&tbl, "Bytes", "Location")
 
-    i := 0; for _, entry in track.allocation_map {
+    i := 0; for _, entry in _track.allocation_map {
         table.row(&tbl, fmt_int(entry.size), entry.location)
         i += 1; if i == max_rows {
             skip_row_count := allocation_map_len - max_rows
@@ -95,7 +97,7 @@ print_not_freed_allocations :: proc (max_rows: int) {
 
 @private
 print_bad_frees :: proc (max_rows: int) {
-    bad_free_array_len := len(track.bad_free_array)
+    bad_free_array_len := len(_track.bad_free_array)
     if bad_free_array_len == 0 do return
 
     tbl: table.Table
@@ -105,7 +107,7 @@ print_bad_frees :: proc (max_rows: int) {
 
     table.header(&tbl, "Address", "Location")
 
-    for entry, i in track.bad_free_array {
+    for entry, i in _track.bad_free_array {
         table.row(&tbl, entry.memory, entry.location)
         if i == max_rows {
             skip_row_count := bad_free_array_len - max_rows

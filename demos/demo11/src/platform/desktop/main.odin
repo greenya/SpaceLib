@@ -11,8 +11,11 @@ _ :: tracking_allocator
 import app "../.."
 
 main :: proc () {
-    context.allocator = tracking_allocator.init()
-    defer tracking_allocator.print(.minimal_unless_issues)
+    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    defer {
+        tracking_allocator.print()
+        tracking_allocator.destroy()
+    }
 
     // skip stack_trace usage for non-Windows, as it requires "stdc++_libbacktrace"
     when ODIN_OS == .Windows {
