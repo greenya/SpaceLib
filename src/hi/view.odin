@@ -8,14 +8,14 @@ View_Init :: struct {
     flags: bit_set [Flag; u16],
 
     using bits: bit_field u16 {
-        level   : int       | 14,   // Order within `strata`, 14 bits, approx. range -8000..+8000
-        strata  : Strata    | 2,    // Drawing layer
+        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000
+        strata  : Strata    | 4,    // Drawing layer
     },
 
     placement   : Placement,// Used only if parent `layout.dir == .none`
-    size        : Vec2,  // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
-    padding     : Vec4,  // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
-    scroll      : Vec2,  // Offset for the children
+    size        : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
+    padding     : Vec4,     // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
+    scroll      : Vec2,     // Offset for the children
     layout      : Layout,   // Layout for the children
 
     on_draw: proc (v: ^View),
@@ -47,7 +47,7 @@ View :: struct {
     },
 }
 
-Flag :: enum u8 {
+Flag :: enum {
     // Core
 
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
@@ -99,11 +99,11 @@ Flag :: enum u8 {
     //              draw_context() becomes trivial, and all the mouse hit tests can benefit from this list.
 }
 
-Strata :: enum u8 {
-    base,       // For the most views, e,g. panels, buttons, health bars, action bars, non-modal dialogs
-    high,       // For priority views, e.g. menus and dropdowns; `high` view never clipped by its `base` parent
-    overlay,    // For screen non-interactive views like popup messages and notifications. For screen interactive views requiring immediate attention, like system menus and modal dialogs, often with screen darkening layer to focus attention and block input.
-    tooltip,    // For topmost and generally non-interactive transient views like tooltips and system messages
+Strata :: enum {
+    background  = -1,   // For lowest and generally non-interactive views like artistic decorations, HUD, damage numbers, world object labels
+    base        = 0,    // For the most views, e.g. panels, buttons, health bars, action bars, non-modal dialogs
+    overlay     = 1,    // For priority views like menus and dropdowns which should avoid parent clipping (only if parent uses `base` strata). For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
+    tooltip     = 2,    // For topmost and generally non-interactive transient views like tooltips, notifications, system messages
 }
 
 Placement :: struct {

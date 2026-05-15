@@ -9,7 +9,8 @@ import "../core"
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
 // TODO: the view layout solver should skip children whose strata don't match with the parent (the positioning should work, but not the fit/fill mechanic)
 
-VIEWS_MAX :: 1000
+VIEWS_MAX :: 2000
+STRATA_BUCKET_VIEWS_MAX :: VIEWS_MAX / 2
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -46,7 +47,7 @@ Context_Init :: struct {
 
 Context :: struct {
     views           : core.Sparse_Array(View, VIEWS_MAX),
-    strata_buckets  : [Strata] [dynamic; VIEWS_MAX] View_ID,
+    strata_buckets  : [Strata] [dynamic; STRATA_BUCKET_VIEWS_MAX] View_ID,
     // views_stack     : [dynamic; 64] ^View,
     root            : ^View,
     dirty           : bool, // if `true`, the `update_context()` will do `solve_context()`; this flag is cleared by `solve_context()` automatically

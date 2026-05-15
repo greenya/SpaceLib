@@ -120,7 +120,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
     hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
     hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
-    hi.set_strata(options_menu, .high)
+    hi.set_strata(options_menu, .overlay)
 
     footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })
     if button1 != "" do add_text_button(footer, name="button1", text=button1)
