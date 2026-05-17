@@ -29,9 +29,9 @@ print_view :: proc (v: ^View, _depth := 0) {
 
     if v.size != {} do fmt.sbprintf(&sb, " size={{%v,%v}}", v.size.x, v.size.y)
 
-    if v.placement != {} {
-        p := &v.placement
-        fmt.sbprint(&sb, " placement={")
+    if v.place != {} {
+        p := &v.place
+        fmt.sbprint(&sb, " place={")
         if p.anchor == p.pivot {
             if p.anchor.x == p.anchor.y do fmt.sbprintf(&sb, "%v", p.anchor.x)
             else                        do fmt.sbprintf(&sb, "{{%v,%v}}", p.anchor.x, p.anchor.y)

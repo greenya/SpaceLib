@@ -7,7 +7,6 @@ import "../core"
 
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
-// TODO: the view layout solver should skip children whose strata don't match with the parent (the positioning should work, but not the fit/fill mechanic)
 // TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
 
 VIEWS_MAX :: 2000

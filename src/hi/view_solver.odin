@@ -11,12 +11,12 @@ _ROOT_VIEW_ID :: 0
 // Note: The root view `flags`, `size`, `padding` and `layout` are ignored.
 _solve_view_fit_and_fixed_size :: proc(v: ^View) {
     // Recurse to children first
-    for child := v.first_child; child != nil; child = child.next_sibling {
-        if .hidden not_in child.flags do _solve_view_fit_and_fixed_size(child)
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .hidden not_in c.flags do _solve_view_fit_and_fixed_size(c)
     }
 
-    child_count, fit_size := _view_content_fit(v)
-    v.solved.child_count = child_count
+    fit_size: Vec2
+    v.solved.layout_child_count, fit_size = _view_layout_content_fit(v)
 
     if v.id == _ROOT_VIEW_ID {
         return
@@ -50,8 +50,8 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
     v_size_x_avail := max(0, v.solved.size.x - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved.size.y - (v.padding[1] + v.padding[3]))
 
-    v_gaps_total := v.solved.child_count > 0\
-        ? f32(v.solved.child_count - 1) * v.layout.gap\
+    v_gaps_total := v.solved.layout_child_count > 0\
+        ? f32(v.solved.layout_child_count - 1) * v.layout.gap\
         : 0
 
     v_size_x_avail_no_gaps := v.layout.dir == .row\
@@ -62,131 +62,142 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
         ? max(0, v_size_y_avail - v_gaps_total)\
         : v_size_y_avail
 
-    child_count_fill_x: int
-    child_count_fill_y: int
-    children_non_fill_x_width: f32
-    children_non_fill_y_height: f32
+    fill_x_child_count: int
+    fill_y_child_count: int
+    non_fill_x_children_width: f32
+    non_fill_y_children_height: f32
 
     // First pass: Update size for ".ratio_*", count "fill" children stats
-    for child := v.first_child; child != nil; child = child.next_sibling {
-        if .hidden in child.flags do continue
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .hidden in c.flags do continue
 
-        if .fill_x in child.flags {
-            child_count_fill_x += 1
+        if v.strata != c.strata {
+            if .ratio_x in c.flags do c.solved.size.x = c.size.x * v.solved.size.x
+            if .ratio_y in c.flags do c.solved.size.y = c.size.y * v.solved.size.y
         } else {
-            if .ratio_x in child.flags {
-                child.solved.size.x = child.size.x * v_size_x_avail_no_gaps
+            if .fill_x in c.flags {
+                fill_x_child_count += 1
+            } else {
+                if .ratio_x in c.flags {
+                    c.solved.size.x = c.size.x * v_size_x_avail_no_gaps
+                }
+                non_fill_x_children_width += c.solved.size.x
             }
-            children_non_fill_x_width += child.solved.size.x
-        }
 
-        if .fill_y in child.flags {
-            child_count_fill_y += 1
-        } else {
-            if .ratio_y in child.flags {
-                child.solved.size.y = child.size.y * v_size_y_avail_no_gaps
+            if .fill_y in c.flags {
+                fill_y_child_count += 1
+            } else {
+                if .ratio_y in c.flags {
+                    c.solved.size.y = c.size.y * v_size_y_avail_no_gaps
+                }
+                non_fill_y_children_height += c.solved.size.y
             }
-            children_non_fill_y_height += child.solved.size.y
         }
     }
 
     // If any "fill" children found, do second pass -- update "fill" children size
-    if child_count_fill_x > 0 || child_count_fill_y > 0 {
-        assert(v.solved.child_count > 0)
+    if fill_x_child_count > 0 || fill_y_child_count > 0 {
+        assert(v.solved.layout_child_count > 0)
 
         fill_child_width: f32
         fill_child_height: f32
 
-        if child_count_fill_x > 0 {
+        if fill_x_child_count > 0 {
             fill_child_width = v.layout.dir == .row\
-                ? max(0, (v_size_x_avail_no_gaps - children_non_fill_x_width) / f32(child_count_fill_x))\
+                ? max(0, (v_size_x_avail_no_gaps - non_fill_x_children_width) / f32(fill_x_child_count))\
                 : v_size_x_avail
         }
 
-        if child_count_fill_y > 0 {
+        if fill_y_child_count > 0 {
             fill_child_height = v.layout.dir == .column\
-                ? max(0, (v_size_y_avail_no_gaps - children_non_fill_y_height) / f32(child_count_fill_y))\
+                ? max(0, (v_size_y_avail_no_gaps - non_fill_y_children_height) / f32(fill_y_child_count))\
                 : v_size_y_avail
         }
 
-        for child := v.first_child; child != nil; child = child.next_sibling {
-            if .hidden not_in child.flags {
-                if .fill_x in child.flags do child.solved.size.x = fill_child_width
-                if .fill_y in child.flags do child.solved.size.y = fill_child_height
-            }
+        for c := v.first_child; c != nil; c = c.next_sibling {
+            if .hidden in c.flags do continue
+            if .fill_x in c.flags do c.solved.size.x = fill_child_width
+            if .fill_y in c.flags do c.solved.size.y = fill_child_height
         }
     }
 
     // Recurse to children last with position calculation
     if v.first_child != nil {
-        cursor := v.solved.pos + { v.padding[0], v.padding[1] } + v.scroll
+        layout_cursor := v.solved.pos + { v.padding[0], v.padding[1] } + v.scroll
 
         // Offset cursor according to main axis alignment (layout.justify)
         if v.layout.justify != .start {
-            if v.layout.dir == .row && child_count_fill_x == 0 {
-                d := v_size_x_avail_no_gaps - children_non_fill_x_width
+            if v.layout.dir == .row && fill_x_child_count == 0 {
+                d := v_size_x_avail_no_gaps - non_fill_x_children_width
                 if v.layout.justify == .center do d /= 2
-                cursor.x += d
-            } else if v.layout.dir == .column && child_count_fill_y == 0 {
-                d := v_size_y_avail_no_gaps - children_non_fill_y_height
+                layout_cursor.x += d
+            } else if v.layout.dir == .column && fill_y_child_count == 0 {
+                d := v_size_y_avail_no_gaps - non_fill_y_children_height
                 if v.layout.justify == .center do d /= 2
-                cursor.y += d
+                layout_cursor.y += d
             }
         }
 
-        for child := v.first_child; child != nil; child = child.next_sibling {
-            if .hidden in child.flags do continue
+        for c := v.first_child; c != nil; c = c.next_sibling {
+            if .hidden in c.flags do continue
 
-            append(&v.ctx.strata_buckets[child.strata], child.id)
+            append(&v.ctx.strata_buckets[c.strata], c.id)
 
-            switch v.layout.dir {
+            if v.strata != c.strata {
+                // Non-native strata child skips layout cursor and uses fixed positioning without parent padding
+                c.solved.pos = _place_pos(
+                    place       = c.place,
+                    size        = c.solved.size,
+                    rel_pos     = v.solved.pos,
+                    rel_size    = v.solved.size,
+                )
+            } else do switch v.layout.dir {
             case .none:
-                child.solved.pos = _placement_pos(
-                    placement   = child.placement,
-                    size        = child.solved.size,
-                    rel_pos     = cursor,
+                c.solved.pos = _place_pos(
+                    place       = c.place,
+                    size        = c.solved.size,
+                    rel_pos     = layout_cursor,
                     rel_size    = {v_size_x_avail, v_size_y_avail},
                 )
             case .row:
-                child.solved.pos = cursor
+                c.solved.pos = layout_cursor
                 // Offset child by Y axis, e.g. cross-axis alignment (layout.align)
                 if v.layout.align != .start {
-                    d := v_size_y_avail - child.solved.size.y
+                    d := v_size_y_avail - c.solved.size.y
                     if v.layout.align == .center do d /= 2
-                    child.solved.pos.y += d
+                    c.solved.pos.y += d
                 }
-                cursor.x += child.solved.size.x + v.layout.gap
+                layout_cursor.x += c.solved.size.x + v.layout.gap
             case .column:
-                child.solved.pos = cursor
+                c.solved.pos = layout_cursor
                 // Offset child by X axis, e.g. cross-axis alignment (layout.align)
                 if v.layout.align != .start {
-                    d := v_size_x_avail - child.solved.size.x
+                    d := v_size_x_avail - c.solved.size.x
                     if v.layout.align == .center do d /= 2
-                    child.solved.pos.x += d
+                    c.solved.pos.x += d
                 }
-                cursor.y += child.solved.size.y + v.layout.gap
+                layout_cursor.y += c.solved.size.y + v.layout.gap
             }
 
-            if child.first_child != nil {
-                _solve_children_fill_and_ratio_size(child)
+            if c.first_child != nil {
+                _solve_children_fill_and_ratio_size(c)
             }
         }
     }
 }
 
-// - `child_count` Number of non-`.hidden` children
+// - `child_count` Number of non-`.hidden` and native strata children
 // - `fit_size` The size to fit those children according to `padding`, `layout.dir` and `layout.gap`
-_view_content_fit :: proc (v: ^View) -> (child_count: int, fit_size: Vec2) {
-    cs_sum: Vec2
-    cs_max: Vec2
+_view_layout_content_fit :: proc (v: ^View) -> (child_count: i32, fit_size: Vec2) {
+    fit_sum: Vec2
+    fit_max: Vec2
 
-    for child := v.first_child; child != nil; child = child.next_sibling {
-        if .hidden not_in child.flags {
-            child_count += 1
-            cs_sum += child.solved.size
-            cs_max.x = max(cs_max.x, child.solved.size.x)
-            cs_max.y = max(cs_max.y, child.solved.size.y)
-        }
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .hidden in c.flags || v.strata != c.strata do continue
+        child_count += 1
+        fit_sum += c.solved.size
+        fit_max.x = max(fit_max.x, c.solved.size.x)
+        fit_max.y = max(fit_max.y, c.solved.size.y)
     }
 
     gaps_total := child_count > 0\
@@ -197,28 +208,28 @@ _view_content_fit :: proc (v: ^View) -> (child_count: int, fit_size: Vec2) {
     case .none:
         // Fit single largest child
         fit_size = {
-            cs_max.x + v.padding[0] + v.padding[2],
-            cs_max.y + v.padding[1] + v.padding[3],
+            fit_max.x + v.padding[0] + v.padding[2],
+            fit_max.y + v.padding[1] + v.padding[3],
         }
     case .row:
         // Fit into row: width is sum, height is max
         fit_size = {
-            cs_sum.x + gaps_total + v.padding[0] + v.padding[2],
-            cs_max.y + v.padding[1] + v.padding[3],
+            fit_sum.x + gaps_total + v.padding[0] + v.padding[2],
+            fit_max.y + v.padding[1] + v.padding[3],
         }
     case .column:
         // Fit into column: width is max, height is sum
         fit_size = {
-            cs_max.x + v.padding[0] + v.padding[2],
-            cs_sum.y + gaps_total + v.padding[1] + v.padding[3],
+            fit_max.x + v.padding[0] + v.padding[2],
+            fit_sum.y + gaps_total + v.padding[1] + v.padding[3],
         }
     }
 
     return
 }
 
-_placement_pos :: proc (placement: Placement, size, rel_pos, rel_size: Vec2) -> Vec2 {
-    anchor_point := rel_pos + (rel_size * placement.anchor)
-    pivot_offset := size * placement.pivot
-    return anchor_point - pivot_offset + placement.offset
+_place_pos :: proc (place: Place, size, rel_pos, rel_size: Vec2) -> Vec2 {
+    anchor_point := rel_pos + (rel_size * place.anchor)
+    pivot_offset := size * place.pivot
+    return anchor_point - pivot_offset + place.offset
 }

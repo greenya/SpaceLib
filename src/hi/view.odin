@@ -12,11 +12,11 @@ View_Init :: struct {
         strata  : Strata    | 4,    // Drawing layer
     },
 
-    placement   : Placement,// Used only if parent `layout.dir == .none`
-    size        : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
-    padding     : Vec4,     // Padding for the children in order: 0=left, 1=top, 2=right, 3=bottom
-    scroll      : Vec2,     // Offset for the children
-    layout      : Layout,   // Layout for the children
+    size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
+    place   : Place,    // Used only if parent has no layout or for non-native `strata`
+    padding : Vec4,     // Padding for native strata children in order: 0=left, 1=top, 2=right, 3=bottom
+    scroll  : Vec2,     // Offset for native strata children
+    layout  : Layout,   // Layout for native strata children
 
     on_draw: proc (v: ^View),
     // on_state: (show/hide/select/deselect)
@@ -41,9 +41,9 @@ View :: struct {
 
     // Solver result in ref units. Not updated for invisible views.
     solved: struct {
-        pos         : Vec2,
-        size        : Vec2,
-        child_count : int,  // Visible child count
+        pos                 : Vec2,
+        size                : Vec2,
+        layout_child_count  : i32, // Count of visible native strata children affected by the `layout`
     },
 }
 
@@ -56,12 +56,12 @@ Flag :: enum {
 
     // Sizing
 
-    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent
-    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent
-    fit_x,      // `solved.size.x` is set to fit children width
-    fit_y,      // `solved.size.y` is set to fit children height
-    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` views.
-    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` views.
+    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
+    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
+    fit_x,      // `solved.size.x` is set to fit native strata children width
+    fit_y,      // `solved.size.y` is set to fit native strata children height
+    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
+    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
 
     // Behavior
 
@@ -106,7 +106,7 @@ Strata :: enum {
     tooltip     = 2,    // For topmost and generally non-interactive transient views like tooltips, notifications, system messages
 }
 
-Placement :: struct {
+Place :: struct {
     anchor  : Vec2, // Parent point (0 to 1)
     pivot   : Vec2, // Local point (0 to 1)
     offset  : Vec2, // Extra offset
@@ -120,9 +120,9 @@ Layout :: struct {
 }
 
 Layout_Direction :: enum u8 {
-    none,   // Children positioned by their `placement`.
-    row,    // Children arranged in a row. Their `placement` is ignored.
-    column, // Children arranged in a column. Their `placement` is ignored.
+    none,   // Children positioned by their `place`.
+    row,    // Children arranged in a row. Their `place` is ignored.
+    column, // Children arranged in a column. Their `place` is ignored.
 }
 
 Layout_Alignment :: enum u8 {

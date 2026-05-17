@@ -99,12 +99,12 @@ on_draw_view :: proc (v: ^hi.View) {
 
 add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, button2 := "", button3 := "", with_header_close_button := false) -> (root: ^hi.View) {
     root = hi.add_view(parent, {
-        name        = "dialog",
-        flags       = {.fit_y},
-        size        = {160,0},
-        layout      = {dir=.column},
-        placement   = {anchor=.5,pivot=.5},
-        on_draw     = on_draw_view,
+        name    = "dialog",
+        flags   = {.fit_y},
+        size    = {160,0},
+        layout  = {dir=.column},
+        place   = {anchor=.5,pivot=.5},
+        on_draw = on_draw_view,
     })
 
     header := hi.add_view(root, { name="header", flags={.fill_x,.fit_y}, padding={10,0,0,0}, layout={dir=.row,align=.center,gap=10} })
@@ -115,7 +115,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
 
     /* content := */ hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
 
-    // options_menu := hi.add_view(content, { name="options_menu", size={100,0}, placement={anchor=.5}, layout={dir=.column}, strata=.overlay })
+    // options_menu := hi.add_view(content, { name="options_menu", size={100,0}, place={anchor=.5}, layout={dir=.column}, strata=.overlay })
     // hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
     // hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
     // hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
@@ -126,9 +126,8 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     if button2 != "" do add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
-    // FIX: different strata -- tooltip should be not part of the layout
-    tooltip := hi.add_view(footer, { name="tooltip", size={100,40}, placement={pivot={0,1},offset={0,-2}}, strata=.tooltip })
-    hi.add_view(tooltip, { name="icon", placement={offset=5}, size=20 })
+    hint := hi.add_view(footer, { name="overlay", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
+    hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
     return
 }
