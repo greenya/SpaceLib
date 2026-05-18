@@ -5,8 +5,8 @@ import "core:strings"
 
 print_view_tree :: proc (v: ^View, _depth := 0) {
     print_view(v, _depth)
-    for child := v.first_child; child != nil; child = child.next_sibling {
-        print_view_tree(child, _depth + 1)
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        print_view_tree(c, _depth + 1)
     }
 }
 

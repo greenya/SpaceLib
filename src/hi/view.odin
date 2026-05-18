@@ -203,6 +203,29 @@ prev_sibling :: proc (v: ^View) -> ^View {
     return nil
 }
 
+Child_Iterator :: struct {
+    next_child      : ^View,
+    strata_filter   : bit_set [Strata],
+}
+
+// If `strata_filter` is empty, it defaults to native strata children only
+child_iterate :: proc (v: ^View, strata_filter := bit_set [Strata] {}) -> (iter: Child_Iterator) {
+    return {
+        next_child = v.first_child,
+        strata_filter = strata_filter != {} ? strata_filter : { v.strata },
+    }
+}
+
+child_next :: proc (it: ^Child_Iterator) -> (v: ^View, ok: bool) {
+    for c := it.next_child; c != nil; c = c.next_sibling {
+        if c.strata in it.strata_filter {
+            it.next_child = c.next_sibling
+            return c, true
+        }
+    }
+    return
+}
+
 Set_Filter :: bit_set [enum { self, children }]
 
 set_debug :: proc (v: ^View, on: bool, filter: bit_set [enum { self, children }] = ~{}) {

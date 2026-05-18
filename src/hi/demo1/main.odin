@@ -129,6 +129,11 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
     hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
+    // Iterator test, should include only buttons
+    fmt.println("Footer buttons:")
+    it := hi.child_iterate(footer)
+    for c in hi.child_next(&it) do fmt.println("\t", c.id, c.name, c.strata)
+
     return
 }
 
