@@ -1,5 +1,8 @@
 package hi
 
+import "core:slice"
+import "../core"
+
 // Bottom-up solver for `.fit_*` and fixed sizes.
 //
 // The given view and its children get:
@@ -43,7 +46,7 @@ _solve_view_fit_and_fixed_size :: proc(v: ^View) {
 // - `solved.size` only if `fill_*` or `ratio_*` size
 // - `solved.pos`
 //
-// Also adds visible children to the `ctx.strata_buckets`.
+// Also adds visible children to the `ctx.visible_views`.
 _solve_children_fill_and_ratio_size :: proc (v: ^View) {
     v_size_x_avail := max(0, v.solved.size.x - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved.size.y - (v.padding[1] + v.padding[3]))
@@ -139,7 +142,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
 
-            append(&v.ctx.strata_buckets[c.strata], c.idx)
+            append(&v.ctx.visible_views, Visible_View { view=c })
 
             if v.strata != c.strata {
                 // Non-native strata child skips layout cursor and uses fixed positioning without parent padding
@@ -181,6 +184,41 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
                 _solve_children_fill_and_ratio_size(c)
             }
         }
+    }
+}
+
+// Updates `ctx.visible_views`:
+// - sorts according to priority: `strata` > `level` > `uid`
+// - solves scissor rects
+_solve_visible_view_scissors :: proc (ctx: ^Context) {
+    slice.sort_by(ctx.visible_views[:], less=proc (w1, w2: Visible_View) -> bool {
+        switch {
+        case w1.view.strata != w2.view.strata   : return w1.view.strata < w2.view.strata
+        case w1.view.level  != w2.view.level    : return w1.view.level  < w2.view.level
+        case                                    : return w1.view.uid    < w2.view.uid
+        }
+    })
+
+    s: struct { rect: Rect, strata: Strata } = { strata=Strata(-999) }
+    for &w in ctx.visible_views {
+        if s.strata != w.view.strata {
+            s.rect = { expand_values(ctx.root.solved.pos), expand_values(ctx.root.solved.size) }
+            s.strata = w.view.strata
+        }
+
+        if .scissor in w.view.flags {
+            v_rect := Rect { expand_values(w.view.solved.pos), expand_values(w.view.solved.size) }
+            s.rect = core.rect_intersection(s.rect, v_rect)
+        }
+
+        // FIX: track actual parent scissor rect, not flat rolling one (like now)
+        //      maybe add View.solved.scissor to simplify things
+
+        // maybe refactor solved.pos+size into solved.rect
+
+        // maybe add .in_scissor flag, update for all ctx.visible_views, basically cache result of core.rects_intersect() and use it in mouse hit test and drawing (skip event->draw if not-.in_scissor)
+
+        w.scissor = s.rect
     }
 }
 

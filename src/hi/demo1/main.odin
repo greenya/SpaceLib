@@ -53,13 +53,18 @@ main :: proc () {
     hi.solve_context(ctx)
     hi.print_view_tree(ctx.root)
 
-    for bucket, strata in ctx.strata_buckets {
-        fmt.printfln("================================================[ %v ]", strata)
-        for v_id in bucket {
-            v := &ctx.views.items[v_id]
-            fmt.printfln("\tL%d\t#%d\t%s", v.level, v.uid, v.name)
-        }
+    fmt.println("ctx.visible_views == {")
+    for w in ctx.visible_views {
+        fmt.printfln("\t%v\tL%d\t#%4d %20s %10s\t%v",
+            w.view.strata,
+            w.view.level,
+            w.view.uid,
+            w.view.name,
+            .scissor in w.view.flags ? "+scissor" : "",
+            w.scissor,
+        )
     }
+    fmt.println("}")
 
     for main_update() {
         main_draw()
@@ -113,7 +118,10 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         add_icon_button(header, name="button_close", icon="close")
     }
 
-    /* content := */ hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
+    content := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
+    clip := hi.add_view(content, { name="clip_in_content", flags={.scissor}, size={100,40}, place={anchor={1,.5},pivot=.5} })
+    hi.add_view(clip, { name="box_in_clip", size=30, place={anchor={.5,1},pivot=.5} })
+    hi.add_view(content, { name="box_in_content", size=30, place={anchor={1,.25},pivot=.5} })
 
     // options_menu := hi.add_view(content, { name="options_menu", size={100,0}, place={anchor=.5}, layout={dir=.column}, strata=.overlay })
     // hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })

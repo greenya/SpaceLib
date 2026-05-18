@@ -2,7 +2,6 @@ package hi
 
 import "core:math"
 import "core:math/linalg"
-import "core:slice"
 import "../core"
 
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
@@ -10,7 +9,7 @@ import "../core"
 // TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
 
 VIEWS_MAX :: 2000
-STRATA_BUCKET_VIEWS_MAX :: VIEWS_MAX / 2
+VISIBLE_VIEWS_MAX :: VIEWS_MAX / 4
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -47,7 +46,7 @@ Context_Init :: struct {
 
 Context :: struct {
     views           : core.Sparse_Array(View, VIEWS_MAX),
-    strata_buckets  : [Strata] [dynamic; STRATA_BUCKET_VIEWS_MAX] View_IDX,
+    visible_views   : [dynamic; VISIBLE_VIEWS_MAX] Visible_View,
     // views_stack     : [dynamic; 64] ^View,
     next_view_uid   : View_UID, // `View.uid` for the next added view
     root            : ^View,
@@ -70,6 +69,11 @@ Context :: struct {
         lmb_pressed     : bool,         // For this frame only
         consumed        : bool,         // For this frame only
     },
+}
+
+Visible_View :: struct {
+    view    : ^View,
+    scissor : Rect,
 }
 
 Mouse_Input :: struct {
@@ -152,29 +156,34 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 }
 
 draw_context :: proc (ctx: ^Context) {
-    for bucket in ctx.strata_buckets {
-        for v_id in bucket {
-            v := &ctx.views.items[v_id]
-            if v.on_draw != nil     do v->on_draw()
-            if .debug in v.flags    do _debug_draw_view(v)
+    for w in ctx.visible_views {
+        if w.view.on_draw != nil {
+            v_rect := Rect { expand_values(w.view.solved.pos), expand_values(w.view.solved.size) }
+            if core.rects_intersect(v_rect, w.scissor) {
+                w.view->on_draw()
+            }
+        }
+        if .debug in w.view.flags {
+            _debug_draw_view(w.view)
         }
     }
 }
 
 // - Re-solves `View.solved` for every non-`.hidden` view
-// - Rebuilds `Context.strata_buckets`
+// - Rebuilds `Context.visible_views`
 // - Sets `Context.solved`
 solve_context :: proc (ctx: ^Context) {
-    for &bucket in ctx.strata_buckets do clear(&bucket)
+    ctx.solved = true
+    clear(&ctx.visible_views)
+
+    if .hidden in ctx.root.flags do return
 
     ctx.root.solved = { size=ctx.ref_size }
-    append(&ctx.strata_buckets[ctx.root.strata], ctx.root.idx)
+    append(&ctx.visible_views, Visible_View { view=ctx.root })
 
     _solve_view_fit_and_fixed_size(ctx.root)
     _solve_children_fill_and_ratio_size(ctx.root)
-    _sort_strata_buckets(ctx)
-
-    ctx.solved = true
+    _solve_visible_view_scissors(ctx)
 }
 
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
@@ -209,20 +218,6 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
 
     if ctx.on_event != nil {
         ctx->on_event({ type=.screen_size_changed })
-    }
-}
-
-_sort_strata_buckets :: proc (ctx: ^Context) {
-    context.user_ptr = ctx
-    for &bucket in ctx.strata_buckets {
-        slice.sort_by(bucket[:], less=proc (i, j: View_IDX) -> bool {
-            ctx := cast (^Context) context.user_ptr
-            v_i := &ctx.views.items[i]
-            v_j := &ctx.views.items[j]
-            return v_i.level != v_j.level\
-                 ? v_i.level  < v_j.level\
-                 : v_i.uid    < v_j.uid
-        })
     }
 }
 
