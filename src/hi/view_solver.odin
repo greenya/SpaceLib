@@ -1,7 +1,5 @@
 package hi
 
-_ROOT_VIEW_ID :: 0
-
 // Bottom-up solver for `.fit_*` and fixed sizes.
 //
 // The given view and its children get:
@@ -18,7 +16,7 @@ _solve_view_fit_and_fixed_size :: proc(v: ^View) {
     fit_size: Vec2
     v.solved.layout_child_count, fit_size = _view_layout_content_fit(v)
 
-    if v.id == _ROOT_VIEW_ID {
+    if v.idx == 0 {
         return
     }
 
@@ -141,7 +139,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
 
-            append(&v.ctx.strata_buckets[c.strata], c.id)
+            append(&v.ctx.strata_buckets[c.strata], c.idx)
 
             if v.strata != c.strata {
                 // Non-native strata child skips layout cursor and uses fixed positioning without parent padding

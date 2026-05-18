@@ -8,10 +8,6 @@ import "../core"
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
 // TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
-// TODO: Fix _sort_strata_buckets(), when view levels equal, it should use some auto-increment id (truly unique),
-//       at the moment it uses "id" which is an index in the sparse array, the issue will rise when removing items
-//       and adding new ones, the indexes will be reused and sorting will be incorrect. Maybe rename id->idx,
-//       and add id, which takes some Context.next_view_id (auto increment on use)
 
 VIEWS_MAX :: 2000
 STRATA_BUCKET_VIEWS_MAX :: VIEWS_MAX / 2
@@ -51,8 +47,9 @@ Context_Init :: struct {
 
 Context :: struct {
     views           : core.Sparse_Array(View, VIEWS_MAX),
-    strata_buckets  : [Strata] [dynamic; STRATA_BUCKET_VIEWS_MAX] View_ID,
+    strata_buckets  : [Strata] [dynamic; STRATA_BUCKET_VIEWS_MAX] View_IDX,
     // views_stack     : [dynamic; 64] ^View,
+    next_view_uid   : View_UID, // `View.uid` for the next added view
     root            : ^View,
     solved          : bool, // if `false`, the `update_context()` will do `solve_context()` automatically
 
@@ -109,9 +106,12 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
 
     core.sparse_array_init(&ctx.views)
 
-    root_id, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
-    ensure(root_id == _ROOT_VIEW_ID)
+    root_idx, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
+    ensure(root_idx == 0)
     ctx.root = root
+
+    ensure(ctx.next_view_uid == 0)
+    ctx.next_view_uid += 1
 
     return ctx
 }
@@ -168,7 +168,7 @@ solve_context :: proc (ctx: ^Context) {
     for &bucket in ctx.strata_buckets do clear(&bucket)
 
     ctx.root.solved = { size=ctx.ref_size }
-    append(&ctx.strata_buckets[ctx.root.strata], ctx.root.id)
+    append(&ctx.strata_buckets[ctx.root.strata], ctx.root.idx)
 
     _solve_view_fit_and_fixed_size(ctx.root)
     _solve_children_fill_and_ratio_size(ctx.root)
@@ -215,11 +215,13 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
 _sort_strata_buckets :: proc (ctx: ^Context) {
     context.user_ptr = ctx
     for &bucket in ctx.strata_buckets {
-        slice.sort_by(bucket[:], less=proc (i, j: View_ID) -> bool {
+        slice.sort_by(bucket[:], less=proc (i, j: View_IDX) -> bool {
             ctx := cast (^Context) context.user_ptr
-            return ctx.views.items[i].level != ctx.views.items[j].level\
-                 ? ctx.views.items[i].level  < ctx.views.items[j].level\
-                 : i < j
+            v_i := &ctx.views.items[i]
+            v_j := &ctx.views.items[j]
+            return v_i.level != v_j.level\
+                 ? v_i.level  < v_j.level\
+                 : v_i.uid    < v_j.uid
         })
     }
 }

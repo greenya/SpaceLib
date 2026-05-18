@@ -2,7 +2,8 @@ package hi
 
 import "../core"
 
-View_ID :: distinct int
+View_IDX :: distinct i32
+View_UID :: distinct i32
 
 View_Init :: struct {
     flags: bit_set [Flag; u16],
@@ -32,8 +33,9 @@ View_Init :: struct {
 View :: struct {
     using init: View_Init,
 
-    ctx : ^Context,
-    id  : View_ID,
+    ctx: ^Context,
+    idx: View_IDX,  // Reusable index in the `ctx.views`
+    uid: View_UID,  // Unique ID for the whole runtime
 
     parent      : ^View,
     next_sibling: ^View,
@@ -130,8 +132,10 @@ add_view :: proc (parent: ^View, init: View_Init) -> ^View {
 }
 
 add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
-    v_id, v := core.sparse_array_add(&ctx.views, View { init=init })
-    v.id = View_ID(v_id)
+    v_idx, v := core.sparse_array_add(&ctx.views, View { init=init })
+    v.idx = View_IDX(v_idx)
+    v.uid = ctx.next_view_uid
+    ctx.next_view_uid += 1
     v.ctx = ctx
     return v
 }
@@ -184,7 +188,7 @@ _remove_detached_view_tree :: proc (v: ^View) {
     for c := v.first_child; c != nil; c = c.next_sibling {
         _remove_detached_view_tree(c)
     }
-    core.sparse_array_remove(&v.ctx.views, int(v.id))
+    core.sparse_array_remove(&v.ctx.views, int(v.idx))
 }
 
 last_child :: proc (v: ^View) -> ^View {

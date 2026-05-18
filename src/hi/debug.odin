@@ -21,7 +21,7 @@ _debug_draw_view :: proc (v: ^View) {
 
     rect := ref_view_to_screen(v)
 
-    if v.id == _ROOT_VIEW_ID {
+    if v.idx == 0 {
         _debug_draw_rect(v.ctx, core.rect_inflated(rect, -4), 4, _DEBUG_ROOT_COLOR)
         text := fmt.tprintf(
             "ref_size: %vx%v\n" +

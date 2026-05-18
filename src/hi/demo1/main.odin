@@ -57,7 +57,7 @@ main :: proc () {
         fmt.printfln("================================================[ %v ]", strata)
         for v_id in bucket {
             v := &ctx.views.items[v_id]
-            fmt.printfln("\tL%d\t#%d\t%s", v.level, v.id, v.name)
+            fmt.printfln("\tL%d\t#%d\t%s", v.level, v.uid, v.name)
         }
     }
 
@@ -121,18 +121,22 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     // hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
     // hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
 
+    button2_view: ^hi.View
     footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })
     if button1 != "" do add_text_button(footer, name="button1", text=button1)
-    if button2 != "" do add_text_button(footer, name="button2", text=button2)
+    if button2 != "" do button2_view = add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
     hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
     hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
+    hi.remove_view(button2_view)
+    add_text_button(footer, name="button4", text=button2)
+
     // Iterator test, should include only buttons
     fmt.println("Footer buttons:")
     it := hi.child_iterate(footer)
-    for c in hi.child_next(&it) do fmt.println("\t", c.id, c.name, c.strata)
+    for c in hi.child_next(&it) do fmt.println("\t", c.idx, c.uid, c.name, c.strata)
 
     return
 }
