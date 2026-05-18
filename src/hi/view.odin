@@ -9,7 +9,7 @@ View_Init :: struct {
 
     using bits: bit_field u16 {
         level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000
-        strata  : Strata    | 4,    // Drawing layer
+        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
@@ -76,7 +76,7 @@ Flag :: enum {
 
     disabled,   // FIX: [NOT IMPLEMENTED] The view is disabled, it will not receive Mouse Action Events (click, wheel, drag)
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse when clicked; the click event will be fired on mouse button release
-    selected,   // The view is "selected". It is up to the `View.on_draw()` to respect this state. The state toggling can be automated using `.check` or `.ratio` flags
+    selected,   // The view is "selected". It is up to the `View.on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags
     check,      // FIX: [NOT IMPLEMENTED] The view inverts `.selected` when clicked
     radio,      // FIX: [NOT IMPLEMENTED] The view sets own `.selected` when clicked and clears it for all `.radio` siblings
     // auto_hide // TODO: think more on auto_hide flag.
@@ -88,21 +88,12 @@ Flag :: enum {
     //              because if we open dropdown inside list of items, the next item in the list will be drawn above the items
     //              of the dropdown as it is spawned just after the list item. "Separate layer" in spacelib:ui was working because
     //              it supports anchoring of frames to any frame, not just parent. In this library we have only child-parent anchoring.
-    //
-    //              Maybe consider ways to add "View.strata" field. Maybe make flags to be bit_field, and take 3 bits for "strata".
-    //              This will complicate update_context() and draw_context(), but will allow to add dropdown or tooltip directly to
-    //              the target view (as child of it), with some higher strata, which should not be considered as "child" for any logic,
-    //              but only for anchoring logic, it should also affect drawing order, all the views with the highest strata should be
-    //              drawn last (on top of anything)
-    //
-    //              Maybe consider ways of building plain list of visible views ordered in a draw-order (painter algorithm), so
-    //              draw_context() becomes trivial, and all the mouse hit tests can benefit from this list.
 }
 
 Strata :: enum {
     background  = -1,   // For lowest and generally non-interactive views like artistic decorations, HUD, damage numbers, world object labels
     base        = 0,    // For the most views, e.g. panels, buttons, health bars, action bars, non-modal dialogs
-    overlay     = 1,    // For priority views like menus and dropdowns which should avoid parent clipping (only if parent uses `base` strata). For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
+    overlay     = 1,    // For priority views like menus and dropdowns which should avoid parent clipping (if parent uses different strata). For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
     tooltip     = 2,    // For topmost and generally non-interactive transient views like tooltips, notifications, system messages
 }
 
@@ -132,29 +123,82 @@ Layout_Alignment :: enum u8 {
 }
 
 add_view :: proc (parent: ^View, init: View_Init) -> ^View {
-    v_id, v := core.sparse_array_add(&parent.ctx.views, View { init=init })
-    v.id = View_ID(v_id)
-    v.ctx = parent.ctx
-    v.parent = parent
-
-    if v.strata == {} {
-        v.strata = v.parent.strata
-    }
-
-    parent_last_child := last_child(parent)
-    if parent_last_child != nil {
-        parent_last_child.next_sibling = v
-    } else {
-        parent.first_child = v
-    }
-
-    v.ctx.solved = false
+    v := add_view_detached(parent.ctx, init)
+    set_parent(v, parent)
+    if v.strata == {} do v.strata = parent.strata
     return v
 }
 
+add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
+    v_id, v := core.sparse_array_add(&ctx.views, View { init=init })
+    v.id = View_ID(v_id)
+    v.ctx = ctx
+    return v
+}
+
+// Detaches view from its current parent and attaches it to the new parent.
+// The view becomes the last child of the new parent.
+//
+// Pass `nil` to keep view detached.
+// Detached views are effectively unreachable for `solve_context()` which uses `Context.root` to traverse the tree.
+// Detached views are still part of the Context, and will be destroyed on `destroy_context()`.
+set_parent :: proc (v, new_parent: ^View) {
+    if v.parent == new_parent do return
+
+    ensure(v != new_parent, "The new parent cannot be the view itself")
+    ensure(v.parent != nil || v.parent == nil && v.next_sibling == nil, "Detached view cannot have next_sibling set")
+
+    // Detach from current parent
+    if v.parent != nil {
+        if v.parent.first_child == v {
+            v.parent.first_child = v.next_sibling
+        } else {
+            prev := prev_sibling(v)
+            prev.next_sibling = v.next_sibling
+        }
+        v.parent = nil
+        v.next_sibling = nil
+    }
+
+    // Attach to new parent
+    if new_parent != nil {
+        new_parent_last_child := last_child(new_parent)
+        if new_parent_last_child != nil {
+            new_parent_last_child.next_sibling = v
+        } else {
+            new_parent.first_child = v
+        }
+        v.parent = new_parent
+    }
+
+    v.ctx.solved = false
+}
+
+remove_view :: proc (v: ^View) {
+    set_parent(v, nil)
+    _remove_detached_view_tree(v)
+    v.ctx.solved = false
+}
+
+_remove_detached_view_tree :: proc (v: ^View) {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        _remove_detached_view_tree(c)
+    }
+    core.sparse_array_remove(&v.ctx.views, int(v.id))
+}
+
 last_child :: proc (v: ^View) -> ^View {
-    for child := v.first_child; child != nil; child = child.next_sibling {
-        if child.next_sibling == nil do return child
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.next_sibling == nil do return c
+    }
+    return nil
+}
+
+prev_sibling :: proc (v: ^View) -> ^View {
+    if v.parent.first_child != v {
+        for c := v.parent.first_child; c != nil; c = c.next_sibling {
+            if c.next_sibling == v do return c
+        }
     }
     return nil
 }
@@ -164,17 +208,17 @@ Set_Filter :: bit_set [enum { self, children }]
 set_debug :: proc (v: ^View, on: bool, filter: bit_set [enum { self, children }] = ~{}) {
     set :: proc (v: ^View, on: bool) { if on { v.flags+={.debug} } else { v.flags-={.debug} } }
     if .self in filter do set(v, on)
-    if .children in filter do for child := v.first_child; child != nil; child = child.next_sibling {
-        set(child, on)
-        if child.first_child != nil do set_debug(child, on, { .children })
+    if .children in filter do for c := v.first_child; c != nil; c = c.next_sibling {
+        set(c, on)
+        if c.first_child != nil do set_debug(c, on, { .children })
     }
 }
 
 set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
     if .self in filter do v.strata = strata
-    if .children in filter do for child := v.first_child; child != nil; child = child.next_sibling {
-        child.strata = strata
-        if child.first_child != nil do set_strata(child, strata, { .children })
+    if .children in filter do for c := v.first_child; c != nil; c = c.next_sibling {
+        c.strata = strata
+        if c.first_child != nil do set_strata(c, strata, { .children })
     }
     v.ctx.solved = false
 }

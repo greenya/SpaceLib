@@ -8,6 +8,10 @@ import "../core"
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
 // TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
+// TODO: Fix _sort_strata_buckets(), when view levels equal, it should use some auto-increment id (truly unique),
+//       at the moment it uses "id" which is an index in the sparse array, the issue will rise when removing items
+//       and adding new ones, the indexes will be reused and sorting will be incorrect. Maybe rename id->idx,
+//       and add id, which takes some Context.next_view_id (auto increment on use)
 
 VIEWS_MAX :: 2000
 STRATA_BUCKET_VIEWS_MAX :: VIEWS_MAX / 2

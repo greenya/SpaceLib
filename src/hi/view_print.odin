@@ -36,14 +36,14 @@ print_view :: proc (v: ^View, _depth := 0) {
             if p.anchor.x == p.anchor.y do fmt.sbprintf(&sb, "%v", p.anchor.x)
             else                        do fmt.sbprintf(&sb, "{{%v,%v}}", p.anchor.x, p.anchor.y)
         } else {
-            if p.anchor.x == p.anchor.y do fmt.sbprintf(&sb, "a=%v", p.anchor.x)
-            else                        do fmt.sbprintf(&sb, "a={{%v,%v}}", p.anchor.x, p.anchor.y)
-            if p.pivot.x == p.pivot.y   do fmt.sbprintf(&sb, ",p=%v", p.pivot.x)
-            else                        do fmt.sbprintf(&sb, ",p={{%v,%v}}", p.pivot.x, p.pivot.y)
+            if p.anchor.x == p.anchor.y do fmt.sbprintf(&sb, "anchor=%v", p.anchor.x)
+            else                        do fmt.sbprintf(&sb, "anchor={{%v,%v}}", p.anchor.x, p.anchor.y)
+            if p.pivot.x == p.pivot.y   do fmt.sbprintf(&sb, ",pivot=%v", p.pivot.x)
+            else                        do fmt.sbprintf(&sb, ",pivot={{%v,%v}}", p.pivot.x, p.pivot.y)
         }
         if p.offset != {} {
-            if p.offset.x == p.offset.y do fmt.sbprintf(&sb, ",o=%v", p.offset.x)
-            else                        do fmt.sbprintf(&sb, ",o={{%v,%v}}", p.offset.x, p.offset.y)
+            if p.offset.x == p.offset.y do fmt.sbprintf(&sb, ",offset=%v", p.offset.x)
+            else                        do fmt.sbprintf(&sb, ",offset={{%v,%v}}", p.offset.x, p.offset.y)
         }
         fmt.sbprint(&sb, "}")
     }

@@ -126,7 +126,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     if button2 != "" do add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
-    hint := hi.add_view(footer, { name="overlay", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
+    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
     hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
     return
