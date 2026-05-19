@@ -9,8 +9,8 @@ View_Init :: struct {
     flags: bit_set [Flag; u16],
 
     using bits: bit_field u16 {
-        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000
         strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
+        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
@@ -43,9 +43,9 @@ View :: struct {
 
     // Solver result in ref units. Not updated for invisible views.
     solved: struct {
-        pos                 : Vec2,
-        size                : Vec2,
-        layout_child_count  : i32, // Count of visible native strata children affected by the `layout`
+        rect                : Rect,
+        parent_scissor      : Rect, // Scissor rect this view is clipped by. If empty, the scissor is disabled.
+        layout_child_count  : i32,  // Count of visible native strata children affected by the `layout`
     },
 }
 
@@ -54,16 +54,16 @@ Flag :: enum {
 
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`.
-    scissor,    // FIX: [NOT IMPLEMENTED] The view clips its children of the equal `strata`. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
+    scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
 
     // Sizing
 
     ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
     ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
-    fit_x,      // `solved.size.x` is set to fit native strata children width
-    fit_y,      // `solved.size.y` is set to fit native strata children height
-    fill_x,     // `solved.size.x` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
-    fill_y,     // `solved.size.y` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
+    fit_x,      // `solved.rect.w` is set to fit native strata children width
+    fit_y,      // `solved.rect.h` is set to fit native strata children height
+    fill_x,     // `solved.rect.w` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
+    fill_y,     // `solved.rect.h` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
 
     // Behavior
 
@@ -252,9 +252,9 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
 
 content_rect :: proc (v: ^View) -> Rect {
     return {
-        v.solved.pos.x + v.padding[0],
-        v.solved.pos.y + v.padding[1],
-        max(0, v.solved.size.x - (v.padding[0] + v.padding[2])),
-        max(0, v.solved.size.y - (v.padding[1] + v.padding[3])),
+        v.solved.rect.x + v.padding[0],
+        v.solved.rect.y + v.padding[1],
+        max(0, v.solved.rect.w - (v.padding[0] + v.padding[2])),
+        max(0, v.solved.rect.h - (v.padding[1] + v.padding[3])),
     }
 }

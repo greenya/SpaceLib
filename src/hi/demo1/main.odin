@@ -29,6 +29,13 @@ main :: proc () {
         on_event = proc (ctx: ^hi.Context, event: hi.Context_Event) {
             fmt.println("[ctx.on_event]", event)
         },
+        set_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
+            k2.set_scissor_rect(
+                scissor != {}\
+                ? k2.Rect(hi.ref_rect_to_screen(ctx, scissor))\
+                : nil,
+            )
+        },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
             k2.draw_line(from, to, thick, color)
         },
@@ -54,14 +61,14 @@ main :: proc () {
     hi.print_view_tree(ctx.root)
 
     fmt.println("ctx.visible_views == {")
-    for w in ctx.visible_views {
+    for v in ctx.visible_views {
         fmt.printfln("\t%v\tL%d\t#%4d %20s %10s\t%v",
-            w.view.strata,
-            w.view.level,
-            w.view.uid,
-            w.view.name,
-            .scissor in w.view.flags ? "+scissor" : "",
-            w.scissor,
+            v.strata,
+            v.level,
+            v.uid,
+            v.name,
+            .scissor in v.flags ? "+scissor" : "",
+            v.solved.parent_scissor,
         )
     }
     fmt.println("}")
@@ -120,8 +127,8 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
 
     content := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80} })
     clip := hi.add_view(content, { name="clip_in_content", flags={.scissor}, size={100,40}, place={anchor={1,.5},pivot=.5} })
-    hi.add_view(clip, { name="box_in_clip", size=30, place={anchor={.5,1},pivot=.5} })
-    hi.add_view(content, { name="box_in_content", size=30, place={anchor={1,.25},pivot=.5} })
+    hi.add_view(clip, { name="box_in_clip", size={50,30}, place={anchor={.5,1},pivot=.5}, on_draw=on_draw_view })
+    hi.add_view(content, { name="box_in_content", size={50,30}, place={anchor={1,.25},pivot=.5}, on_draw=on_draw_view })
 
     // options_menu := hi.add_view(content, { name="options_menu", size={100,0}, place={anchor=.5}, layout={dir=.column}, strata=.overlay })
     // hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
@@ -135,11 +142,13 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     if button2 != "" do button2_view = add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
-    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay })
+    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=on_draw_view })
     hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
     hi.remove_view(button2_view)
-    add_text_button(footer, name="button4", text=button2)
+    add_text_button(footer, name="button4", text="")
+    add_text_button(footer, name="button5", text="")
+    add_text_button(footer, name="button6", text="")
 
     // Iterator test, should include only buttons
     fmt.println("Footer buttons:")

@@ -32,28 +32,30 @@ _debug_draw_view :: proc (v: ^View) {
             "screen_font_height: %i\n" +
             "screen_pixel_scale: %.2f\n" +
             "\n" +
+            "time: %.3f (%ims)\n" +
             "mouse.screen_pos: %.0f,%.0f\n" +
             "mouse.ref_pos: %.0f,%.0f\n" +
             "mouse.lmb_down: %v\n" +
             "\n" +
-            "time: %.3f (%ims)\n" +
-            "views: %i",
+            "visible views: %i of %i\n" +
+            "views limit: %i",
             v.ctx.ref_size.x, v.ctx.ref_size.y,
             v.ctx.ref_font_height,
             v.ctx.screen_size.x, v.ctx.screen_size.y,
             v.ctx.screen_top_left.x, v.ctx.screen_top_left.y,
             v.ctx.screen_font_height,
             v.ctx.screen_pixel_scale,
+            v.ctx.time, int(v.ctx.dt*1000),
             v.ctx.mouse.screen_pos.x, v.ctx.mouse.screen_pos.y,
             v.ctx.mouse.ref_pos.x, v.ctx.mouse.ref_pos.y,
             v.ctx.mouse.lmb_down,
-            v.ctx.time, int(v.ctx.dt*1000),
-            core.sparse_array_len(v.ctx.views),
+            len(v.ctx.visible_views), core.sparse_array_len(v.ctx.views),
+            core.sparse_array_cap(v.ctx.views),
         )
         v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)
     } else {
         _debug_draw_rect(v.ctx, rect, 1, _DEBUG_VIEW_COLOR)
-        text := fmt.tprintf("%s\n%vx%v", v.name, v.solved.size.x, v.solved.size.y)
+        text := fmt.tprintf("%s\n%vx%v", v.name, v.solved.rect.w, v.solved.rect.h)
         v.ctx.debug_draw_text(text, {rect.x,rect.y}+{2,2}, _DEBUG_VIEW_COLOR)
     }
 }
