@@ -3,14 +3,14 @@ package hi
 import "../core"
 
 View_IDX :: distinct i32
-View_UID :: distinct i32
+View_SID :: distinct i32
 
 View_Init :: struct {
     flags: bit_set [Flag; u16],
 
     using bits: bit_field u16 {
         strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
-        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000
+        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher.
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
@@ -34,8 +34,8 @@ View :: struct {
     using init: View_Init,
 
     ctx: ^Context,
-    idx: View_IDX,  // Reusable index in the `ctx.views`
-    uid: View_UID,  // Unique ID for the whole runtime
+    idx: View_IDX, // Reusable index in the `ctx.views`
+    sid: View_SID, // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned. The value is `0` for detached views.
 
     parent      : ^View,
     next_sibling: ^View,
@@ -134,8 +134,6 @@ add_view :: proc (parent: ^View, init: View_Init) -> ^View {
 add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
     v_idx, v := core.sparse_array_add(&ctx.views, View { init=init })
     v.idx = View_IDX(v_idx)
-    v.uid = ctx.next_view_uid
-    ctx.next_view_uid += 1
     v.ctx = ctx
     return v
 }
@@ -162,6 +160,7 @@ set_parent :: proc (v, new_parent: ^View) {
         }
         v.parent = nil
         v.next_sibling = nil
+        v.sid = 0
     }
 
     // Attach to new parent
@@ -173,6 +172,7 @@ set_parent :: proc (v, new_parent: ^View) {
             new_parent.first_child = v
         }
         v.parent = new_parent
+        v.sid = _next_view_sid(v.ctx)
     }
 
     v.ctx.solved = false

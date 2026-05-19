@@ -65,7 +65,7 @@ main :: proc () {
         fmt.printfln("\t%v\tL%d\t#%4d %20s %10s\t%v",
             v.strata,
             v.level,
-            v.uid,
+            v.sid,
             v.name,
             .scissor in v.flags ? "+scissor" : "",
             v.solved.parent_scissor,
@@ -153,7 +153,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     // Iterator test, should include only buttons
     fmt.println("Footer buttons:")
     it := hi.child_iterate(footer)
-    for c in hi.child_next(&it) do fmt.println("\t", c.idx, c.uid, c.name, c.strata)
+    for c in hi.child_next(&it) do fmt.println("\t", c.idx, c.sid, c.name, c.strata)
 
     return
 }

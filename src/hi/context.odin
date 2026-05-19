@@ -51,7 +51,7 @@ Context_Init :: struct {
 Context :: struct {
     views           : core.Sparse_Array(View, VIEWS_MAX),
     visible_views   : [dynamic; VIEWS_MAX] ^View,
-    next_view_uid   : View_UID,
+    next_view_sid   : View_SID,
     root            : ^View,
     solved          : bool, // if `false`, the `update_context()` will do `solve_context()` automatically which clears this flag
 
@@ -106,14 +106,14 @@ Context_Event_Type :: enum {
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
     ctx.init = init
+    ctx.next_view_sid = 1
 
     core.sparse_array_init(&ctx.views)
 
     root_idx, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
     ensure(root_idx == 0)
     ctx.root = root
-
-    ctx.next_view_uid = 1
+    ctx.root.sid = _next_view_sid(ctx)
 
     return ctx
 }
@@ -196,9 +196,16 @@ solve_context :: proc (ctx: ^Context) {
         switch {
         case i.strata != j.strata   : return i.strata < j.strata
         case i.level  != j.level    : return i.level  < j.level
-        case                        : return i.uid    < j.uid
+        case                        : return i.sid    < j.sid
         }
     })
+}
+
+@require_results
+_next_view_sid :: proc (ctx: ^Context) -> View_SID {
+    n := ctx.next_view_sid
+    ctx.next_view_sid += 1
+    return n
 }
 
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {

@@ -16,7 +16,7 @@ print_view :: proc (v: ^View, _depth := 0) {
 
     for _ in 0..<_depth do strings.write_string(&sb, "\t")
 
-    fmt.sbprintf(&sb, "#%d [%d]", v.uid, v.idx)
+    fmt.sbprintf(&sb, "#%d [%d]", v.sid, v.idx)
 
     if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
