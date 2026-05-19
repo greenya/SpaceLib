@@ -102,6 +102,7 @@ Context_Event :: struct {
 Context_Event_Type :: enum {
     screen_size_changed,
     screen_font_height_changed,
+    context_solved,
 }
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
@@ -173,7 +174,13 @@ draw_context :: proc (ctx: ^Context) {
 // - Rebuilds `Context.visible_views`
 // - Sets `Context.solved`
 solve_context :: proc (ctx: ^Context) {
-    ctx.solved = true
+    defer {
+        ctx.solved = true
+        if ctx.on_event != nil {
+            ctx->on_event({ type=.context_solved })
+        }
+    }
+
     clear(&ctx.visible_views)
 
     if .hidden in ctx.root.flags do return
