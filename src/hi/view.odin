@@ -15,6 +15,7 @@ View_Init :: struct {
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
     place   : Place,    // Used only if parent has no layout or for non-native `strata`
+    opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved.opacity` of the view and all its children (all stratas).
     padding : Vec4,     // Padding for native strata children in order: 0=left, 1=top, 2=right, 3=bottom
     scroll  : Vec2,     // Offset for native strata children
     layout  : Layout,   // Layout for native strata children
@@ -41,11 +42,19 @@ View :: struct {
     next_sibling: ^View,
     first_child : ^View,
 
-    // Solver result in ref units. Not updated for invisible views.
+    // Solver result. Not updated for *inactive* views.
+    //
+    // A view is considered *inactive* and skipped by the solver if:
+    // - the view itself or any parent of the view is `.hidden`
+    // - the view does not intersect `solved.parent_scissor` (completely clipped out)
+    // - the view is a child of an *inactive* view
+    //
+    // Note: Zero opacity alone does not make the view *inactive*.
     solved: struct {
-        rect                : Rect,
-        parent_scissor      : Rect, // Scissor rect this view is clipped by. If empty, the scissor is disabled.
-        layout_child_count  : i32,  // Count of visible native strata children affected by the `layout`
+        rect                : Rect, // Position and size in ref units
+        parent_scissor      : Rect, // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
+        layout_child_count  : i32,  // Count of native strata children affected by the layout (excludes `.hidden` views)
+        opacity             : f32,  // Combined hierarchical opacity from fully transparent (`0.0`) to fully opaque (`1.0`)
     },
 }
 
@@ -67,7 +76,7 @@ Flag :: enum {
 
     // Behavior
 
-    // TODO: All events should be given from the top visible view to the bottom (root)
+    // TODO: All events should be given from the top view to the bottom (root)
     // - if view doesn't have on_*, the event keeps propagation to the next (bottom) view
     // - if view has on_*, the event callback is executed and the event considered to be consumed, propagation stops
     //      // TODO: maybe add return value (keep_bubbling_up: bool), or flag into Event struct, or something,
@@ -135,6 +144,7 @@ add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
     v_idx, v := core.sparse_array_add(&ctx.views, View { init=init })
     v.idx = View_IDX(v_idx)
     v.ctx = ctx
+    if v.opacity == 0 do v.opacity = 1
     return v
 }
 
@@ -261,4 +271,8 @@ content_rect :: proc (v: ^View) -> Rect {
         max(0, v.solved.rect.w - (v.padding[0] + v.padding[2])),
         max(0, v.solved.rect.h - (v.padding[1] + v.padding[3])),
     }
+}
+
+in_root_rect :: proc (v: ^View) -> bool {
+    return core.rect_in_rect(v.solved.rect, v.ctx.root.solved.rect)
 }

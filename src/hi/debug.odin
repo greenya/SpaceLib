@@ -37,7 +37,7 @@ _debug_draw_view :: proc (v: ^View) {
             "mouse.ref_pos: %.0f,%.0f\n" +
             "mouse.lmb_down: %v\n" +
             "\n" +
-            "visible views: %i of %i\n" +
+            "active views: %i of %i\n" +
             "views limit: %i",
             v.ctx.ref_size.x, v.ctx.ref_size.y,
             v.ctx.ref_font_height,
@@ -49,7 +49,7 @@ _debug_draw_view :: proc (v: ^View) {
             v.ctx.mouse.screen_pos.x, v.ctx.mouse.screen_pos.y,
             v.ctx.mouse.ref_pos.x, v.ctx.mouse.ref_pos.y,
             v.ctx.mouse.lmb_down,
-            len(v.ctx.visible_views), core.sparse_array_len(v.ctx.views),
+            len(v.ctx.active_views), core.sparse_array_len(v.ctx.views),
             core.sparse_array_cap(v.ctx.views),
         )
         v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)

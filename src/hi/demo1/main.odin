@@ -60,13 +60,14 @@ main :: proc () {
     hi.solve_context(ctx)
     hi.print_view_tree(ctx.root)
 
-    fmt.println("ctx.visible_views == {")
-    for v in ctx.visible_views {
-        fmt.printfln("\t%v\tL%d\t#%4d %20s %10s\t%v",
+    fmt.println("ctx.active_views == {")
+    for v in ctx.active_views {
+        fmt.printfln("\t%v\tL%d\t#%4d %20s |%f| %10s\t%v",
             v.strata,
             v.level,
             v.sid,
             v.name,
+            v.solved.opacity,
             .scissor in v.flags ? "+scissor" : "",
             v.solved.parent_scissor,
         )
@@ -106,7 +107,8 @@ main_draw :: proc () {
 
 on_draw_view :: proc (v: ^hi.View) {
     rect := k2.Rect(hi.ref_view_to_screen(v))
-    k2.draw_rect(rect, {180,220,250,80})
+    alpha := u8(v.solved.opacity * 255)
+    k2.draw_rect(rect, {30,80,50,alpha})
 }
 
 add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, button2 := "", button3 := "", with_header_close_button := false) -> (root: ^hi.View) {
@@ -137,12 +139,12 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     // hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
 
     button2_view: ^hi.View
-    footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })
+    footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10}, opacity=.5 })
     if button1 != "" do add_text_button(footer, name="button1", text=button1)
     if button2 != "" do button2_view = add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
-    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=on_draw_view })
+    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=on_draw_view, opacity=.5 })
     hi.add_view(hint, { name="icon", place={offset=5}, size=15 })
 
     hi.remove_view(button2_view)

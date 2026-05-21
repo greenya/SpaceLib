@@ -7,8 +7,6 @@ import "../core"
 
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
-// TODO: add in_root_rect(v) -> bool, check if v.solved fully in the {0,0,ref_size.x,ref_size.y}
-// TODO: add Views.opacity and Views.solved.opacity (propagated opacity)
 
 VIEWS_MAX :: 2000
 
@@ -50,7 +48,7 @@ Context_Init :: struct {
 
 Context :: struct {
     views           : core.Sparse_Array(View, VIEWS_MAX),
-    visible_views   : [dynamic; VIEWS_MAX] ^View,
+    active_views    : [dynamic; VIEWS_MAX] ^View,
     next_view_sid   : View_SID,
     root            : ^View,
     solved          : bool, // if `false`, the `update_context()` will do `solve_context()` automatically which clears this flag
@@ -110,7 +108,8 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
 
     core.sparse_array_init(&ctx.views)
 
-    root_idx, root := core.sparse_array_add(&ctx.views, View { ctx=ctx, name="root" })
+    root_init := View { ctx=ctx, name="root", opacity=1 }
+    root_idx, root := core.sparse_array_add(&ctx.views, root_init)
     ensure(root_idx == 0)
     ctx.root = root
     ctx.root.sid = _next_view_sid(ctx)
@@ -124,7 +123,6 @@ destroy_context :: proc (ctx: ^Context) {
 
 update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
     screen_size_changed := screen_size != ctx.screen_size
-
     if screen_size_changed {
         _set_screen_size(ctx, screen_size)
         ctx.solved = false
@@ -132,16 +130,18 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 
     if !ctx.solved {
         solve_context(ctx)
+    } else {
+        _propagate_active_views_opacity(ctx)
     }
 
     ctx.dt = dt
     ctx.time += dt
 
     ctx.mouse = {
-        input = mouse_input,
-        ref_pos = screen_pos_to_ref(ctx, mouse_input.screen_pos),
-        lmb_down_prev = ctx.mouse.lmb_down,
-        lmb_pressed = !ctx.mouse.lmb_down && mouse_input.lmb_down,
+        input           = mouse_input,
+        ref_pos         = screen_pos_to_ref(ctx, mouse_input.screen_pos),
+        lmb_down_prev   = ctx.mouse.lmb_down,
+        lmb_pressed     = !ctx.mouse.lmb_down && mouse_input.lmb_down,
     }
 
     // TODO: Process input tree using hi.mouse, return true if input was consumed
@@ -155,50 +155,72 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 
 draw_context :: proc (ctx: ^Context) {
     parent_scissor: Rect = {-1,-1,-1,-1}
-    for v in ctx.visible_views {
+    can_set_scissor := ctx.set_scissor != nil
+
+    for v in ctx.active_views {
         if parent_scissor != v.solved.parent_scissor {
             parent_scissor = v.solved.parent_scissor
-            if ctx.set_scissor != nil {
-                ctx->set_scissor(parent_scissor)
-            }
+            if can_set_scissor do ctx->set_scissor(parent_scissor)
         }
         if v.on_draw != nil {
             v->on_draw()
         }
         if .debug in v.flags {
+            if parent_scissor != {} && can_set_scissor do ctx->set_scissor({})
             _debug_draw_view(v)
+            if parent_scissor != {} && can_set_scissor do ctx->set_scissor(parent_scissor)
         }
     }
 }
 
-// - Re-solves `View.solved` for every visible view
-// - Rebuilds `Context.visible_views`
+// - Rebuilds `Context.active_views`
+// - Updates `View.solved` for every active view
 // - Sets `Context.solved`
+//
+// Note: This procedure is executed automatically by the `update_context()` when `Context.solved` is cleared.
+// Generally, after you do all the manual modifications to the views and at the end you do `ctx.solved = false`.
+// But sometimes you need to solve the context to know updated (solved) values in advance, for example when
+// spawning a tooltip -- after adding dynamic content to the tooltip, you want to reposition it (or re-anchor)
+// if it happens to go partially off-screen, to do that you do manual call to `solve_context()` so your
+// `tooltip.solved.rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
+// the screen.
 solve_context :: proc (ctx: ^Context) {
-    defer {
-        ctx.solved = true
-        if ctx.on_event != nil {
-            ctx->on_event({ type=.context_solved })
+    clear(&ctx.active_views)
+
+    if .hidden not_in ctx.root.flags {
+        ctx.root.solved = {
+            rect    = {0,0,ctx.ref_size.x,ctx.ref_size.y},
+            opacity = ctx.root.opacity,
         }
+        append(&ctx.active_views, ctx.root)
+
+        _solve_view_fit_and_fixed_size(ctx.root)
+        _solve_children_fill_and_ratio_size(ctx.root)
+        _sort_active_views(ctx)
+        _propagate_active_views_opacity(ctx)
     }
 
-    clear(&ctx.visible_views)
+    ctx.solved = true
+    if ctx.on_event != nil {
+        ctx->on_event({ type=.context_solved })
+    }
+}
 
-    if .hidden in ctx.root.flags do return
-
-    ctx.root.solved = { rect={0,0,ctx.ref_size.x,ctx.ref_size.y} }
-    append(&ctx.visible_views, ctx.root)
-
-    _solve_view_fit_and_fixed_size(ctx.root)
-    _solve_children_fill_and_ratio_size(ctx.root)
-
-    slice.sort_by(ctx.visible_views[:], less=proc (i, j: ^View) -> bool {
+_sort_active_views :: proc (ctx: ^Context) {
+    slice.sort_by(ctx.active_views[:], less=proc (i, j: ^View) -> bool {
         switch {
         case i.strata != j.strata   : return i.strata < j.strata
         case i.level  != j.level    : return i.level  < j.level
         case                        : return i.sid    < j.sid
         }
     })
+}
+
+_propagate_active_views_opacity :: proc (ctx: ^Context) {
+    for v in ctx.active_views {
+        parent_opacity := v.parent != nil ? v.parent.solved.opacity : 1.0
+        v.solved.opacity = parent_opacity * v.opacity
+    }
 }
 
 @require_results

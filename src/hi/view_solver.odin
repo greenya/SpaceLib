@@ -46,7 +46,7 @@ _solve_view_fit_and_fixed_size :: proc(v: ^View) {
 // - `solved.rect.x/y`
 // - `solved.parent_scissor`
 //
-// Also appends child to `Context.visible_views` in case it intersects `solved.parent_scissor`.
+// Also appends child to `Context.active_views` in case it intersects `solved.parent_scissor`.
 _solve_children_fill_and_ratio_size :: proc (v: ^View) {
     v_size_x_avail := max(0, v.solved.rect.w - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved.rect.h - (v.padding[1] + v.padding[3]))
@@ -176,9 +176,9 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
                 _place_rect_pos(&c.solved.rect, c.place, { c.solved.rect.w, c.solved.rect.h }, v.solved.rect)
             }
 
-            // Scissor calculation and visibility check
+            // Scissor calculation and in-scissor check
 
-            is_visible := true
+            in_scissor := true
             c.solved.parent_scissor = {}
 
             if v.strata == c.strata {
@@ -191,12 +191,12 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View) {
                     c.solved.parent_scissor = v.solved.parent_scissor
                 }
                 if c.solved.parent_scissor != {} {
-                    is_visible = core.rects_intersect(c.solved.parent_scissor, c.solved.rect)
+                    in_scissor = core.rects_intersect(c.solved.parent_scissor, c.solved.rect)
                 }
             }
 
-            if is_visible {
-                append(&v.ctx.visible_views, c)
+            if in_scissor {
+                append(&v.ctx.active_views, c)
                 if c.first_child != nil {
                     _solve_children_fill_and_ratio_size(c)
                 }
