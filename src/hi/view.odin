@@ -15,7 +15,7 @@ View_Init :: struct {
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
     place   : Place,    // Used only if parent has no layout or for non-native `strata`
-    opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved.opacity` of the view and all its children (all stratas).
+    opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved_opacity` of the view and all its children (all stratas).
     padding : Vec4,     // Padding for native strata children in order: 0=left, 1=top, 2=right, 3=bottom
     scroll  : Vec2,     // Offset for native strata children
     layout  : Layout,   // Layout for native strata children
@@ -27,6 +27,7 @@ View_Init :: struct {
 
     // USER DATA
     name: string,
+    text: string,       // Text with rich formatting if `.text` is used
     // user_idx: int,
     // user_ptr: rawptr,
 }
@@ -42,20 +43,9 @@ View :: struct {
     next_sibling: ^View,
     first_child : ^View,
 
-    // Solver result. Not updated for *inactive* views.
-    //
-    // A view is considered *inactive* and skipped by the solver if:
-    // - the view itself or any parent of the view is `.hidden`
-    // - the view does not intersect `solved.parent_scissor` (completely clipped out)
-    // - the view is a child of an *inactive* view
-    //
-    // Note: Zero opacity alone does not make the view *inactive*.
-    solved: struct {
-        rect                : Rect, // Position and size in ref units
-        parent_scissor      : Rect, // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
-        layout_child_count  : i32,  // Count of native strata children affected by the layout (excludes `.hidden` views)
-        opacity             : f32,  // Combined hierarchical opacity from fully transparent (`0.0`) to fully opaque (`1.0`)
-    },
+    solved_rect                 : Rect, // Solved position and size in ref units
+    solved_layout_child_count   : i32,  // Solved count of native strata children affected by the layout (excludes `.hidden` views)
+    solved_opacity              : f32,  // Solved combined hierarchical opacity (0 to 1)
 }
 
 Flag :: enum {
@@ -64,15 +54,16 @@ Flag :: enum {
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`.
     scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
+    text,       // The view is a Rich Text view, its `size` property is ignored and the `solved_rect.w/h` will be set from `Context.measure_text()`
 
     // Sizing
 
     ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
     ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
-    fit_x,      // `solved.rect.w` is set to fit native strata children width
-    fit_y,      // `solved.rect.h` is set to fit native strata children height
-    fill_x,     // `solved.rect.w` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
-    fill_y,     // `solved.rect.h` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
+    fit_x,      // `solved_rect.w` is set to fit native strata children width
+    fit_y,      // `solved_rect.h` is set to fit native strata children height
+    fill_x,     // `solved_rect.w` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
+    fill_y,     // `solved_rect.h` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
 
     // Behavior
 
@@ -266,13 +257,13 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
 
 content_rect :: proc (v: ^View) -> Rect {
     return {
-        v.solved.rect.x + v.padding[0],
-        v.solved.rect.y + v.padding[1],
-        max(0, v.solved.rect.w - (v.padding[0] + v.padding[2])),
-        max(0, v.solved.rect.h - (v.padding[1] + v.padding[3])),
+        v.solved_rect.x + v.padding[0],
+        v.solved_rect.y + v.padding[1],
+        max(0, v.solved_rect.w - (v.padding[0] + v.padding[2])),
+        max(0, v.solved_rect.h - (v.padding[1] + v.padding[3])),
     }
 }
 
 in_root_rect :: proc (v: ^View) -> bool {
-    return core.rect_in_rect(v.solved.rect, v.ctx.root.solved.rect)
+    return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
 }

@@ -55,7 +55,7 @@ _debug_draw_view :: proc (v: ^View) {
         v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)
     } else {
         _debug_draw_rect(v.ctx, rect, 1, _DEBUG_VIEW_COLOR)
-        text := fmt.tprintf("%s\n%vx%v", v.name, v.solved.rect.w, v.solved.rect.h)
+        text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
         v.ctx.debug_draw_text(text, {rect.x,rect.y}+{2,2}, _DEBUG_VIEW_COLOR)
     }
 }

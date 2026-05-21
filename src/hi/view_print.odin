@@ -21,8 +21,8 @@ print_view :: proc (v: ^View, _depth := 0) {
     if v.name != "" do fmt.sbprintf(&sb, " \"%s\"", v.name)
 
     {
-        r := &v.solved.rect
-        fmt.sbprintf(&sb, " <%v,%v:%vx%v|%f>", r.x, r.y, r.w, r.h, v.solved.opacity)
+        r := &v.solved_rect
+        fmt.sbprintf(&sb, " <%v,%v:%vx%v|%f>", r.x, r.y, r.w, r.h, v.solved_opacity)
     }
 
     for f in Flag do if f in v.flags do fmt.sbprintf(&sb, " .%v", f)

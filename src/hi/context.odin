@@ -8,7 +8,9 @@ import "../core"
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
 
-VIEWS_MAX :: 2000
+MAX_VIEWS           :: 2000
+MAX_ACTIVE_VIEWS    :: MAX_VIEWS / 4
+MAX_TEXT_TOKENS     :: 1000
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -35,10 +37,13 @@ Context_Init :: struct {
     align_center: bool,
 
     // Event callback
-    on_event: proc (ctx: ^Context, event: Context_Event),
+    on_event: Context_Event_Proc,
 
     // Scissor callback. Scissor should be disabled when `scissor == {}`.
-    set_scissor: proc (ctx: ^Context, scissor: Rect),
+    on_scissor: Context_Scissor_Proc,
+
+    on_text_measure: Text_Measure_Proc,
+    on_text_command: Text_Command_Proc,
 
     // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
@@ -47,11 +52,12 @@ Context_Init :: struct {
 }
 
 Context :: struct {
-    views           : core.Sparse_Array(View, VIEWS_MAX),
-    active_views    : [dynamic; VIEWS_MAX] ^View,
-    next_view_sid   : View_SID,
-    root            : ^View,
-    solved          : bool, // if `false`, the `update_context()` will do `solve_context()` automatically which clears this flag
+    views               : core.Sparse_Array(View, MAX_VIEWS),
+    active_views        : [dynamic; MAX_ACTIVE_VIEWS] Active_View,
+    active_text_tokens  : [dynamic; MAX_TEXT_TOKENS] Text_Token,
+    next_view_sid       : View_SID,
+    root                : ^View,
+    solved              : bool, // if `false`, the `update_context()` will do `solve_context()` automatically which clears this flag
 
     using init: Context_Init,
 
@@ -70,6 +76,20 @@ Context :: struct {
         lmb_pressed     : bool,         // For this frame only
         consumed        : bool,         // For this frame only
     },
+}
+
+// An active view.
+//
+// A view is considered *inactive* and skipped by the solver if:
+// - the view itself or any parent of the view is `.hidden`
+// - the view does not intersect `solved_scissor` (completely clipped out)
+// - the view is a child of an *inactive* view
+//
+// Note: Zero opacity alone does not make the view *inactive*.
+Active_View :: struct {
+    using view          : ^View,
+    solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
+    solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Slice into `Context.active_text_tokens`. Only for `.text` views.
 }
 
 Mouse_Input :: struct {
@@ -100,6 +120,9 @@ Context_Event_Type :: enum {
     screen_font_height_changed,
     context_solved,
 }
+
+Context_Event_Proc :: proc (ctx: ^Context, event: Context_Event)
+Context_Scissor_Proc :: proc (ctx: ^Context, scissor: Rect)
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
@@ -154,21 +177,21 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 }
 
 draw_context :: proc (ctx: ^Context) {
-    parent_scissor: Rect = {-1,-1,-1,-1}
-    can_set_scissor := ctx.set_scissor != nil
+    solved_scissor: Rect = {-1,-1,-1,-1}
+    has_on_scissor := ctx.on_scissor != nil
 
     for v in ctx.active_views {
-        if parent_scissor != v.solved.parent_scissor {
-            parent_scissor = v.solved.parent_scissor
-            if can_set_scissor do ctx->set_scissor(parent_scissor)
+        if solved_scissor != v.solved_scissor {
+            solved_scissor = v.solved_scissor
+            if has_on_scissor do ctx->on_scissor(solved_scissor)
         }
         if v.on_draw != nil {
             v->on_draw()
         }
         if .debug in v.flags {
-            if parent_scissor != {} && can_set_scissor do ctx->set_scissor({})
+            if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
             _debug_draw_view(v)
-            if parent_scissor != {} && can_set_scissor do ctx->set_scissor(parent_scissor)
+            if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
         }
     }
 }
@@ -182,20 +205,19 @@ draw_context :: proc (ctx: ^Context) {
 // But sometimes you need to solve the context to know updated (solved) values in advance, for example when
 // spawning a tooltip -- after adding dynamic content to the tooltip, you want to reposition it (or re-anchor)
 // if it happens to go partially off-screen, to do that you do manual call to `solve_context()` so your
-// `tooltip.solved.rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
+// `tooltip.solved_rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
 // the screen.
 solve_context :: proc (ctx: ^Context) {
     clear(&ctx.active_views)
 
     if .hidden not_in ctx.root.flags {
-        ctx.root.solved = {
-            rect    = {0,0,ctx.ref_size.x,ctx.ref_size.y},
-            opacity = ctx.root.opacity,
-        }
-        append(&ctx.active_views, ctx.root)
+        ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
+        ctx.root.solved_opacity = ctx.root.opacity
+        ctx.root.solved_layout_child_count = 0
+        append(&ctx.active_views, Active_View { ctx.root, {}, nil })
 
         _solve_view_fit_and_fixed_size(ctx.root)
-        _solve_children_fill_and_ratio_size(ctx.root)
+        _solve_children_fill_and_ratio_size(ctx.root, {})
         _sort_active_views(ctx)
         _propagate_active_views_opacity(ctx)
     }
@@ -207,7 +229,7 @@ solve_context :: proc (ctx: ^Context) {
 }
 
 _sort_active_views :: proc (ctx: ^Context) {
-    slice.sort_by(ctx.active_views[:], less=proc (i, j: ^View) -> bool {
+    slice.sort_by(ctx.active_views[:], less=proc (i, j: Active_View) -> bool {
         switch {
         case i.strata != j.strata   : return i.strata < j.strata
         case i.level  != j.level    : return i.level  < j.level
@@ -218,8 +240,8 @@ _sort_active_views :: proc (ctx: ^Context) {
 
 _propagate_active_views_opacity :: proc (ctx: ^Context) {
     for v in ctx.active_views {
-        parent_opacity := v.parent != nil ? v.parent.solved.opacity : 1.0
-        v.solved.opacity = parent_opacity * v.opacity
+        parent_opacity := v.parent != nil ? v.parent.solved_opacity : 1.0
+        v.solved_opacity = parent_opacity * v.opacity
     }
 }
 
@@ -289,5 +311,5 @@ ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
 }
 
 ref_view_to_screen :: proc (v: ^View) -> Rect {
-    return ref_rect_to_screen(v.ctx, v.solved.rect)
+    return ref_rect_to_screen(v.ctx, v.solved_rect)
 }
