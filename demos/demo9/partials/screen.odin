@@ -75,7 +75,7 @@ add_screen_header :: proc (screen: ^Screen) {
 
             if tabs_flow.scroll.offset_max != 0 {
                 selected := ui.first_selected_child(tabs)
-                offset := core.rect_offset_into_view(selected.rect, tabs.rect)
+                offset := core.rect_offset_into_rect(selected.rect, tabs.rect)
                 if abs(offset.x) > .1 {
                     dx := offset.x * f.ui.clock.dt * .333
                     ui.scroll(tabs, dx)

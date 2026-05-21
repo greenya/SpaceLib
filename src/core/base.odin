@@ -106,9 +106,12 @@ rect_scaled_top_right   :: proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1
 rect_scaled_bottom_left :: proc (r: Rect, s: Vec2) -> Rect { return { r.x, r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
 rect_scaled_bottom_right:: proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1-s.x), r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
 
-rect_from_size      :: proc (size: Vec2)          -> Rect { return { 0, 0, size.x, size.y } }
-rect_from_center    :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x/2, v.y-size.y/2, size.x, size.y } }
-rect_from_top_left  :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y, size.x, size.y } }
+rect_from_size          :: proc (size: Vec2)          -> Rect { return { 0, 0, size.x, size.y } }
+rect_from_center        :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x/2, v.y-size.y/2, size.x, size.y } }
+rect_from_top_left      :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y, size.x, size.y } }
+rect_from_top_right     :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x, v.y, size.x, size.y } }
+rect_from_bottom_left   :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y-size.y, size.x, size.y } }
+rect_from_bottom_right  :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x, v.y-size.y, size.x, size.y } }
 
 rect_grow :: proc (r: ^Rect, o: Rect) {
     if o.x < r.x {
@@ -154,7 +157,7 @@ rects_intersect :: proc (a: Rect, b: Rect) -> bool {
     return false
 }
 
-rect_offset_into_view :: proc (r: Rect, v: Rect) -> (offset: Vec2) {
+rect_offset_into_rect :: proc (r: Rect, v: Rect) -> (offset: Vec2) {
     if r.w <= v.w {
         r_x2 := r.x + r.w
         v_x2 := v.x + v.w
@@ -170,6 +173,14 @@ rect_offset_into_view :: proc (r: Rect, v: Rect) -> (offset: Vec2) {
     }
 
     return
+}
+
+rect_in_rect :: proc (inner: Rect, outer: Rect) -> bool {
+    return\
+        inner.x < outer.x ||
+        inner.y < outer.y ||
+        (inner.x + inner.w) > (outer.x + outer.w) ||
+        (inner.y + inner.h) > (outer.y + outer.h)
 }
 
 rect_equal_approx :: proc (a: Rect, b: Rect, e: f32) -> bool {
