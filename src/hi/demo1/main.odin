@@ -150,10 +150,9 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     add_text_button(footer, name="button5", text="")
     add_text_button(footer, name="button6", text="")
 
-    // Iterator test, should include only buttons
-    fmt.println("Footer buttons:")
+    fmt.println("Footer buttons: // Iterator test, should include only buttons")
     it := hi.child_iterate(footer)
-    for c in hi.child_next(&it) do fmt.println("\t", c.idx, c.sid, c.name, c.strata)
+    for c, i in hi.child_next(&it) do fmt.println("\t", i, c.name)
 
     return
 }

@@ -8,7 +8,7 @@ View_SID :: distinct i32
 View_Init :: struct {
     flags: bit_set [Flag; u16],
 
-    using bits: bit_field u16 {
+    using _: bit_field u16 {
         strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
         level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher.
     },
@@ -209,6 +209,7 @@ prev_sibling :: proc (v: ^View) -> ^View {
 
 Child_Iterator :: struct {
     next_child      : ^View,
+    next_child_i    : int,
     strata_filter   : bit_set [Strata],
 }
 
@@ -220,11 +221,14 @@ child_iterate :: proc (v: ^View, strata_filter := bit_set [Strata] {}) -> (iter:
     }
 }
 
-child_next :: proc (it: ^Child_Iterator) -> (v: ^View, ok: bool) {
-    for c := it.next_child; c != nil; c = c.next_sibling {
+child_next :: proc (it: ^Child_Iterator) -> (c: ^View, i: int, ok: bool) {
+    for c = it.next_child; c != nil; c = c.next_sibling {
         if c.strata in it.strata_filter {
+            ok = true
+            i = it.next_child_i
+            it.next_child_i += 1
             it.next_child = c.next_sibling
-            return c, true
+            return
         }
     }
     return
