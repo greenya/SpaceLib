@@ -1,5 +1,6 @@
 package hi
 
+import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import "core:slice"
@@ -7,6 +8,7 @@ import "../core"
 
 // TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 // TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
+// TODO: add text_token_iterator, for easier drawing phase
 
 MAX_VIEWS           :: 2000
 MAX_ACTIVE_VIEWS    :: MAX_VIEWS / 4
@@ -42,8 +44,15 @@ Context_Init :: struct {
     // Scissor callback. Scissor should be disabled when `scissor == {}`.
     on_scissor: Context_Scissor_Proc,
 
-    on_text_measure: Text_Measure_Proc,
-    on_text_command: Text_Command_Proc,
+    // Text token callback. Used only with `.text` views.
+    // The `token.type` can be:
+    // - `.word` an actual `token.text` needs measuring, use `style.font` and put result to `token.size`
+    // - `.whitespace` similar to previous, also needs measuring, or you can measure all whitespaces as single space
+    // - `.command` any unknown tag `token.text` with optional `token.args`; set `token.size` for physical space tag, update `style` for styling
+    on_text_token: Context_Text_Token_Proc,
+
+    // Fallback for all `.text` view drawing, used only if `View.on_draw` is not set
+    on_draw_text: proc (v: ^Active_View),
 
     // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
@@ -76,6 +85,12 @@ Context :: struct {
         lmb_pressed     : bool,         // For this frame only
         consumed        : bool,         // For this frame only
     },
+
+    stats: struct {
+        max_views_used              : int,
+        max_active_views_used       : int,
+        max_active_text_tokens_used : int,
+    },
 }
 
 // An active view.
@@ -89,7 +104,7 @@ Context :: struct {
 Active_View :: struct {
     using view          : ^View,
     solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
-    solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Slice into `Context.active_text_tokens`. Only for `.text` views.
+    solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
 }
 
 Mouse_Input :: struct {
@@ -121,8 +136,9 @@ Context_Event_Type :: enum {
     context_solved,
 }
 
-Context_Event_Proc :: proc (ctx: ^Context, event: Context_Event)
-Context_Scissor_Proc :: proc (ctx: ^Context, scissor: Rect)
+Context_Event_Proc      :: proc (ctx: ^Context, event: Context_Event)
+Context_Scissor_Proc    :: proc (ctx: ^Context, scissor: Rect)
+Context_Text_Token_Proc :: proc (ctx: ^Context, token: ^Text_Token, style: ^Text_Style)
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
@@ -176,26 +192,6 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     return ctx.mouse.consumed
 }
 
-draw_context :: proc (ctx: ^Context) {
-    solved_scissor: Rect = {-1,-1,-1,-1}
-    has_on_scissor := ctx.on_scissor != nil
-
-    for v in ctx.active_views {
-        if solved_scissor != v.solved_scissor {
-            solved_scissor = v.solved_scissor
-            if has_on_scissor do ctx->on_scissor(solved_scissor)
-        }
-        if v.on_draw != nil {
-            v->on_draw()
-        }
-        if .debug in v.flags {
-            if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
-            _debug_draw_view(v)
-            if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
-        }
-    }
-}
-
 // - Rebuilds `Context.active_views`
 // - Updates `View.solved` for every active view
 // - Sets `Context.solved`
@@ -209,6 +205,7 @@ draw_context :: proc (ctx: ^Context) {
 // the screen.
 solve_context :: proc (ctx: ^Context) {
     clear(&ctx.active_views)
+    clear(&ctx.active_text_tokens)
 
     if .hidden not_in ctx.root.flags {
         ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
@@ -219,12 +216,41 @@ solve_context :: proc (ctx: ^Context) {
         _solve_view_fit_and_fixed_size(ctx.root)
         _solve_children_fill_and_ratio_size(ctx.root, {})
         _sort_active_views(ctx)
+        _generate_active_text_tokens(ctx)
         _propagate_active_views_opacity(ctx)
+
+        ctx.stats.max_active_views_used = max(ctx.stats.max_active_views_used, len(ctx.active_views))
+        ctx.stats.max_active_text_tokens_used = max(ctx.stats.max_active_text_tokens_used, len(ctx.active_text_tokens))
     }
 
     ctx.solved = true
     if ctx.on_event != nil {
         ctx->on_event({ type=.context_solved })
+    }
+}
+
+draw_context :: proc (ctx: ^Context) {
+    solved_scissor: Rect = {-1,-1,-1,-1}
+    has_on_scissor := ctx.on_scissor != nil
+    has_on_draw_text := ctx.on_draw_text != nil
+
+    for &v in ctx.active_views {
+        if solved_scissor != v.solved_scissor {
+            solved_scissor = v.solved_scissor
+            if has_on_scissor do ctx->on_scissor(solved_scissor)
+        }
+
+        if v.on_draw != nil {
+            v->on_draw()
+        } else if .text in v.flags && has_on_draw_text {
+            ctx.on_draw_text(&v)
+        }
+
+        if .debug in v.flags {
+            if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
+            _debug_draw_view(v)
+            if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
+        }
     }
 }
 
@@ -236,6 +262,17 @@ _sort_active_views :: proc (ctx: ^Context) {
         case                        : return i.sid    < j.sid
         }
     })
+}
+
+_generate_active_text_tokens :: proc (ctx: ^Context) {
+    for &v in ctx.active_views {
+        if .text not_in v.flags || v.text == "" do continue
+
+        tokens := _text_tokenize(ctx, v.text)
+        _text_measure_tokens(ctx, tokens)
+        _text_wrap_tokens(ctx, tokens, max_width=v.solved_rect.w)
+        fmt.println(len(tokens), tokens) // !! DEBUG
+    }
 }
 
 _propagate_active_views_opacity :: proc (ctx: ^Context) {

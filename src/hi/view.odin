@@ -20,7 +20,7 @@ View_Init :: struct {
     scroll  : Vec2,     // Offset for native strata children
     layout  : Layout,   // Layout for native strata children
 
-    on_draw: proc (v: ^View),
+    on_draw: proc (v: ^Active_View),
     // on_state: (show/hide/select/deselect)
     // on_mouse: (status: enter/leave), (action: click/wheel/drag)
     // TODO: maybe combine all events into on_event, the pro: less callbacks and less size of View, the con: more false calls
@@ -52,9 +52,9 @@ Flag :: enum {
     // Core
 
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
-    debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`.
     scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
-    text,       // The view is a Rich Text view, its `size` property is ignored and the `solved_rect.w/h` will be set from `Context.measure_text()`
+    debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
+    text,       // The view is a Rich Text
 
     // Sizing
 
@@ -136,6 +136,7 @@ add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
     v.idx = View_IDX(v_idx)
     v.ctx = ctx
     if v.opacity == 0 do v.opacity = 1
+    ctx.stats.max_views_used = max(ctx.stats.max_views_used, core.sparse_array_len(ctx.views))
     return v
 }
 

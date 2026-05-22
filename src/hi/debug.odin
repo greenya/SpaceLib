@@ -37,8 +37,11 @@ _debug_draw_view :: proc (v: ^View) {
             "mouse.ref_pos: %.0f,%.0f\n" +
             "mouse.lmb_down: %v\n" +
             "\n" +
+            "views: %i of %i\n" +
             "active views: %i of %i\n" +
-            "views limit: %i",
+            "max active views used: %i\n" +
+            "active text tokens: %i of %i\n" +
+            "max active text tokens used: %i\n",
             v.ctx.ref_size.x, v.ctx.ref_size.y,
             v.ctx.ref_font_height,
             v.ctx.screen_size.x, v.ctx.screen_size.y,
@@ -49,8 +52,11 @@ _debug_draw_view :: proc (v: ^View) {
             v.ctx.mouse.screen_pos.x, v.ctx.mouse.screen_pos.y,
             v.ctx.mouse.ref_pos.x, v.ctx.mouse.ref_pos.y,
             v.ctx.mouse.lmb_down,
-            len(v.ctx.active_views), core.sparse_array_len(v.ctx.views),
-            core.sparse_array_cap(v.ctx.views),
+            v.ctx.stats.max_views_used, core.sparse_array_cap(v.ctx.views),
+            len(v.ctx.active_views), cap(v.ctx.active_views),
+            v.ctx.stats.max_active_views_used,
+            len(v.ctx.active_text_tokens), cap(v.ctx.active_text_tokens),
+            v.ctx.stats.max_active_text_tokens_used,
         )
         v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)
     } else {
