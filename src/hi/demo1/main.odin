@@ -15,10 +15,12 @@ main :: proc () {
         tracking_allocator.destroy()
     }
 
-    fmt.println("-----------------------")
-    fmt.println("Context size   :", size_of(hi.Context))
-    fmt.println("View size      :", size_of(hi.View))
-    fmt.println("-----------------------")
+    fmt.println("-------------------------------------------")
+    fmt.println("Context size       :", size_of(hi.Context))
+    fmt.println("View size          :", size_of(hi.View))
+    fmt.println("Active_View size   :", size_of(hi.Active_View))
+    fmt.println("Text_Token size    :", size_of(hi.Text_Token))
+    fmt.println("-------------------------------------------")
 
     k2.init(1280, 720, "demo", { window_mode=.Windowed_Resizable })
 
@@ -37,18 +39,18 @@ main :: proc () {
                 : nil,
             )
         },
-        on_text_token = proc (ctx: ^hi.Context, token: ^hi.Text_Token, style: ^hi.Text_Style) {
+        on_measure_text = proc (ctx: ^hi.Context, style: ^hi.Text_Style, text: string, is_whitespace: bool) -> (size: [2] f32) {
             default_font_height := f32(ctx.screen_font_height) / 2
-            #partial switch token.type {
-            case .word, .whitespace:
-                token.size = k2.measure_text(token.text, default_font_height)
-            case .command:
-                switch token.text {
-                case "c": style.color = core.color_from_hex(token.args) // or named color
-                case "f": style.font = token.args
-                case "icon": token.size = default_font_height
-                }
+            return k2.measure_text(text, default_font_height)
+        },
+        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
+            default_font_height := f32(ctx.screen_font_height) / 2
+            switch cmd {
+            case "f": style.font = args
+            case "c": style.color = core.color_from_hex(args) // or named color
+            case "icon": size = default_font_height
             }
+            return
         },
         on_draw_text = proc (v: ^hi.Active_View) {
             pos := hi.ref_pos_to_screen(v.ctx, {v.solved_rect.x,v.solved_rect.y})

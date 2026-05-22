@@ -3,36 +3,46 @@ package hi
 import "core:strings"
 import "core:strconv"
 
+// TODO: support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
+// TODO: support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
+
 Text_Token :: struct {
     type: Text_Token_Type,
     text: string,       // Text or command name
     args: string,       // Command args, e.g. "primary" for "[color=primary]"
-    size: Vec2,         // Occupied size, expected to be set by `Context.on_text_token` for anything that takes space (text, whitespace, icon)
+    size: Vec2,         // Occupied size, the value received from the `Context.on_measure_text()` and `Context.on_text_custom_command()`
     solved_pos: Vec2,   // Calculated by the wrapping algorithm
 }
 
 Text_Token_Type :: enum u8 {
-    word,           // Continuous block of letters/numbers/punctuations
-    whitespace,     // Spaces, tabs, new line characters
-    line_break,     // Force line break. Normal `\n` doesn't break the line, and treated as whitespace
-    tab_stop,       // Force horizontal gap. Jumps to an absolute X position on the current line.
-    nowrap,
-    align_left,
-    align_right,
-    align_center,
-    command,        // Custom command, e.g. "[icon=sword]" or "[item=#1234]"
+    word,       // Continuous block of letters/numbers/punctuations between `.whitespace` tokens
+    whitespace, // Spaces, tabs, new lines
+    br,         // Line break. Normal `\n` doesn't break the line, and treated as `.whitespace`.
+    tab,        // Tab stop
+    wrap,       // Enable wrapping mode
+    nowrap,     // Disable wrapping mode
+    left,       // Align to the left
+    right,      // Align to the right
+    center,     // Align to the center
+    custom,     // Custom/unknown command, e.g. "[icon=sword]" or "[item=#1234]"
 }
 
 Text_Style :: struct {
-    font    : string,
-    color   : Color,
-    align   : Text_Alignment,
+    font        : string,
+    color       : Color,
+    align       : Text_Alignment,
+    wrapping    : bool,
+    user_ptr    : rawptr,
+    user_idx    : int,
 }
 
-Text_Alignment :: enum u8 { left, center, right }
+Text_Style_Default := Text_Style { color={255,255,255,255}, wrapping=true }
+
+Text_Alignment :: enum u8 { left, right, center }
 
 _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds_check {
-    att_len := len(ctx.active_text_tokens)
+    pool := &ctx.active_text_tokens
+    pool_len := len(pool)
     text_len := len(text)
 
     for i := 0; i < text_len; /**/ {
@@ -52,21 +62,15 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
                 i = j + 1 // Move cursor after ']'
                 cmd, args := _text_parse_tag_text(tag_text)
                 switch cmd {
-                case "br":
-                    append(&ctx.active_text_tokens, Text_Token { type=.line_break })
-                case "tab":
-                    v, _ := strconv.parse_f32(args)
-                    append(&ctx.active_text_tokens, Text_Token { type=.tab_stop, size={v,0} })
-                case "nowrap":
-                    append(&ctx.active_text_tokens, Text_Token { type=.nowrap })
-                case "left":
-                    append(&ctx.active_text_tokens, Text_Token { type=.align_left })
-                case "right":
-                    append(&ctx.active_text_tokens, Text_Token { type=.align_right })
-                case "center":
-                    append(&ctx.active_text_tokens, Text_Token { type=.align_center })
-                case:
-                    append(&ctx.active_text_tokens, Text_Token { type=.command, text=cmd, args=args })
+                case "br"       : append(pool, Text_Token { type=.br })
+                case "tab"      : v, _ := strconv.parse_f32(args)
+                                  append(pool, Text_Token { type=.tab, size={v,0} })
+                case "wrap"     : append(pool, Text_Token { type=.wrap })
+                case "nowrap"   : append(pool, Text_Token { type=.nowrap })
+                case "left"     : append(pool, Text_Token { type=.left })
+                case "right"    : append(pool, Text_Token { type=.right })
+                case "center"   : append(pool, Text_Token { type=.center })
+                case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
                 }
             }
 
@@ -77,57 +81,69 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
                 if c==' ' || c=='\t' || c=='\n' || c=='[' do break
                 j += 1
             }
-            append(&ctx.active_text_tokens, Text_Token { type=.word, text=text[i:j] })
+            append(pool, Text_Token { type=.word, text=text[i:j] })
             i = j
         }
     }
 
-    assert(len(ctx.active_text_tokens) != cap(ctx.active_text_tokens), "Most likely Context.active_text_tokens overflow")
-    return ctx.active_text_tokens[att_len:]
+    assert(len(pool) != cap(pool), "Most likely Context.active_text_tokens overflow")
+    return pool[pool_len:]
 }
 
 _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
-    has_on_text_token := ctx.on_text_token != nil
-    style := Text_Style { align=.left, color={255,0,0,255} }
-    for &tok in tokens do switch tok.type {
-    case .word, .whitespace, .command:
-        if has_on_text_token do ctx->on_text_token(&tok, &style)
-    case .line_break, .tab_stop, .nowrap, .align_left, .align_right, .align_center:
-        /**/ // control tokens, has no size (or it is dynamic)
+    has_on_measure_text := ctx.on_measure_text != nil
+    has_on_text_custom_command := ctx.on_text_custom_command != nil
+
+    style := Text_Style_Default
+    if ctx.on_text_style != nil do ctx->on_text_style(&style)
+
+    for &tok in tokens do #partial switch tok.type {
+    case .word, .whitespace:
+        if has_on_measure_text {
+            tok.size = ctx->on_measure_text(&style, tok.text, tok.type==.whitespace)
+        }
+    case .custom:
+        if has_on_text_custom_command {
+            tok.size = ctx->on_text_custom_command(&style, tok.text, tok.args)
+        }
     }
 }
 
 _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) #no_bounds_check {
+    style := Text_Style_Default
+    if ctx.on_text_style != nil do ctx->on_text_style(&style)
+
     cursor_x        := f32(0)
     cursor_y        := f32(0)
-    line_height     := f32(16) // ? Default line height
+    line_height     := f32(0)
     line_start_i    := 0
-    line_align      := Text_Alignment.left
-    is_wrapping     := true
+    align           := style.align
+    wrapping        := style.wrapping
 
     for &tok, i in tokens {
         #partial switch tok.type {
-        case .align_left    : line_align = .left; continue
-        case .align_right   : line_align = .right; continue
-        case .align_center  : line_align = .center; continue
-        case .nowrap        : is_wrapping = false; continue
-        case .tab_stop      : cursor_x = max(cursor_x, tok.size.x); continue
+        case .left      : align = .left     ; continue
+        case .right     : align = .right    ; continue
+        case .center    : align = .center   ; continue
+        case .wrap      : wrapping = true   ; continue
+        case .nowrap    : wrapping = false  ; continue
+        case .tab       : cursor_x = max(cursor_x, tok.size.x); continue
         }
 
         line_height = max(line_height, tok.size.y)
-        is_overflow := is_wrapping && (cursor_x + tok.size.x > max_width)
+        overflow := wrapping && (cursor_x + tok.size.x > max_width)
 
-        if tok.type == .line_break || is_overflow {
-            if line_align != .left {
-                _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, line_align)
+        if tok.type == .br || overflow {
+            if align != .left {
+                _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, align)
             }
 
             cursor_x = 0
             cursor_y += line_height
-            line_height = 16 // ? Default line height
+            line_height = 0
             line_start_i = i
 
-            if is_overflow && tok.type == .whitespace do continue
+            if overflow && tok.type == .whitespace do continue
         }
 
         tok.solved_pos = { cursor_x, cursor_y }
@@ -135,8 +151,8 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     }
 
     // align very last line
-    if line_align != .left {
-        _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, line_align)
+    if align != .left {
+        _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, align)
     }
 }
 

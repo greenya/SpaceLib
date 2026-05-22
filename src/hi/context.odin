@@ -44,14 +44,32 @@ Context_Init :: struct {
     // Scissor callback. Scissor should be disabled when `scissor == {}`.
     on_scissor: Context_Scissor_Proc,
 
-    // Text token callback. Used only with `.text` views.
-    // The `token.type` can be:
-    // - `.word` an actual `token.text` needs measuring, use `style.font` and put result to `token.size`
-    // - `.whitespace` similar to previous, also needs measuring, or you can measure all whitespaces as single space
-    // - `.command` any unknown tag `token.text` with optional `token.args`; set `token.size` for physical space tag, update `style` for styling
-    on_text_token: Context_Text_Token_Proc,
+    // Text measure callback. Used only with `.text` views.
+    // - `style.font` contains current font
+    // - `is_whitespace` indicates that `text` contains non-drawable text (single/multiple spaces, tabs, new lines)
+    on_measure_text: Context_Measure_Text_Proc,
 
-    // Fallback for all `.text` view drawing, used only if `View.on_draw` is not set
+    // Text custom command callback. Used only with `.text` views.
+    //
+    // Builtin commands:
+    // - `br` Line break
+    // - `tab=XXX` Tab stop; moves cursor X position to XXX if it is lower than XXX
+    // - `wrap` / `nowrap` Toggle wrapping mode
+    // - `left`, `center`, `right` Set alignment (applied at line break or text end)
+    //
+    // The callback is NOT called for any command above.
+    // Return non-zero size for physical space, e.g. `[icon=sword]`.
+    // Update `style` for styling, use `style.user_*` to store custom state.
+    //
+    // Note: The callback is called when updating the text (tokenizing and measuring), and when drawing it to the screen.
+    // Check `ctx.drawing` if needed to know exact phase (e.g. to skip gpu state change for some `[shader=fancy_text]`).
+    on_text_custom_command: Context_Text_Command_Proc,
+
+    // Text style callback. Used only with `.text` views.
+    // Called once before tokenizing the text and allows overriding default `Text_Style` state.
+    on_text_style: Context_Text_Style_Proc,
+
+    // Fallback for all `.text` view drawing.
     on_draw_text: proc (v: ^Active_View),
 
     // Debug drawing callbacks. Used with `.debug` views.
@@ -137,9 +155,11 @@ Context_Event_Type :: enum {
     context_solved,
 }
 
-Context_Event_Proc      :: proc (ctx: ^Context, event: Context_Event)
-Context_Scissor_Proc    :: proc (ctx: ^Context, scissor: Rect)
-Context_Text_Token_Proc :: proc (ctx: ^Context, token: ^Text_Token, style: ^Text_Style)
+Context_Event_Proc          :: proc (ctx: ^Context, event: Context_Event)
+Context_Scissor_Proc        :: proc (ctx: ^Context, scissor: Rect)
+Context_Measure_Text_Proc   :: proc (ctx: ^Context, style: ^Text_Style, text: string, is_whitespace: bool) -> (size: [2] f32)
+Context_Text_Command_Proc   :: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
+Context_Text_Style_Proc     :: proc (ctx: ^Context, style: ^Text_Style)
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
