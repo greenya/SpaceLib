@@ -1,6 +1,5 @@
 package hi
 
-import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import "core:slice"
@@ -45,8 +44,13 @@ Context_Init :: struct {
     on_scissor: Context_Scissor_Proc,
 
     // Text measure callback. Used only with `.text` views.
-    // - `style.font` contains current font
-    // - `is_whitespace` indicates that `text` contains non-drawable text (single/multiple spaces, tabs, new lines)
+    // - `style` Current style; font details are in `style.font` and `style.user_*` (if used)
+    // - `type` token type, expect only:
+    //      * `.word` Letters/numbers/punctuations
+    //      * `.whitespace` Spaces `" "` and tabs `"\t"`
+    // - `text` Non-empty string to measure
+    //
+    // Use `ctx.ref_font_height` as base font size multiplier. Returned value is in ref units.
     on_measure_text: Context_Measure_Text_Proc,
 
     // Text custom command callback. Used only with `.text` views.
@@ -58,18 +62,23 @@ Context_Init :: struct {
     // - `left`, `center`, `right` Set alignment (applied at line break or text end)
     //
     // The callback is NOT called for any command above.
-    // Return non-zero size for physical space, e.g. `[icon=sword]`.
+    // Return non-zero size (in ref units) for physical space, e.g. `[icon=sword]`.
     // Update `style` for styling, use `style.user_*` to store custom state.
     //
-    // Note: The callback is called when updating the text (tokenizing and measuring), and when drawing it to the screen.
-    // Check `ctx.drawing` if needed to know exact phase (e.g. to skip gpu state change for some `[shader=fancy_text]`).
-    on_text_custom_command: Context_Text_Command_Proc,
+    // Call on every custom command in both phases: updating and drawing.
+    // Check `ctx.drawing` if need to know the phase.
+    on_text_custom_command: Context_Text_Custom_Command_Proc,
 
     // Text style callback. Used only with `.text` views.
-    // Called once before tokenizing the text and allows overriding default `Text_Style` state.
+    // Allows overriding default style (font, color, align, wrapping).
+    //
+    // Called once before traversing the tokens in both phases: updating and drawing.
+    // Check `ctx.drawing` if need to know the phase.
     on_text_style: Context_Text_Style_Proc,
 
-    // Fallback for all `.text` view drawing.
+    // Fallback for all `.text` view drawing. Use `ctx.screen_font_height` as base font size multiplier.
+    //
+    // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Active_View),
 
     // Debug drawing callbacks. Used with `.debug` views.
@@ -155,11 +164,11 @@ Context_Event_Type :: enum {
     context_solved,
 }
 
-Context_Event_Proc          :: proc (ctx: ^Context, event: Context_Event)
-Context_Scissor_Proc        :: proc (ctx: ^Context, scissor: Rect)
-Context_Measure_Text_Proc   :: proc (ctx: ^Context, style: ^Text_Style, text: string, is_whitespace: bool) -> (size: [2] f32)
-Context_Text_Command_Proc   :: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
-Context_Text_Style_Proc     :: proc (ctx: ^Context, style: ^Text_Style)
+Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
+Context_Scissor_Proc            :: proc (ctx: ^Context, scissor: Rect)
+Context_Measure_Text_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
+Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
+Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
 
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
@@ -228,26 +237,28 @@ solve_context :: proc (ctx: ^Context) {
     clear(&ctx.active_views)
     clear(&ctx.active_text_tokens)
 
-    if .hidden not_in ctx.root.flags {
-        ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
-        ctx.root.solved_opacity = ctx.root.opacity
-        ctx.root.solved_layout_child_count = 0
-        append(&ctx.active_views, Active_View { ctx.root, {}, nil })
-
-        _solve_view_fit_and_fixed_size(ctx.root)
-        _solve_children_fill_and_ratio_size(ctx.root, {})
-        _sort_active_views(ctx)
-        _generate_active_text_tokens(ctx)
-        _propagate_active_views_opacity(ctx)
-
+    defer {
         ctx.stats.max_active_views_used = max(ctx.stats.max_active_views_used, len(ctx.active_views))
         ctx.stats.max_active_text_tokens_used = max(ctx.stats.max_active_text_tokens_used, len(ctx.active_text_tokens))
+
+        ctx.solved = true
+        if ctx.on_event != nil {
+            ctx->on_event({ type=.context_solved })
+        }
     }
 
-    ctx.solved = true
-    if ctx.on_event != nil {
-        ctx->on_event({ type=.context_solved })
-    }
+    if .hidden in ctx.root.flags do return
+
+    ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
+    ctx.root.solved_opacity = ctx.root.opacity
+    ctx.root.solved_layout_child_count = 0
+    append(&ctx.active_views, Active_View { ctx.root, {}, nil })
+
+    _solve_view_fit_and_fixed_size(ctx.root)
+    _solve_children_fill_and_ratio_size(ctx.root, {})
+    _sort_active_views(ctx)
+    _generate_active_text_tokens(ctx)
+    _propagate_active_views_opacity(ctx)
 }
 
 draw_context :: proc (ctx: ^Context) {
@@ -266,7 +277,7 @@ draw_context :: proc (ctx: ^Context) {
 
         if v.on_draw != nil {
             v->on_draw()
-        } else if .text in v.flags && has_on_draw_text {
+        } else if .text in v.flags && has_on_draw_text && len(v.solved_text_tokens) > 0 {
             ctx.on_draw_text(&v)
         }
 
@@ -289,13 +300,19 @@ _sort_active_views :: proc (ctx: ^Context) {
 }
 
 _generate_active_text_tokens :: proc (ctx: ^Context) {
-    for &v in ctx.active_views {
-        if .text not_in v.flags || v.text == "" do continue
+    assert(len(ctx.active_text_tokens) == 0)
 
-        tokens := _text_tokenize(ctx, v.text)
-        _text_measure_tokens(ctx, tokens)
-        _text_wrap_tokens(ctx, tokens, max_width=v.solved_rect.w)
-        fmt.println(len(tokens), tokens) // !! DEBUG
+    for &v in ctx.active_views {
+        if .text not_in v.flags do continue
+
+        if v.text == "" {
+            v.solved_text_tokens = nil
+            continue
+        }
+
+        v.solved_text_tokens = _text_tokenize(ctx, v.text)
+        _text_measure_tokens(ctx, v.solved_text_tokens)
+        _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=v.solved_rect.w)
     }
 }
 

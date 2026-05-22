@@ -26,7 +26,7 @@ main :: proc () {
 
     ctx = hi.create_context({
         ref_size = {320,180},
-        ref_font_height = 16,
+        ref_font_height = 12,
         align_center = true,
         aspect_ratio_matching = -1,
         on_event = proc (ctx: ^hi.Context, event: hi.Context_Event) {
@@ -39,22 +39,36 @@ main :: proc () {
                 : nil,
             )
         },
-        on_measure_text = proc (ctx: ^hi.Context, style: ^hi.Text_Style, text: string, is_whitespace: bool) -> (size: [2] f32) {
-            default_font_height := f32(ctx.screen_font_height) / 2
-            return k2.measure_text(text, default_font_height)
+        on_measure_text = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
+            font_size := f32(ctx.ref_font_height)
+            size = k2.measure_text(text, font_size)
+            fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
+            return
         },
         on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
-            default_font_height := f32(ctx.screen_font_height) / 2
             switch cmd {
             case "f": style.font = args
             case "c": style.color = core.color_from_hex(args) // or named color
-            case "icon": size = default_font_height
+            case "icon": size = f32(ctx.ref_font_height)
             }
             return
         },
         on_draw_text = proc (v: ^hi.Active_View) {
-            pos := hi.ref_pos_to_screen(v.ctx, {v.solved_rect.x,v.solved_rect.y})
-            k2.draw_text(v.text, pos, f32(ctx.screen_font_height)/2, k2.WHITE)
+            // fmt.println(v.name, "token:", len(v.solved_text_tokens), "text:", v.text)
+            v_content_rect := hi.content_rect(v)
+            v_content_pos := [2] f32 { v_content_rect.x, v_content_rect.y }
+
+            for tok in v.solved_text_tokens {
+                // fmt.println(tok)
+                if tok.type == .word {
+                    tok_pos := v_content_pos + tok.solved_pos
+                    tok_pos_screen := hi.ref_pos_to_screen(v.ctx, tok_pos)
+                    k2.draw_text(tok.text, tok_pos_screen, f32(ctx.screen_font_height), k2.WHITE)
+
+                    tok_rect_screen := hi.ref_rect_to_screen(v.ctx, {tok_pos.x, tok_pos.y, tok.size.x, tok.size.y})
+                    k2.draw_rect(k2.Rect(tok_rect_screen), {100,0,0,80})
+                }
+            }
         },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
             k2.draw_line(from, to, thick, color)
@@ -68,7 +82,7 @@ main :: proc () {
         ctx.root,
         name = "dialog_exit_game",
         title = "Exit Game?",
-        content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].[br][center]Proceed?",
+        content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].\n\n[center]Proceed?",
         button1 = "Yes",
         button2 = "No",
         button3 = "Maybe",
@@ -166,9 +180,9 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     if button2 != "" do button2_view = add_text_button(footer, name="button2", text=button2)
     if button3 != "" do add_text_button(footer, name="button3", text=button3)
 
-    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={60,1}, padding=5, layout={dir=.row,gap=5}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=draw_view, opacity=.8 })
+    hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={80,1}, padding=5, layout={dir=.row,gap=5}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=draw_view, opacity=.8 })
     hi.add_view(hint, { name="icon", size=15 })
-    hi.add_view(hint, { name="desc", flags={.text,.fill_x,.fill_y}, text="Hello[br]World!" })
+    hi.add_view(hint, { name="desc", flags={.text,.fill_x,.fill_y}, text="Hello World!" })
 
     hi.remove_view(button2_view)
     add_text_button(footer, name="button4", text="Four")

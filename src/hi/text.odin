@@ -15,18 +15,19 @@ Text_Token :: struct {
 }
 
 Text_Token_Type :: enum u8 {
-    word,       // Continuous block of letters/numbers/punctuations between `.whitespace` tokens
-    whitespace, // Spaces, tabs, new lines
-    br,         // Line break. Normal `\n` doesn't break the line, and treated as `.whitespace`.
+    word,       // Continuous block of letters/numbers/punctuations between other tokens
+    whitespace, // Continuous block of spaces `" "` or tabs `"\t"`
+    br,         // New line `"\n"` or Line break command `[br]`
     tab,        // Tab stop
     wrap,       // Enable wrapping mode
     nowrap,     // Disable wrapping mode
     left,       // Align to the left
     right,      // Align to the right
     center,     // Align to the center
-    custom,     // Custom/unknown command, e.g. "[icon=sword]" or "[item=#1234]"
+    custom,     // Custom/unknown command, e.g. `[icon=sword]` or `[item=#1234]`
 }
 
+// FIX: add font_height, so new lines are consistent, and the following works as expected "\n\n" and "\n[font=big]\n"; the initial (default) style should use Context.ref_font_height and user is expected to update font_height when font changes
 Text_Style :: struct {
     font        : string,
     color       : Color,
@@ -36,10 +37,11 @@ Text_Style :: struct {
     user_idx    : int,
 }
 
-Text_Style_Default := Text_Style { color={255,255,255,255}, wrapping=true }
+Text_Style_Default :: Text_Style { color={255,255,255,255}, wrapping=true }
 
 Text_Alignment :: enum u8 { left, right, center }
 
+// Tokenizes given text. Appends to `ctx.active_text_tokens`. Returns slice of appended tokens.
 _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds_check {
     pool := &ctx.active_text_tokens
     pool_len := len(pool)
@@ -48,11 +50,15 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
     for i := 0; i < text_len; /**/ {
         r := text[i]
         switch r {
-        case ' ', '\t', '\n':
+        case ' ', '\t':
             j := i
-            for j < text_len && (text[j]==' ' || text[j]=='\t' || text[j]=='\n') do j += 1
+            for j < text_len && (text[j]==' ' || text[j]=='\t') do j += 1
             append(&ctx.active_text_tokens, Text_Token { type=.whitespace, text=text[i:j] })
             i = j
+
+        case '\n':
+            append(pool, Text_Token { type=.br, text="\n" })
+            i += 1
 
         case '[':
             j := i + 1
@@ -62,7 +68,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
                 i = j + 1 // Move cursor after ']'
                 cmd, args := _text_parse_tag_text(tag_text)
                 switch cmd {
-                case "br"       : append(pool, Text_Token { type=.br })
+                case "br"       : append(pool, Text_Token { type=.br, text="\n" })
                 case "tab"      : v, _ := strconv.parse_f32(args)
                                   append(pool, Text_Token { type=.tab, size={v,0} })
                 case "wrap"     : append(pool, Text_Token { type=.wrap })
@@ -90,6 +96,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
     return pool[pool_len:]
 }
 
+// Measures given tokes. Updates each `Text_Token.size`.
 _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
     has_on_measure_text := ctx.on_measure_text != nil
     has_on_text_custom_command := ctx.on_text_custom_command != nil
@@ -100,7 +107,7 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
     for &tok in tokens do #partial switch tok.type {
     case .word, .whitespace:
         if has_on_measure_text {
-            tok.size = ctx->on_measure_text(&style, tok.text, tok.type==.whitespace)
+            tok.size = ctx->on_measure_text(style, tok.type, tok.text)
         }
     case .custom:
         if has_on_text_custom_command {
@@ -109,6 +116,7 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
     }
 }
 
+// Wraps and aligns given tokes. Updates each `Text_Token.solved_pos`.
 _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) #no_bounds_check {
     style := Text_Style_Default
     if ctx.on_text_style != nil do ctx->on_text_style(&style)
@@ -133,17 +141,18 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
         line_height = max(line_height, tok.size.y)
         overflow := wrapping && (cursor_x + tok.size.x > max_width)
 
-        if tok.type == .br || overflow {
+        if overflow || tok.type == .br {
             if align != .left {
                 _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, align)
             }
 
             cursor_x = 0
             cursor_y += line_height
-            line_height = 0
-            line_start_i = i
+            line_height = 0 // FIX: this is incorrect, fails to do multiple line breaks like "\n\n"
+            line_start_i = tok.type == .br ? i + 1 : i
 
             if overflow && tok.type == .whitespace do continue
+            if tok.type == .br do continue
         }
 
         tok.solved_pos = { cursor_x, cursor_y }
