@@ -66,7 +66,8 @@ Context :: struct {
     active_text_tokens  : [dynamic; MAX_TEXT_TOKENS] Text_Token,
     next_view_sid       : View_SID,
     root                : ^View,
-    solved              : bool, // if `false`, the `update_context()` will do `solve_context()` automatically which clears this flag
+    solved              : bool, // if cleared, the `update_context()` will do `solve_context()` automatically which sets this flag
+    drawing             : bool, // if set, the `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
 
     using init: Context_Init,
 
@@ -230,6 +231,9 @@ solve_context :: proc (ctx: ^Context) {
 }
 
 draw_context :: proc (ctx: ^Context) {
+    ctx.drawing = true
+    defer ctx.drawing = false
+
     solved_scissor: Rect = {-1,-1,-1,-1}
     has_on_scissor := ctx.on_scissor != nil
     has_on_draw_text := ctx.on_draw_text != nil
