@@ -3,8 +3,8 @@ package hi
 import "core:strings"
 import "core:strconv"
 
-// TODO: support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
-// TODO: support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
+// TODO: [?] support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
+// TODO: [?] support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
 
 Text_Token :: struct {
     type: Text_Token_Type,
@@ -27,9 +27,9 @@ Text_Token_Type :: enum u8 {
     custom,     // Custom/unknown command, e.g. `[icon=sword]` or `[item=#1234]`
 }
 
-// FIX: add font_height, so new lines are consistent, and the following works as expected "\n\n" and "\n[font=big]\n"; the initial (default) style should use Context.ref_font_height and user is expected to update font_height when font changes
 Text_Style :: struct {
     font        : string,
+    font_scale  : f32, // Font height scale of the `font` relative to `Context.ref_font_height`. The value is used for empty line height calculation.
     color       : Color,
     align       : Text_Alignment,
     wrapping    : bool,
@@ -37,7 +37,11 @@ Text_Style :: struct {
     user_idx    : int,
 }
 
-Text_Style_Default :: Text_Style { color={255,255,255,255}, wrapping=true }
+Text_Style_Default :: Text_Style {
+    font_scale  = 1.0,
+    color       = {255,255,255,255},
+    wrapping    = true,
+}
 
 Text_Alignment :: enum u8 { left, right, center }
 
@@ -109,6 +113,8 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
         if has_on_measure_text {
             tok.size = ctx->on_measure_text(style, tok.type, tok.text)
         }
+    case .br:
+        tok.size.y = style.font_scale * f32(ctx.ref_font_height)
     case .custom:
         if has_on_text_custom_command {
             tok.size = ctx->on_text_custom_command(&style, tok.text, tok.args)
@@ -118,15 +124,15 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
 
 // Wraps and aligns given tokes. Updates each `Text_Token.solved_pos`.
 _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) #no_bounds_check {
+    cursor_x: f32
+    cursor_y: f32
+    line_height: f32
+    line_start_i: int
+
     style := Text_Style_Default
     if ctx.on_text_style != nil do ctx->on_text_style(&style)
-
-    cursor_x        := f32(0)
-    cursor_y        := f32(0)
-    line_height     := f32(0)
-    line_start_i    := 0
-    align           := style.align
-    wrapping        := style.wrapping
+    align := style.align
+    wrapping := style.wrapping
 
     for &tok, i in tokens {
         #partial switch tok.type {
@@ -147,8 +153,8 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
             }
 
             cursor_x = 0
-            cursor_y += line_height
-            line_height = 0 // FIX: this is incorrect, fails to do multiple line breaks like "\n\n"
+            cursor_y += line_height == 0 ? tok.size.y : line_height
+            line_height = 0
             line_start_i = tok.type == .br ? i + 1 : i
 
             if overflow && tok.type == .whitespace do continue
