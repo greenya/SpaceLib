@@ -161,7 +161,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     })
 
     header := hi.add_view(root, { name="header", flags={.fill_x,.fit_y}, padding={10,0,0,0}, layout={dir=.row,align=.center,gap=10} })
-    hi.add_view(header, { name="title", flags={.fill_x,.text}, size={0,14}, text=title })
+    hi.add_view(header, { name="title", flags={.fill_x,.text}, text=title })
     if with_header_close_button {
         add_icon_button(header, name="button_close", icon="close")
     }

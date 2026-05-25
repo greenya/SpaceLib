@@ -123,7 +123,8 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
 }
 
 // Wraps and aligns given tokes. Updates each `Text_Token.solved_pos`.
-_text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) #no_bounds_check {
+// Returns total height needed to fit all the tokens with given `max_width`.
+_text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) -> (total_height: f32) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32
     line_height: f32
@@ -169,6 +170,8 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     if align != .left {
         _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, align)
     }
+
+    return cursor_y + line_height
 }
 
 _text_apply_line_alignment :: proc(line_tokens: [] Text_Token, max_width, line_width: f32, align: Text_Alignment) #no_bounds_check {

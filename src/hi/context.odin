@@ -65,7 +65,7 @@ Context_Init :: struct {
     // Return non-zero size (in ref units) for physical space, e.g. `[icon=sword]`.
     // Update `style` for styling, use `style.user_*` to store custom state.
     //
-    // Call on every custom command in both phases: updating and drawing.
+    // Called on every custom command in both phases: updating and drawing.
     // Check `ctx.drawing` if need to know the phase.
     on_text_custom_command: Context_Text_Custom_Command_Proc,
 
@@ -316,7 +316,8 @@ _generate_active_text_tokens :: proc (ctx: ^Context) {
 
         v.solved_text_tokens = _text_tokenize(ctx, v.text)
         _text_measure_tokens(ctx, v.solved_text_tokens)
-        _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=v.solved_rect.w)
+        // FIX: 1 frame lag on text layout; also we're overwriting user's input (size.y)
+        v.size.y = _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=v.solved_rect.w)
     }
 }
 
