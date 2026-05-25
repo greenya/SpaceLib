@@ -167,7 +167,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     }
 
     content_ := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80}, padding=10 })
-    hi.add_view(content_, { name="text", flags={.text,.fill_y}, size={80,0}, padding=3, text=content })
+    hi.add_view(content_, { name="text", flags={.text}, size={80,0}, padding=3, text=content })
     clip := hi.add_view(content_, { name="clip_in_content", flags={.scissor}, size={100,40}, place={anchor={1,.5},pivot=.5} })
     hi.add_view(clip, { name="box_in_clip", size={50,30}, place={anchor={.5,1},pivot=.5}, on_draw=draw_view })
     hi.add_view(content_, { name="box_in_content", size={50,30}, place={anchor={1,.25},pivot=.5}, on_draw=draw_view })
@@ -186,7 +186,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
 
     hint := hi.add_view(footer, { name="hint", flags={.ratio_y}, size={80,1}, padding=5, layout={dir=.row,gap=5}, place={anchor={1,0},offset={5,0}}, strata=.overlay, on_draw=draw_view, opacity=.8 })
     hi.add_view(hint, { name="icon", size=15 })
-    hi.add_view(hint, { name="desc", flags={.text,.fill_x,.fill_y}, text="Hello World!" })
+    hi.add_view(hint, { name="desc", flags={.text,.fill_x}, text="Hello World!" })
 
     hi.remove_view(button2_view)
     add_text_button(footer, name="button4", text="Four")
@@ -206,6 +206,6 @@ add_icon_button :: proc (parent: ^hi.View, name, icon: string) -> ^hi.View {
 
 add_text_button :: proc (parent: ^hi.View, name, text: string) -> (root: ^hi.View) {
     root = hi.add_view(parent, { name=name, size={60,20}, on_draw=draw_view })
-    hi.add_view(root, { name="label", flags={.text,.fill_x,.fill_y}, text=text })
+    hi.add_view(root, { name="label", flags={.text,.fill_x}, text=text })
     return
 }

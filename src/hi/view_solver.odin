@@ -30,12 +30,14 @@ _solve_view_fit_and_fixed_size :: proc(v: ^View) {
         v.solved_rect.w = v.size.x
     }
 
-    if .fit_y in v.flags {
-        v.solved_rect.h = fit_size.y
-    } else if v.flags & { .ratio_y, .fill_y } != {} {
-        // Skip parent-dependent height for next solver
-    } else {
-        v.solved_rect.h = v.size.y
+    if .text not_in v.flags {
+        if .fit_y in v.flags {
+            v.solved_rect.h = fit_size.y
+        } else if v.flags & { .ratio_y, .fill_y } != {} {
+            // Skip parent-dependent height for next solver
+        } else {
+            v.solved_rect.h = v.size.y
+        }
     }
 }
 
@@ -74,7 +76,9 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 
         if v.strata != c.strata {
             if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
-            if .ratio_y in c.flags do c.solved_rect.h = c.size.y * v.solved_rect.h
+            if .text not_in c.flags {
+                if .ratio_y in c.flags do c.solved_rect.h = c.size.y * v.solved_rect.h
+            }
         } else {
             if .fill_x in c.flags {
                 fill_x_child_count += 1
@@ -85,13 +89,15 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 non_fill_x_children_width += c.solved_rect.w
             }
 
-            if .fill_y in c.flags {
-                fill_y_child_count += 1
-            } else {
-                if .ratio_y in c.flags {
-                    c.solved_rect.h = c.size.y * v_size_y_avail_no_gaps
+            if .text not_in c.flags {
+                if .fill_y in c.flags {
+                    fill_y_child_count += 1
+                } else {
+                    if .ratio_y in c.flags {
+                        c.solved_rect.h = c.size.y * v_size_y_avail_no_gaps
+                    }
+                    non_fill_y_children_height += c.solved_rect.h
                 }
-                non_fill_y_children_height += c.solved_rect.h
             }
         }
     }
@@ -118,7 +124,9 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
             if .fill_x in c.flags do c.solved_rect.w = fill_child_width
-            if .fill_y in c.flags do c.solved_rect.h = fill_child_height
+            if .text not_in c.flags {
+                if .fill_y in c.flags do c.solved_rect.h = fill_child_height
+            }
         }
     }
 

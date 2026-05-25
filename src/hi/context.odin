@@ -227,6 +227,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 }
 
 // - Rebuilds `Context.active_views`
+// - Rebuilds `Context.active_text_tokens`
 // - Updates `View.solved` for every active view
 // - Sets `Context.solved`
 //
@@ -239,7 +240,6 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 // the screen.
 solve_context :: proc (ctx: ^Context) {
     clear(&ctx.active_views)
-    clear(&ctx.active_text_tokens)
 
     defer {
         ctx.stats.max_active_views_used = max(ctx.stats.max_active_views_used, len(ctx.active_views))
@@ -258,10 +258,19 @@ solve_context :: proc (ctx: ^Context) {
     ctx.root.solved_layout_child_count = 0
     append(&ctx.active_views, Active_View { ctx.root, {}, nil })
 
-    _solve_view_fit_and_fixed_size(ctx.root)
-    _solve_children_fill_and_ratio_size(ctx.root, {})
+    // never repeat layout and text measurement more than twice
+    for _ in 0..<2 {
+        _solve_view_fit_and_fixed_size(ctx.root)
+        _solve_children_fill_and_ratio_size(ctx.root, {})
+        text_height_mismatch := _regenerate_active_text_tokens(ctx)
+        if text_height_mismatch {
+            resize(&ctx.active_views, 1) // keep root only
+            continue
+        }
+        break
+    }
+
     _sort_active_views(ctx)
-    _generate_active_text_tokens(ctx)
     _propagate_active_views_opacity(ctx)
 }
 
@@ -303,8 +312,8 @@ _sort_active_views :: proc (ctx: ^Context) {
     })
 }
 
-_generate_active_text_tokens :: proc (ctx: ^Context) {
-    assert(len(ctx.active_text_tokens) == 0)
+_regenerate_active_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch: bool) {
+    clear(&ctx.active_text_tokens)
 
     for &v in ctx.active_views {
         if .text not_in v.flags do continue
@@ -316,9 +325,15 @@ _generate_active_text_tokens :: proc (ctx: ^Context) {
 
         v.solved_text_tokens = _text_tokenize(ctx, v.text)
         _text_measure_tokens(ctx, v.solved_text_tokens)
-        // FIX: 1 frame lag on text layout; also we're overwriting user's input (size.y)
-        v.size.y = _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=v.solved_rect.w)
+
+        context_w := v.solved_rect.w - v.padding[0] - v.padding[2]
+        text_height := _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=context_w)
+        solved_rect_h := text_height + v.padding[1] + v.padding[3]
+        if 0.1 < abs(v.solved_rect.h - solved_rect_h) do text_height_mismatch = true
+        v.solved_rect.h = solved_rect_h
     }
+
+    return
 }
 
 _propagate_active_views_opacity :: proc (ctx: ^Context) {

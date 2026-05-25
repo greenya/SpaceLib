@@ -63,7 +63,7 @@ Flag :: enum {
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Active_View.solved_text_tokens` to draw the text. The `View.solved_rect.h` is determined by its measured height of all the text.
+    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Active_View.solved_text_tokens` to draw the text. The `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
 
     // Sizing
 
