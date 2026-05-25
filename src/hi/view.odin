@@ -20,10 +20,19 @@ View_Init :: struct {
     scroll  : Vec2,     // Offset for native strata children
     layout  : Layout,   // Layout for native strata children
 
+    // Drawing callback.
+    // If not set and view is `.text`, the `Context.on_draw_text()` will be used.
+    //
+    // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
     on_draw: proc (v: ^Active_View),
-    // on_state: (show/hide/select/deselect)
-    // on_mouse: (status: enter/leave), (action: click/wheel/drag)
-    // TODO: maybe combine all events into on_event, the pro: less callbacks and less size of View, the con: more false calls
+
+    // Event callback.
+    //
+    // Mouse Action events (`.clicked`, `.wheeled`) and Mouse Status events (`.entered`, `.left`) are propagated
+    // to the parent unless `true` returned.
+    //
+    // Note: The events get processed and this callback gets called in the Updating Phase only, e.g. from within `update_context()`.
+    on_event: proc (v: ^View, event: Event) -> (consumed: bool),
 
     // USER DATA
     name: string,
@@ -67,20 +76,12 @@ Flag :: enum {
 
     // Behavior
 
-    // TODO: All events should be given from the top view to the bottom (root)
-    // - if view doesn't have on_*, the event keeps propagation to the next (bottom) view
-    // - if view has on_*, the event callback is executed and the event considered to be consumed, propagation stops
-    //      // TODO: maybe add return value (keep_bubbling_up: bool), or flag into Event struct, or something,
-    //               to allow receiving event and keep propagation, so for example adding fullscreen top most view
-    //               can catch all the events (for debugging maybe) and all the views below still receive events and work
-    //               Maybe instead of return bool, this can be done via extra Flag, e.g. ".observer"
-    //      With this approach we don't need "pass" or "pass_self" or "block_wheel" flags (like spacelib:ui does)
-
-    disabled,   // FIX: [NOT IMPLEMENTED] The view is disabled, it will not receive Mouse Action Events (click, wheel, drag)
-    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse when clicked; the click event will be fired on mouse button release
-    selected,   // The view is "selected". It is up to the `View.on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags
-    check,      // FIX: [NOT IMPLEMENTED] The view inverts `.selected` when clicked
-    radio,      // FIX: [NOT IMPLEMENTED] The view sets own `.selected` when clicked and clears it for all `.radio` siblings
+    disabled,   // The view is disabled, it will not receive Mouse Action events: `.clicked`, `.wheeled`.
+    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
+    selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
+    check,      // The view inverts `.selected` when clicked
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings
+    page,       // The view hides all `.page` siblings when gets `show()`
     // auto_hide // TODO: think more on auto_hide flag.
     //              In spacelib:ui, this flag was intended to be used for dropdown menus and similar popups
     //              which should be closed if clicked outside; the task apparently wasn't that simple and
@@ -92,7 +93,7 @@ Flag :: enum {
     //              it supports anchoring of frames to any frame, not just parent. In this library we have only child-parent anchoring.
 }
 
-Strata :: enum {
+Strata :: enum i8 {
     background  = -1,   // For lowest and generally non-interactive views like artistic decorations, HUD, damage numbers, world object labels
     base        = 0,    // For the most views, e.g. panels, buttons, health bars, action bars, non-modal dialogs
     overlay     = 1,    // For priority views like menus and dropdowns which should avoid parent clipping (if parent uses different strata). For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
@@ -106,14 +107,14 @@ Place :: struct {
 }
 
 Layout :: struct {
-    dir     : Layout_Direction, // Direction of the main axis
+    dir     : Layout_Direction, // Direction of the main axis. If `.none`, the layout is not used and all the fields are ignored.
     justify : Layout_Alignment, // Alignment along the main axis
     align   : Layout_Alignment, // Alignment along the cross axis
     gap     : f32,              // Spacing between adjacent children
 }
 
 Layout_Direction :: enum u8 {
-    none,   // Children positioned by their `place`.
+    none,   // No layout. Children positioned by their `place`.
     row,    // Children arranged in a row. Their `place` is ignored.
     column, // Children arranged in a column. Their `place` is ignored.
 }
@@ -122,6 +123,33 @@ Layout_Alignment :: enum u8 {
     start,  // Children aligned to the "top" or "left", depending on the axis.
     end,    // Children aligned to the "bottom" or "right" depending on the axis.
     center,
+}
+
+Event :: struct {
+    type: Event_Type,
+}
+
+Event_Type :: enum u8 {
+    // Core
+
+    shown,      // The view became shown, e.g. lost `.hidden` flag. The view may not be visible still (parent is `.hidden` or clipped out by the parent scissor).
+    hidden,     // The view gained `.hidden` flag
+    updated,    // Continuously fired at the end of `update_context()`. Only for *active* views.
+
+    // Mouse
+
+    entered,    // FIX: [NOT IMPLEMENTED] Propagable Mouse Status event. Fired when mouse cursor enters the view.
+    left,       // FIX: [NOT IMPLEMENTED] Propagable Mouse Status event. Fired when mouse cursor leaves the view.
+    clicked,    // Propagable Mouse Action event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
+    captured,   // Fired when `.capture` view gets mouse button press.
+    released,   // Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
+    dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view between `.captured` and `.released`.
+    wheeled,    // Propagable Mouse Action event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
+
+    // Behavior
+
+    scrolled,   // The `View.scroll` has changed
+    selection_changed,  // The `.selected` has changed
 }
 
 add_view :: proc (parent: ^View, init: View_Init) -> ^View {
@@ -268,3 +296,90 @@ content_rect :: proc (v: ^View) -> Rect {
 in_root_rect :: proc (v: ^View) -> bool {
     return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
 }
+
+_emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
+    return v.on_event != nil\
+        ? v->on_event(e)\
+        : false
+}
+
+show :: proc (v: ^View) {
+    if .hidden in v.flags {
+        v.flags -= { .hidden }
+        _emit(v, { type=.shown })
+    }
+
+    if .page in v.flags && v.parent != nil {
+        for s := v.parent.first_child; s != nil; s = s.next_sibling {
+            if s != v {
+                s.flags += { .hidden }
+                _emit(s, { type=.hidden })
+            }
+        }
+    }
+}
+
+hide :: proc (v: ^View) {
+    if .hidden not_in v.flags {
+        v.flags += { .hidden }
+        _emit(v, { type=.hidden })
+    }
+}
+
+click :: proc (v: ^View) -> (consumed: bool) {
+    if .disabled in v.flags do return false
+
+    if .check in v.flags {
+        v.flags ~= { .selected }
+        _emit(v, { type=.selection_changed })
+    }
+
+    if .radio in v.flags && v.parent != nil {
+        for s := v.parent.first_child; s != nil; s = s.next_sibling {
+            if s != v && .selected in s.flags {
+                s.flags -= { .selected }
+                _emit(s, { type=.selection_changed })
+            }
+        }
+    }
+
+    return _emit(v, { type=.clicked })
+}
+
+wheel :: proc (v: ^View) -> (consumed: bool) {
+    if .disabled in v.flags do return false
+
+    if v.layout.dir != .none {
+        // TODO: [?] add some .wheel_scroll flag, and if set, do the scroll in direction of layout.dir:
+        // step := v.ctx.ref_font_height * (wheel_delta > 0 ? 1 : -1)
+        // scroll(v, step, absolute=false)
+    }
+
+    return _emit(v, { type=.wheeled })
+}
+
+scroll_max :: proc (v: ^View) -> f32 {
+    // TODO: impl
+    return 111
+}
+
+scroll_to :: proc (v: ^View, value: f32, absolute: bool) {
+    // TODO: impl
+}
+
+scroll_to_min :: proc (v: ^View) {
+    scroll_to(v, 0, absolute=true)
+}
+
+scroll_to_max :: proc (v: ^View) {
+    value := scroll_max(v)
+    scroll_to(v, value, absolute=true)
+}
+
+// TODO: renamed View.scroll to View.pan (.scrolled event -> .panned). Make pan to work in X and Y direction, and scroll() to use layout.dir (single axis direction);
+// scroll_size() should return single axis result from pan_size()
+// if we support mouse drag event, the pan() should simplify panning of the view
+
+// pan_max :: proc (v: ^View) -> Vec2 {}
+
+// pan :: proc (v: ^View, value: Vec2, relative: bool) {}

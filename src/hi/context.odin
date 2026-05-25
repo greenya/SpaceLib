@@ -141,18 +141,18 @@ Mouse_Input :: struct {
     wheel_delta : f32,
 }
 
-Mouse_Event :: struct {
-    type: Mouse_Event_Type,
-}
+// Mouse_Event :: struct {
+//     type: Mouse_Event_Type,
+// }
 
-Mouse_Event_Type :: enum {
-    moved,
-    pressed,
-    released,
-    scrolled,
-    // entered,
-    // left,
-}
+// Mouse_Event_Type :: enum {
+//     moved,
+//     pressed,
+//     released,
+//     scrolled,
+//     // entered,
+//     // left,
+// }
 
 Context_Event :: struct {
     type: Context_Event_Type,
@@ -161,7 +161,7 @@ Context_Event :: struct {
 Context_Event_Type :: enum {
     screen_size_changed,
     screen_font_height_changed,
-    context_solved,
+    solved,
 }
 
 Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
@@ -219,6 +219,10 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     // TODO: Animate and layout tree
     // animate_and_layout_tree(ctx.root, dt)
 
+    for &v in ctx.active_views {
+        _emit(v, { type=.updated })
+    }
+
     return ctx.mouse.consumed
 }
 
@@ -243,7 +247,7 @@ solve_context :: proc (ctx: ^Context) {
 
         ctx.solved = true
         if ctx.on_event != nil {
-            ctx->on_event({ type=.context_solved })
+            ctx->on_event({ type=.solved })
         }
     }
 

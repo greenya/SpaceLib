@@ -30,7 +30,7 @@ main :: proc () {
         align_center = true,
         aspect_ratio_matching = -1,
         on_event = proc (ctx: ^hi.Context, event: hi.Context_Event) {
-            fmt.println("[ctx.on_event]", event)
+            fmt.println("context event:", event)
         },
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(
@@ -154,6 +154,10 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         layout  = {dir=.column},
         place   = {anchor=.5,pivot=.5},
         on_draw = draw_view,
+        on_event= proc (v: ^hi.View, e: hi.Event) -> bool {
+            if e.type != .updated do fmt.println(v.name, "event:", e)
+            return true
+        },
     })
 
     header := hi.add_view(root, { name="header", flags={.fill_x,.fit_y}, padding={10,0,0,0}, layout={dir=.row,align=.center,gap=10} })
