@@ -54,19 +54,14 @@ main :: proc () {
             return
         },
         on_draw_text = proc (v: ^hi.Active_View) {
-            // fmt.println(v.name, "token:", len(v.solved_text_tokens), "text:", v.text)
-            v_content_rect := hi.content_rect(v)
-            v_content_pos := [2] f32 { v_content_rect.x, v_content_rect.y }
-
-            for tok in v.solved_text_tokens {
-                // fmt.println(tok)
-                if tok.type == .word {
-                    tok_pos := v_content_pos + tok.solved_pos
-                    tok_pos_screen := hi.ref_pos_to_screen(v.ctx, tok_pos)
-                    k2.draw_text(tok.text, tok_pos_screen, f32(ctx.screen_font_height), k2.WHITE)
-
-                    tok_rect_screen := hi.ref_rect_to_screen(v.ctx, {tok_pos.x, tok_pos.y, tok.size.x, tok.size.y})
-                    k2.draw_rect(k2.Rect(tok_rect_screen), {100,0,0,80})
+            it := hi.active_view_text_token_iterate(v)
+            for tok, screen_pos, screen_rect in hi.active_view_text_token_next(&it) {
+                #partial switch tok.type {
+                case .word:
+                    k2.draw_text(tok.text, screen_pos, f32(ctx.screen_font_height), k2.WHITE)
+                    k2.draw_rect(k2.Rect(screen_rect), {100,0,0,80})
+                case .custom:
+                    k2.draw_rect_outline(k2.Rect(screen_rect), 2, k2.WHITE)
                 }
             }
         },
@@ -81,7 +76,7 @@ main :: proc () {
     add_dialog(
         ctx.root,
         name = "dialog_exit_game",
-        title = "Exit Game?",
+        title = "[icon=icon771] Exit Game?",
         content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].\n\n[center]Proceed?",
         button1 = "Yes",
         button2 = "No",

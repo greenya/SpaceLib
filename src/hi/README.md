@@ -2,8 +2,6 @@
 
 ## TODOs
 
-TODO: View: add text_token_iterator, for easier drawing phase
-
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 
 - At the moment, user can achieve this easily just by doing `ctx.ref_size = screen_size` just before calling update_context(). Maybe keep like this, and do not add extra logic (?)

@@ -222,6 +222,7 @@ _remove_detached_view_tree :: proc (v: ^View) {
     core.sparse_array_remove(&v.ctx.views, int(v.idx))
 }
 
+@require_results
 last_child :: proc (v: ^View) -> ^View {
     for c := v.first_child; c != nil; c = c.next_sibling {
         if c.next_sibling == nil do return c
@@ -229,6 +230,7 @@ last_child :: proc (v: ^View) -> ^View {
     return nil
 }
 
+@require_results
 prev_sibling :: proc (v: ^View) -> ^View {
     if v.parent.first_child != v {
         for c := v.parent.first_child; c != nil; c = c.next_sibling {
@@ -245,6 +247,7 @@ Child_Iterator :: struct {
 }
 
 // If `strata_filter` is empty, it defaults to native strata children only
+@require_results
 child_iterate :: proc (v: ^View, strata_filter := bit_set [Strata] {}) -> (iter: Child_Iterator) {
     return {
         next_child = v.first_child,
@@ -252,6 +255,7 @@ child_iterate :: proc (v: ^View, strata_filter := bit_set [Strata] {}) -> (iter:
     }
 }
 
+@require_results
 child_next :: proc (it: ^Child_Iterator) -> (c: ^View, i: int, ok: bool) {
     for c = it.next_child; c != nil; c = c.next_sibling {
         if c.strata in it.strata_filter {
@@ -285,6 +289,7 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
     v.ctx.solved = false
 }
 
+@require_results
 content_rect :: proc (v: ^View) -> Rect {
     return {
         v.solved_rect.x + v.padding[0],
@@ -294,6 +299,7 @@ content_rect :: proc (v: ^View) -> Rect {
     }
 }
 
+@require_results
 in_root_rect :: proc (v: ^View) -> bool {
     return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
 }
@@ -358,6 +364,7 @@ wheel :: proc (v: ^View) -> (consumed: bool) {
     return _emit(v, { type=.wheeled })
 }
 
+@require_results
 scroll_max :: proc (v: ^View) -> f32 {
     // TODO: impl
     return 111

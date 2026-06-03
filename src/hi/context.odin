@@ -74,6 +74,8 @@ Context_Init :: struct {
 
     // Fallback for all `.text` view drawing. Use `ctx.screen_font_height` as base font size multiplier.
     //
+    // Use `active_view_text_token_iterate/next()` to simplify iterating over tokens.
+    //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Active_View),
 
@@ -117,20 +119,6 @@ Context :: struct {
     },
 }
 
-// An active view.
-//
-// A view is considered *inactive* and skipped by the solver if:
-// - the view itself or any parent of the view is `.hidden`
-// - the view does not intersect `solved_scissor` (completely clipped out)
-// - the view is a child of an *inactive* view
-//
-// Note: Zero opacity alone does not make the view *inactive*.
-Active_View :: struct {
-    using view          : ^View,
-    solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
-    solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
-}
-
 Mouse_Input :: struct {
     screen_pos  : Vec2,
     lmb_down    : bool,
@@ -166,6 +154,7 @@ Context_Measure_Text_Proc       :: proc (ctx: ^Context, style: Text_Style, type:
 Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
 Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
 
+@require_results
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
     ctx := new(Context, allocator)
     ctx.init = init
@@ -382,22 +371,27 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     }
 }
 
+@require_results
 screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: Vec2) -> Vec2 {
     return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
 }
 
+@require_results
 screen_size_to_ref :: proc (ctx: ^Context, screen_size: Vec2) -> Vec2 {
     return screen_size / ctx.screen_pixel_scale
 }
 
+@require_results
 ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: Vec2) -> Vec2 {
     return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
 }
 
+@require_results
 ref_size_to_screen :: proc (ctx: ^Context, ref_size: Vec2) -> Vec2 {
     return ref_size * ctx.screen_pixel_scale
 }
 
+@require_results
 ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
     return {
         expand_values(ref_pos_to_screen(ctx, { ref_rect.x, ref_rect.y })),
@@ -405,6 +399,7 @@ ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
     }
 }
 
+@require_results
 ref_view_to_screen :: proc (v: ^View) -> Rect {
     return ref_rect_to_screen(v.ctx, v.solved_rect)
 }
