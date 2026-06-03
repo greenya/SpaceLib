@@ -111,9 +111,9 @@ Context :: struct {
     },
 
     stats: struct {
-        max_views_used              : int,
-        max_active_views_used       : int,
-        max_active_text_tokens_used : int,
+        views_peak              : int,
+        active_views_peak       : int,
+        active_text_tokens_peak : int,
     },
 }
 
@@ -179,6 +179,7 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
     ctx.root = root
     ctx.root.sid = _next_view_sid(ctx)
 
+    ctx.stats.views_peak = 1
     return ctx
 }
 
@@ -238,8 +239,8 @@ solve_context :: proc (ctx: ^Context) {
     clear(&ctx.active_views)
 
     defer {
-        ctx.stats.max_active_views_used = max(ctx.stats.max_active_views_used, len(ctx.active_views))
-        ctx.stats.max_active_text_tokens_used = max(ctx.stats.max_active_text_tokens_used, len(ctx.active_text_tokens))
+        ctx.stats.active_views_peak = max(ctx.stats.active_views_peak, len(ctx.active_views))
+        ctx.stats.active_text_tokens_peak = max(ctx.stats.active_text_tokens_peak, len(ctx.active_text_tokens))
 
         ctx.solved = true
         if ctx.on_event != nil {

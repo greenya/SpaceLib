@@ -93,20 +93,7 @@ main :: proc () {
 
     hi.solve_context(ctx)
     hi.print_view_tree(ctx.root)
-
-    fmt.println("ctx.active_views == {")
-    for v in ctx.active_views {
-        fmt.printfln("\t%v\tL%d\t#%4d %20s |%f| %10s\t%v",
-            v.strata,
-            v.level,
-            v.sid,
-            v.name,
-            v.solved_opacity,
-            .scissor in v.flags ? "+scissor" : "",
-            v.solved_scissor,
-        )
-    }
-    fmt.println("}")
+    hi.print_active_views(ctx)
 
     for main_update() {
         main_draw()

@@ -164,7 +164,8 @@ add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
     v.idx = View_IDX(v_idx)
     v.ctx = ctx
     if v.opacity == 0 do v.opacity = 1
-    ctx.stats.max_views_used = max(ctx.stats.max_views_used, core.sparse_array_len(ctx.views))
+
+    ctx.stats.views_peak = max(ctx.stats.views_peak, core.sparse_array_len(ctx.views))
     return v
 }
 
