@@ -311,9 +311,8 @@ show :: proc (v: ^View) {
 
     if .page in v.flags && v.parent != nil {
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
-            if s != v {
-                s.flags += { .hidden }
-                _emit(s, { type=.hidden })
+            if s != v && .hidden not_in v.flags {
+                hide(s)
             }
         }
     }
@@ -382,4 +381,4 @@ scroll_to_max :: proc (v: ^View) {
 
 // pan_max :: proc (v: ^View) -> Vec2 {}
 
-// pan :: proc (v: ^View, value: Vec2, relative: bool) {}
+// pan :: proc (v: ^View, value: Vec2, absolute: bool) {}

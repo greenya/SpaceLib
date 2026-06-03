@@ -5,10 +5,6 @@ import "core:math/linalg"
 import "core:slice"
 import "../core"
 
-// TODO: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
-// TODO: make Context.views sparse array size to be a parameter somehow (now its hardcoded), maybe provide storage interface with add/remove (?)
-// TODO: add text_token_iterator, for easier drawing phase
-
 MAX_VIEWS           :: 2000
 MAX_ACTIVE_VIEWS    :: MAX_VIEWS / 4
 MAX_TEXT_TOKENS     :: 1000

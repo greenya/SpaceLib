@@ -3,9 +3,6 @@ package hi
 import "core:strings"
 import "core:strconv"
 
-// TODO: [?] support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
-// TODO: [?] support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
-
 Text_Token :: struct {
     type: Text_Token_Type,
     text: string,       // Text or command name

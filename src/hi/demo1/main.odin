@@ -42,7 +42,7 @@ main :: proc () {
         on_measure_text = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
             font_size := f32(ctx.ref_font_height)
             size = k2.measure_text(text, font_size)
-            fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
+            // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
         },
         on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {

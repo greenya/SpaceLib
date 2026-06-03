@@ -1,8 +1,29 @@
-# hi Notes
+# hi
 
-----------
+## TODOs
+
+TODO: View: add text_token_iterator, for easier drawing phase
+
+TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
+
+- At the moment, user can achieve this easily just by doing `ctx.ref_size = screen_size` just before calling update_context(). Maybe keep like this, and do not add extra logic (?)
+
+TODO: Context: make `Context.views` sparse array size to be a parameter somehow (now it is hardcoded)
+
+- Maybe provide storage interface with add/remove (?)
+- Maybe use `#config()` args, so user tune exact amount needed for the game. Small games might need only 100 views, medium 1000+ and large 5000+.
+
+TODO: Text: [?] support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
+
+TODO: Text: [?] support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
+
+TODO: View: [?] Support for Free-Floating Fit, e.g. when parent doesn't have `layout`, but still want its size to be updated, to fit all children, who are placed via their `placement`.
+
+## Notes on number of stratas
 
 [?] 6 stratas idea for more granular layer control. Do we need it? For now lets keep 4.
+
+Note: at the moment we use 4 bits to store the value, so we can have up 16 levels. Also we do not store any preallocated array for each strata, so memory footprint should not change when increasing number of stratas.
 
 ```odin
 Strata :: enum {
@@ -15,7 +36,7 @@ Strata :: enum {
 }
 ```
 
-----------
+## Notes on building ui from code with writing less of it (scoped building or extra generator/builder)
 
 [?] Maybe remove view_scoped.odin, and Context.scoped_views_stack, as this value is very temporary, but lives in Context for all time. So instead, we can maybe do like
 
@@ -58,22 +79,3 @@ add_button :: proc (ctx: Context, name: string) {
 The `View_Generator` holds the state, and has arrow procs. The `begin()` and `end()` is no different from `if group() { ...`, the point is that large groups like whole dialog is not nice to put all code inside "if". So the `group()` does the same as `begin()` plus defers `end()` call.
 
 Not sure how `add_button()` using only Context can deduct the parent to be used. If we will be passing View_Generator to add_button(), then there is no point in View_Generator i guess, all the procs can be held by the Context itself.
-
-----------
-
-// TODO: Support for Free-Floating Fit, e.g. when parent doesn't have `layout`,
-//       but still want its size to be updated, to fit all children, who are placed
-//       via their `placement`.
-
-----------
-
-```odin
-// example of root with safe margins of 2.5% on all sides:
-append(&ctx.views, View {
-    name="root",
-    flags={ .ratio_x, .ratio_y },
-    sizing=.fixed_ratio,
-    size=.95,
-    placement={ anchor=.5, pivot=.5 },
-})
-```
