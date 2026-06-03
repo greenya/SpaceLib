@@ -282,7 +282,7 @@ draw_context :: proc (ctx: ^Context) {
 
         if .debug in v.flags {
             if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
-            _debug_draw_view(v)
+            _debug_draw_view(&v)
             if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
         }
     }

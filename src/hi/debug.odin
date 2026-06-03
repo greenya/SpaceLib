@@ -5,9 +5,10 @@ import "../core"
 
 _DEBUG_ROOT_COLOR       :: Color { 255, 255, 255, 80 }
 _DEBUG_VIEW_COLOR       :: Color { 255, 255,   0, 255 }
+_DEBUG_TEXT_TOKEN_COLOR :: Color { 255,   0, 255, 255 }
 _DEBUG_SCISSOR_COLOR    :: Color {   0, 255, 255, 255 }
 
-_debug_draw_view :: proc (v: ^View) {
+_debug_draw_view :: proc (v: ^Active_View) {
     content_rect := ref_rect_to_screen(v.ctx, content_rect(v))
 
     if .scissor in v.flags {
@@ -20,6 +21,7 @@ _debug_draw_view :: proc (v: ^View) {
 
     if v.idx == 0 {
         _debug_draw_rect(v.ctx, core.rect_inflated(rect, -4), 4, _DEBUG_ROOT_COLOR)
+
         if v.ctx.debug_draw_text != nil {
             text := fmt.tprintf(
                 "ref_size: %vx%v\n" +
@@ -66,9 +68,18 @@ _debug_draw_view :: proc (v: ^View) {
         }
     } else {
         _debug_draw_rect(v.ctx, rect, 1, _DEBUG_VIEW_COLOR)
+
         if v.ctx.debug_draw_text != nil {
             text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
             v.ctx.debug_draw_text(text, {rect.x,rect.y}+{2,2}, _DEBUG_VIEW_COLOR)
+        }
+
+        if .text in v.flags {
+            it := active_view_text_token_iterate(v, in_scissor_only=false)
+            for _, tok_rect in active_view_text_token_next(&it) {
+                tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
+                _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
+            }
         }
     }
 }
