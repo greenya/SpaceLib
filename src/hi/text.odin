@@ -26,7 +26,7 @@ Text_Token_Type :: enum u8 {
 
 Text_Style :: struct {
     font        : string,
-    font_scale  : f32, // Font height scale of the `font` relative to `Context.ref_font_height`. The value is used for empty line height calculation.
+    font_scale  : f32, // Font height scale of the `font`
     color       : Color,
     align       : Text_Alignment,
     wrapping    : bool,
@@ -188,4 +188,49 @@ _text_parse_tag_text :: proc (tag_text: string) -> (cmd, args: string) #no_bound
     i := strings.index_byte(tag_text, '=')
     if i >= 0   do return tag_text[0:i], tag_text[i+1:]
     else        do return tag_text, ""
+}
+
+Text_Token_Iterator :: struct {
+    tokens  : [] Text_Token,
+    style   : Text_Style,
+    ctx     : ^Context,
+    filter  : bit_set [Text_Token_Type],
+    next_i  : int,
+}
+
+// The `filter` affects only returned tokens; the `.custom` tokens always get processed for `Text_Token_Iterator.style` changes.
+@require_results
+text_token_iterate :: proc (
+    ctx     : ^Context,
+    tokens  : [] Text_Token,
+    filter  := bit_set [Text_Token_Type] { .word, .custom },
+) -> (it: Text_Token_Iterator) {
+    assert(filter != {})
+
+    it = {
+        tokens  = tokens,
+        style   = Text_Style_Default,
+        ctx     = ctx,
+        filter  = filter,
+    }
+
+    if ctx.on_text_style != nil do ctx->on_text_style(&it.style)
+
+    return
+}
+
+@require_results
+text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: bool) #no_bounds_check {
+    for i := it.next_i; i < len(it.tokens); i += 1 {
+        tok = &it.tokens[i]
+        if tok.type == .custom && it.ctx.on_text_custom_command != nil {
+            it.ctx->on_text_custom_command(&it.style, tok.text, tok.args)
+        }
+        if tok.type in it.filter {
+            it.next_i = i + 1
+            ok = true
+            return
+        }
+    }
+    return
 }

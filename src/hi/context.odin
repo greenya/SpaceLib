@@ -40,8 +40,8 @@ Context_Init :: struct {
     on_scissor: Context_Scissor_Proc,
 
     // Text measure callback. Used only with `.text` views.
-    // - `style` Current style; font details are in `style.font` and `style.user_*` (if used)
-    // - `type` token type, expect only:
+    // - `style` Current style (e.g. font details)
+    // - `type` Token type, expect only:
     //      * `.word` Letters/numbers/punctuations
     //      * `.whitespace` Spaces `" "` and tabs `"\t"`
     // - `text` Non-empty string to measure
@@ -74,7 +74,7 @@ Context_Init :: struct {
 
     // Fallback for all `.text` view drawing. Use `ctx.screen_font_height` as base font size multiplier.
     //
-    // Use `active_view_text_token_iterate/next()` to simplify iterating over tokens.
+    // Use `active_view_text_token_iterate/next()` to simplify iterating over the tokens.
     //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Active_View),

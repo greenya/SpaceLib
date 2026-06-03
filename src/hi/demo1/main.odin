@@ -22,7 +22,7 @@ main :: proc () {
     fmt.println("Text_Token size    :", size_of(hi.Text_Token))
     fmt.println("-------------------------------------------")
 
-    k2.init(1280, 720, "demo", { window_mode=.Windowed_Resizable })
+    k2.init(1280, 720, "demo1", { window_mode=.Windowed_Resizable })
 
     ctx = hi.create_context({
         ref_size = {320,180},
@@ -55,13 +55,15 @@ main :: proc () {
         },
         on_draw_text = proc (v: ^hi.Active_View) {
             it := hi.active_view_text_token_iterate(v)
-            for tok, screen_pos, screen_rect in hi.active_view_text_token_next(&it) {
+            for tok, tok_rect in hi.active_view_text_token_next(&it) {
+                tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
                 #partial switch tok.type {
                 case .word:
-                    k2.draw_text(tok.text, screen_pos, f32(ctx.screen_font_height), k2.WHITE)
-                    k2.draw_rect(k2.Rect(screen_rect), {100,0,0,80})
+                    font_size_s := f32(v.ctx.screen_font_height) * it.style.font_scale
+                    k2.draw_text(tok.text, {tok_rect_s.x,tok_rect_s.y}, font_size_s, it.style.color)
+                    k2.draw_rect(k2.Rect(tok_rect_s), {100,0,0,80})
                 case .custom:
-                    k2.draw_rect_outline(k2.Rect(screen_rect), 2, k2.WHITE)
+                    k2.draw_rect_outline(k2.Rect(tok_rect_s), 2, it.style.color)
                 }
             }
         },

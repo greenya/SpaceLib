@@ -17,9 +17,7 @@ Active_View :: struct {
 }
 
 Active_View_Text_Iterator :: struct {
-    active_view     : ^Active_View,
-    next_i          : int,
-    filter          : bit_set [Text_Token_Type],
+    using token_it  : Text_Token_Iterator,
     measurable_only : bool, // If true, skip tokens with zero size
     in_scissor_only : bool, // If true, skip tokens clipped out by `active_view.solved_scissor` if it is used
     content_rect    : Rect,
@@ -34,29 +32,28 @@ active_view_text_token_iterate :: proc (
 ) -> (it: Active_View_Text_Iterator) {
     assert(filter != {})
     return {
-        active_view         = active_view,
-        filter              = filter,
-        measurable_only     = measurable_only,
-        in_scissor_only     = in_scissor_only && active_view.solved_scissor != {},
-        content_rect        = content_rect(active_view),
+        token_it        = text_token_iterate(active_view.ctx, active_view.solved_text_tokens, filter),
+        measurable_only = measurable_only,
+        in_scissor_only = in_scissor_only && active_view.solved_scissor != {},
+        content_rect    = content_rect(active_view),
     }
 }
 
 @require_results
-active_view_text_token_next :: proc (it: ^Active_View_Text_Iterator) -> (tok: ^Text_Token, screen_pos: Vec2, screen_rect: Rect, ok: bool) #no_bounds_check {
-    for i := it.next_i; i < len(it.active_view.solved_text_tokens); i += 1 {
-        tok = &it.active_view.solved_text_tokens[i]
+active_view_text_token_next :: proc (it: ^Active_View_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
+    for tok_ in text_token_next(&it.token_it) {
+        if it.measurable_only && tok_.size == {} do continue
 
-        if tok.type not_in it.filter do continue
-        if it.measurable_only && tok.size == {} do continue
+        tok_rect = Rect {
+            tok_.solved_pos.x + it.content_rect.x,
+            tok_.solved_pos.y + it.content_rect.y,
+            tok_.size.x,
+            tok_.size.y,
+        }
 
-        tok_pos := tok.solved_pos + { it.content_rect.x, it.content_rect.y }
-        tok_rect := Rect { tok_pos.x, tok_pos.y, tok.size.x, tok.size.y }
         if it.in_scissor_only && !core.rects_intersect(it.content_rect, tok_rect) do continue
 
-        it.next_i = i + 1
-        screen_pos = ref_pos_to_screen(it.active_view.ctx, tok_pos)
-        screen_rect = ref_rect_to_screen(it.active_view.ctx, tok_rect)
+        tok = tok_
         ok = true
         return
     }
