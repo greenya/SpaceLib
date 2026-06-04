@@ -17,10 +17,11 @@ Active_View :: struct {
 }
 
 Active_View_Text_Iterator :: struct {
-    using token_it  : Text_Token_Iterator,
-    measurable_only : bool, // If true, skip tokens with zero size
-    in_scissor_only : bool, // If true, skip tokens clipped out by `active_view.solved_scissor` if it is used
-    content_rect    : Rect,
+    using token_it      : Text_Token_Iterator,
+    content_top_left    : Vec2,
+    measurable_only     : bool, // If true, skip tokens with zero size
+    in_scissor_only     : bool, // If true, skip tokens clipped out by `active_view.solved_scissor` if it is used
+    scissor_rect        : Rect,
 }
 
 @require_results
@@ -31,12 +32,21 @@ active_view_text_token_iterate :: proc (
     in_scissor_only := true,
 ) -> (it: Active_View_Text_Iterator) {
     assert(filter != {})
-    return {
-        token_it        = text_token_iterate(active_view.ctx, active_view.solved_text_tokens, filter),
-        measurable_only = measurable_only,
-        in_scissor_only = in_scissor_only && active_view.solved_scissor != {},
-        content_rect    = content_rect(active_view),
+
+    content_rect_ := content_rect(active_view)
+
+    it = {
+        token_it            = text_token_iterate(active_view.ctx, active_view.solved_text_tokens, filter),
+        measurable_only     = measurable_only,
+        content_top_left    = { content_rect_.x, content_rect_.y },
     }
+
+    if in_scissor_only && active_view.solved_scissor != {} {
+        it.scissor_rect = active_view.solved_scissor
+        it.in_scissor_only = true
+    }
+
+    return
 }
 
 @require_results
@@ -45,13 +55,13 @@ active_view_text_token_next :: proc (it: ^Active_View_Text_Iterator) -> (tok: ^T
         if it.measurable_only && tok_.size == {} do continue
 
         tok_rect = Rect {
-            tok_.solved_pos.x + it.content_rect.x,
-            tok_.solved_pos.y + it.content_rect.y,
+            tok_.solved_pos.x + it.content_top_left.x,
+            tok_.solved_pos.y + it.content_top_left.y,
             tok_.size.x,
             tok_.size.y,
         }
 
-        if it.in_scissor_only && !core.rects_intersect(it.content_rect, tok_rect) do continue
+        if it.in_scissor_only && !core.rects_intersect(it.scissor_rect, tok_rect) do continue
 
         tok = tok_
         ok = true

@@ -54,7 +54,6 @@ main :: proc () {
             return
         },
         on_draw_text = proc (v: ^hi.Active_View) {
-            // FIX: `in_scissor_only` seems doesn't work
             it := hi.active_view_text_token_iterate(v)
             fmt.println("-----------", it.in_scissor_only)
             for tok, tok_rect in hi.active_view_text_token_next(&it) {
