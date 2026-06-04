@@ -143,10 +143,10 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
         }
 
         line_height = max(line_height, tok.size.y)
-        overflow := wrapping && (cursor_x + tok.size.x > max_width)
+        overflow := wrapping && cursor_x > 0 && (cursor_x + tok.size.x > max_width)
 
         if overflow || tok.type == .br {
-            _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, align)
+            _text_apply_line_alignment(tokens[line_start_i:i], max_width, align)
 
             cursor_x = 0
             cursor_y += line_height == 0 ? tok.size.y : line_height
@@ -162,12 +162,12 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     }
 
     // align very last line
-    _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, align)
+    _text_apply_line_alignment(tokens[line_start_i:], max_width, align)
 
     return cursor_y + line_height
 }
 
-_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width, line_width: f32, align: Text_Alignment) #no_bounds_check {
+_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, align: Text_Alignment) #no_bounds_check {
     if len(line_tokens) == 0 do return
 
     start_i: int
@@ -195,18 +195,24 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width, line_
         }
     }
 
-    printable_line_width := line_width - leading_space_w - trailing_space_w
+    printable_line_width: f32
+    for i in start_i..=end_i {
+        printable_line_width += line_tokens[i].size.x
+    }
+
     if printable_line_width <= 0 {
         for &tok in line_tokens do tok.solved_pos = {}
         return
     }
 
-    shift_amount := -leading_space_w
+    shift_amount: f32
     switch align {
     case .left  : /**/
     case .right : shift_amount +=  max_width - printable_line_width
     case .center: shift_amount += (max_width - printable_line_width) / 2
     }
+
+    if shift_amount < 0 do shift_amount = 0
 
     for &tok, i in line_tokens {
         if i >= start_i && i <= end_i do tok.solved_pos.x += shift_amount
