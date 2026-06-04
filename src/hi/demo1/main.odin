@@ -55,14 +55,14 @@ main :: proc () {
         },
         on_draw_text = proc (v: ^hi.Active_View) {
             it := hi.active_view_text_token_iterate(v)
-            fmt.println("-----------", it.in_scissor_only)
+            // fmt.println("-----------", it.in_scissor_only)
             for tok, tok_rect in hi.active_view_text_token_next(&it) {
                 tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
                 #partial switch tok.type {
                 case .word:
                     font_size_s := f32(v.ctx.screen_font_height) * it.style.font_scale
                     k2.draw_text(tok.text, {tok_rect_s.x,tok_rect_s.y}, font_size_s, it.style.color)
-                    fmt.println("::::", tok.text)
+                    // fmt.println("::::", tok.text)
                 case .custom:
                     k2.draw_rect_outline(k2.Rect(tok_rect_s), 2, it.style.color)
                 }
@@ -80,8 +80,13 @@ main :: proc () {
         ctx.root,
         name = "dialog_exit_game",
         title = "[icon=icon771] Exit Game?",
-        // FIX: right-aligned text has some extra space at the end of the line (right side)
-        content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].\n\n[center]Proceed?\n[right]Some extra right-aligned text that is clipped by the scissor.",
+        // content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].\n\n[center]Proceed?\n[right]Some extra right-aligned text that is clipped by the scissor.",
+        // content = "[right]All unsaved\nprogress will\nbe lost.\n\n[center]Proceed?\n[right]Some extra right-aligned text that is clipped by the scissor.",
+        // content = "[right]\nHello World!",
+        // content = "Hello\n\nWorld!",
+        // FIX: issue when a word cannot fit in the line by itself adds extra new line before it
+        content = "LLLLLLLLLLLLLLLLLLLLLLLLong word and short",
+        // content = "LLLLLLLLLLLLLLLLLLLLLLLLong worddddddddddddddddddddd and short",
         button1 = "Yes",
         button2 = "No",
         button3 = "Maybe",

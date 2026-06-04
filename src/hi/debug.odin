@@ -75,7 +75,7 @@ _debug_draw_view :: proc (v: ^Active_View) {
         }
 
         if .text in v.flags {
-            it := active_view_text_token_iterate(v, in_scissor_only=false)
+            it := active_view_text_token_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
             for _, tok_rect in active_view_text_token_next(&it) {
                 tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
                 _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)

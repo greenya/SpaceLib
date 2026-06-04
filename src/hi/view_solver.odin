@@ -9,7 +9,7 @@ import "../core"
 // - `solved_layout_child_count`
 //
 // Note: The root view `flags`, `size`, `padding` and `layout` are ignored.
-_solve_view_fit_and_fixed_size :: proc(v: ^View) {
+_solve_view_fit_and_fixed_size :: proc (v: ^View) {
     // Recurse to children first
     for c := v.first_child; c != nil; c = c.next_sibling {
         if .hidden not_in c.flags do _solve_view_fit_and_fixed_size(c)

@@ -5,8 +5,8 @@ import "core:strconv"
 
 Text_Token :: struct {
     type: Text_Token_Type,
-    text: string,       // Text or command name
-    args: string,       // Command args, e.g. "primary" for "[color=primary]"
+    text: string,       // Text of the `.word` or `.whitespace` or name of the `.custom` command, e.g. "color" for "[color=primary]"
+    args: string,       // `.custom` command args, e.g. "primary" for "[color=primary]"
     size: Vec2,         // Occupied size, the value received from the `Context.on_measure_text()` and `Context.on_text_custom_command()`
     solved_pos: Vec2,   // Calculated by the wrapping algorithm
 }
@@ -146,9 +146,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
         overflow := wrapping && (cursor_x + tok.size.x > max_width)
 
         if overflow || tok.type == .br {
-            if align != .left {
-                _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, align)
-            }
+            _text_apply_line_alignment(tokens[line_start_i:i], max_width, cursor_x, align)
 
             cursor_x = 0
             cursor_y += line_height == 0 ? tok.size.y : line_height
@@ -164,24 +162,61 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     }
 
     // align very last line
-    if align != .left {
-        _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, align)
-    }
+    _text_apply_line_alignment(tokens[line_start_i:], max_width, cursor_x, align)
 
     return cursor_y + line_height
 }
 
-_text_apply_line_alignment :: proc(line_tokens: [] Text_Token, max_width, line_width: f32, align: Text_Alignment) #no_bounds_check {
-    assert(align != .left)
+_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width, line_width: f32, align: Text_Alignment) #no_bounds_check {
+    if len(line_tokens) == 0 do return
 
-    rem_space := max_width - line_width
-    if rem_space <= 0 do return
+    start_i: int
+    end_i := len(line_tokens) - 1
 
-    shift_amount := align == .center\
-        ? rem_space / 2\
-        : rem_space
+    leading_space_w: f32
+    for start_i <= end_i {
+        tok := &line_tokens[start_i]
+        if _text_token_is_non_printable(tok) {
+            leading_space_w += tok.size.x
+            start_i += 1
+        } else {
+            break
+        }
+    }
 
-    for &tok in line_tokens do tok.solved_pos.x += shift_amount
+    trailing_space_w: f32
+    for end_i >= start_i {
+        tok := &line_tokens[end_i]
+        if _text_token_is_non_printable(tok) {
+            trailing_space_w += tok.size.x
+            end_i -= 1
+        } else {
+            break
+        }
+    }
+
+    printable_line_width := line_width - leading_space_w - trailing_space_w
+    if printable_line_width <= 0 {
+        for &tok in line_tokens do tok.solved_pos = {}
+        return
+    }
+
+    shift_amount := -leading_space_w
+    switch align {
+    case .left  : /**/
+    case .right : shift_amount +=  max_width - printable_line_width
+    case .center: shift_amount += (max_width - printable_line_width) / 2
+    }
+
+    for &tok, i in line_tokens {
+        if i >= start_i && i <= end_i do tok.solved_pos.x += shift_amount
+        else                          do tok.solved_pos = {}
+    }
+}
+
+// Token is `.whitespace` or has zero width
+_text_token_is_non_printable :: proc (tok: ^Text_Token) -> bool {
+    return tok.type == .whitespace || tok.size.x == 0
 }
 
 _text_parse_tag_text :: proc (tag_text: string) -> (cmd, args: string) #no_bounds_check {
