@@ -67,9 +67,9 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
             for j < text_len && text[j]!='|' do j += 1
             if j < text_len && text[j]=='|' {
                 tag_text := text[i+1:j] // Extract text between '|' and '|'
-                i = j + 1 // Move cursor after closing '|'
                 cmd, args := _text_parse_tag_text(tag_text)
                 switch cmd {
+                case ""         : append(pool, Text_Token { type=.word, text=text[i:i+1] }) // double pipe ("||")
                 case "br"       : append(pool, Text_Token { type=.br, text="\n" })
                 case "tab"      : v, _ := strconv.parse_f32(args)
                                   append(pool, Text_Token { type=.tab, size={v,0} })
@@ -80,6 +80,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
                 case "center"   : append(pool, Text_Token { type=.center })
                 case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
                 }
+                i = j + 1 // Move cursor after closing '|'
             }
 
         case:
