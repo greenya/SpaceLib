@@ -2,47 +2,47 @@ package hi
 
 import "../core"
 
-// An active view. A view that is most likely visible right now.
+// A view that is most likely visible right now.
 //
-// A view is considered *inactive* and skipped by the solver if:
-// - the view itself or any parent of the view is `.hidden`
+// A view is considered *invisible* and skipped by the solver if:
+// - the view itself or any its parent is `.hidden`
 // - the view does not intersect `solved_scissor` (completely clipped out)
-// - the view is a child of an *inactive* view
+// - the view is a child of *invisible* view
 //
-// Note: Zero `View.opacity` alone does not make the view *inactive*.
-Active_View :: struct {
+// Note: Zero `View.opacity` alone does not make the view *invisible*.
+Visible_View :: struct {
     using view          : ^View,
     solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
     solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
 }
 
-Active_View_Text_Iterator :: struct {
+Visible_View_Text_Iterator :: struct {
     using token_it      : Text_Token_Iterator,
     content_top_left    : Vec2,
     measurable_only     : bool, // If true, skip tokens with zero size
-    in_scissor_only     : bool, // If true, skip tokens clipped out by `active_view.solved_scissor` if it is used
+    in_scissor_only     : bool, // If true, skip tokens clipped out by `visible_view.solved_scissor` if it is used
     scissor_rect        : Rect,
 }
 
 @require_results
-active_view_text_token_iterate :: proc (
-    active_view     : ^Active_View,
+visible_view_text_token_iterate :: proc (
+    visible_view    : ^Visible_View,
     filter          := bit_set [Text_Token_Type] { .word, .custom },
     measurable_only := true,
     in_scissor_only := true,
-) -> (it: Active_View_Text_Iterator) {
+) -> (it: Visible_View_Text_Iterator) {
     assert(filter != {})
 
-    content_rect_ := content_rect(active_view)
+    content_rect_ := content_rect(visible_view)
 
     it = {
-        token_it            = text_token_iterate(active_view.ctx, active_view.solved_text_tokens, filter),
+        token_it            = text_token_iterate(visible_view.ctx, visible_view.solved_text_tokens, filter),
         measurable_only     = measurable_only,
         content_top_left    = { content_rect_.x, content_rect_.y },
     }
 
-    if in_scissor_only && active_view.solved_scissor != {} {
-        it.scissor_rect = active_view.solved_scissor
+    if in_scissor_only && visible_view.solved_scissor != {} {
+        it.scissor_rect = visible_view.solved_scissor
         it.in_scissor_only = true
     }
 
@@ -50,7 +50,7 @@ active_view_text_token_iterate :: proc (
 }
 
 @require_results
-active_view_text_token_next :: proc (it: ^Active_View_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
+visible_view_text_token_next :: proc (it: ^Visible_View_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
     for tok_ in text_token_next(&it.token_it) {
         if it.measurable_only && tok_.size == {} do continue
 

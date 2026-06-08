@@ -8,7 +8,7 @@ _DEBUG_VIEW_COLOR       :: Color { 255, 255,   0, 255 }
 _DEBUG_TEXT_TOKEN_COLOR :: Color { 255,   0, 255, 255 }
 _DEBUG_SCISSOR_COLOR    :: Color {   0, 255, 255, 255 }
 
-_debug_draw_view :: proc (v: ^Active_View) {
+_debug_draw_view :: proc (v: ^Visible_View) {
     content_rect := ref_rect_to_screen(v.ctx, content_rect(v))
 
     if .scissor in v.flags {
@@ -39,10 +39,10 @@ _debug_draw_view :: proc (v: ^Active_View) {
                 "\n" +
                 "views: %i of %i\n" +
                 "views peak: %i\n" +
-                "active views: %i of %i\n" +
-                "active views peak: %i\n" +
-                "active text tokens: %i of %i\n" +
-                "active text tokens peak: %i",
+                "visible views: %i of %i\n" +
+                "visible views peak: %i\n" +
+                "visible text tokens: %i of %i\n" +
+                "visible text tokens peak: %i",
 
                 v.ctx.ref_size.x, v.ctx.ref_size.y,
                 v.ctx.ref_font_height,
@@ -59,10 +59,10 @@ _debug_draw_view :: proc (v: ^Active_View) {
 
                 core.sparse_array_len(v.ctx.views), core.sparse_array_cap(v.ctx.views),
                 v.ctx.stats.views_peak,
-                len(v.ctx.active_views), cap(v.ctx.active_views),
-                v.ctx.stats.active_views_peak,
-                len(v.ctx.active_text_tokens), cap(v.ctx.active_text_tokens),
-                v.ctx.stats.active_text_tokens_peak,
+                len(v.ctx.visible_views), cap(v.ctx.visible_views),
+                v.ctx.stats.visible_views_peak,
+                len(v.ctx.visible_text_tokens), cap(v.ctx.visible_text_tokens),
+                v.ctx.stats.visible_text_tokens_peak,
             )
             v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)
         }
@@ -75,8 +75,8 @@ _debug_draw_view :: proc (v: ^Active_View) {
         }
 
         if .text in v.flags {
-            it := active_view_text_token_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
-            for _, tok_rect in active_view_text_token_next(&it) {
+            it := visible_view_text_token_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
+            for _, tok_rect in visible_view_text_token_next(&it) {
                 tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
                 _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
             }

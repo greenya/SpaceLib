@@ -18,7 +18,7 @@ main :: proc () {
     fmt.println("-------------------------------------------")
     fmt.println("Context size       :", size_of(hi.Context))
     fmt.println("View size          :", size_of(hi.View))
-    fmt.println("Active_View size   :", size_of(hi.Active_View))
+    fmt.println("Visible_View size  :", size_of(hi.Visible_View))
     fmt.println("Text_Token size    :", size_of(hi.Text_Token))
     fmt.println("-------------------------------------------")
 
@@ -53,10 +53,10 @@ main :: proc () {
             }
             return
         },
-        on_draw_text = proc (v: ^hi.Active_View) {
-            it := hi.active_view_text_token_iterate(v)
+        on_draw_text = proc (v: ^hi.Visible_View) {
+            it := hi.visible_view_text_token_iterate(v)
             // fmt.println("-----------", it.in_scissor_only)
-            for tok, tok_rect in hi.active_view_text_token_next(&it) {
+            for tok, tok_rect in hi.visible_view_text_token_next(&it) {
                 tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
                 #partial switch tok.type {
                 case .word:
@@ -96,7 +96,7 @@ main :: proc () {
 
     hi.solve_context(ctx)
     hi.print_view_tree(ctx.root)
-    hi.print_active_views(ctx)
+    hi.print_visible_views(ctx)
 
     for main_update() {
         main_draw()
@@ -129,7 +129,7 @@ main_draw :: proc () {
     k2.present()
 }
 
-draw_view :: proc (v: ^hi.Active_View) {
+draw_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(hi.ref_view_to_screen(v))
     alpha := u8(v.solved_opacity * 255)
     k2.draw_rect(rect, {30,80,50,alpha})

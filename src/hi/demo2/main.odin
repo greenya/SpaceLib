@@ -31,9 +31,9 @@ main :: proc () {
             size = k2.measure_text(text, font_size)
             return
         },
-        on_draw_text = proc (v: ^hi.Active_View) {
-            it := hi.active_view_text_token_iterate(v)
-            for tok, tok_rect in hi.active_view_text_token_next(&it) {
+        on_draw_text = proc (v: ^hi.Visible_View) {
+            it := hi.visible_view_text_token_iterate(v)
+            for tok, tok_rect in hi.visible_view_text_token_next(&it) {
                 tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
                 font_size_s := f32(v.ctx.screen_font_height) * it.style.font_scale
                 k2.draw_text(tok.text, {tok_rect_s.x,tok_rect_s.y}, f32(v.ctx.screen_font_height), it.style.color)
@@ -51,7 +51,7 @@ main :: proc () {
     hi.set_debug(app.ui.root, true)
     hi.solve_context(app.ui)
     hi.print_view_tree(app.ui.root)
-    hi.print_active_views(app.ui)
+    hi.print_visible_views(app.ui)
 
     for main_update() {
         main_draw()
@@ -85,7 +85,7 @@ main_draw :: proc () {
     k2.present()
 }
 
-draw_view :: proc (v: ^hi.Active_View) {
+draw_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(v.solved_rect)
     alpha := u8(v.solved_opacity * 255)
     k2.draw_rect(rect, {30,80,50,alpha})

@@ -48,7 +48,7 @@ _solve_view_fit_and_fixed_size :: proc (v: ^View) {
 // - `solved_rect.x/y`
 // - `solved_scissor`
 //
-// Also appends child to `Context.active_views` in case it intersects `solved_scissor`.
+// Also appends child to `Context.visible_views` in case it intersects `solved_scissor`.
 _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     v_size_x_avail := max(0, v.solved_rect.w - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved_rect.h - (v.padding[1] + v.padding[3]))
@@ -204,7 +204,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
             }
 
             if in_scissor {
-                append(&v.ctx.active_views, Active_View { c, c_solved_scissor, nil })
+                append(&v.ctx.visible_views, Visible_View { c, c_solved_scissor, nil })
                 if c.first_child != nil {
                     _solve_children_fill_and_ratio_size(c, c_solved_scissor)
                 }

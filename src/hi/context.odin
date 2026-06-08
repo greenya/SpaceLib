@@ -5,9 +5,9 @@ import "core:math/linalg"
 import "core:slice"
 import "../core"
 
-MAX_VIEWS           :: 2000
-MAX_ACTIVE_VIEWS    :: MAX_VIEWS / 4
-MAX_TEXT_TOKENS     :: 1000
+MAX_VIEWS               :: 2000
+MAX_VISIBLE_VIEWS       :: 200
+MAX_VISIBLE_TEXT_TOKENS :: 1000
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720 etc.
@@ -74,10 +74,10 @@ Context_Init :: struct {
 
     // Fallback for all `.text` view drawing. Use `ctx.screen_font_height` as base font size multiplier.
     //
-    // Use `active_view_text_token_iterate/next()` to simplify iterating over the tokens.
+    // Use `visible_view_text_token_iterate/next()` to simplify iterating over the tokens.
     //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
-    on_draw_text: proc (v: ^Active_View),
+    on_draw_text: proc (v: ^Visible_View),
 
     // Debug drawing callbacks. Used with `.debug` views.
     // All positions and sizes are in screen space.
@@ -87,8 +87,8 @@ Context_Init :: struct {
 
 Context :: struct {
     views               : core.Sparse_Array(View, MAX_VIEWS),
-    active_views        : [dynamic; MAX_ACTIVE_VIEWS] Active_View,
-    active_text_tokens  : [dynamic; MAX_TEXT_TOKENS] Text_Token,
+    visible_views       : [dynamic; MAX_VISIBLE_VIEWS] Visible_View,
+    visible_text_tokens : [dynamic; MAX_VISIBLE_TEXT_TOKENS] Text_Token,
     next_view_sid       : View_SID,
     root                : ^View,
     solved              : bool, // if cleared, the `update_context()` will do `solve_context()` automatically which sets this flag
@@ -114,8 +114,8 @@ Context :: struct {
 
     stats: struct {
         views_peak              : int,
-        active_views_peak       : int,
-        active_text_tokens_peak : int,
+        visible_views_peak      : int,
+        visible_text_tokens_peak: int,
     },
 }
 
@@ -186,7 +186,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     if !ctx.solved {
         solve_context(ctx)
     } else {
-        _propagate_active_views_opacity(ctx)
+        _propagate_visible_views_opacity(ctx)
     }
 
     ctx.dt = dt
@@ -205,16 +205,16 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     // TODO: Animate and layout tree
     // animate_and_layout_tree(ctx.root, dt)
 
-    for &v in ctx.active_views {
+    for &v in ctx.visible_views {
         _emit(v, { type=.updated })
     }
 
     return ctx.mouse.consumed
 }
 
-// - Rebuilds `Context.active_views`
-// - Rebuilds `Context.active_text_tokens`
-// - Updates `View.solved` for every active view
+// - Rebuilds `Context.visible_views`
+// - Rebuilds `Context.visible_text_tokens`
+// - Updates `View.solved` for every *visible* view
 // - Sets `Context.solved`
 //
 // Note: This procedure is executed automatically by the `update_context()` when `Context.solved` is cleared.
@@ -225,11 +225,11 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 // `tooltip.solved_rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
 // the screen.
 solve_context :: proc (ctx: ^Context) {
-    clear(&ctx.active_views)
+    clear(&ctx.visible_views)
 
     defer {
-        ctx.stats.active_views_peak = max(ctx.stats.active_views_peak, len(ctx.active_views))
-        ctx.stats.active_text_tokens_peak = max(ctx.stats.active_text_tokens_peak, len(ctx.active_text_tokens))
+        ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
+        ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, len(ctx.visible_text_tokens))
 
         ctx.solved = true
         if ctx.on_event != nil {
@@ -242,22 +242,22 @@ solve_context :: proc (ctx: ^Context) {
     ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
     ctx.root.solved_opacity = ctx.root.opacity
     ctx.root.solved_layout_child_count = 0
-    append(&ctx.active_views, Active_View { ctx.root, {}, nil })
+    append(&ctx.visible_views, Visible_View { ctx.root, {}, nil })
 
     // never repeat layout and text measurement more than twice
     for _ in 0..<2 {
         _solve_view_fit_and_fixed_size(ctx.root)
         _solve_children_fill_and_ratio_size(ctx.root, {})
-        text_height_mismatch := _regenerate_active_text_tokens(ctx)
+        text_height_mismatch := _regenerate_visible_text_tokens(ctx)
         if text_height_mismatch {
-            resize(&ctx.active_views, 1) // keep root only
+            resize(&ctx.visible_views, 1) // keep root only
             continue
         }
         break
     }
 
-    _sort_active_views(ctx)
-    _propagate_active_views_opacity(ctx)
+    _sort_visible_views(ctx)
+    _propagate_visible_views_opacity(ctx)
 }
 
 draw_context :: proc (ctx: ^Context) {
@@ -268,7 +268,7 @@ draw_context :: proc (ctx: ^Context) {
     has_on_scissor := ctx.on_scissor != nil
     has_on_draw_text := ctx.on_draw_text != nil
 
-    for &v in ctx.active_views {
+    for &v in ctx.visible_views {
         if solved_scissor != v.solved_scissor {
             solved_scissor = v.solved_scissor
             if has_on_scissor do ctx->on_scissor(solved_scissor)
@@ -288,8 +288,8 @@ draw_context :: proc (ctx: ^Context) {
     }
 }
 
-_sort_active_views :: proc (ctx: ^Context) {
-    slice.sort_by(ctx.active_views[:], less=proc (i, j: Active_View) -> bool {
+_sort_visible_views :: proc (ctx: ^Context) {
+    slice.sort_by(ctx.visible_views[:], less=proc (i, j: Visible_View) -> bool {
         switch {
         case i.strata != j.strata   : return i.strata < j.strata
         case i.level  != j.level    : return i.level  < j.level
@@ -298,10 +298,10 @@ _sort_active_views :: proc (ctx: ^Context) {
     })
 }
 
-_regenerate_active_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch: bool) {
-    clear(&ctx.active_text_tokens)
+_regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch: bool) {
+    clear(&ctx.visible_text_tokens)
 
-    for &v in ctx.active_views {
+    for &v in ctx.visible_views {
         if .text not_in v.flags do continue
 
         if v.text == "" {
@@ -322,8 +322,8 @@ _regenerate_active_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch:
     return
 }
 
-_propagate_active_views_opacity :: proc (ctx: ^Context) {
-    for v in ctx.active_views {
+_propagate_visible_views_opacity :: proc (ctx: ^Context) {
+    for v in ctx.visible_views {
         parent_opacity := v.parent != nil ? v.parent.solved_opacity : 1.0
         v.solved_opacity = parent_opacity * v.opacity
     }

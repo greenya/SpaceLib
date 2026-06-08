@@ -42,9 +42,10 @@ Text_Style_Default :: Text_Style {
 
 Text_Alignment :: enum u8 { left, right, center }
 
-// Tokenizes given text. Appends to `ctx.active_text_tokens`. Returns slice of appended tokens.
+// Tokenizes given text. Appends to `ctx.visible_text_tokens`.
+// Returns slice of appended tokens.
 _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds_check {
-    pool := &ctx.active_text_tokens
+    pool := &ctx.visible_text_tokens
     pool_len := len(pool)
     text_len := len(text)
 
@@ -54,7 +55,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
         case ' ', '\t':
             j := i
             for j < text_len && (text[j]==' ' || text[j]=='\t') do j += 1
-            append(&ctx.active_text_tokens, Text_Token { type=.whitespace, text=text[i:j] })
+            append(&ctx.visible_text_tokens, Text_Token { type=.whitespace, text=text[i:j] })
             i = j
 
         case '\n':
@@ -93,7 +94,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
         }
     }
 
-    assert(len(pool) != cap(pool), "Most likely Context.active_text_tokens overflow")
+    assert(len(pool) != cap(pool), "Most likely Context.visible_text_tokens overflow")
     return pool[pool_len:]
 }
 

@@ -24,7 +24,7 @@ View_Init :: struct {
     // If not set and view is `.text`, the `Context.on_draw_text()` will be used.
     //
     // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
-    on_draw: proc (v: ^Active_View),
+    on_draw: proc (v: ^Visible_View),
 
     // Event callback.
     //
@@ -63,7 +63,7 @@ Flag :: enum {
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
     scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Active_View.solved_text_tokens` to draw the text. The `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. The `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
 
     // Sizing
 
@@ -134,7 +134,7 @@ Event_Type :: enum u8 {
 
     shown,      // The view became shown, e.g. lost `.hidden` flag. The view may not be visible still (parent is `.hidden` or clipped out by the parent scissor).
     hidden,     // The view gained `.hidden` flag
-    updated,    // Continuously fired at the end of `update_context()`. Only for *active* views.
+    updated,    // Continuously fired at the end of `update_context()`. Only for *visible* views.
 
     // Mouse
 

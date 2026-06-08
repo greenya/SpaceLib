@@ -76,9 +76,9 @@ print_view :: proc (v: ^View, _depth := 0) {
     fmt.println(strings.to_string(sb))
 }
 
-print_active_views :: proc (ctx: ^Context) {
+print_visible_views :: proc (ctx: ^Context) {
     fmt.println("----------------------------------------------------------------------------------------------------------------")
-    for v in ctx.active_views {
+    for v in ctx.visible_views {
         fmt.printfln("\t%v\tL%d\t#%4d %20s |%f| %10s\t%v",
             v.strata,
             v.level,
