@@ -25,11 +25,11 @@ _debug_draw_view :: proc (v: ^Visible_View) {
         if v.ctx.debug_draw_text != nil {
             text := fmt.tprintf(
                 "ref_size: %vx%v\n" +
-                "ref_font_height: %i\n" +
+                "ref_font_height: %.0f\n" +
                 "\n" +
                 "screen_size: %.0fx%.0f\n" +
                 "screen_top_left: %.0f,%.0f\n" +
-                "screen_font_height: %i\n" +
+                "screen_font_height: %.0f\n" +
                 "screen_pixel_scale: %.2f\n" +
                 "\n" +
                 "time: %.3f (%ims)\n" +
@@ -75,8 +75,8 @@ _debug_draw_view :: proc (v: ^Visible_View) {
         }
 
         if .text in v.flags {
-            it := visible_view_text_token_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
-            for _, tok_rect in visible_view_text_token_next(&it) {
+            it := visible_text_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
+            for _, tok_rect in visible_text_next(&it) {
                 tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
                 _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
             }

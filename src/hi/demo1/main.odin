@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:strconv"
 import "../../core"
 import "../../core/tracking_allocator"
 import hi ".."
@@ -39,8 +40,8 @@ main :: proc () {
                 : nil,
             )
         },
-        on_measure_text = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
-            font_size := f32(ctx.ref_font_height)
+        on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
+            font_size := ctx.ref_font_height * style.font_scale
             size = k2.measure_text(text, font_size)
             // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
@@ -48,23 +49,25 @@ main :: proc () {
         on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
             switch cmd {
             case "f": style.font = args
+            case "s": style.font_scale, _ = strconv.parse_f32(args)
             case "c": style.color = core.color_from_hex(args) // or named color
-            case "icon": size = f32(ctx.ref_font_height)
+            case "icon": size = ctx.ref_font_height * style.font_scale
             }
             return
         },
         on_draw_text = proc (v: ^hi.Visible_View) {
-            it := hi.visible_view_text_token_iterate(v)
+            it := hi.visible_text_iterate(v)
             // fmt.println("-----------", it.in_scissor_only)
-            for tok, tok_rect in hi.visible_view_text_token_next(&it) {
-                tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
+            for tok, tok_rect in hi.visible_text_next(&it) {
                 #partial switch tok.type {
                 case .word:
-                    font_size_s := f32(v.ctx.screen_font_height) * it.style.font_scale
-                    k2.draw_text(tok.text, {tok_rect_s.x,tok_rect_s.y}, font_size_s, it.style.color)
+                    tok_pos_s := hi.ref_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
+                    tok_font_size_s := hi.visible_text_font_size_screen(it)
+                    k2.draw_text(tok.text, tok_pos_s, tok_font_size_s, it.style.color)
                     // fmt.println("::::", tok.text)
                 case .custom:
-                    k2.draw_rect_outline(k2.Rect(tok_rect_s), 2, it.style.color)
+                    tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
+                    k2.draw_rect_outline(k2.Rect(tok_rect_s), 8, it.style.color)
                 }
             }
         },
@@ -79,7 +82,7 @@ main :: proc () {
     add_dialog(
         ctx.root,
         name = "dialog_exit_game",
-        title = "[icon=icon771] Exit Game?",
+        title = "[s=1.5][icon=icon771] Exit Game?",
         content = "[c=#fff]All unsaved [c=#f00]progress will be lost[c=#fff].\n\n[center]Proceed?\n[right]Some extra right-aligned text that is clipped by the scissor.",
         // content = "[right]All unsaved\nprogress will\nbe lost.\n\n[center]Proceed?\n[right]Some extra right-aligned text that is clipped by the scissor.",
         // content = "[right]\nHello World!",

@@ -16,7 +16,7 @@ Visible_View :: struct {
     solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
 }
 
-Visible_View_Text_Iterator :: struct {
+Visible_Text_Iterator :: struct {
     using token_it      : Text_Token_Iterator,
     content_top_left    : Vec2,
     measurable_only     : bool, // If true, skip tokens with zero size
@@ -25,12 +25,12 @@ Visible_View_Text_Iterator :: struct {
 }
 
 @require_results
-visible_view_text_token_iterate :: proc (
+visible_text_iterate :: proc (
     visible_view    : ^Visible_View,
     filter          := bit_set [Text_Token_Type] { .word, .custom },
     measurable_only := true,
     in_scissor_only := true,
-) -> (it: Visible_View_Text_Iterator) {
+) -> (it: Visible_Text_Iterator) {
     assert(filter != {})
 
     content_rect_ := content_rect(visible_view)
@@ -50,7 +50,7 @@ visible_view_text_token_iterate :: proc (
 }
 
 @require_results
-visible_view_text_token_next :: proc (it: ^Visible_View_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
+visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
     for tok_ in text_token_next(&it.token_it) {
         if it.measurable_only && tok_.size == {} do continue
 
@@ -68,4 +68,14 @@ visible_view_text_token_next :: proc (it: ^Visible_View_Text_Iterator) -> (tok: 
         return
     }
     return
+}
+
+@require_results
+visible_text_font_size :: proc (it: Visible_Text_Iterator) -> f32 {
+    return it.style.font_scale * it.ctx.ref_font_height
+}
+
+@require_results
+visible_text_font_size_screen :: proc (it: Visible_Text_Iterator) -> f32 {
+    return it.style.font_scale * it.ctx.ref_font_height * it.ctx.screen_pixel_scale
 }

@@ -7,7 +7,7 @@ Text_Token :: struct {
     type: Text_Token_Type,
     text: string,       // Text of the `.word` or `.whitespace` or name of the `.custom` command, e.g. "color" for "[color=primary]"
     args: string,       // `.custom` command args, e.g. "primary" for "[color=primary]"
-    size: Vec2,         // Occupied size, the value received from the `Context.on_measure_text()` and `Context.on_text_custom_command()`
+    size: Vec2,         // Occupied size, the value received from the `Context.on_text_measure()` and `Context.on_text_custom_command()`
     solved_pos: Vec2,   // Calculated by the wrapping algorithm
 }
 
@@ -100,7 +100,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
 
 // Measures given tokes. Updates each `Text_Token.size`.
 _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
-    has_on_measure_text := ctx.on_measure_text != nil
+    has_on_text_measure := ctx.on_text_measure != nil
     has_on_text_custom_command := ctx.on_text_custom_command != nil
 
     style := Text_Style_Default
@@ -108,11 +108,11 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
 
     for &tok in tokens do #partial switch tok.type {
     case .word, .whitespace:
-        if has_on_measure_text {
-            tok.size = ctx->on_measure_text(style, tok.type, tok.text)
+        if has_on_text_measure {
+            tok.size = ctx->on_text_measure(style, tok.type, tok.text)
         }
     case .br:
-        tok.size.y = style.font_scale * f32(ctx.ref_font_height)
+        tok.size.y = style.font_scale * ctx.ref_font_height
     case .custom:
         if has_on_text_custom_command {
             tok.size = ctx->on_text_custom_command(&style, tok.text, tok.args)

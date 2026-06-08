@@ -10,11 +10,11 @@ MAX_VISIBLE_VIEWS       :: 200
 MAX_VISIBLE_TEXT_TOKENS :: 1000
 
 Context_Init :: struct {
-    // Reference size, e.g. 320x180, 1280x720 etc.
+    // Reference size, e.g. 320x180, 1280x720
     ref_size: Vec2,
 
-    // Reference font height, e.g. 8, 10, 16 etc.
-    ref_font_height: int,
+    // Reference font height, e.g. 8, 10, 16
+    ref_font_height: f32,
 
     // Aspect ratio logic
     // - Fixed Aspect Ratio, value is `<0`
@@ -40,14 +40,15 @@ Context_Init :: struct {
     on_scissor: Context_Scissor_Proc,
 
     // Text measure callback. Used only with `.text` views.
-    // - `style` Current style (e.g. font details)
+    // - `style` Current style
+    //      * `ctx.ref_font_height * style.font_scale` current font size
     // - `type` Token type, expect only:
     //      * `.word` Letters/numbers/punctuations
     //      * `.whitespace` Spaces `" "` and tabs `"\t"`
     // - `text` Non-empty string to measure
     //
-    // Use `ctx.ref_font_height` as base font size multiplier. Returned value is in ref units.
-    on_measure_text: Context_Measure_Text_Proc,
+    // Returned value is in ref units.
+    on_text_measure: Context_Text_Measure_Proc,
 
     // Text custom command callback. Used only with `.text` views.
     //
@@ -72,9 +73,10 @@ Context_Init :: struct {
     // Check `ctx.drawing` if need to know the phase.
     on_text_style: Context_Text_Style_Proc,
 
-    // Fallback for all `.text` view drawing. Use `ctx.screen_font_height` as base font size multiplier.
-    //
-    // Use `visible_view_text_token_iterate/next()` to simplify iterating over the tokens.
+    // Fallback for all `.text` view drawing.
+    // - Use `visible_text_iterate/next()` to iterate over the tokens
+    // - Use `iterator.style` for current style information, e.g. font, color, user state
+    // - Use `ref_pos_to_screen()` for current token screen position
     //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Visible_View),
@@ -102,7 +104,7 @@ Context :: struct {
     screen_size         : Vec2,
     screen_pixel_scale  : f32,
     screen_top_left     : Vec2,
-    screen_font_height  : int,
+    screen_font_height  : f32,  // Floored value of `ref_font_size * screen_pixel_scale`, e.g. 20.0, 21.0, 22.0
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
@@ -150,7 +152,7 @@ Context_Event_Type :: enum {
 
 Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
 Context_Scissor_Proc            :: proc (ctx: ^Context, scissor: Rect)
-Context_Measure_Text_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
+Context_Text_Measure_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
 Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
 Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
 
@@ -354,7 +356,7 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
         : {}
 
     if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {
-        new_font_height := int(f32(ctx.ref_font_height) * new_pixel_scale)
+        new_font_height := math.floor(ctx.ref_font_height * new_pixel_scale)
         if new_font_height != ctx.screen_font_height {
             ctx.screen_font_height = new_font_height
             if ctx.on_event != nil {

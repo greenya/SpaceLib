@@ -26,18 +26,13 @@ main :: proc () {
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
-        on_measure_text = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
-            font_size := f32(ctx.ref_font_height)
-            size = k2.measure_text(text, font_size)
-            return
+        on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
+            return k2.measure_text(text, ctx.ref_font_height)
         },
         on_draw_text = proc (v: ^hi.Visible_View) {
-            it := hi.visible_view_text_token_iterate(v)
-            for tok, tok_rect in hi.visible_view_text_token_next(&it) {
-                tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
-                font_size_s := f32(v.ctx.screen_font_height) * it.style.font_scale
-                k2.draw_text(tok.text, {tok_rect_s.x,tok_rect_s.y}, f32(v.ctx.screen_font_height), it.style.color)
-                k2.draw_rect(k2.Rect(tok_rect_s), {100,0,0,80})
+            it := hi.visible_text_iterate(v, filter={.word})
+            for tok, tok_rect in hi.visible_text_next(&it) {
+                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, v.ctx.ref_font_height, it.style.color)
             }
         },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
@@ -47,6 +42,8 @@ main :: proc () {
             k2.draw_text(text, pos, 20, color)
         },
     })
+
+    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.fill_x} })
 
     hi.set_debug(app.ui.root, true)
     hi.solve_context(app.ui)
