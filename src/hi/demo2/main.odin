@@ -6,8 +6,14 @@ import "../../core/tracking_allocator"
 import hi ".."
 import k2 "../../../../karl2d"
 
+// RAW_START ||RAW_START||
 App :: struct {
     ui: ^hi.Context,
+    EXAMPLE: bit_field u8 {
+        AAA: int | 2,
+        BBB: int | 3,
+        CCC: int | 3,
+    },
 }
 
 app: App

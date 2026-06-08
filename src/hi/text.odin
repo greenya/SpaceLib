@@ -81,6 +81,10 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
                 case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
                 }
                 i = j + 1 // Move cursor after closing '|'
+            } else {
+                // No closing '|' found; treat '|' as .word and continue
+                append(pool, Text_Token { type=.word, text=text[i:i+1] })
+                i += 1
             }
 
         case:
