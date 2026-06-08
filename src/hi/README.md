@@ -13,15 +13,15 @@ TODO: Context: make `Context.views` sparse array size to be a parameter somehow 
 
 TODO: Text: Fix issue with wrapping overflow text between commands where no real whitespaces
 
-At the moment, if we have say "He[c=#0f0]ll[c=#fff]o", the tokens are "He", "[c=#0f0]", "ll", "[c=#fff]", "o" and anywhere wrapping can happen, e.g. "He|llo", "Hell|o". Maybe we need to extend Text_Token struct, and the tokenizer should track whitespaces and if no whitespaces between .word tokens, they are considered one word chunk, and should be on the same line: if drop from overflow -- drop whole chunk.
+At the moment, if we have say "He|c=#0f0|ll|c=#fff|o", the tokens are "He", "|c=#0f0|", "ll", "|c=#fff|", "o" and anywhere wrapping can happen, e.g. "He/llo", "Hell/o". Maybe we need to extend Text_Token struct, and the tokenizer should track whitespaces and if no whitespaces between .word tokens, they are considered one word chunk, and should be on the same line: if drop from overflow -- drop whole chunk.
 
-Maybe we need to introduce new builtin commands like "break" and "nobreak" (similar to .br, which user can put manually via "\n" or "[br]" and we use it for overflow wrap). The default style setting will be `breaking=true`. We will be using it automatically when we need to disallow overflow wrap, and user can use it manually, when multiple words with spaces needs to be on the same line no matter what. For example "Your final score is [nobreak]1 000 000[break]." -- the ending "." should be part of "1 000 000" automatically if we do it correctly, as there is no whitespaces before.
+Maybe we need to introduce new builtin commands like "break" and "nobreak" (similar to .br, which user can put manually via "\n" or "|br|" and we use it for overflow wrap). The default style setting will be `breaking=true`. We will be using it automatically when we need to disallow overflow wrap, and user can use it manually, when multiple words with spaces needs to be on the same line no matter what. For example "Your final score is |nobreak|1 000 000|break|." -- the ending "." should be part of "1 000 000" automatically if we do it correctly, as there is no whitespaces before.
 
 TODO: Text: [?] do not automatically re-tokenize and re-measure text if Context.ref_font_size is not changed
 
     At the moment, we regenerate text tokens completely (re-tokenize, re-measure, re-wrap), i guess we could just re-wrap existing measured tokens. Need to test timings, if this optimization is necessary.
 
-TODO: Text: [?] support multiple commands in a tag, and change `[` and `]` into rarely used `|`, example: |wrap,left|This is |c=#f0f,f=big|Big Pink Text!
+TODO: Text: [?] support multiple commands in a tag, example: "|wrap,left|This is |c=#f0f,f=big|Big Pink Text!"
 
 TODO: Text: [?] support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
 

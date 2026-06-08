@@ -51,16 +51,10 @@ Context_Init :: struct {
     on_text_measure: Context_Text_Measure_Proc,
 
     // Text custom command callback. Used only with `.text` views.
-    //
-    // Builtin commands:
-    // - `br` Line break
-    // - `tab=XXX` Tab stop; moves cursor X position to XXX if it is lower than XXX
-    // - `wrap` / `nowrap` Toggle wrapping mode
-    // - `left`, `center`, `right` Set alignment (applied at line break or text end)
-    //
-    // The callback is NOT called for any command above.
-    // Return non-zero size (in ref units) for physical space, e.g. `[icon=sword]`.
-    // Update `style` for styling, use `style.user_*` to store custom state.
+    // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
+    //   of `Text_Token_Type` to know what they do and which tag names are reserved.
+    // - Return non-zero size (in ref units) for physical space, e.g. `[icon=sword]`.
+    // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom command in both phases: updating and drawing.
     // Check `ctx.drawing` if need to know the phase.

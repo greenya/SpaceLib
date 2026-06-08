@@ -5,8 +5,8 @@ import "core:strconv"
 
 Text_Token :: struct {
     type: Text_Token_Type,
-    text: string,       // Text of the `.word` or `.whitespace` or name of the `.custom` command, e.g. "color" for "[color=primary]"
-    args: string,       // `.custom` command args, e.g. "primary" for "[color=primary]"
+    text: string,       // Text of the `.word` or `.whitespace` or name of the `.custom` command, e.g. "color" for "|color=primary|"
+    args: string,       // `.custom` command args, e.g. "primary" for "|color=primary|"
     size: Vec2,         // Occupied size, the value received from the `Context.on_text_measure()` and `Context.on_text_custom_command()`
     solved_pos: Vec2,   // Calculated by the wrapping algorithm
 }
@@ -14,14 +14,14 @@ Text_Token :: struct {
 Text_Token_Type :: enum u8 {
     word,       // Continuous block of letters/numbers/punctuations between other tokens
     whitespace, // Continuous block of spaces `" "` or tabs `"\t"`
-    br,         // New line `"\n"` or Line break command `[br]`
-    tab,        // Tab stop
-    wrap,       // Enable wrapping mode
-    nowrap,     // Disable wrapping mode
-    left,       // Align to the left
-    right,      // Align to the right
-    center,     // Align to the center
-    custom,     // Custom/unknown command, e.g. `[icon=sword]` or `[item=#1234]`
+    br,         // New line `"\n"` or Line break `|br|`
+    tab,        // `|tab=XXX|` Tab stop. Moves cursor X position to XXX if it is lower than XXX.
+    wrap,       // `|wrap|` Enable wrapping mode
+    nowrap,     // `|nowrap|` Disable wrapping mode
+    left,       // `|left|` Align to the left
+    right,      // `|right|` Align to the right
+    center,     // `|center|` Align to the center
+    custom,     // Custom/unknown command, e.g. `|icon=sword|` or `|item=#1234|`. Values stored in `Text_Token.text/args` and should be processed in `Context.on_text_custom_command()`.
 }
 
 Text_Style :: struct {
@@ -62,12 +62,12 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
             append(pool, Text_Token { type=.br, text="\n" })
             i += 1
 
-        case '[':
+        case '|':
             j := i + 1
-            for j < text_len && text[j]!=']' do j += 1
-            if j < text_len && text[j]==']' {
-                tag_text := text[i+1:j] // Extract text between '[' and ']'
-                i = j + 1 // Move cursor after ']'
+            for j < text_len && text[j]!='|' do j += 1
+            if j < text_len && text[j]=='|' {
+                tag_text := text[i+1:j] // Extract text between '|' and '|'
+                i = j + 1 // Move cursor after closing '|'
                 cmd, args := _text_parse_tag_text(tag_text)
                 switch cmd {
                 case "br"       : append(pool, Text_Token { type=.br, text="\n" })
@@ -86,7 +86,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
             j := i
             for j < text_len {
                 c := text[j]
-                if c==' ' || c=='\t' || c=='\n' || c=='[' do break
+                if c==' ' || c=='\t' || c=='\n' || c=='|' do break
                 j += 1
             }
             append(pool, Text_Token { type=.word, text=text[i:j] })
