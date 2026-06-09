@@ -27,10 +27,10 @@ Context_Init :: struct {
     // The lower bound for `screen_pixel_scale`
     min_pixel_scale: f32,
 
-    // If `true`, the `screen_pixel_scale` will get floored
+    // If `true`, `screen_pixel_scale` is floored
     integer_scaling: bool,
 
-    // If `true`, the `screen_top_left` might not be `{0,0}`
+    // If `true`, `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
     // Event callback
@@ -50,6 +50,13 @@ Context_Init :: struct {
     // Returned value is in ref units.
     on_text_measure: Context_Text_Measure_Proc,
 
+    // Text style callback. Used only with `.text` views.
+    // Allows overriding default style (font, color, align, wrapping).
+    //
+    // Called once before traversing the tokens in both phases: updating and drawing.
+    // Check `ctx.drawing` if need to know the phase.
+    on_text_style: Context_Text_Style_Proc,
+
     // Text custom command callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
@@ -60,12 +67,12 @@ Context_Init :: struct {
     // Check `ctx.drawing` if need to know the phase.
     on_text_custom_command: Context_Text_Custom_Command_Proc,
 
-    // Text style callback. Used only with `.text` views.
-    // Allows overriding default style (font, color, align, wrapping).
+    // Text wordy callback. Used only with `.text_wordy` views.
+    // Allows specifying a separate text token buffer for large/heavy text views.
     //
-    // Called once before traversing the tokens in both phases: updating and drawing.
-    // Check `ctx.drawing` if need to know the phase.
-    on_text_style: Context_Text_Style_Proc,
+    // The buffer will be automatically cleared before use.
+    // `View.solved_text_tokens` will slice into this buffer.
+    on_text_wordy: Context_Text_Wordy_Proc,
 
     // Fallback for all `.text` view drawing.
     // - Use `visible_text_iterate/next()` to iterate over the tokens
@@ -87,8 +94,8 @@ Context :: struct {
     visible_text_tokens : [dynamic; MAX_VISIBLE_TEXT_TOKENS] Text_Token,
     next_view_sid       : View_SID,
     root                : ^View,
-    solved              : bool, // if cleared, the `update_context()` will do `solve_context()` automatically which sets this flag
-    drawing             : bool, // if set, the `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
+    solved              : bool, // if cleared, `update_context()` will do `solve_context()` automatically which sets this flag
+    drawing             : bool, // if set, `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
 
     using init: Context_Init,
 
@@ -147,8 +154,9 @@ Context_Event_Type :: enum {
 Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
 Context_Scissor_Proc            :: proc (ctx: ^Context, scissor: Rect)
 Context_Text_Measure_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
-Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
 Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
+Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
+Context_Text_Wordy_Proc         :: proc (ctx: ^Context, v: ^View) -> (buf: ^[dynamic] Text_Token)
 
 @require_results
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
@@ -213,7 +221,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 // - Updates `View.solved` for every *visible* view
 // - Sets `Context.solved`
 //
-// Note: This procedure is executed automatically by the `update_context()` when `Context.solved` is cleared.
+// Note: This procedure is executed automatically by `update_context()` when `Context.solved` is cleared.
 // Generally, after you do all the manual modifications to the views and at the end you do `ctx.solved = false`.
 // But sometimes you need to solve the context to know updated (solved) values in advance, for example when
 // spawning a tooltip -- after adding dynamic content to the tooltip, you want to reposition it (or re-anchor)
@@ -305,7 +313,19 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch
             continue
         }
 
-        v.solved_text_tokens = _text_tokenize(ctx, v.text)
+        if .text_wordy in v.flags {
+            pool: ^[dynamic] Text_Token
+            assert(ctx.on_text_wordy != nil, "Context.on_text_wordy must be set when using .text_wordy views")
+            pool = ctx->on_text_wordy(v)
+            assert(pool != nil, "Context.on_text_wordy must not return nil")
+            clear(pool)
+            v.solved_text_tokens = _text_tokenize(pool, v.text)
+        } else {
+            pool := slice.into_dynamic(ctx.visible_text_tokens[len(ctx.visible_text_tokens):])
+            assert(len(pool) != cap(pool), "Most likely Context.visible_text_tokens overflow")
+            v.solved_text_tokens = _text_tokenize(&pool, v.text)
+        }
+
         _text_measure_tokens(ctx, v.solved_text_tokens)
 
         context_w := v.solved_rect.w - v.padding[0] - v.padding[2]

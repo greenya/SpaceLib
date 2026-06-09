@@ -17,6 +17,8 @@ At the moment, if we have say "He|c=#0f0|ll|c=#fff|o", the tokens are "He", "|c=
 
 Maybe we need to introduce new builtin commands like "break" and "nobreak" (similar to .br, which user can put manually via "\n" or "|br|" and we use it for overflow wrap). The default style setting will be `breaking=true`. We will be using it automatically when we need to disallow overflow wrap, and user can use it manually, when multiple words with spaces needs to be on the same line no matter what. For example "Your final score is |nobreak|1 000 000|break|." -- the ending "." should be part of "1 000 000" automatically if we do it correctly, as there is no whitespaces before.
 
+TODO: Text: [?] support `.text_wordy_static` flag, which would tell to never re-tokenizer and re-measure the text, only re-wrap. This can be a win for any large text (and most large texts are never changes anyway; we also can provide some `set_wordy_text()` to discard cache and re-do all).
+
 TODO: Text: [?] do not automatically re-tokenize and re-measure text if Context.ref_font_size is not changed
 
     At the moment, we regenerate text tokens completely (re-tokenize, re-measure, re-wrap), i guess we could just re-wrap existing measured tokens. Need to test timings, if this optimization is necessary.

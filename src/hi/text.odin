@@ -52,11 +52,10 @@ Text_Style_Default :: Text_Style {
 
 Text_Alignment :: enum u8 { left, right, center }
 
-// Tokenizes given text. Appends to `ctx.visible_text_tokens`.
-// Returns slice of appended tokens.
-_text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds_check {
-    pool := &ctx.visible_text_tokens
-    pool_len := len(pool)
+// Tokenizes given text.
+// Appends to the `pool` and returns slice of just appended tokens.
+_text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string) -> [] Text_Token #no_bounds_check {
+    pool_len_start := len(pool)
     text_len := len(text)
     raw_mode := false
 
@@ -76,7 +75,7 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
         case ' ', '\t':
             j := i
             for j < text_len && (text[j]==' ' || text[j]=='\t') do j += 1
-            append(&ctx.visible_text_tokens, Text_Token { type=.whitespace, text=text[i:j] })
+            append(pool, Text_Token { type=.whitespace, text=text[i:j] })
             i = j
 
         case '\n':
@@ -134,11 +133,11 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
         }
     }
 
-    assert(len(pool) != cap(pool), "Most likely Context.visible_text_tokens overflow")
-    return pool[pool_len:]
+    return pool[pool_len_start:]
 }
 
-// Measures given tokes. Updates each `Text_Token.size`.
+// Measures given tokes.
+// Updates each `Text_Token.size`.
 _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
     has_on_text_measure := ctx.on_text_measure != nil
     has_on_text_custom_command := ctx.on_text_custom_command != nil
@@ -160,7 +159,8 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
     }
 }
 
-// Wraps and aligns given tokes. Updates each `Text_Token.solved_pos`.
+// Wraps and aligns given tokes.
+// Updates each `Text_Token.solved_pos`.
 // Returns total height needed to fit all the tokens with given `max_width`.
 _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) -> (total_height: f32) #no_bounds_check {
     cursor_x: f32
@@ -217,7 +217,7 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, 
     leading_space_w: f32
     for start_i <= end_i {
         tok := &line_tokens[start_i]
-        if _text_token_is_non_printable(tok) {
+        if _tok_is_non_printable(tok) {
             leading_space_w += tok.size.x
             start_i += 1
         } else {
@@ -228,7 +228,7 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, 
     trailing_space_w: f32
     for end_i >= start_i {
         tok := &line_tokens[end_i]
-        if _text_token_is_non_printable(tok) {
+        if _tok_is_non_printable(tok) {
             trailing_space_w += tok.size.x
             end_i -= 1
         } else {
@@ -259,11 +259,10 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, 
         if i >= start_i && i <= end_i do tok.solved_pos.x += shift_amount
         else                          do tok.solved_pos = {}
     }
-}
 
-// Token is `.whitespace` or has zero width
-_text_token_is_non_printable :: proc (tok: ^Text_Token) -> bool {
-    return tok.type == .whitespace || tok.size.x == 0
+    _tok_is_non_printable :: proc (tok: ^Text_Token) -> bool {
+        return tok.type == .whitespace || tok.size.x == 0
+    }
 }
 
 _text_parse_tag_text :: proc (tag_text: string) -> (cmd, args: string) #no_bounds_check {

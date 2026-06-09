@@ -6,14 +6,14 @@ View_IDX :: distinct i32
 View_SID :: distinct i32
 
 View_Init :: struct {
-    flags: bit_set [Flag; u16],
+    flags: bit_set [Flag; u32],
 
     using _: bit_field u16 {
         strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
         level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher.
     },
 
-    size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows to interpret value as fraction of the parent
+    size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
     place   : Place,    // Used only if parent has no layout or for non-native `strata`
     opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved_opacity` of the view and all its children (all stratas).
     padding : Vec4,     // Padding for native strata children in order: 0=left, 1=top, 2=right, 3=bottom
@@ -21,7 +21,7 @@ View_Init :: struct {
     layout  : Layout,   // Layout for native strata children
 
     // Drawing callback.
-    // If not set and view is `.text`, the `Context.on_draw_text()` will be used.
+    // If not set and view is `.text`, `Context.on_draw_text()` will be used.
     //
     // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
     on_draw: proc (v: ^Visible_View),
@@ -45,7 +45,7 @@ View :: struct {
     using init: View_Init,
 
     ctx: ^Context,
-    idx: View_IDX, // Reusable index in the `ctx.views`
+    idx: View_IDX, // Reusable index in `ctx.views`
     sid: View_SID, // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned. The value is `0` for detached views.
 
     parent      : ^View,
@@ -61,9 +61,10 @@ Flag :: enum {
     // Core
 
     hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
-    scissor,    // The view clips native strata children. The clipping is applied according to the `content_rect()`. // TODO: should affect drawing and mouse hit test
+    scissor,    // The view clips native strata children. The clipping is applied according to `content_rect()`. // TODO: should affect drawing and mouse hit test
     debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. The `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text_wordy, // The text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
 
     // Sizing
 
@@ -148,8 +149,8 @@ Event_Type :: enum u8 {
 
     // Behavior
 
-    scrolled,   // The `View.scroll` has changed
-    selection_changed,  // The `.selected` has changed
+    scrolled,   // `View.scroll` has changed
+    selection_changed,  // `.selected` has changed
 }
 
 add_view :: proc (parent: ^View, init: View_Init) -> ^View {

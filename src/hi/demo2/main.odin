@@ -1,6 +1,7 @@
 // |-raw-|
 package main
 
+import "core:fmt"
 import "../../core"
 import "../../core/tracking_allocator"
 import hi ".."
@@ -8,11 +9,7 @@ import k2 "../../../../karl2d"
 
 App :: struct {
     ui: ^hi.Context,
-    EXAMPLE: bit_field u8 {
-        AAA: int | 2,
-        BBB: int | 3,
-        CCC: int | 3,
-    },
+    token_buf: [dynamic] hi.Text_Token,
 }
 
 app: App
@@ -34,6 +31,9 @@ main :: proc () {
         on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
             return k2.measure_text(text, ctx.ref_font_height)
         },
+        on_text_wordy = proc (ctx: ^hi.Context, v: ^hi.View) -> ^[dynamic] hi.Text_Token {
+            return &app.token_buf
+        },
         on_draw_text = proc (v: ^hi.Visible_View) {
             it := hi.visible_text_iterate(v, filter={.word})
             for tok, tok_rect in hi.visible_text_next(&it) {
@@ -48,12 +48,14 @@ main :: proc () {
         },
     })
 
-    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.fill_x} })
+    defer {
+        l := len(app.token_buf)
+        c := cap(app.token_buf)
+        fmt.printfln("token_buf: len=%i, cap=%i, size=%m", l, c, c*size_of(hi.Text_Token))
+        delete(app.token_buf)
+    }
 
-    hi.set_debug(app.ui.root, true)
-    hi.solve_context(app.ui)
-    hi.print_view_tree(app.ui.root)
-    hi.print_visible_views(app.ui)
+    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.text_wordy,.fill_x} })
 
     for main_update() {
         main_draw()
