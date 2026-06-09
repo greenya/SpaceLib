@@ -319,11 +319,11 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch
             pool = ctx->on_text_wordy(v)
             assert(pool != nil, "Context.on_text_wordy must not return nil")
             clear(pool)
-            v.solved_text_tokens = _text_tokenize(pool, v.text)
+            v.solved_text_tokens = _text_tokenize(pool, v.text, .text_literal in v.flags)
         } else {
             pool := slice.into_dynamic(ctx.visible_text_tokens[len(ctx.visible_text_tokens):])
             assert(len(pool) != cap(pool), "Most likely Context.visible_text_tokens overflow")
-            v.solved_text_tokens = _text_tokenize(&pool, v.text)
+            v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_literal in v.flags)
         }
 
         _text_measure_tokens(ctx, v.solved_text_tokens)

@@ -60,11 +60,12 @@ View :: struct {
 Flag :: enum {
     // Core
 
-    hidden,     // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
-    scissor,    // The view clips native strata children. The clipping is applied according to `content_rect()`. // TODO: should affect drawing and mouse hit test
-    debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    text,       // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
-    text_wordy, // The text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
+    hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
+    scissor,        // The view clips native strata children. The clipping is applied according to `content_rect()`. // TODO: should affect drawing and mouse hit test
+    debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
+    text,           // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text_literal,   // The text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
+    text_wordy,     // The text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
 
     // Sizing
 

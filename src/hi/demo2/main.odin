@@ -1,4 +1,3 @@
-// |-raw-|
 package main
 
 import "core:fmt"
@@ -55,7 +54,8 @@ main :: proc () {
         delete(app.token_buf)
     }
 
-    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.text_wordy,.fill_x} })
+    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    // hi.set_debug(app.ui.root, true)
 
     for main_update() {
         main_draw()
