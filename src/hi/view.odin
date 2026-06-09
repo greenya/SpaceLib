@@ -293,9 +293,11 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
 
 @require_results
 content_rect :: proc (v: ^View) -> Rect {
+    parent_scroll: [2] f32
+    if v.parent != nil do parent_scroll = v.parent.scroll
     return {
-        v.solved_rect.x + v.padding[0],
-        v.solved_rect.y + v.padding[1],
+        v.solved_rect.x + v.padding[0] + parent_scroll.x,
+        v.solved_rect.y + v.padding[1] + parent_scroll.y,
         max(0, v.solved_rect.w - (v.padding[0] + v.padding[2])),
         max(0, v.solved_rect.h - (v.padding[1] + v.padding[3])),
     }
