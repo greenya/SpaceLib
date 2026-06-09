@@ -8,6 +8,7 @@ import k2 "../../../../karl2d"
 
 App :: struct {
     ui: ^hi.Context,
+    container: ^hi.View,
     token_buf: [dynamic] hi.Text_Token,
 }
 
@@ -23,7 +24,7 @@ main :: proc () {
     k2.init(1280, 720, "demo2", { window_mode=.Windowed_Resizable })
 
     app.ui = hi.create_context({
-        ref_font_height = 20,
+        ref_font_height = 24,
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
@@ -54,7 +55,10 @@ main :: proc () {
         delete(app.token_buf)
     }
 
-    hi.add_view(app.ui.root, { text=#load("main.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    app.ui.root.padding = 40
+    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor}, padding=20, on_draw=draw_view })
+    hi.add_view(app.container, { text=#load("main.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+
     // hi.set_debug(app.ui.root, true)
 
     for main_update() {
@@ -77,6 +81,8 @@ main_update :: proc () -> (keep_running: bool) {
         wheel_delta = k2.get_mouse_wheel_delta(),
     }
 
+    app.container.scroll.y += 50 * k2.get_mouse_wheel_delta()
+
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
@@ -92,6 +98,9 @@ main_draw :: proc () {
 draw_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(v.solved_rect)
     alpha := u8(v.solved_opacity * 255)
-    k2.draw_rect(rect, {30,80,50,alpha})
+    k2.draw_rect(rect, {40,40,40,alpha})
     k2.draw_rect_outline(rect, 4, {30,180,50,alpha})
+
+    content_rect := k2.Rect(core.rect_inflated(hi.content_rect(v), 20))
+    k2.draw_rect_outline(content_rect, 20, {100,100,100,alpha})
 }

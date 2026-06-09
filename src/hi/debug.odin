@@ -61,7 +61,7 @@ _debug_draw_view :: proc (v: ^Visible_View) {
                 v.ctx.stats.views_peak,
                 len(v.ctx.visible_views), cap(v.ctx.visible_views),
                 v.ctx.stats.visible_views_peak,
-                len(v.ctx.visible_text_tokens), cap(v.ctx.visible_text_tokens),
+                v.ctx.visible_text_tokens_used, cap(v.ctx.visible_text_tokens),
                 v.ctx.stats.visible_text_tokens_peak,
             )
             v.ctx.debug_draw_text(text, {2,2}, _DEBUG_VIEW_COLOR)

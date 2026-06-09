@@ -91,7 +91,8 @@ Context_Init :: struct {
 Context :: struct {
     views               : core.Sparse_Array(View, MAX_VIEWS),
     visible_views       : [dynamic; MAX_VISIBLE_VIEWS] Visible_View,
-    visible_text_tokens : [dynamic; MAX_VISIBLE_TEXT_TOKENS] Text_Token,
+    visible_text_tokens : [MAX_VISIBLE_TEXT_TOKENS] Text_Token,
+    visible_text_tokens_used: int,
     next_view_sid       : View_SID,
     root                : ^View,
     solved              : bool, // if cleared, `update_context()` will do `solve_context()` automatically which sets this flag
@@ -233,7 +234,7 @@ solve_context :: proc (ctx: ^Context) {
 
     defer {
         ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
-        ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, len(ctx.visible_text_tokens))
+        ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, ctx.visible_text_tokens_used)
 
         ctx.solved = true
         if ctx.on_event != nil {
@@ -303,7 +304,7 @@ _sort_visible_views :: proc (ctx: ^Context) {
 }
 
 _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch: bool) {
-    clear(&ctx.visible_text_tokens)
+    ctx.visible_text_tokens_used = 0
 
     for &v in ctx.visible_views {
         if .text not_in v.flags do continue
@@ -321,9 +322,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch
             clear(pool)
             v.solved_text_tokens = _text_tokenize(pool, v.text, .text_literal in v.flags)
         } else {
-            pool := slice.into_dynamic(ctx.visible_text_tokens[len(ctx.visible_text_tokens):])
-            assert(len(pool) != cap(pool), "Most likely Context.visible_text_tokens overflow")
+            pool := slice.into_dynamic(ctx.visible_text_tokens[ctx.visible_text_tokens_used:len(ctx.visible_text_tokens)])
             v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_literal in v.flags)
+            ctx.visible_text_tokens_used += len(v.solved_text_tokens)
+            assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
         }
 
         _text_measure_tokens(ctx, v.solved_text_tokens)
