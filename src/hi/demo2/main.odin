@@ -1,12 +1,11 @@
+// |-raw-|
 package main
 
-import "core:fmt"
 import "../../core"
 import "../../core/tracking_allocator"
 import hi ".."
 import k2 "../../../../karl2d"
 
-// RAW_START ||RAW_START||
 App :: struct {
     ui: ^hi.Context,
     EXAMPLE: bit_field u8 {

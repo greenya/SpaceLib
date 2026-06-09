@@ -5,23 +5,33 @@ import "core:strconv"
 
 Text_Token :: struct {
     type: Text_Token_Type,
-    text: string,       // Text of the `.word` or `.whitespace` or name of the `.custom` command, e.g. "color" for "|color=primary|"
-    args: string,       // `.custom` command args, e.g. "primary" for "|color=primary|"
-    size: Vec2,         // Occupied size, the value received from the `Context.on_text_measure()` and `Context.on_text_custom_command()`
+    text: string,       // Text of the `.word` or `.whitespace`, or the name of a `.custom` command (e.g., "color" for "|color=primary|")
+    args: string,       // `.custom` command arguments (e.g., "primary" for "|color=primary|")
+    size: Vec2,         // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_command()`
     solved_pos: Vec2,   // Calculated by the wrapping algorithm
 }
 
 Text_Token_Type :: enum u8 {
+    // Content
+
     word,       // Continuous block of letters/numbers/punctuations between other tokens
     whitespace, // Continuous block of spaces `" "` or tabs `"\t"`
-    br,         // New line `"\n"` or Line break `|br|`
-    tab,        // `|tab=XXX|` Tab stop. Moves cursor X position to XXX if it is lower than XXX.
-    wrap,       // `|wrap|` Enable wrapping mode
-    nowrap,     // `|nowrap|` Disable wrapping mode
+    br,         // Newline `"\n"` or Line break command `|br|`
+
+    // Commands
+
     left,       // `|left|` Align to the left
     right,      // `|right|` Align to the right
     center,     // `|center|` Align to the center
-    custom,     // Custom/unknown command, e.g. `|icon=sword|` or `|item=#1234|`. Values stored in `Text_Token.text/args` and should be processed in `Context.on_text_custom_command()`.
+    wrap,       // `|wrap|` Enable wrapping mode
+    nowrap,     // `|nowrap|` Disable wrapping mode
+    tab,        // `|tab=XXX|` Tab stop. Moves cursor X position to XXX if it is lower than XXX.
+    custom,     // Custom/unknown command, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_command()`.
+
+    // Internal (these tokens are here only for documentation purposes and are never added to the result stream of tokens)
+
+    raw_start,  // `|-raw-|` Raw mode start. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is the end of raw mode. Note: the tokenizer never adds this token type to the result stream.
+    raw_end,    // `|-/raw-|` Raw mode end. Note: the tokenizer never adds this token type to the result stream.
 }
 
 Text_Style :: struct {
@@ -48,9 +58,20 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
     pool := &ctx.visible_text_tokens
     pool_len := len(pool)
     text_len := len(text)
+    raw_mode := false
 
     for i := 0; i < text_len; /**/ {
         r := text[i]
+
+        raw_end_tag :: "|-/raw-|"
+        if raw_mode && r == '|' && i + len(raw_end_tag) <= text_len {
+            if text[i:i+len(raw_end_tag)] == raw_end_tag {
+                i += len(raw_end_tag)
+                raw_mode = false
+                continue
+            }
+        }
+
         switch r {
         case ' ', '\t':
             j := i
@@ -63,21 +84,35 @@ _text_tokenize :: proc (ctx: ^Context, text: string) -> [] Text_Token #no_bounds
             i += 1
 
         case '|':
+            if raw_mode {
+                append(pool, Text_Token { type=.word, text=text[i:i+1] })
+                i += 1
+                continue
+            }
+
             j := i + 1
-            for j < text_len && text[j]!='|' do j += 1
+            for j < text_len && text[j]!='|' && text[j]!='\n' do j += 1
+
             if j < text_len && text[j]=='|' {
-                tag_text := text[i+1:j] // Extract text between '|' and '|'
+                tag_text := text[i+1:j]
                 cmd, args := _text_parse_tag_text(tag_text)
                 switch cmd {
                 case ""         : append(pool, Text_Token { type=.word, text=text[i:i+1] }) // double pipe ("||")
+
                 case "br"       : append(pool, Text_Token { type=.br, text="\n" })
-                case "tab"      : v, _ := strconv.parse_f32(args)
-                                  append(pool, Text_Token { type=.tab, size={v,0} })
-                case "wrap"     : append(pool, Text_Token { type=.wrap })
-                case "nowrap"   : append(pool, Text_Token { type=.nowrap })
+
                 case "left"     : append(pool, Text_Token { type=.left })
                 case "right"    : append(pool, Text_Token { type=.right })
                 case "center"   : append(pool, Text_Token { type=.center })
+
+                case "wrap"     : append(pool, Text_Token { type=.wrap })
+                case "nowrap"   : append(pool, Text_Token { type=.nowrap })
+
+                case "tab"      : v, _ := strconv.parse_f32(args)
+                                  append(pool, Text_Token { type=.tab, size={v,0} })
+
+                case "-raw-"    : raw_mode = true
+
                 case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
                 }
                 i = j + 1 // Move cursor after closing '|'
