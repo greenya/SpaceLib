@@ -412,8 +412,8 @@ ref_size_to_screen :: proc (ctx: ^Context, ref_size: Vec2) -> Vec2 {
 @require_results
 ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
     return {
-        expand_values(ref_pos_to_screen(ctx, { ref_rect.x, ref_rect.y })),
-        expand_values(ref_size_to_screen(ctx, { ref_rect.w, ref_rect.h })),
+        **ref_pos_to_screen(ctx, { ref_rect.x, ref_rect.y }),
+        **ref_size_to_screen(ctx, { ref_rect.w, ref_rect.h }),
     }
 }
 
