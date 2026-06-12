@@ -34,7 +34,7 @@ Context_Init :: struct {
     // If `true`, `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
-    // Scroll step used by `scroll_by_step()`, which can be used for mouse wheel scrolling.
+    // Scroll step used by `scroll_*_step()`, which can be used for mouse wheel scrolling.
     // If not set, `DEFAULT_SCROLL_STEP` is used.
     scroll_step: Vec2,
 

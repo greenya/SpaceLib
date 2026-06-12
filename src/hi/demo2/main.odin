@@ -70,7 +70,7 @@ main :: proc () {
     }
 
     app.ui.root.padding = 40
-    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
+    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor,.wheel_scroll}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
 
     hi.add_view(app.container, { text="|header|hi.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
     hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
@@ -107,7 +107,7 @@ main_update :: proc () -> (keep_running: bool) {
         wheel_delta = wheel_delta,
     }
 
-    hi.scroll_by_step(app.container, magnitude={0,wheel_delta})
+    hi.wheel(app.container) // TODO: remove when UI does it internally
 
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)

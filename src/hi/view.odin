@@ -93,6 +93,7 @@ Flag :: enum {
     //              because if we open dropdown inside list of items, the next item in the list will be drawn above the items
     //              of the dropdown as it is spawned just after the list item. "Separate layer" in spacelib:ui was working because
     //              it supports anchoring of frames to any frame, not just parent. In this library we have only child-parent anchoring.
+    wheel_scroll, // The view scrolls itself on mouse wheel using `scroll_layout_by_step()`. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout` is used.
 }
 
 Strata :: enum i8 {
@@ -342,13 +343,14 @@ click :: proc (v: ^View) -> (consumed: bool) {
 wheel :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
-    if v.layout.dir != .none {
-        // TODO: [?] add some .wheel_scroll flag, and if set, do the scroll in direction of layout.dir:
-        // step := v.ctx.ref_font_height * (wheel_delta > 0 ? 1 : -1)
-        // scroll(v, step, absolute=false)
+    scrolled: bool
+    if v.layout.dir != .none && .wheel_scroll in v.flags {
+        scrolled = scroll_layout_by_step(v, v.ctx.mouse.wheel_delta)
     }
 
-    return _emit(v, { type=.wheeled })
+    consumed = _emit(v, { type=.wheeled })
+    consumed ||= scrolled
+    return
 }
 
 // Padded viewport rect for native strata children.
@@ -409,7 +411,7 @@ scroll_min :: proc (v: ^View) -> Vec2 {
     }
 }
 
-scroll_to :: proc (v: ^View, value: Vec2) {
+scroll_to :: proc (v: ^View, value: Vec2) -> (scrolled: bool) {
     scroll_min_ := scroll_min(v)
     new_scroll := Vec2 {
         clamp(value.x, scroll_min_.x, 0),
@@ -420,16 +422,19 @@ scroll_to :: proc (v: ^View, value: Vec2) {
         v.scroll = new_scroll
         v.ctx.solved = false
         _emit(v, { type=.scrolled })
+        scrolled = true
     }
+
+    return
 }
 
-scroll_by :: proc (v: ^View, offset: Vec2) {
-    scroll_to(v, v.scroll + offset)
+scroll_by :: proc (v: ^View, offset: Vec2) -> (scrolled: bool) {
+    return scroll_to(v, v.scroll + offset)
 }
 
-scroll_by_step :: proc (v: ^View, magnitude: Vec2) {
+scroll_by_step :: proc (v: ^View, magnitude: Vec2) -> (scrolled: bool) {
     step := v.ctx.scroll_step != {} ? v.ctx.scroll_step : DEFAULT_SCROLL_STEP
-    scroll_by(v, magnitude * step)
+    return scroll_by(v, magnitude * step)
 }
 
 scroll_to_start :: proc (v: ^View) {
@@ -440,7 +445,7 @@ scroll_to_end :: proc (v: ^View) {
     scroll_to(v, scroll_min(v))
 }
 
-scroll_to_layout_start :: proc (v: ^View) {
+scroll_layout_to_start :: proc (v: ^View) {
     switch v.layout.dir {
     case .none  : panic("The view has no layout")
     case .row   : scroll_to(v, { 0, v.scroll.y })
@@ -448,10 +453,19 @@ scroll_to_layout_start :: proc (v: ^View) {
     }
 }
 
-scroll_to_layout_end :: proc (v: ^View) {
+scroll_layout_to_end :: proc (v: ^View) {
     switch v.layout.dir {
     case .none  : panic("The view has no layout")
     case .row   : scroll_to(v, { scroll_min(v).x, v.scroll.y })
     case .column: scroll_to(v, { v.scroll.x, scroll_min(v).y })
     }
+}
+
+scroll_layout_by_step :: proc (v: ^View, magnitude: f32) -> (scrolled: bool) {
+    switch v.layout.dir {
+    case .none  : panic("The view has no layout")
+    case .row   : return scroll_by_step(v, { magnitude, 0 })
+    case .column: return scroll_by_step(v, { 0, magnitude })
+    }
+    return
 }
