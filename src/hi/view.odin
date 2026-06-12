@@ -427,6 +427,11 @@ scroll_by :: proc (v: ^View, offset: Vec2) {
     scroll_to(v, v.scroll + offset)
 }
 
+scroll_by_step :: proc (v: ^View, magnitude: Vec2) {
+    step := v.ctx.scroll_step != {} ? v.ctx.scroll_step : DEFAULT_SCROLL_STEP
+    scroll_by(v, magnitude * step)
+}
+
 scroll_to_start :: proc (v: ^View) {
     scroll_to(v, {})
 }

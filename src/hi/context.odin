@@ -8,6 +8,7 @@ import "../core"
 MAX_VIEWS               :: 2000
 MAX_VISIBLE_VIEWS       :: 200
 MAX_VISIBLE_TEXT_TOKENS :: 1000
+DEFAULT_SCROLL_STEP     :: Vec2 { 40, 40 }
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720
@@ -32,6 +33,10 @@ Context_Init :: struct {
 
     // If `true`, `screen_top_left` might not be `{0,0}`
     align_center: bool,
+
+    // Scroll step used by `scroll_by_step()`, which can be used for mouse wheel scrolling.
+    // If not set, `DEFAULT_SCROLL_STEP` is used.
+    scroll_step: Vec2,
 
     // Event callback
     on_event: Context_Event_Proc,

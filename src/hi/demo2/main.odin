@@ -107,7 +107,7 @@ main_update :: proc () -> (keep_running: bool) {
         wheel_delta = wheel_delta,
     }
 
-    hi.scroll_by(app.container, {0, 50 * wheel_delta })
+    hi.scroll_by_step(app.container, magnitude={0,wheel_delta})
 
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
