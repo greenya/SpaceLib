@@ -291,15 +291,25 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
     v.ctx.solved = false
 }
 
+// Content rect for view's children.
+// Also a scissor rect if `.scissor` flag is used.
 @require_results
 content_rect :: proc (v: ^View) -> Rect {
-    parent_scroll: [2] f32
-    if v.parent != nil do parent_scroll = v.parent.scroll
     return {
-        v.solved_rect.x + v.padding[0] + parent_scroll.x,
-        v.solved_rect.y + v.padding[1] + parent_scroll.y,
+        v.solved_rect.x + v.padding[0],
+        v.solved_rect.y + v.padding[1],
         max(0, v.solved_rect.w - (v.padding[0] + v.padding[2])),
         max(0, v.solved_rect.h - (v.padding[1] + v.padding[3])),
+    }
+}
+
+// Content top left point for view's children.
+// Includes `View.scroll`.
+@require_results
+content_top_left :: proc (v: ^View) -> Vec2 {
+    return {
+        v.solved_rect.x + v.padding[0] + v.scroll.x,
+        v.solved_rect.y + v.padding[1] + v.scroll.y,
     }
 }
 

@@ -33,12 +33,10 @@ visible_text_iterate :: proc (
 ) -> (it: Visible_Text_Iterator) {
     assert(filter != {})
 
-    content_rect_ := content_rect(visible_view)
-
     it = {
         token_it            = text_token_iterate(visible_view.ctx, visible_view.solved_text_tokens, filter),
         measurable_only     = measurable_only,
-        content_top_left    = { content_rect_.x, content_rect_.y },
+        content_top_left    = content_top_left(visible_view),
     }
 
     if in_scissor_only && visible_view.solved_scissor != {} {

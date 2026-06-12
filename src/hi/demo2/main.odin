@@ -82,6 +82,7 @@ main_update :: proc () -> (keep_running: bool) {
     }
 
     app.container.scroll.y += 50 * k2.get_mouse_wheel_delta()
+    app.ui.solved = false
 
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
