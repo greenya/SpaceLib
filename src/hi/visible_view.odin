@@ -17,11 +17,11 @@ Visible_View :: struct {
 }
 
 Visible_Text_Iterator :: struct {
-    using token_it      : Text_Token_Iterator,
-    content_top_left    : Vec2,
-    measurable_only     : bool, // If true, skip tokens with zero size
-    in_scissor_only     : bool, // If true, skip tokens clipped out by `visible_view.solved_scissor` if it is used
-    scissor_rect        : Rect,
+    using token_it  : Text_Token_Iterator,
+    content_top_left: Vec2,
+    measurable_only : bool, // If true, skip tokens with zero size
+    in_scissor_only : bool, // If true, skip tokens clipped out by `visible_view.solved_scissor` if it is used
+    scissor_rect    : Rect,
 }
 
 @require_results
@@ -34,9 +34,9 @@ visible_text_iterate :: proc (
     assert(filter != {})
 
     it = {
-        token_it            = text_token_iterate(visible_view.ctx, visible_view.solved_text_tokens, filter),
-        measurable_only     = measurable_only,
-        content_top_left    = content_top_left(visible_view),
+        token_it        = text_token_iterate(visible_view.ctx, visible_view.solved_text_tokens, filter),
+        measurable_only = measurable_only,
+        content_top_left= content_top_left(visible_view),
     }
 
     if in_scissor_only && visible_view.solved_scissor != {} {

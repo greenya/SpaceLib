@@ -9,7 +9,7 @@ import k2 "../../../../karl2d"
 App :: struct {
     ui: ^hi.Context,
     container: ^hi.View,
-    token_buf: [dynamic] hi.Text_Token,
+    token_buffers: map [^hi.View] [dynamic] hi.Text_Token,
 }
 
 app: App
@@ -29,15 +29,27 @@ main :: proc () {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
         on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
-            return k2.measure_text(text, ctx.ref_font_height)
+            font_height := style.font_scale * ctx.screen_font_height
+            return k2.measure_text(text, font_height)
+        },
+        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
+            switch cmd {
+            case "header":
+                style.align = .center
+                style.color = core.gray2
+                style.font_scale = 2
+            }
+            return
         },
         on_text_wordy = proc (ctx: ^hi.Context, v: ^hi.View) -> ^[dynamic] hi.Text_Token {
-            return &app.token_buf
+            if v not_in app.token_buffers do app.token_buffers[v] = make([dynamic] hi.Text_Token)
+            return &app.token_buffers[v]
         },
         on_draw_text = proc (v: ^hi.Visible_View) {
             it := hi.visible_text_iterate(v, filter={.word})
             for tok, tok_rect in hi.visible_text_next(&it) {
-                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, v.ctx.ref_font_height, it.style.color)
+                font_height := it.style.font_scale * v.ctx.screen_font_height
+                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height, it.style.color)
             }
         },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
@@ -49,17 +61,30 @@ main :: proc () {
     })
 
     defer {
-        l := len(app.token_buf)
-        c := cap(app.token_buf)
-        fmt.printfln("token_buf: len=%i, cap=%i, size=%m", l, c, c*size_of(hi.Text_Token))
-        delete(app.token_buf)
+        fmt.println("Token buffers")
+        for v, b in app.token_buffers {
+            fmt.printfln("* len=%i, cap=%i, size=%m", len(b), cap(b), cap(b)*size_of(hi.Text_Token))
+            delete(b)
+        }
+        delete(app.token_buffers)
     }
 
     app.ui.root.padding = 40
-    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor}, padding=20, on_draw=draw_view })
-    hi.add_view(app.container, { text=#load("main.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
 
-    // hi.set_debug(app.ui.root, true)
+    hi.add_view(app.container, { text="|header|hi.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
+    hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+
+    hi.add_view(app.container, { text="|header|content.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
+    hi.add_view(app.container, { text=#load("../context.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+
+    hi.add_view(app.container, { text="|header|view.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
+    hi.add_view(app.container, { text=#load("../view.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+
+    hi.add_view(app.container, { text="|header|text.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
+    hi.add_view(app.container, { text=#load("../text.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+
+    hi.set_debug(app.ui.root, true)
 
     for main_update() {
         main_draw()
@@ -75,14 +100,14 @@ main_update :: proc () -> (keep_running: bool) {
 
     dt := k2.get_frame_time()
     screen_size := k2.get_screen_size()
+    wheel_delta := k2.get_mouse_wheel_delta()
     mouse_input := hi.Mouse_Input {
         lmb_down = k2.mouse_button_is_held(.Left),
         screen_pos = k2.get_mouse_position(),
-        wheel_delta = k2.get_mouse_wheel_delta(),
+        wheel_delta = wheel_delta,
     }
 
-    app.container.scroll.y += 50 * k2.get_mouse_wheel_delta()
-    app.ui.solved = false
+    hi.scroll_by(app.container, {0, 50 * wheel_delta })
 
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
@@ -98,10 +123,15 @@ main_draw :: proc () {
 
 draw_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(v.solved_rect)
-    alpha := u8(v.solved_opacity * 255)
-    k2.draw_rect(rect, {40,40,40,alpha})
-    k2.draw_rect_outline(rect, 4, {30,180,50,alpha})
+    k2.draw_rect(rect, core.gray2)
 
-    content_rect := k2.Rect(core.rect_inflated(hi.content_rect(v), 20))
-    k2.draw_rect_outline(content_rect, 20, {100,100,100,alpha})
+    v_border :: 16
+    v_rect := core.rect_inflated(hi.viewport_rect(v), v_border)
+    k2.draw_rect_outline(k2.Rect(v_rect), v_border, core.gray4)
+}
+
+draw_view_header :: proc (v: ^hi.Visible_View) {
+    rect := k2.Rect(v.solved_rect)
+    k2.draw_rect(rect, core.gray4)
+    v.ctx.on_draw_text(v)
 }

@@ -37,6 +37,7 @@ Context_Init :: struct {
     on_event: Context_Event_Proc,
 
     // Scissor callback. Scissor should be disabled when `scissor == {}`.
+    // The value is in ref units.
     on_scissor: Context_Scissor_Proc,
 
     // Text measure callback. Used only with `.text` views.

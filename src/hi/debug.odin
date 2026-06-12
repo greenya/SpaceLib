@@ -9,12 +9,12 @@ _DEBUG_TEXT_TOKEN_COLOR :: Color { 255,   0, 255, 255 }
 _DEBUG_SCISSOR_COLOR    :: Color {   0, 255, 255, 255 }
 
 _debug_draw_view :: proc (v: ^Visible_View) {
-    content_rect := ref_rect_to_screen(v.ctx, content_rect(v))
+    viewport_rect_ := ref_rect_to_screen(v.ctx, viewport_rect(v))
 
     if .scissor in v.flags {
-        _debug_draw_rect(v.ctx, content_rect, 4, _DEBUG_SCISSOR_COLOR)
+        _debug_draw_rect(v.ctx, viewport_rect_, 4, _DEBUG_SCISSOR_COLOR)
     } else if v.padding != {} {
-        _debug_draw_rect(v.ctx, content_rect, 1, _DEBUG_SCISSOR_COLOR)
+        _debug_draw_rect(v.ctx, viewport_rect_, 1, _DEBUG_SCISSOR_COLOR)
     }
 
     rect := ref_view_to_screen(v)

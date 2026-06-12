@@ -191,10 +191,10 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 
             if v.strata == c.strata {
                 if .scissor in v.flags {
-                    v_content_rect := content_rect(v)
+                    v_viewport_rect := viewport_rect(v)
                     c_solved_scissor = v_solved_scissor != {}\
-                        ? core.rect_intersection(v_solved_scissor, v_content_rect)\
-                        : v_content_rect
+                        ? core.rect_intersection(v_solved_scissor, v_viewport_rect)\
+                        : v_viewport_rect
                 } else {
                     c_solved_scissor = v_solved_scissor
                 }

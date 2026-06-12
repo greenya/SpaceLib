@@ -61,7 +61,7 @@ Flag :: enum {
     // Core
 
     hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
-    scissor,        // The view clips native strata children. The clipping is applied according to `content_rect()`. // TODO: should affect drawing and mouse hit test
+    scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`. // TODO: should affect drawing and mouse hit test
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
     text,           // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
     text_literal,   // The text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
@@ -291,33 +291,6 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
     v.ctx.solved = false
 }
 
-// Content rect for view's children.
-// Also a scissor rect if `.scissor` flag is used.
-@require_results
-content_rect :: proc (v: ^View) -> Rect {
-    return {
-        v.solved_rect.x + v.padding[0],
-        v.solved_rect.y + v.padding[1],
-        max(0, v.solved_rect.w - (v.padding[0] + v.padding[2])),
-        max(0, v.solved_rect.h - (v.padding[1] + v.padding[3])),
-    }
-}
-
-// Content top left point for view's children.
-// Includes `View.scroll`.
-@require_results
-content_top_left :: proc (v: ^View) -> Vec2 {
-    return {
-        v.solved_rect.x + v.padding[0] + v.scroll.x,
-        v.solved_rect.y + v.padding[1] + v.scroll.y,
-    }
-}
-
-@require_results
-in_root_rect :: proc (v: ^View) -> bool {
-    return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
-}
-
 _emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
     return v.on_event != nil\
         ? v->on_event(e)\
@@ -378,29 +351,102 @@ wheel :: proc (v: ^View) -> (consumed: bool) {
     return _emit(v, { type=.wheeled })
 }
 
+// Padded viewport rect for native strata children.
+// Also a scissor rect if `.scissor` flag is used.
 @require_results
-scroll_max :: proc (v: ^View) -> f32 {
-    // TODO: impl
-    return 111
+viewport_rect :: proc (v: ^View) -> Rect {
+    return {
+        v.solved_rect.x + v.padding[0],
+        v.solved_rect.y + v.padding[1],
+        max(0, v.solved_rect.w - (v.padding[0] + v.padding[2])),
+        max(0, v.solved_rect.h - (v.padding[1] + v.padding[3])),
+    }
 }
 
-scroll_to :: proc (v: ^View, value: f32, absolute: bool) {
-    // TODO: impl
+// Total size needed to fit all native strata children
+@require_results
+content_size :: proc (v: ^View) -> Vec2 {
+    bottom_right := content_bottom_right(v)
+    top_left := content_top_left(v)
+    return {
+        max(0, bottom_right.x - top_left.x),
+        max(0, bottom_right.y - top_left.y),
+    }
 }
 
-scroll_to_min :: proc (v: ^View) {
-    scroll_to(v, 0, absolute=true)
+// Padded and scrolled top-left point for native strata children
+@require_results
+content_top_left :: proc (v: ^View) -> Vec2 {
+    return {
+        v.solved_rect.x + v.padding[0] + v.scroll.x,
+        v.solved_rect.y + v.padding[1] + v.scroll.y,
+    }
 }
 
-scroll_to_max :: proc (v: ^View) {
-    value := scroll_max(v)
-    scroll_to(v, value, absolute=true)
+// Farthest bottom-right point of native strata children
+@require_results
+content_bottom_right :: proc (v: ^View) -> (result: Vec2) {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .hidden in c.flags || c.strata != v.strata do continue
+        result.x = max(result.x, c.solved_rect.x + c.solved_rect.w)
+        result.y = max(result.y, c.solved_rect.y + c.solved_rect.h)
+    }
+    return
 }
 
-// TODO: renamed View.scroll to View.pan (.scrolled event -> .panned). Make pan to work in X and Y direction, and scroll() to use layout.dir (single axis direction);
-// scroll_size() should return single axis result from pan_size()
-// if we support mouse drag event, the pan() should simplify panning of the view
+// Scroll minimum value.
+// Returned components are always `<=0`.
+//
+// The scrolling offset `View.scroll` moves in range `scroll_min()...{0,0}`, that is why there is
+// no "scroll_max()" as it is always zero. Content without any scroll is sitting at zero (maximum scroll).
+@require_results
+scroll_min :: proc (v: ^View) -> Vec2 {
+    viewport_rect_ := viewport_rect(v)
+    content_size_ := content_size(v)
+    return {
+        -max(0, content_size_.x - viewport_rect_.w),
+        -max(0, content_size_.y - viewport_rect_.h),
+    }
+}
 
-// pan_max :: proc (v: ^View) -> Vec2 {}
+scroll_to :: proc (v: ^View, value: Vec2) {
+    scroll_min_ := scroll_min(v)
+    new_scroll := Vec2 {
+        clamp(value.x, scroll_min_.x, 0),
+        clamp(value.y, scroll_min_.y, 0),
+    }
 
-// pan :: proc (v: ^View, value: Vec2, absolute: bool) {}
+    if new_scroll != v.scroll {
+        v.scroll = new_scroll
+        v.ctx.solved = false
+        _emit(v, { type=.scrolled })
+    }
+}
+
+scroll_by :: proc (v: ^View, offset: Vec2) {
+    scroll_to(v, v.scroll + offset)
+}
+
+scroll_to_start :: proc (v: ^View) {
+    scroll_to(v, {})
+}
+
+scroll_to_end :: proc (v: ^View) {
+    scroll_to(v, scroll_min(v))
+}
+
+scroll_to_layout_start :: proc (v: ^View) {
+    switch v.layout.dir {
+    case .none  : panic("The view has no layout")
+    case .row   : scroll_to(v, { 0, v.scroll.y })
+    case .column: scroll_to(v, { v.scroll.x, 0 })
+    }
+}
+
+scroll_to_layout_end :: proc (v: ^View) {
+    switch v.layout.dir {
+    case .none  : panic("The view has no layout")
+    case .row   : scroll_to(v, { scroll_min(v).x, v.scroll.y })
+    case .column: scroll_to(v, { v.scroll.x, scroll_min(v).y })
+    }
+}

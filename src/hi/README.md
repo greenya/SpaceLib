@@ -89,3 +89,12 @@ add_button :: proc (ctx: Context, name: string) {
 The `View_Generator` holds the state, and has arrow procs. The `begin()` and `end()` is no different from `if group() { ...`, the point is that large groups like whole dialog is not nice to put all code inside "if". So the `group()` does the same as `begin()` plus defers `end()` call.
 
 Not sure how `add_button()` using only Context can deduct the parent to be used. If we will be passing View_Generator to add_button(), then there is no point in View_Generator i guess, all the procs can be held by the Context itself.
+
+## in_root_rect
+
+```odin
+@require_results
+in_root_rect :: proc (v: ^View) -> bool {
+    return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
+}
+```
