@@ -170,24 +170,23 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
 
     style := Text_Style_Default
     if ctx.on_text_style != nil do ctx->on_text_style(&style)
-    align := style.align
-    wrapping := style.wrapping
 
     for &tok, i in tokens {
         #partial switch tok.type {
-        case .left      : align = .left     ; continue
-        case .right     : align = .right    ; continue
-        case .center    : align = .center   ; continue
-        case .wrap      : wrapping = true   ; continue
-        case .nowrap    : wrapping = false  ; continue
+        case .left      : style.align = .left       ; continue
+        case .right     : style.align = .right      ; continue
+        case .center    : style.align = .center     ; continue
+        case .wrap      : style.wrapping = true     ; continue
+        case .nowrap    : style.wrapping = false    ; continue
         case .tab       : cursor_x = max(cursor_x, tok.size.x); continue
+        case .custom    : ctx->on_text_custom_command(&style, tok.text, tok.args)
         }
 
         line_height = max(line_height, tok.size.y)
-        overflow := wrapping && cursor_x > 0 && (cursor_x + tok.size.x > max_width)
+        overflow := style.wrapping && cursor_x > 0 && (cursor_x + tok.size.x > max_width)
 
         if overflow || tok.type == .br {
-            _text_apply_line_alignment(tokens[line_start_i:i], max_width, align)
+            _text_apply_line_alignment(tokens[line_start_i:i], max_width, style.align)
 
             cursor_x = 0
             cursor_y += line_height == 0 ? tok.size.y : line_height
@@ -203,7 +202,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     }
 
     // align very last line
-    _text_apply_line_alignment(tokens[line_start_i:], max_width, align)
+    _text_apply_line_alignment(tokens[line_start_i:], max_width, style.align)
 
     return cursor_y + line_height
 }
