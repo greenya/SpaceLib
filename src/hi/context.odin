@@ -102,9 +102,10 @@ Context :: struct {
     visible_text_tokens : [MAX_VISIBLE_TEXT_TOKENS] Text_Token,
     visible_text_tokens_used: int,
     next_view_sid       : View_SID,
-    root                : ^View,
-    solved              : bool, // if cleared, `update_context()` will do `solve_context()` automatically which sets this flag
-    drawing             : bool, // if set, `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
+    root                : ^View, // Root view, created by `create_context()` and always set
+    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or nil. The view and its parents have `.hovered` set.
+    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically for add/remove/reparent and screen-size changes. Clear it manually after direct layout-affecting mutations, e.g. changing `View.padding`.
+    drawing             : bool, // If true, `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
 
     using init: Context_Init,
 
@@ -212,6 +213,9 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         lmb_pressed     = !ctx.mouse.lmb_down && mouse_input.lmb_down,
     }
 
+    visible_view_hit := _hit_test(ctx, ctx.mouse.ref_pos)
+    _hit_set_view(ctx, visible_view_hit != nil ? visible_view_hit.view : nil)
+
     // TODO: Process input tree using hi.mouse, return true if input was consumed
     // ctx.mouse.consumed = process_input_tree(ctx.root)
 
@@ -223,6 +227,64 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     }
 
     return ctx.mouse.consumed
+}
+
+_hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
+    old_hit := ctx.hit
+    if old_hit == new_hit {
+        ctx.hit = new_hit
+        return
+    }
+
+    depth :: proc (v: ^View) -> (result: int) {
+        for i := v; i != nil; i = i.parent do result += 1
+        return
+    }
+
+    old_path := old_hit
+    new_path := new_hit
+    old_depth := depth(old_path)
+    new_depth := depth(new_path)
+
+    for old_depth > new_depth {
+        old_path = old_path.parent
+        old_depth -= 1
+    }
+
+    for new_depth > old_depth {
+        new_path = new_path.parent
+        new_depth -= 1
+    }
+
+    for old_path != new_path {
+        old_path = old_path.parent
+        new_path = new_path.parent
+    }
+
+    common_parent := old_path
+
+    for v := old_hit; v != common_parent; v = v.parent {
+        v.flags -= { .hovered }
+        _emit(v, { type=.left })
+    }
+
+    for v := new_hit; v != common_parent; v = v.parent {
+        v.flags += { .hovered }
+        _emit(v, { type=.entered })
+    }
+
+    ctx.hit = new_hit
+}
+
+_hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
+    #reverse for &v in ctx.visible_views {
+        in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
+        in_scissor := v.solved_scissor != {}\
+            ? core.vec_in_rect(ref_pos, v.solved_scissor)\
+            : true
+        if in_rect && in_scissor do return &v
+    }
+    return nil
 }
 
 // - Rebuilds `Context.visible_views`

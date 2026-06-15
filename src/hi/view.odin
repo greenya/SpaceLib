@@ -28,8 +28,8 @@ View_Init :: struct {
 
     // Event callback.
     //
-    // Mouse Action events (`.clicked`, `.wheeled`) and Mouse Status events (`.entered`, `.left`) are propagated
-    // to the parent unless `true` returned.
+    // *Mouse Action* events (`.clicked`, `.wheeled`) propagate to the parent unless `consumed=true` is returned.
+    // The `consumed` return value is ignored for all other events.
     //
     // Note: The events get processed and this callback gets called in the Updating Phase only, e.g. from within `update_context()`.
     on_event: proc (v: ^View, event: Event) -> (consumed: bool),
@@ -60,9 +60,10 @@ View :: struct {
 Flag :: enum {
     // Core
 
-    hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
-    scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`. // TODO: should affect drawing and mouse hit test
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
+    hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
+    hovered,        // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
+    scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
     text,           // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
     text_literal,   // The text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
     text_wordy,     // The text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
@@ -78,7 +79,7 @@ Flag :: enum {
 
     // Behavior
 
-    disabled,   // The view is disabled, it will not receive Mouse Action events: `.clicked`, `.wheeled`.
+    disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to the parents until consumed.
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked
@@ -141,13 +142,13 @@ Event_Type :: enum u8 {
 
     // Mouse
 
-    entered,    // FIX: [NOT IMPLEMENTED] Propagable Mouse Status event. Fired when mouse cursor enters the view.
-    left,       // FIX: [NOT IMPLEMENTED] Propagable Mouse Status event. Fired when mouse cursor leaves the view.
-    clicked,    // Propagable Mouse Action event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
+    entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any its children. Fired once for each newly-hovered view in the hit tree. This event cannot be consumed.
+    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed.
+    clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
     captured,   // Fired when `.capture` view gets mouse button press.
     released,   // Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
     dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view between `.captured` and `.released`.
-    wheeled,    // Propagable Mouse Action event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
+    wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 
     // Behavior
 
