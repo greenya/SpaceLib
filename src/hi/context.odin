@@ -88,10 +88,12 @@ Context_Init :: struct {
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Visible_View),
 
-    // Debug drawing callbacks. Used with `.debug` views.
-    // All positions and sizes are in screen space.
-    debug_draw_line: proc (from, to: Vec2, thick: f32, color: Color),
-    debug_draw_text: proc (text: string, pos: Vec2, color: Color),
+    // Debug draw filter. Used with `.debug` views and `debug_draw_*` callbacks. Default value is `~{}` (all types).
+    debug_draw_filter: bit_set [Debug_Draw_Type],
+    // Debug draw line callback. Used with `.debug` views.
+    debug_draw_line: proc (from_screen, to_screen: Vec2, thick_screen: f32, color: Color),
+    // Debug draw text callback. Used with `.debug` views.
+    debug_draw_text: proc (text: string, pos_screen: Vec2, color: Color),
 }
 
 Context :: struct {
@@ -180,6 +182,9 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
     ctx.root.sid = _next_view_sid(ctx)
 
     ctx.stats.views_peak = 1
+
+    if ctx.debug_draw_filter == {} do ctx.debug_draw_filter = ~{}
+
     return ctx
 }
 
@@ -194,11 +199,8 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         ctx.solved = false
     }
 
-    if !ctx.solved {
-        solve_context(ctx)
-    } else {
-        _propagate_visible_views_opacity(ctx)
-    }
+    if !ctx.solved do solve_context(ctx)
+    _propagate_visible_views_opacity(ctx)
 
     ctx.dt = dt
     ctx.time += dt
@@ -268,7 +270,6 @@ solve_context :: proc (ctx: ^Context) {
     }
 
     _sort_visible_views(ctx)
-    _propagate_visible_views_opacity(ctx)
 }
 
 draw_context :: proc (ctx: ^Context) {
@@ -293,9 +294,13 @@ draw_context :: proc (ctx: ^Context) {
 
         if .debug in v.flags {
             if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
-            _debug_draw_view(&v)
+            _debug_draw_view(&v, ctx.debug_draw_filter)
             if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
         }
+    }
+
+    if .debug in ctx.root.flags && .stats in ctx.debug_draw_filter {
+        _debug_draw_stats(ctx)
     }
 }
 
