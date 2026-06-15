@@ -362,6 +362,7 @@ draw_context :: proc (ctx: ^Context) {
     }
 
     if .debug in ctx.root.flags && .stats in ctx.debug_draw_filter {
+        if has_on_scissor do ctx->on_scissor({})
         _debug_draw_stats(ctx)
     }
 }
