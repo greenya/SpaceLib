@@ -62,6 +62,7 @@ Flag :: enum {
 
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
     hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
+    updating,       // The view receives `.updated` every `update_context()` while visible
     hovered,        // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
     text,           // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).

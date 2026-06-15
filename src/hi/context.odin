@@ -223,7 +223,9 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     // animate_and_layout_tree(ctx.root, dt)
 
     for &v in ctx.visible_views {
-        _emit(v, { type=.updated })
+        if .updating in v.flags {
+            _emit(v, { type=.updated })
+        }
     }
 
     return ctx.mouse.consumed
