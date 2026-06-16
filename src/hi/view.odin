@@ -141,7 +141,7 @@ Event_Type :: enum u8 {
 
     shown,      // The view became shown, e.g. lost `.hidden` flag. The view may not be visible still (parent is `.hidden` or clipped out by the parent scissor).
     hidden,     // The view gained `.hidden` flag
-    updated,    // Continuously fired at the end of `update_context()`. Only for *visible* views.
+    updated,    // Continuously fired at the end of `update_context()`. Only for *visible* and `.updating` views.
 
     // Mouse
 
@@ -310,7 +310,7 @@ show :: proc (v: ^View) {
 
     if .page in v.flags && v.parent != nil {
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
-            if s != v do hide(s)
+            if s != v && .page in s.flags do hide(s)
         }
     }
 }
