@@ -8,13 +8,13 @@ import "../core"
 MAX_VIEWS               :: 2000
 MAX_VISIBLE_VIEWS       :: 200
 MAX_VISIBLE_TEXT_TOKENS :: 1000
-DEFAULT_SCROLL_STEP     :: Vec2 { 40, 40 }
 
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720
     ref_size: Vec2,
 
     // Reference font height, e.g. 8, 10, 16
+    // This value is also used as a fallback for empty `scroll_step`.
     ref_font_height: f32,
 
     // Aspect ratio logic
@@ -35,7 +35,7 @@ Context_Init :: struct {
     align_center: bool,
 
     // Scroll step used by `scroll_*_step()`, which can be used for mouse wheel scrolling.
-    // If not set, `DEFAULT_SCROLL_STEP` is used.
+    // If not set, the value of `ref_font_height` is used for vertical and horizontal step.
     scroll_step: Vec2,
 
     // Event callback

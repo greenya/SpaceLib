@@ -435,7 +435,9 @@ scroll_by :: proc (v: ^View, offset: Vec2) -> (scrolled: bool) {
 }
 
 scroll_by_step :: proc (v: ^View, magnitude: Vec2) -> (scrolled: bool) {
-    step := v.ctx.scroll_step != {} ? v.ctx.scroll_step : DEFAULT_SCROLL_STEP
+    step := v.ctx.scroll_step != {}\
+        ? v.ctx.scroll_step\
+        : { v.ctx.ref_font_height, v.ctx.ref_font_height }
     return scroll_by(v, magnitude * step)
 }
 
