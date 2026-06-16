@@ -9,8 +9,8 @@ View_Init :: struct {
     flags: bit_set [Flag; u32],
 
     using _: bit_field u16 {
-        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low
-        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher.
+        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`.
+        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
@@ -158,6 +158,7 @@ add_view :: proc (parent: ^View, init: View_Init) -> ^View {
     v := add_view_detached(parent.ctx, init)
     set_parent(v, parent)
     if v.strata == {} do v.strata = parent.strata
+    if v.level == {} do v.level = parent.level
     return v
 }
 

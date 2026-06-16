@@ -160,7 +160,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     hi.add_view(clip, { name="box_in_clip", size={50,30}, place={anchor={.5,1},pivot=.5}, on_draw=draw_view })
     hi.add_view(content_, { name="box_in_content", size={50,30}, place={anchor={1,.25},pivot=.5}, on_draw=draw_view })
 
-    options_menu := hi.add_view(content_, { name="options_menu", flags={.fit_x,.fit_y}, place={anchor=.5}, padding=4, layout={dir=.column}, strata=.overlay, on_draw=draw_view })
+    options_menu := hi.add_view(content_, { name="options_menu", flags={.fit_x,.fit_y}, place={anchor=.5}, padding=4, layout={dir=.column}, strata=.overlay, level=10, on_draw=draw_view })
     options_bar := hi.add_view(options_menu, { name="bar", flags={.fit_x,.fit_y}, layout={dir=.row,align=.center,gap=2} })
     hi.add_view(options_bar, { text="Actions:", flags={.text,.text_fit_x} })
     add_icon_button(options_bar, name="button51", icon="51")
