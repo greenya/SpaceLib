@@ -136,7 +136,7 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_literal: b
     return pool[pool_len_start:]
 }
 
-// Measures given tokes.
+// Measures given tokens.
 // Updates each `Text_Token.size`.
 _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
     has_on_text_measure := ctx.on_text_measure != nil
@@ -159,10 +159,14 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
     }
 }
 
-// Wraps and aligns given tokes.
-// Updates each `Text_Token.solved_pos`.
-// Returns total height needed to fit all the tokens with given `max_width`.
-_text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32) -> (total_height: f32) #no_bounds_check {
+// Wraps and aligns given tokens.
+// - Updates each `Text_Token.solved_pos`.
+// - Automatic wrapping is applied if `limit_x > 0`.
+// - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
+//
+// Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
+// This works for now as we always re-measure before wrapping; cached re-wrap would need separate storage, e.g. Text_Token.solved_width.
+_text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32
     line_height: f32
@@ -171,6 +175,8 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
     style := Text_Style_Default
     if ctx.on_text_style != nil do ctx->on_text_style(&style)
 
+    extent.x = limit_x
+
     for &tok, i in tokens {
         #partial switch tok.type {
         case .left      : style.align = .left       ; continue
@@ -178,15 +184,23 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
         case .center    : style.align = .center     ; continue
         case .wrap      : style.wrapping = true     ; continue
         case .nowrap    : style.wrapping = false    ; continue
-        case .tab       : cursor_x = max(cursor_x, tok.size.x); continue
-        case .custom    : ctx->on_text_custom_command(&style, tok.text, tok.args)
+
+        case .tab:
+            next_x := max(cursor_x, tok.size.x)
+            tok.solved_pos = { cursor_x, cursor_y }
+            tok.size.x = next_x - cursor_x
+            cursor_x = next_x
+            continue
+
+        case .custom:
+            ctx->on_text_custom_command(&style, tok.text, tok.args)
         }
 
         line_height = max(line_height, tok.size.y)
-        overflow := style.wrapping && cursor_x > 0 && (cursor_x + tok.size.x > max_width)
+        overflow := style.wrapping && limit_x > 0 && cursor_x > 0 && (cursor_x + tok.size.x > limit_x)
 
         if overflow || tok.type == .br {
-            _text_apply_line_alignment(tokens[line_start_i:i], max_width, style.align)
+            extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
 
             cursor_x = 0
             cursor_y += line_height == 0 ? tok.size.y : line_height
@@ -201,38 +215,34 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, max_width: f32)
         cursor_x += tok.size.x
     }
 
-    // align very last line
-    _text_apply_line_alignment(tokens[line_start_i:], max_width, style.align)
-
-    return cursor_y + line_height
+    // align very last line and set the total height
+    extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:], limit_x, style.align))
+    extent.y = cursor_y + line_height
+    return
 }
 
-_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, align: Text_Alignment) #no_bounds_check {
+_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, align: Text_Alignment) -> (extent_x: f32) #no_bounds_check {
     if len(line_tokens) == 0 do return
 
     start_i: int
     end_i := len(line_tokens) - 1
 
-    leading_space_w: f32
     for start_i <= end_i {
         tok := &line_tokens[start_i]
-        if _tok_is_non_printable(tok) {
-            leading_space_w += tok.size.x
-            start_i += 1
-        } else {
-            break
-        }
+        if _tok_is_non_printable(tok) do start_i += 1
+        else                          do break
     }
 
-    trailing_space_w: f32
     for end_i >= start_i {
         tok := &line_tokens[end_i]
-        if _tok_is_non_printable(tok) {
-            trailing_space_w += tok.size.x
-            end_i -= 1
-        } else {
-            break
-        }
+        if _tok_is_non_printable(tok) do end_i -= 1
+        else                          do break
+    }
+
+    if start_i > end_i {
+        // the line has no printable tokens -- reset all positions
+        for &tok in line_tokens do tok.solved_pos = {}
+        return
     }
 
     printable_line_width: f32
@@ -240,24 +250,24 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, max_width: f32, 
         printable_line_width += line_tokens[i].size.x
     }
 
-    if printable_line_width <= 0 {
-        for &tok in line_tokens do tok.solved_pos = {}
-        return
-    }
-
     shift_amount: f32
-    switch align {
-    case .left  : /**/
-    case .right : shift_amount +=  max_width - printable_line_width
-    case .center: shift_amount += (max_width - printable_line_width) / 2
+    if limit_x > 0 {
+        switch align {
+        case .left  : /**/
+        case .right : shift_amount =  limit_x - printable_line_width
+        case .center: shift_amount = (limit_x - printable_line_width) / 2
+        }
+
+        if shift_amount < 0 do shift_amount = 0
     }
 
-    if shift_amount < 0 do shift_amount = 0
-
+    // shift printable tokens and reset positions of all leading and trailing non-printable ones
     for &tok, i in line_tokens {
         if i >= start_i && i <= end_i do tok.solved_pos.x += shift_amount
         else                          do tok.solved_pos = {}
     }
+
+    return line_tokens[end_i].solved_pos.x + line_tokens[end_i].size.x
 
     _tok_is_non_printable :: proc (tok: ^Text_Token) -> bool {
         return tok.type == .whitespace || tok.size.x == 0

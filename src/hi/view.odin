@@ -65,9 +65,6 @@ Flag :: enum {
     updating,       // The view receives `.updated` every `update_context()` while visible
     hovered,        // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
-    text,           // The `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
-    text_literal,   // The text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
-    text_wordy,     // The text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
 
     // Sizing
 
@@ -78,23 +75,21 @@ Flag :: enum {
     fill_x,     // `solved_rect.w` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
     fill_y,     // `solved_rect.h` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
 
+    // Rich Text
+
+    text,           // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text_fit_x,     // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
+    text_literal,   // Text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
+    text_wordy,     // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
+
     // Behavior
 
     disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to the parents until consumed.
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to parents.
-    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. In most cases this is two views: the one gets selected and the one gets de-selected. The `.clicked` event does not propagate to parents.
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. In most cases these are two views: the one gets selected and the one gets de-selected. The `.clicked` event does not propagate to parents.
     page,       // The view hides all `.page` siblings when gets `show()`
-    // auto_hide // TODO: think more on auto_hide flag.
-    //              In spacelib:ui, this flag was intended to be used for dropdown menus and similar popups
-    //              which should be closed if clicked outside; the task apparently wasn't that simple and
-    //              obvious, and the flag wasn't very useful.
-    //              Before this flag, we need to think about tooltips and dropdowns, they are special and should be drawn above
-    //              other elements. In spacelib:ui's demo this was manually solved by creating and managing a separate layer,
-    //              because if we open dropdown inside list of items, the next item in the list will be drawn above the items
-    //              of the dropdown as it is spawned just after the list item. "Separate layer" in spacelib:ui was working because
-    //              it supports anchoring of frames to any frame, not just parent. In this library we have only child-parent anchoring.
     wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
     wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
     wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`.

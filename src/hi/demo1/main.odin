@@ -160,11 +160,16 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
     hi.add_view(clip, { name="box_in_clip", size={50,30}, place={anchor={.5,1},pivot=.5}, on_draw=draw_view })
     hi.add_view(content_, { name="box_in_content", size={50,30}, place={anchor={1,.25},pivot=.5}, on_draw=draw_view })
 
-    // options_menu := hi.add_view(content_, { name="options_menu", size={100,0}, place={anchor=.5}, layout={dir=.column}, strata=.overlay })
-    // hi.add_view(options_menu, { name="option1", flags={.fill_x}, size={0,20} })
-    // hi.add_view(options_menu, { name="option2", flags={.fill_x}, size={0,20} })
-    // hi.add_view(options_menu, { name="option3", flags={.fill_x}, size={0,20} })
-    // hi.add_view(options_menu, { name="option4", flags={.fill_x}, size={0,20} })
+    options_menu := hi.add_view(content_, { name="options_menu", flags={.fit_x,.fit_y}, place={anchor=.5}, padding=4, layout={dir=.column}, strata=.overlay, on_draw=draw_view })
+    options_bar := hi.add_view(options_menu, { name="bar", flags={.fit_x,.fit_y}, layout={dir=.row,align=.center,gap=2} })
+    hi.add_view(options_bar, { text="Actions:", flags={.text,.text_fit_x} })
+    add_icon_button(options_bar, name="button51", icon="51")
+    add_icon_button(options_bar, name="button52", icon="52")
+    hi.add_view(options_bar, { text="Status: OK", flags={.text,.text_fit_x} })
+    hi.add_view(options_menu, { name="option1", text="Option #111|tab=65|501", flags={.fill_x,.text} })
+    hi.add_view(options_menu, { name="option2", text="Option #22|tab=65|502", flags={.fill_x,.text} })
+    hi.add_view(options_menu, { name="option3", text="Option #3|tab=65|503", flags={.fill_x,.text} })
+    hi.add_view(options_menu, { name="option4", text="Option #4|tab=65|504", flags={.fill_x,.text} })
 
     button2_view: ^hi.View
     footer := hi.add_view(root, { name="footer", flags={.scissor,.fill_x,.fit_y}, padding=5, layout={dir=.row,justify=.center,align=.center,gap=10} })

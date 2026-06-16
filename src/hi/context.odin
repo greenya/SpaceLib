@@ -324,15 +324,12 @@ solve_context :: proc (ctx: ^Context) {
     append(&ctx.visible_views, Visible_View { ctx.root, {}, nil })
 
     // never repeat layout and text measurement more than twice
-    for _ in 0..<2 {
+    for i in 0..<2 {
+        if i > 0 do resize(&ctx.visible_views, 1) // keep root only
         _solve_view_fit_and_fixed_size(ctx.root)
         _solve_children_fill_and_ratio_size(ctx.root, {})
-        text_height_mismatch := _regenerate_visible_text_tokens(ctx)
-        if text_height_mismatch {
-            resize(&ctx.visible_views, 1) // keep root only
-            continue
-        }
-        break
+        extent_mismatch := _regenerate_visible_text_tokens(ctx)
+        if !extent_mismatch do break
     }
 
     _sort_visible_views(ctx)
@@ -381,7 +378,7 @@ _sort_visible_views :: proc (ctx: ^Context) {
     })
 }
 
-_regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch: bool) {
+_regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: bool) {
     ctx.visible_text_tokens_used = 0
 
     for &v in ctx.visible_views {
@@ -408,11 +405,20 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (text_height_mismatch
 
         _text_measure_tokens(ctx, v.solved_text_tokens)
 
-        context_w := v.solved_rect.w - v.padding[0] - v.padding[2]
-        text_height := _text_wrap_tokens(ctx, v.solved_text_tokens, max_width=context_w)
-        solved_rect_h := text_height + v.padding[1] + v.padding[3]
-        if 0.1 < abs(v.solved_rect.h - solved_rect_h) do text_height_mismatch = true
-        v.solved_rect.h = solved_rect_h
+        if .text_fit_x in v.flags {
+            extent := _text_wrap_tokens(ctx, v.solved_text_tokens, 0)
+            solved_w := extent.x + v.padding[0] + v.padding[2]
+            solved_h := extent.y + v.padding[1] + v.padding[3]
+            if abs(solved_w-v.solved_rect.w)>.1 || abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
+            v.solved_rect.w = solved_w
+            v.solved_rect.h = solved_h
+        } else {
+            limit_x := v.solved_rect.w - v.padding[0] - v.padding[2]
+            extent := _text_wrap_tokens(ctx, v.solved_text_tokens, limit_x)
+            solved_h := extent.y + v.padding[1] + v.padding[3]
+            if abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
+            v.solved_rect.h = solved_h
+        }
     }
 
     return

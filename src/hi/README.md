@@ -2,6 +2,10 @@
 
 ## TODOs
 
+TODO: Context: Handle Context.hit change on removing and re-parenting views
+
+TODO: View: Add .modal flag, should block any events propagation to parent views
+
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
 
 - At the moment, user can achieve this easily just by doing `ctx.ref_size = screen_size` just before calling update_context(). Maybe keep like this, and do not add extra logic (?)
@@ -26,8 +30,6 @@ TODO: Text: [?] do not automatically re-tokenize and re-measure text if Context.
 TODO: Text: [?] support multiple commands in a tag, example: "|wrap,left|This is |c=#f0f,f=big|Big Pink Text!"
 
 TODO: Text: [?] support stack of fonts and colors with simple [dynamic; N] T, so next is possible: |c=#fff|He|c=#ff0|ll|/c|o, World!
-
-TODO: View: [?] Support for Free-Floating Fit, e.g. when parent doesn't have `layout`, but still want its size to be updated, to fit all children, who are placed via their `placement`.
 
 ## Notes on number of stratas
 
@@ -97,4 +99,13 @@ Not sure how `add_button()` using only Context can deduct the parent to be used.
 in_root_rect :: proc (v: ^View) -> bool {
     return core.rect_in_rect(v.solved_rect, v.ctx.root.solved_rect)
 }
+```
+
+## .auto_hide
+
+```odin
+// auto_hide // TODO: think more on auto_hide flag.
+//              In spacelib:ui, this flag was intended to be used for dropdown menus and similar popups
+//              which should be closed if clicked outside; the task apparently wasn't that simple and
+//              obvious, and the flag wasn't very useful.
 ```
