@@ -31,7 +31,8 @@ View_Init :: struct {
     // *Mouse Action* events (`.clicked`, `.wheeled`) propagate to the parent unless `consumed=true` is returned.
     // The `consumed` return value is ignored for all other events.
     //
-    // Note: The events get processed and this callback gets called in the Updating Phase only, e.g. from within `update_context()`.
+    // Note: Most events are emitted during `update_context()`.
+    // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
     on_event: proc (v: ^View, event: Event) -> (consumed: bool),
 
     // USER DATA
@@ -141,7 +142,7 @@ Event_Type :: enum u8 {
     // Mouse
 
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any its children. Fired once for each newly-hovered view in the hit tree. This event cannot be consumed.
-    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed.
+    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you call `set_parent()` manually, e.g. outside of `update_context()`.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
     captured,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button press.
     released,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
@@ -183,6 +184,10 @@ set_parent :: proc (v, new_parent: ^View) {
 
     ensure(v != new_parent, "The new parent cannot be the view itself")
     ensure(v.parent != nil || v.parent == nil && v.next_sibling == nil, "Detached view cannot have next_sibling set")
+    ensure(!view_tree_contains(v, new_parent), "The new parent cannot be a child of the view")
+    ensure(new_parent == nil || v.ctx == new_parent.ctx, "Cannot parent a view to a view from another context")
+
+    _hit_clear_if_view_tree_contains_hit(v)
 
     // Detach from current parent
     if v.parent != nil {
@@ -241,6 +246,21 @@ prev_sibling :: proc (v: ^View) -> ^View {
         }
     }
     return nil
+}
+
+// Returns true if `child` is `v` or inside its subtree
+@require_results
+view_tree_contains :: proc(v, child: ^View) -> bool {
+    for c := child; c != nil; c = c.parent {
+        if c == v do return true
+    }
+    return false
+}
+
+_hit_clear_if_view_tree_contains_hit :: proc(v: ^View) {
+    if v.ctx.hit != nil && view_tree_contains(v, v.ctx.hit) {
+        _hit_set_view(v.ctx, nil)
+    }
 }
 
 Child_Iterator :: struct {
