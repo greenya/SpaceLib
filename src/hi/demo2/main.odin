@@ -69,8 +69,12 @@ main :: proc () {
         delete(app.token_buffers)
     }
 
-    app.ui.root.padding = 40
-    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor,.wheel_scroll}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
+    app.ui.root.padding = {80,40,80,40}
+    app.ui.root.on_event = proc (v: ^hi.View, e: hi.Event) -> (consumed: bool) {
+        if e.type == .wheeled do return hi.wheel_one(app.container)
+        return
+    }
+    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor,.wheel_scroll_layout}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
 
     hi.add_view(app.container, { text="|header|hi.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
     hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
@@ -106,8 +110,6 @@ main_update :: proc () -> (keep_running: bool) {
         screen_pos = k2.get_mouse_position(),
         wheel_delta = wheel_delta,
     }
-
-    hi.wheel(app.container) // TODO: remove when UI does it internally
 
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)

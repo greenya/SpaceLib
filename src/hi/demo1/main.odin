@@ -154,7 +154,7 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         add_icon_button(header, name="button_close", icon="close")
     }
 
-    content_ := hi.add_view(root, { name="content", flags={.fill_x,.scissor}, size={0,80}, padding=10 })
+    content_ := hi.add_view(root, { name="content", flags={.fill_x,.scissor,.wheel_scroll_x}, size={0,80}, padding=10 })
     hi.add_view(content_, { name="text", flags={.text}, size={80,0}, padding=3, text=content })
     clip := hi.add_view(content_, { name="clip_in_content", flags={.scissor}, size={100,40}, place={anchor={1,.5},pivot=.5} })
     hi.add_view(clip, { name="box_in_clip", size={50,30}, place={anchor={.5,1},pivot=.5}, on_draw=draw_view })

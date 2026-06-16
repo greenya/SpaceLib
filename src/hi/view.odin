@@ -83,8 +83,8 @@ Flag :: enum {
     disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to the parents until consumed.
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
-    check,      // The view inverts `.selected` when clicked
-    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings
+    check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to parents.
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. In most cases this is two views: the one gets selected and the one gets de-selected. The `.clicked` event does not propagate to parents.
     page,       // The view hides all `.page` siblings when gets `show()`
     // auto_hide // TODO: think more on auto_hide flag.
     //              In spacelib:ui, this flag was intended to be used for dropdown menus and similar popups
@@ -95,7 +95,9 @@ Flag :: enum {
     //              because if we open dropdown inside list of items, the next item in the list will be drawn above the items
     //              of the dropdown as it is spawned just after the list item. "Separate layer" in spacelib:ui was working because
     //              it supports anchoring of frames to any frame, not just parent. In this library we have only child-parent anchoring.
-    wheel_scroll, // The view scrolls itself on mouse wheel using `scroll_layout_by_step()`. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout` is used.
+    wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
+    wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
+    wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`.
 }
 
 Strata :: enum i8 {
@@ -146,8 +148,8 @@ Event_Type :: enum u8 {
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any its children. Fired once for each newly-hovered view in the hit tree. This event cannot be consumed.
     left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
-    captured,   // Fired when `.capture` view gets mouse button press.
-    released,   // Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
+    captured,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button press.
+    released,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
     dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view between `.captured` and `.released`.
     wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 
@@ -308,9 +310,7 @@ show :: proc (v: ^View) {
 
     if .page in v.flags && v.parent != nil {
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
-            if s != v && .hidden not_in v.flags {
-                hide(s)
-            }
+            if s != v do hide(s)
         }
     }
 }
@@ -322,32 +322,72 @@ hide :: proc (v: ^View) {
     }
 }
 
+// Fires `.clicked` event for the view as it would be clicked with a mouse.
+//
+// The event will be propagated to the parents until consumed.
+// If you're in a parent view and want to re-route the event to a child view
+// (which might not consume the event), you can `click_one()` to avoid recursive propagation.
 click :: proc (v: ^View) -> (consumed: bool) {
+    for i := v; i != nil; i = i.parent do if click_one(i) do return true
+    return
+}
+
+// Fires `.clicked` event for the view as it would be clicked with a mouse.
+// No propagation.
+click_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
     if .check in v.flags {
         v.flags ~= { .selected }
         _emit(v, { type=.selection_changed })
+        consumed = true
     }
 
     if .radio in v.flags && v.parent != nil {
+        if .selected not_in v.flags {
+            v.flags += { .selected }
+            _emit(v, { type=.selection_changed })
+        }
+
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
             if s != v && .selected in s.flags {
                 s.flags -= { .selected }
                 _emit(s, { type=.selection_changed })
             }
         }
+
+        consumed = true
     }
 
-    return _emit(v, { type=.clicked })
+    consumed ||= _emit(v, { type=.clicked })
+    return
 }
 
+// Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
+//
+// The event will be propagated to the parents until consumed.
+// If you're in a parent view and want to re-route the event to a child view
+// (which might not consume the event), you can `wheel_one()` to avoid recursive propagation.
 wheel :: proc (v: ^View) -> (consumed: bool) {
+    for i := v; i != nil; i = i.parent do if wheel_one(i) do return true
+    return
+}
+
+// Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
+// No propagation.
+wheel_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
     scrolled: bool
-    if v.layout.dir != .none && .wheel_scroll in v.flags {
-        scrolled = scroll_layout_by_step(v, v.ctx.mouse.wheel_delta)
+    switch {
+    case .wheel_scroll_x in v.flags:
+        scrolled = scroll_by_step(v, { v.ctx.mouse.wheel_delta, 0 })
+    case .wheel_scroll_y in v.flags:
+        scrolled = scroll_by_step(v, { 0, v.ctx.mouse.wheel_delta })
+    case .wheel_scroll_layout in v.flags:
+        if v.layout.dir != .none {
+            scrolled = scroll_layout_by_step(v, v.ctx.mouse.wheel_delta)
+        }
     }
 
     consumed = _emit(v, { type=.wheeled })

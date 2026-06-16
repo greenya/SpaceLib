@@ -216,8 +216,10 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     visible_view_hit := _hit_test(ctx, ctx.mouse.ref_pos)
     _hit_set_view(ctx, visible_view_hit != nil ? visible_view_hit.view : nil)
 
-    // TODO: Process input tree using hi.mouse, return true if input was consumed
-    // ctx.mouse.consumed = process_input_tree(ctx.root)
+    if ctx.hit != nil {
+        if ctx.mouse.lmb_pressed        do ctx.mouse.consumed ||= click(ctx.hit)
+        if ctx.mouse.wheel_delta != 0   do ctx.mouse.consumed ||= wheel(ctx.hit)
+    }
 
     // TODO: Animate and layout tree
     // animate_and_layout_tree(ctx.root, dt)
