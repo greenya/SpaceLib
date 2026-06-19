@@ -142,7 +142,7 @@ Event_Type :: enum u8 {
     // Mouse
 
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any its children. Fired once for each newly-hovered view in the hit tree. This event cannot be consumed.
-    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you call `set_parent()` manually, e.g. outside of `update_context()`.
+    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
     captured,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button press.
     released,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
