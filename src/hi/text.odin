@@ -171,6 +171,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
     cursor_y: f32
     line_height: f32
     line_start_i: int
+    has_on_text_custom_command := ctx.on_text_custom_command != nil
 
     style := Text_Style_Default
     if ctx.on_text_style != nil do ctx->on_text_style(&style)
@@ -193,7 +194,9 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             continue
 
         case .custom:
-            ctx->on_text_custom_command(&style, tok.text, tok.args)
+            if has_on_text_custom_command {
+                ctx->on_text_custom_command(&style, tok.text, tok.args)
+            }
         }
 
         line_height = max(line_height, tok.size.y)
