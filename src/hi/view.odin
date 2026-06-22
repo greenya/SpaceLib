@@ -230,6 +230,12 @@ _remove_detached_view_tree :: proc (v: ^View) {
     core.sparse_array_remove(&v.ctx.views, int(v.idx))
 }
 
+remove_children :: proc (v: ^View) {
+    for v.first_child != nil {
+        remove_view(v.first_child)
+    }
+}
+
 @require_results
 last_child :: proc (v: ^View) -> ^View {
     for c := v.first_child; c != nil; c = c.next_sibling {
