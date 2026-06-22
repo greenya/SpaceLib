@@ -196,7 +196,8 @@ vec_zero_approx :: proc (a: Vec2, e: f32) -> bool {
 }
 
 vec_in_rect :: proc (vec: Vec2, r: Rect) -> bool {
-    return r.x<vec.x && r.x+r.w>vec.x && r.y<vec.y && r.y+r.h>vec.y
+    return r.x <= vec.x && vec.x < r.x+r.w &&
+           r.y <= vec.y && vec.y < r.y+r.h
 }
 
 vec_in_arc :: proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
