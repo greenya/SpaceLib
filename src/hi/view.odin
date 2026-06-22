@@ -313,9 +313,7 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
 }
 
 _emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
-    return v.on_event != nil\
-        ? v->on_event(e)\
-        : false
+    return v.on_event != nil ? v->on_event(e) : false
 }
 
 show :: proc (v: ^View) {
@@ -353,12 +351,14 @@ click :: proc (v: ^View) -> (consumed: bool) {
 click_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
+    check_consumed: bool
     if .check in v.flags {
         v.flags ~= { .selected }
         _emit(v, { type=.selection_changed })
-        consumed = true
+        check_consumed = true
     }
 
+    radio_consumed: bool
     if .radio in v.flags && v.parent != nil {
         if .selected not_in v.flags {
             v.flags += { .selected }
@@ -372,11 +372,11 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
             }
         }
 
-        consumed = true
+        radio_consumed = true
     }
 
-    consumed ||= _emit(v, { type=.clicked })
-    return
+    clicked_consumed := _emit(v, { type=.clicked })
+    return check_consumed || radio_consumed || clicked_consumed
 }
 
 // Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
@@ -406,9 +406,8 @@ wheel_one :: proc (v: ^View) -> (consumed: bool) {
         }
     }
 
-    consumed = _emit(v, { type=.wheeled })
-    consumed ||= scrolled
-    return
+    wheeled_consumed := _emit(v, { type=.wheeled })
+    return scrolled || wheeled_consumed
 }
 
 // Padded viewport rect for native strata children.
