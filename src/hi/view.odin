@@ -35,11 +35,12 @@ View_Init :: struct {
     // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
     on_event: proc (v: ^View, event: Event) -> (consumed: bool),
 
-    // USER DATA
-    name: string,
-    text: string,       // Text with rich formatting if `.text` is used
-    // user_idx: int,
-    // user_ptr: rawptr,
+    // User data
+
+    name    : string,   // Optional name
+    text    : string,   // Text with rich formatting if `.text` is used
+    user_ptr: rawptr,
+    user_idx: int,
 }
 
 View :: struct {
@@ -234,6 +235,24 @@ remove_children :: proc (v: ^View) {
     for v.first_child != nil {
         remove_view(v.first_child)
     }
+}
+
+@require_results
+child_by_index :: proc (v: ^View, index: int) -> ^View {
+    i: int
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if i == index do return c
+        i += 1
+    }
+    return nil
+}
+
+@require_results
+child_by_name :: proc (v: ^View, name: string) -> ^View {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.name == name do return c
+    }
+    return nil
 }
 
 @require_results
