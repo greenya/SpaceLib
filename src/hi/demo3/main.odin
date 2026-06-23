@@ -10,14 +10,6 @@ import k2 "../../../../karl2d"
 log :: fmt.println
 logf :: fmt.printfln
 
-App :: struct {
-    ui: ^hi.Context,
-    panels_container: ^hi.View,
-    panels: [dynamic] ^Panel,
-}
-
-app: App
-
 main :: proc () {
     context.allocator = tracking_allocator.init(verbosity=.minimal)
     defer {
@@ -28,40 +20,10 @@ main :: proc () {
     k2.init(1280, 720, "demo3", { window_mode=.Windowed_Resizable })
     defer k2.shutdown()
 
-    app.ui = hi.create_context({
-        ref_font_height = 20,
-        on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
-            k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
-        },
-        on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
-            font_height := style.font_scale * ctx.screen_font_height
-            return k2.measure_text(text, font_height)
-        },
-        on_draw_text = proc (v: ^hi.Visible_View) {
-            it := hi.visible_text_iterate(v, filter={.word})
-            for tok, tok_rect in hi.visible_text_next(&it) {
-                font_height := it.style.font_scale * v.ctx.screen_font_height
-                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height, it.style.color)
-            }
-        },
-        scroll_step = 40,
-    })
-    defer hi.destroy_context(app.ui)
+    app_init()
+    defer app_destroy()
 
-    app.panels_container = hi.add_view(app.ui.root, {
-        flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_layout },
-        layout  = { dir=.row, gap=10 },
-        on_draw = proc (v: ^hi.Visible_View) {
-            rect := k2.Rect(hi.viewport_rect(v))
-            k2.draw_rect(rect, core.gray1)
-        },
-    })
-
-    append(&app.panels, panel_create(app.panels_container, ""))
-    defer {
-        for p in app.panels do panel_destroy(p)
-        delete(app.panels)
-    }
+    app_add_panel(path="")
 
     for main_update() {
         main_draw()
@@ -79,6 +41,13 @@ main_update :: proc () -> (keep_running: bool) {
         lmb_down = k2.mouse_button_is_held(.Left),
         screen_pos = k2.get_mouse_position(),
         wheel_delta = wheel_delta,
+    }
+
+    if k2.key_went_down(.Space) {
+        debug := .debug not_in app.ui.root.flags
+        hi.set_debug(app.ui.root, debug, filter={.self})
+        app.ui_panel_list.padding = debug ? {300,0,0,0} : {}
+        app.ui.solved = false
     }
 
     app.ui.ref_size = screen_size

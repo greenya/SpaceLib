@@ -77,16 +77,16 @@ main :: proc () {
     app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor,.wheel_scroll_layout}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
 
     hi.add_view(app.container, { text="|header|hi.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
 
     hi.add_view(app.container, { text="|header|content.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../context.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    hi.add_view(app.container, { text=#load("../context.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
 
     hi.add_view(app.container, { text="|header|view.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../view.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    hi.add_view(app.container, { text=#load("../view.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
 
     hi.add_view(app.container, { text="|header|text.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../text.odin"), flags={.text,.text_literal,.text_wordy,.fill_x} })
+    hi.add_view(app.container, { text=#load("../text.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
 
     hi.set_debug(app.ui.root, true)
 
