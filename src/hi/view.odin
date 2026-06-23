@@ -238,6 +238,21 @@ remove_children :: proc (v: ^View) {
     }
 }
 
+// Returns index of `v` in `v.parent` children.
+// - Panics if `v.parent` is not set.
+// - Panics if `v.parent` children has no `v`.
+@require_results
+view_index :: proc (v: ^View) -> int {
+    ensure(v.parent != nil)
+    i: int
+    for c := v.parent.first_child; c != nil; c = c.next_sibling {
+        if c == v do return i
+        i += 1
+    }
+    panic("Integrity error. View.parent is set but it doesn't contain the child. Please use `set_parent()` to correctly re-parent a view.")
+}
+
+// Returns child at given index; `v.first_child` has `index == 0`
 @require_results
 child_by_index :: proc (v: ^View, index: int) -> ^View {
     i: int
@@ -248,10 +263,30 @@ child_by_index :: proc (v: ^View, index: int) -> ^View {
     return nil
 }
 
+// Returns first child with given name
 @require_results
 child_by_name :: proc (v: ^View, name: string) -> ^View {
     for c := v.first_child; c != nil; c = c.next_sibling {
         if c.name == name do return c
+    }
+    return nil
+}
+
+// Returns first child with any flag in `flags` set
+@require_results
+child_by_any_flags :: proc (v: ^View, flags: Flags) -> ^View {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.flags & flags != {} do return c
+    }
+    return nil
+}
+
+// Returns first child with all `flags` set. Returns `nil` if `flags` is empty.
+@require_results
+child_by_all_flags :: proc (v: ^View, flags: Flags) -> ^View {
+    if flags == {} do return nil
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.flags & flags == flags do return c
     }
     return nil
 }
