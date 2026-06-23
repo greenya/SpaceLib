@@ -54,16 +54,16 @@ Text_Alignment :: enum u8 { left, right, center }
 
 // Tokenizes given text.
 // Appends to the `pool` and returns slice of just appended tokens.
-_text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_literal: bool) -> [] Text_Token #no_bounds_check {
+_text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclusive: bool) -> [] Text_Token #no_bounds_check {
     pool_len_start := len(pool)
     text_len := len(text)
-    raw_mode := is_literal
+    raw_mode := is_raw_exclusive
 
     for i := 0; i < text_len; /**/ {
         r := text[i]
 
         raw_end_tag :: "|-/raw-|"
-        if raw_mode && !is_literal && r == '|' && i + len(raw_end_tag) <= text_len {
+        if raw_mode && !is_raw_exclusive && r == '|' && i + len(raw_end_tag) <= text_len {
             if text[i:i+len(raw_end_tag)] == raw_end_tag {
                 i += len(raw_end_tag)
                 raw_mode = false

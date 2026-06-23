@@ -6,7 +6,7 @@ import "core:slice"
 import "../core"
 
 MAX_VIEWS               :: 2000
-MAX_VISIBLE_VIEWS       :: 200
+MAX_VISIBLE_VIEWS       :: 400
 MAX_VISIBLE_TEXT_TOKENS :: 1000
 
 MAX_VIEW_SOLVER_PASSES      :: 2
@@ -370,10 +370,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             pool = ctx->on_text_wordy(v)
             assert(pool != nil, "Context.on_text_wordy must not return nil")
             clear(pool)
-            v.solved_text_tokens = _text_tokenize(pool, v.text, .text_literal in v.flags)
+            v.solved_text_tokens = _text_tokenize(pool, v.text, .text_raw in v.flags)
         } else {
             pool := slice.into_dynamic(ctx.visible_text_tokens[ctx.visible_text_tokens_used:len(ctx.visible_text_tokens)])
-            v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_literal in v.flags)
+            v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_raw in v.flags)
             ctx.visible_text_tokens_used += len(v.solved_text_tokens)
             assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
         }

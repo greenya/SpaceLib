@@ -6,7 +6,7 @@ View_IDX :: distinct i32
 View_SID :: distinct i32
 
 View_Init :: struct {
-    flags: bit_set [Flag; u32],
+    flags: Flags,
 
     using _: bit_field u16 {
         strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`.
@@ -59,6 +59,7 @@ View :: struct {
     solved_opacity              : f32,  // Solved combined hierarchical opacity (0 to 1)
 }
 
+Flags :: bit_set [Flag; u32]
 Flag :: enum {
     // Core
 
@@ -79,10 +80,10 @@ Flag :: enum {
 
     // Rich Text
 
-    text,           // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
-    text_fit_x,     // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
-    text_literal,   // Text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
-    text_wordy,     // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
+    text,       // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
+    text_fit_x, // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
+    text_raw,   // Text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|-raw-|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|-/raw-|` exit tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
+    text_wordy, // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
 
     // Behavior
 
