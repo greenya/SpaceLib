@@ -9,6 +9,9 @@ MAX_VIEWS               :: 2000
 MAX_VISIBLE_VIEWS       :: 200
 MAX_VISIBLE_TEXT_TOKENS :: 1000
 
+MAX_VIEW_SOLVER_PASSES      :: 2
+MAX_SCROLL_SOLVER_PASSES    :: 4
+
 Context_Init :: struct {
     // Reference size, e.g. 320x180, 1280x720
     ref_size: Vec2,
@@ -234,68 +237,10 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     return ctx.mouse.consumed
 }
 
-_hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
-    old_hit := ctx.hit
-    if old_hit == new_hit {
-        ctx.hit = new_hit
-        return
-    }
-
-    depth :: proc (v: ^View) -> (result: int) {
-        for i := v; i != nil; i = i.parent do result += 1
-        return
-    }
-
-    old_path := old_hit
-    new_path := new_hit
-    old_depth := depth(old_path)
-    new_depth := depth(new_path)
-
-    for old_depth > new_depth {
-        old_path = old_path.parent
-        old_depth -= 1
-    }
-
-    for new_depth > old_depth {
-        new_path = new_path.parent
-        new_depth -= 1
-    }
-
-    for old_path != new_path {
-        old_path = old_path.parent
-        new_path = new_path.parent
-    }
-
-    common_parent := old_path
-
-    for v := old_hit; v != common_parent; v = v.parent {
-        v.flags -= { .hovered }
-        _emit(v, { type=.left })
-    }
-
-    for v := new_hit; v != common_parent; v = v.parent {
-        v.flags += { .hovered }
-        _emit(v, { type=.entered })
-    }
-
-    ctx.hit = new_hit
-}
-
-_hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
-    #reverse for &v in ctx.visible_views {
-        in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
-        in_scissor := v.solved_scissor != {}\
-            ? core.vec_in_rect(ref_pos, v.solved_scissor)\
-            : true
-        if in_rect && in_scissor do return &v
-    }
-    return nil
-}
-
 // - Rebuilds `Context.visible_views`
 // - Rebuilds `Context.visible_text_tokens`
-// - Updates `View.solved` for every *visible* view
-// - Sets `Context.solved`
+// - Updates `View.solved_*` for every *visible* view
+// - Sets `Context.solved`; the value can be `false` when reaching limit on solve passes
 //
 // Note: This procedure is executed automatically by `update_context()` when `Context.solved` is cleared.
 // Generally, after you do all the manual modifications to the views and at the end you do `ctx.solved = false`.
@@ -304,19 +249,29 @@ _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
 // if it happens to go partially off-screen, to do that you do manual call to `solve_context()` so your
 // `tooltip.solved_rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
 // the screen.
+//
+// Note: The `Context.solved` can be `false` when reaching limit on solve passes. If you have
+// some complex view tree and want to ensure the context is solved, you can do something like:
+//
+//      for i:=0; i<10 && !ctx.solved; i+=1 do solve_context(ctx)
+//
+// Use this only as a fallback when you need fully converged solved values immediately.
+// In normal update flow, this is not necessary: if the context remains unsolved, the next
+// `update_context()` will continue solving it automatically.
 solve_context :: proc (ctx: ^Context) {
-    clear(&ctx.visible_views)
+    view_solver_passed := true
+    scroll_solver_passed := true
 
     defer {
         ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
         ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, ctx.visible_text_tokens_used)
-
-        ctx.solved = true
-        if ctx.on_event != nil {
+        ctx.solved = view_solver_passed && scroll_solver_passed
+        if ctx.solved && ctx.on_event != nil {
             ctx->on_event({ type=.solved })
         }
     }
 
+    clear(&ctx.visible_views)
     if .hidden in ctx.root.flags do return
 
     ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
@@ -324,13 +279,32 @@ solve_context :: proc (ctx: ^Context) {
     ctx.root.solved_layout_child_count = 0
     append(&ctx.visible_views, Visible_View { ctx.root, {}, nil })
 
-    // never repeat layout and text measurement more than twice
-    for i in 0..<2 {
+    for i in 0..<MAX_SCROLL_SOLVER_PASSES {
         if i > 0 do resize(&ctx.visible_views, 1) // keep root only
-        _solve_view_fit_and_fixed_size(ctx.root)
-        _solve_children_fill_and_ratio_size(ctx.root, {})
-        extent_mismatch := _regenerate_visible_text_tokens(ctx)
-        if !extent_mismatch do break
+
+        for j in 0..<MAX_VIEW_SOLVER_PASSES {
+            if j > 0 do resize(&ctx.visible_views, 1) // keep root only
+            _solve_view_fit_and_fixed_size(ctx.root)
+            _solve_children_fill_and_ratio_size(ctx.root, {})
+            extent_mismatch := _regenerate_visible_text_tokens(ctx)
+            view_solver_passed = !extent_mismatch
+            if !extent_mismatch do break
+        }
+
+        scroll_solver_passed = true
+        for v in ctx.visible_views {
+            scroll_min_ := scroll_min(v)
+            new_scroll := Vec2 {
+                clamp(v.scroll.x, scroll_min_.x, 0),
+                clamp(v.scroll.y, scroll_min_.y, 0),
+            }
+            if new_scroll != v.scroll {
+                // allow mutating v.scroll only for non-final pass
+                if i < -1+MAX_SCROLL_SOLVER_PASSES do v.scroll = new_scroll
+                scroll_solver_passed = false
+            }
+        }
+        if scroll_solver_passed do break
     }
 
     _sort_visible_views(ctx)
@@ -472,6 +446,64 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     if ctx.on_event != nil {
         ctx->on_event({ type=.screen_size_changed })
     }
+}
+
+_hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
+    old_hit := ctx.hit
+    if old_hit == new_hit {
+        ctx.hit = new_hit
+        return
+    }
+
+    depth :: proc (v: ^View) -> (result: int) {
+        for i := v; i != nil; i = i.parent do result += 1
+        return
+    }
+
+    old_path := old_hit
+    new_path := new_hit
+    old_depth := depth(old_path)
+    new_depth := depth(new_path)
+
+    for old_depth > new_depth {
+        old_path = old_path.parent
+        old_depth -= 1
+    }
+
+    for new_depth > old_depth {
+        new_path = new_path.parent
+        new_depth -= 1
+    }
+
+    for old_path != new_path {
+        old_path = old_path.parent
+        new_path = new_path.parent
+    }
+
+    common_parent := old_path
+
+    for v := old_hit; v != common_parent; v = v.parent {
+        v.flags -= { .hovered }
+        _emit(v, { type=.left })
+    }
+
+    for v := new_hit; v != common_parent; v = v.parent {
+        v.flags += { .hovered }
+        _emit(v, { type=.entered })
+    }
+
+    ctx.hit = new_hit
+}
+
+_hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
+    #reverse for &v in ctx.visible_views {
+        in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
+        in_scissor := v.solved_scissor != {}\
+            ? core.vec_in_rect(ref_pos, v.solved_scissor)\
+            : true
+        if in_rect && in_scissor do return &v
+    }
+    return nil
 }
 
 @require_results

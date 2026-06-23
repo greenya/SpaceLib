@@ -152,7 +152,7 @@ Event_Type :: enum u8 {
 
     // Behavior
 
-    scrolled,   // `View.scroll` has changed
+    scrolled,   // `View.scroll` has changed. Note: solve-time clamping is silent.
     selection_changed,  // `.selected` has changed
 }
 

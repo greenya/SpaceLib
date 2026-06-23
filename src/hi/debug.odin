@@ -67,8 +67,9 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         ctx.stats.visible_text_tokens_peak,
     )
 
-    ctx.debug_draw_text(text, {3,3}, core.brightness(_DEBUG_STATS_COLOR, -.8))
-    ctx.debug_draw_text(text, {2,2}, _DEBUG_STATS_COLOR)
+    pos := Vec2 {4,50}
+    ctx.debug_draw_text(text, pos+1, core.brightness(_DEBUG_STATS_COLOR, -.8))
+    ctx.debug_draw_text(text, pos, _DEBUG_STATS_COLOR)
 }
 
 _debug_draw_view :: proc (v: ^Visible_View, filter: bit_set [Debug_Draw_Type] = ~{}) {
@@ -121,7 +122,7 @@ _debug_draw_view_info :: proc (v: ^View) {
     text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
     lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
     color := .hovered in v.flags ? _DEBUG_HIT_TEST_COLOR : _DEBUG_VIEW_COLOR
-    v.ctx.debug_draw_text(text, lt_s + {2,2}, color)
+    v.ctx.debug_draw_text(text, lt_s+4, color)
 }
 
 _debug_draw_view_text :: proc (v: ^Visible_View) {
