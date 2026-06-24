@@ -7,7 +7,7 @@ import "../core"
 
 MAX_VIEWS               :: 2000
 MAX_VISIBLE_VIEWS       :: 400
-MAX_VISIBLE_TEXT_TOKENS :: 1000
+MAX_VISIBLE_TEXT_TOKENS :: 2000
 
 MAX_VIEW_SOLVER_PASSES      :: 2
 MAX_SCROLL_SOLVER_PASSES    :: 4
@@ -267,7 +267,6 @@ solve_context :: proc (ctx: ^Context) {
 
     defer {
         ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
-        ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, ctx.visible_text_tokens_used)
         ctx.solved = view_solver_passed && scroll_solver_passed
         if ctx.solved && ctx.on_event != nil {
             ctx->on_event({ type=.solved })
@@ -378,6 +377,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             pool := slice.into_dynamic(ctx.visible_text_tokens[ctx.visible_text_tokens_used:len(ctx.visible_text_tokens)])
             v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_raw in v.flags)
             ctx.visible_text_tokens_used += len(v.solved_text_tokens)
+            // Note: we use visible_text_tokens for full text measurement, this overflows on any large view even
+            // if technically all the tokens are not visible at once; for games this is fine, as majority of the text
+            // is quite controlled, but for general applications it is not nice
+            ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, ctx.visible_text_tokens_used)
             assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
         }
 
