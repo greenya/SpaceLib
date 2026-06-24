@@ -91,7 +91,7 @@ Flag :: enum {
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to parents.
-    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. In most cases these are two views: the one gets selected and the one gets de-selected. The `.clicked` event does not propagate to parents.
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to parents.
     page,       // The view hides all `.page` siblings when gets `show()`
     wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
     wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
@@ -421,16 +421,16 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
 
     radio_consumed: bool
     if .radio in v.flags && v.parent != nil {
-        if .selected not_in v.flags {
-            v.flags += { .selected }
-            _emit(v, { type=.selection_changed })
-        }
-
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
             if s != v && .selected in s.flags {
                 s.flags -= { .selected }
                 _emit(s, { type=.selection_changed })
             }
+        }
+
+        if .selected not_in v.flags {
+            v.flags += { .selected }
+            _emit(v, { type=.selection_changed })
         }
 
         radio_consumed = true
