@@ -2,8 +2,6 @@
 
 ## TODOs
 
-TODO: Context: Handle Context.hit change on removing and re-parenting views
-
 TODO: View: Add .modal flag, should block any events propagation to parent views
 
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
@@ -23,7 +21,7 @@ Maybe we need to introduce new builtin commands like "break" and "nobreak" (simi
 
 TODO: Text: [?] support `.text_wordy_static` flag, which would tell to never re-tokenizer and re-measure the text, only re-wrap. This can be a win for any large text (and most large texts are never changes anyway; we also can provide some `set_wordy_text()` to discard cache and re-do all).
 
-TODO: Text: [?] do not automatically re-tokenize and re-measure text if Context.ref_font_size is not changed
+TODO: Text: [?] do not automatically re-tokenize and re-measure text if Context.ref_font_height is not changed
 
     At the moment, we regenerate text tokens completely (re-tokenize, re-measure, re-wrap), i guess we could just re-wrap existing measured tokens. Need to test timings, if this optimization is necessary.
 

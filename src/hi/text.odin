@@ -154,7 +154,10 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
         tok.size.y = style.font_scale * ctx.ref_font_height
     case .custom:
         if has_on_text_custom_command {
-            tok.size = ctx->on_text_custom_command(&style, tok.text, tok.args)
+            scale := ctx->on_text_custom_command(&style, tok.text, tok.args)
+            if scale != {} {
+                tok.size = scale * style.font_scale * ctx.ref_font_height
+            }
         }
     }
 }
@@ -326,4 +329,14 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
         }
     }
     return
+}
+
+@require_results
+text_style_font_height :: proc (ctx: ^Context, style: Text_Style) -> f32 {
+    return style.font_scale * ctx.ref_font_height
+}
+
+@require_results
+text_style_font_height_screen :: proc (ctx: ^Context, style: Text_Style) -> f32 {
+    return style.font_scale * ctx.ref_font_height * ctx.screen_pixel_scale
 }

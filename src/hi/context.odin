@@ -50,7 +50,7 @@ Context_Init :: struct {
 
     // Text measure callback. Used only with `.text` views.
     // - `style` Current style
-    //      * `ctx.ref_font_height * style.font_scale` current font size
+    //      * Use `text_style_font_height()` for current font height
     // - `type` Token type, expect only:
     //      * `.word` Letters/numbers/punctuations
     //      * `.whitespace` Spaces `" "` and tabs `"\t"`
@@ -69,7 +69,9 @@ Context_Init :: struct {
     // Text custom command callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
-    // - Return non-zero size (in ref units) for physical space, e.g. `[icon=sword]`.
+    // - Return non-zero `size_scale` of the current font height for physical space,
+    //   e.g. for `[icon=sword]` you might want to return `size_scale = 1`,
+    //   which would occupy square of physical space for inline icon.
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom command in both phases: updating and drawing.
@@ -86,6 +88,7 @@ Context_Init :: struct {
     // Fallback for all `.text` view drawing.
     // - Use `visible_text_iterate/next()` to iterate over the tokens
     // - Use `iterator.style` for current style information, e.g. font, color, user state
+    //      * Use `text_style_font_height_screen()` for current font height in screen units
     // - Use `ref_pos_to_screen()` for current token screen position
     //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
@@ -118,7 +121,7 @@ Context :: struct {
     screen_size         : Vec2,
     screen_pixel_scale  : f32,
     screen_top_left     : Vec2,
-    screen_font_height  : f32,  // Floored value of `ref_font_size * screen_pixel_scale`, e.g. 20.0, 21.0, 22.0
+    screen_font_height  : f32,  // Floored value of `ref_font_height * screen_pixel_scale`, e.g. 20.0, 21.0, 22.0
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
@@ -168,7 +171,7 @@ Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
 Context_Scissor_Proc            :: proc (ctx: ^Context, scissor: Rect)
 Context_Text_Measure_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
 Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
-Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size: [2] f32)
+Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size_scale: [2] f32)
 Context_Text_Wordy_Proc         :: proc (ctx: ^Context, v: ^View) -> (buf: ^[dynamic] Text_Token)
 
 @require_results

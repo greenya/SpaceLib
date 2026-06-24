@@ -67,13 +67,3 @@ visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok
     }
     return
 }
-
-@require_results
-visible_text_font_size :: proc (it: Visible_Text_Iterator) -> f32 {
-    return it.style.font_scale * it.ctx.ref_font_height
-}
-
-@require_results
-visible_text_font_size_screen :: proc (it: Visible_Text_Iterator) -> f32 {
-    return it.style.font_scale * it.ctx.ref_font_height * it.ctx.screen_pixel_scale
-}
