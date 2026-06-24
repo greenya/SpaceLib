@@ -41,17 +41,17 @@ main :: proc () {
             )
         },
         on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
-            font_size := ctx.ref_font_height * style.font_scale
-            size = k2.measure_text(text, font_size)
+            font_height := hi.text_style_font_height(ctx, style)
+            size = k2.measure_text(text, font_height)
             // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
         },
-        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
+        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size_scale: [2] f32) {
             switch cmd {
             case "f": style.font = args
             case "s": style.font_scale, _ = strconv.parse_f32(args)
             case "c": style.color = core.color_from_hex(args) // or named color
-            case "icon": size = ctx.ref_font_height * style.font_scale
+            case "i": size_scale = 1
             }
             return
         },
@@ -61,13 +61,13 @@ main :: proc () {
             for tok, tok_rect in hi.visible_text_next(&it) {
                 #partial switch tok.type {
                 case .word:
-                    tok_pos_s := hi.ref_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
-                    tok_font_size_s := hi.visible_text_font_size_screen(it)
-                    k2.draw_text(tok.text, tok_pos_s, tok_font_size_s, it.style.color)
+                    pos_s := hi.ref_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
+                    font_height_screen := hi.text_style_font_height_screen(it.ctx, it.style)
+                    k2.draw_text(tok.text, pos_s, font_height_screen, it.style.color)
                     // fmt.println("::::", tok.text)
                 case .custom:
-                    tok_rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
-                    k2.draw_rect_outline(k2.Rect(tok_rect_s), 8, it.style.color)
+                    rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
+                    k2.draw_rect_outline(k2.Rect(rect_s), 8, it.style.color)
                 }
             }
         },
@@ -82,7 +82,7 @@ main :: proc () {
     add_dialog(
         ctx.root,
         name = "dialog_exit_game",
-        title = "|s=1.5||icon=icon771| Exit Game?",
+        title = "|s=1.5||i=icon771| Exit Game?",
         content = "|c=#fff|All unsaved |c=#f00|progress will be lost|c=#fff|.\n\n|center|Proceed?\n|right|Some extra right-aligned text that is clipped by the scissor.",
         button1 = "Yes",
         button2 = "No",

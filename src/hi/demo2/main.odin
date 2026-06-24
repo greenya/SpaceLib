@@ -29,7 +29,7 @@ main :: proc () {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
         on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
-            font_height := style.font_scale * ctx.screen_font_height
+            font_height := hi.text_style_font_height(ctx, style)
             return k2.measure_text(text, font_height)
         },
         on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
@@ -48,8 +48,8 @@ main :: proc () {
         on_draw_text = proc (v: ^hi.Visible_View) {
             it := hi.visible_text_iterate(v, filter={.word})
             for tok, tok_rect in hi.visible_text_next(&it) {
-                font_height := it.style.font_scale * v.ctx.screen_font_height
-                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height, it.style.color)
+                font_height_screen := hi.text_style_font_height_screen(it.ctx, it.style)
+                k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height_screen, it.style.color)
             }
         },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
