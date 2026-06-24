@@ -176,6 +176,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
     overflow_cursor_x: f32
     line_height: f32
     line_start_i: int
+    line_has_printable_after_overflow: bool
     has_on_text_custom_command := ctx.on_text_custom_command != nil
 
     style := Text_Style_Default
@@ -197,6 +198,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             tok.size.x = next_x - cursor_x
             cursor_x = next_x
             overflow_cursor_x = next_x
+            line_has_printable_after_overflow = false
             continue
 
         case .custom:
@@ -206,7 +208,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
         }
 
         line_height = max(line_height, tok.size.y)
-        overflow := style.wrapping && limit_x > 0 && cursor_x > 0 && (cursor_x + tok.size.x > limit_x)
+        overflow := style.wrapping && limit_x > 0 && line_has_printable_after_overflow && (cursor_x + tok.size.x > limit_x)
 
         if overflow || tok.type == .br {
             extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
@@ -215,6 +217,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             cursor_y += line_height == 0 ? tok.size.y : line_height
             line_height = 0
             line_start_i = tok.type == .br ? i + 1 : i
+            line_has_printable_after_overflow = false
 
             if tok.type == .br {
                 overflow_cursor_x = 0
@@ -227,12 +230,17 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
 
         tok.solved_pos = { cursor_x, cursor_y }
         cursor_x += tok.size.x
+        line_has_printable_after_overflow ||= _tok_starts_printable_content(tok)
     }
 
     // align very last line and set the total height
     extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:], limit_x, style.align))
     extent.y = cursor_y + line_height
     return
+
+    _tok_starts_printable_content :: proc (tok: Text_Token) -> bool {
+        return tok.size.x > 0 && (tok.type!=.whitespace && tok.type!=.tab)
+    }
 }
 
 // Alignment applied only if `limit_x > 0`
@@ -244,14 +252,14 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, al
 
     for start_i <= end_i {
         tok := &line_tokens[start_i]
-        if _tok_is_non_printable(tok) do start_i += 1
-        else                          do break
+        if _tok_is_trimmed_for_alignment(tok) do start_i += 1
+        else                                  do break
     }
 
     for end_i >= start_i {
         tok := &line_tokens[end_i]
-        if _tok_is_non_printable(tok) do end_i -= 1
-        else                          do break
+        if _tok_is_trimmed_for_alignment(tok) do end_i -= 1
+        else                                  do break
     }
 
     if start_i > end_i {
@@ -284,7 +292,7 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, al
 
     return line_tokens[end_i].solved_pos.x + line_tokens[end_i].size.x
 
-    _tok_is_non_printable :: proc (tok: ^Text_Token) -> bool {
+    _tok_is_trimmed_for_alignment :: proc (tok: ^Text_Token) -> bool {
         return tok.type == .whitespace || tok.size.x == 0
     }
 }
