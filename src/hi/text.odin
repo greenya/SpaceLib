@@ -15,8 +15,8 @@ Text_Token_Type :: enum u8 {
     // Content
 
     word,       // Continuous block of letters/numbers/punctuations between other tokens
-    whitespace, // Continuous block of spaces `" "` or tabs `"\t"`
-    br,         // Newline `"\n"` or Line break command `|br|`
+    whitespace, // Continuous block of spaces `" "` or tabs `\t`
+    br,         // Newline `\n` or Line break command `|br|`
 
     // Commands
 
@@ -25,7 +25,7 @@ Text_Token_Type :: enum u8 {
     center,     // `|center|` Align to the center
     wrap,       // `|wrap|` Enable wrapping mode
     nowrap,     // `|nowrap|` Disable wrapping mode
-    tab,        // `|tab=XXX|` Tab stop. Moves cursor X position to XXX if it is lower than XXX.
+    tab,        // `|tab=XXX|` Tab stop. Moves cursor X forward to XXX if current X is lower. In wrapping mode, overflowed continuation lines start at the last tab stop until `\n`, `|br|`, or another tab stop.
     custom,     // Custom/unknown command, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_command()`.
 
     // Internal (these tokens are here only for documentation purposes and are never added to the result stream of tokens)
@@ -165,6 +165,7 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
 // Wraps and aligns given tokens.
 // - Updates each `Text_Token.solved_pos`.
 // - Automatic wrapping is applied if `limit_x > 0`.
+// - Alignment commands effective only if `limit_x > 0`.
 // - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
 //
 // Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
@@ -172,6 +173,7 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
 _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32
+    overflow_cursor_x: f32
     line_height: f32
     line_start_i: int
     has_on_text_custom_command := ctx.on_text_custom_command != nil
@@ -194,6 +196,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             tok.solved_pos = { cursor_x, cursor_y }
             tok.size.x = next_x - cursor_x
             cursor_x = next_x
+            overflow_cursor_x = next_x
             continue
 
         case .custom:
@@ -208,10 +211,15 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
         if overflow || tok.type == .br {
             extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
 
-            cursor_x = 0
+            cursor_x = overflow_cursor_x
             cursor_y += line_height == 0 ? tok.size.y : line_height
             line_height = 0
             line_start_i = tok.type == .br ? i + 1 : i
+
+            if tok.type == .br {
+                overflow_cursor_x = 0
+                cursor_x = 0
+            }
 
             if overflow && tok.type == .whitespace do continue
             if tok.type == .br do continue
@@ -227,6 +235,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
     return
 }
 
+// Alignment applied only if `limit_x > 0`
 _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, align: Text_Alignment) -> (extent_x: f32) #no_bounds_check {
     if len(line_tokens) == 0 do return
 
