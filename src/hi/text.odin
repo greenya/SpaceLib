@@ -174,9 +174,9 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
     cursor_x: f32
     cursor_y: f32
     overflow_cursor_x: f32
+    overflow_allowed: bool
     line_height: f32
     line_start_i: int
-    line_has_printable_after_overflow: bool
     has_on_text_custom_command := ctx.on_text_custom_command != nil
 
     style := Text_Style_Default
@@ -198,7 +198,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             tok.size.x = next_x - cursor_x
             cursor_x = next_x
             overflow_cursor_x = next_x
-            line_has_printable_after_overflow = false
+            overflow_allowed = false
             continue
 
         case .custom:
@@ -207,30 +207,41 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             }
         }
 
-        line_height = max(line_height, tok.size.y)
-        overflow := style.wrapping && limit_x > 0 && line_has_printable_after_overflow && (cursor_x + tok.size.x > limit_x)
+        if tok.type == .br {
+            extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
 
-        if overflow || tok.type == .br {
+            cursor_x = 0
+            cursor_y += max(line_height, tok.size.y)
+            overflow_cursor_x = 0
+            line_height = 0
+            line_start_i = i + 1
+            overflow_allowed = false
+
+            continue
+        }
+
+        line_height = max(line_height, tok.size.y)
+
+        overflow :=
+            style.wrapping &&
+            limit_x > 0 &&
+            overflow_allowed &&
+            _tok_starts_printable_content(tok) &&
+            cursor_x + tok.size.x > limit_x
+
+        if overflow {
             extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
 
             cursor_x = overflow_cursor_x
-            cursor_y += line_height == 0 ? tok.size.y : line_height
+            cursor_y += line_height
             line_height = 0
-            line_start_i = tok.type == .br ? i + 1 : i
-            line_has_printable_after_overflow = false
-
-            if tok.type == .br {
-                overflow_cursor_x = 0
-                cursor_x = 0
-            }
-
-            if overflow && tok.type == .whitespace do continue
-            if tok.type == .br do continue
+            line_start_i = i
+            overflow_allowed = false
         }
 
         tok.solved_pos = { cursor_x, cursor_y }
         cursor_x += tok.size.x
-        line_has_printable_after_overflow ||= _tok_starts_printable_content(tok)
+        overflow_allowed ||= _tok_starts_printable_content(tok)
     }
 
     // align very last line and set the total height
