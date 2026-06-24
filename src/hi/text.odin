@@ -220,8 +220,6 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             continue
         }
 
-        line_height = max(line_height, tok.size.y)
-
         overflow :=
             style.wrapping &&
             limit_x > 0 &&
@@ -238,6 +236,8 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
             line_start_i = i
             overflow_allowed = false
         }
+
+        line_height = max(line_height, tok.size.y)
 
         tok.solved_pos = { cursor_x, cursor_y }
         cursor_x += tok.size.x
