@@ -31,7 +31,6 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         "\n" +
         "screen_size: %.0fx%.0f\n" +
         "screen_top_left: %.0f,%.0f\n" +
-        "screen_font_height: %.0f\n" +
         "screen_pixel_scale: %.2f\n" +
         "\n" +
         "time: %.3f (%ims)\n" +
@@ -51,7 +50,6 @@ _debug_draw_stats :: proc (ctx: ^Context) {
 
         ctx.screen_size.x, ctx.screen_size.y,
         ctx.screen_top_left.x, ctx.screen_top_left.y,
-        ctx.screen_font_height,
         ctx.screen_pixel_scale,
 
         ctx.time, int(ctx.dt*1000),

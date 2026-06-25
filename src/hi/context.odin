@@ -124,7 +124,6 @@ Context :: struct {
     screen_size         : Vec2,
     screen_pixel_scale  : f32,
     screen_top_left     : Vec2,
-    screen_font_height  : f32,  // Floored value of `ref_font_height * screen_pixel_scale`, e.g. 20.0, 21.0, 22.0
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
@@ -153,7 +152,7 @@ Context_Event :: struct {
 
 Context_Event_Type :: enum {
     screen_size_changed,
-    screen_font_height_changed,
+    screen_pixel_scale_changed,
     solved,                     // The context was solved. Note: user call to `solve_context()` is silent.
 }
 
@@ -434,26 +433,19 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     }
 
     new_pixel_scale = max(new_pixel_scale, max(ctx.min_pixel_scale, 0.001))
+    pixel_scale_changed := new_pixel_scale != ctx.screen_pixel_scale
 
+    ctx.screen_pixel_scale = new_pixel_scale
+    ctx.screen_size = new_size
     ctx.screen_top_left = ctx.align_center\
         ? 0.5 * (new_size - ctx.ref_size * new_pixel_scale)\
         : {}
 
-    if 0.001 < abs(new_pixel_scale-ctx.screen_pixel_scale) {
-        new_font_height := math.floor(ctx.ref_font_height * new_pixel_scale)
-        if new_font_height != ctx.screen_font_height {
-            ctx.screen_font_height = new_font_height
-            if ctx.on_event != nil {
-                ctx->on_event({ type=.screen_font_height_changed })
-            }
-        }
-    }
-
-    ctx.screen_size = new_size
-    ctx.screen_pixel_scale = new_pixel_scale
-
     if ctx.on_event != nil {
         ctx->on_event({ type=.screen_size_changed })
+        if pixel_scale_changed {
+            ctx->on_event({ type=.screen_pixel_scale_changed })
+        }
     }
 }
 
