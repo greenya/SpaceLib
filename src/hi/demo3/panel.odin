@@ -73,7 +73,12 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
             }
             return
         },
-        on_draw = _panel_draw_button_view,
+        on_draw = proc (v: ^hi.Visible_View) {
+            rect := k2.Rect(v.solved_rect)
+            if .hovered in v.flags do k2.draw_rect(rect, core.gray6)
+            else                   do k2.draw_rect(rect, core.gray5)
+            v.ctx.on_draw_text(v)
+        },
     })
 
     panel.ui_list_is_empty = hi.add_view(panel.ui_title_bar, {
@@ -196,13 +201,6 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
         mem_usage_text,
         allocator=panel.allocator,
     )
-}
-
-_panel_draw_button_view :: proc (v: ^hi.Visible_View) {
-    rect := k2.Rect(v.solved_rect)
-    if .hovered in v.flags do k2.draw_rect(rect, core.gray7)
-    else                   do k2.draw_rect(rect, core.gray5)
-    v.ctx.on_draw_text(v)
 }
 
 _panel_mem_usage :: proc (panel: ^Panel) -> (allocated, reserved: int) {

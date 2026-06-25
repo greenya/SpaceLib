@@ -108,7 +108,7 @@ Context :: struct {
     visible_text_tokens_used: int,
     next_view_sid       : View_SID,
     root                : ^View, // Root view, created by `create_context()` and always set
-    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or nil. The view and its parents have `.hovered` set.
+    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or `nil`. The view and its parents have `.hovered` set.
 
     updating            : bool, // If true, `update_context()` phase is currently running
     solving             : bool, // If true, `solve_context()` is currently running. If another solve is needed, queue it for later with `queue_solve_context()`.
@@ -188,29 +188,25 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     ctx.updating = true
     defer ctx.updating = false
 
-    screen_size_changed := screen_size != ctx.screen_size
-    if screen_size_changed {
-        _set_screen_size(ctx, screen_size)
-        queue_solve_context(ctx)
-    }
-
-    if !ctx.solved {
-        ctx.solved = solve_context(ctx)
-        if ctx.solved && ctx.on_event != nil {
-            ctx->on_event({ type=.solved })
-        }
-    }
-
-    _propagate_visible_views_opacity(ctx)
-
     ctx.dt = dt
     ctx.time += dt
+
+    if screen_size != ctx.screen_size {
+        _set_screen_size(ctx, screen_size)
+    }
 
     ctx.mouse = {
         input           = mouse_input,
         ref_pos         = screen_pos_to_ref(ctx, mouse_input.screen_pos),
         lmb_down_prev   = ctx.mouse.lmb_down,
         lmb_pressed     = !ctx.mouse.lmb_down && mouse_input.lmb_down,
+    }
+
+    if !ctx.solved {
+        solve_context(ctx)
+        if ctx.solved && ctx.on_event != nil {
+            ctx->on_event({ type=.solved })
+        }
     }
 
     visible_view_hit := _hit_test(ctx, ctx.mouse.ref_pos)
@@ -222,11 +218,8 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         ctx.mouse.consumed = click_consumed || wheel_consumed
     }
 
-    for &v in ctx.visible_views {
-        if .updating in v.flags {
-            _emit(v, { type=.updated })
-        }
-    }
+    _propagate_visible_views_opacity(ctx)
+    _emit_visible_views_updated(ctx)
 
     return ctx.mouse.consumed
 }
@@ -235,7 +228,8 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 // - Rebuilds `Context.visible_views`
 // - Rebuilds `Context.visible_text_tokens`
 // - Updates `View.solved_*` for every *visible* view
-// - Returns `true` if all sub-solvers passed within internal pass limits
+// - Updates `Context.solved` and returns its value
+//   (true, if all sub-solvers passed within internal pass limits)
 //
 // Note: This procedure is executed automatically by `update_context()` when context needs
 // solving. Generally, after you do all the manual modifications to the views and at the end
@@ -259,7 +253,10 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
     scroll_solver_passed := true
 
     clear(&ctx.visible_views)
-    if .hidden in ctx.root.flags do return true
+    if .hidden in ctx.root.flags {
+        ctx.solved = true
+        return true
+    }
 
     ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
     ctx.root.solved_opacity = ctx.root.opacity
@@ -297,7 +294,8 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
     _sort_visible_views(ctx)
 
     ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
-    return view_solver_passed && scroll_solver_passed
+    ctx.solved = view_solver_passed && scroll_solver_passed
+    return ctx.solved
 }
 
 // Run `solve_context()` up to `max_passes` times.
@@ -414,6 +412,26 @@ _propagate_visible_views_opacity :: proc (ctx: ^Context) {
     }
 }
 
+_emit_visible_views_updated :: proc (ctx: ^Context) {
+    // We cannot iterate over ctx.visible_views and call user event handler at the same time,
+    // as user can solve_context() and rebuild ctx.visible_views
+
+    Target :: struct { v: ^View, sid: View_SID }
+    targets: [dynamic; MAX_VISIBLE_VIEWS] Target
+
+    for v in ctx.visible_views {
+        if .updating in v.flags {
+            append(&targets, Target { v.view, v.sid })
+        }
+    }
+
+    for t in targets {
+        if t.v.sid == t.sid {
+            _emit(t.v, { type=.updated })
+        }
+    }
+}
+
 @require_results
 _next_view_sid :: proc (ctx: ^Context) -> View_SID {
     n := ctx.next_view_sid
@@ -447,6 +465,8 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
             ctx->on_event({ type=.screen_pixel_scale_changed })
         }
     }
+
+    queue_solve_context(ctx)
 }
 
 _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {

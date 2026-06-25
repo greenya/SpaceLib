@@ -38,7 +38,7 @@ View_Init :: struct {
     //
     // If not set and view is `.text`, `Context.on_draw_text()` will be used.
     //
-    // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
+    // Note: Called from within `draw_context()`.
     on_draw: proc (v: ^Visible_View),
 }
 
@@ -187,6 +187,7 @@ set_parent :: proc (v, new_parent: ^View) {
     ensure(v.parent != nil || v.parent == nil && v.next_sibling == nil, "Detached view cannot have next_sibling set")
     ensure(!view_tree_contains(v, new_parent), "The new parent cannot be a child of the view")
     ensure(new_parent == nil || v.ctx == new_parent.ctx, "Cannot parent a view to a view from another context")
+    ensure(!v.ctx.solving, "Cannot modify view tree while solve_context() is running")
 
     _hit_clear_if_view_tree_contains_hit(v)
 
@@ -311,6 +312,7 @@ prev_sibling :: proc (v: ^View) -> ^View {
 // Moves `v` to become `v.parent.first_child`
 bring_to_start :: proc (v: ^View) {
     ensure(v.parent != nil)
+    ensure(!v.ctx.solving, "Cannot modify view tree while solve_context() is running")
 
     if v.parent.first_child == v do return
 
@@ -325,6 +327,7 @@ bring_to_start :: proc (v: ^View) {
 // Moves `v` to become `last_child(v.parent)`
 bring_to_end :: proc (v: ^View) {
     ensure(v.parent != nil)
+    ensure(!v.ctx.solving, "Cannot modify view tree while solve_context() is running")
 
     if v.next_sibling == nil do return
 
