@@ -20,11 +20,10 @@ View_Init :: struct {
     scroll  : Vec2,     // Offset for native strata children
     layout  : Layout,   // Layout for native strata children
 
-    // Drawing callback.
-    // If not set and view is `.text`, `Context.on_draw_text()` will be used.
-    //
-    // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
-    on_draw: proc (v: ^Visible_View),
+    name    : string, // Optional name
+    text    : string, // Text with rich formatting if `.text` is used
+    user_ptr: rawptr,
+    user_idx: int,
 
     // Event callback.
     //
@@ -35,12 +34,12 @@ View_Init :: struct {
     // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
     on_event: proc (v: ^View, event: Event) -> (consumed: bool),
 
-    // User data
-
-    name    : string,   // Optional name
-    text    : string,   // Text with rich formatting if `.text` is used
-    user_ptr: rawptr,
-    user_idx: int,
+    // Drawing callback.
+    //
+    // If not set and view is `.text`, `Context.on_draw_text()` will be used.
+    //
+    // Note: Called in the Drawing Phase only, e.g. from within `draw_context()`.
+    on_draw: proc (v: ^Visible_View),
 }
 
 View :: struct {
@@ -249,7 +248,7 @@ view_index :: proc (v: ^View) -> int {
         if c == v do return i
         i += 1
     }
-    panic("Integrity error. View.parent is set but it doesn't contain the child. Please use `set_parent()` to correctly re-parent a view.")
+    panic("Integrity error. View.parent doesn't contain the child. Please use `set_parent()` to correctly re-parent a view.")
 }
 
 // Returns child at given index; `v.first_child` has `index == 0`
@@ -307,6 +306,40 @@ prev_sibling :: proc (v: ^View) -> ^View {
         }
     }
     return nil
+}
+
+// Moves `v` to become `v.parent.first_child`
+bring_to_start :: proc (v: ^View) {
+    ensure(v.parent != nil)
+
+    if v.parent.first_child == v do return
+
+    prev := prev_sibling(v)
+    prev.next_sibling = v.next_sibling
+    v.next_sibling = v.parent.first_child
+    v.parent.first_child = v
+
+    v.ctx.solved = false
+}
+
+// Moves `v` to become `last_child(v.parent)`
+bring_to_end :: proc (v: ^View) {
+    ensure(v.parent != nil)
+
+    if v.next_sibling == nil do return
+
+    prev := prev_sibling(v)
+    if prev != nil {
+        prev.next_sibling = v.next_sibling
+    } else {
+        v.parent.first_child = v.next_sibling
+    }
+
+    last := last_child(v.parent)
+    last.next_sibling = v
+    v.next_sibling = nil
+
+    v.ctx.solved = false
 }
 
 // Returns true if `child` is `v` or inside its subtree
