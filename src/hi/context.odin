@@ -110,7 +110,7 @@ Context :: struct {
     next_view_sid       : View_SID,
     root                : ^View, // Root view, created by `create_context()` and always set
     hit                 : ^View, // Current mouse hit view from the last `update_context()`, or nil. The view and its parents have `.hovered` set.
-    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically for add/remove/reparent and screen-size changes. Clear it manually after direct layout-affecting mutations, e.g. changing `View.padding`.
+    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically for add/remove/re-parent and screen-size changes. Clear it manually after direct layout-affecting mutations, e.g. changing `View.padding`.
     drawing             : bool, // If true, `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
 
     using init: Context_Init,
@@ -262,6 +262,8 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 // In normal update flow, this is not necessary: if the context remains unsolved, the next
 // `update_context()` will continue solving it automatically.
 solve_context :: proc (ctx: ^Context) {
+    ensure(!ctx.drawing, "solve_context() cannot be called while draw_context() is running")
+
     view_solver_passed := true
     scroll_solver_passed := true
 
