@@ -2,12 +2,14 @@ package hi
 
 import "../core"
 
-// A view that is most likely visible right now.
+// A solved visible view.
+//
+// Do not store `Visible_View` references: all visible views are rebuilt on every `solve_context()`.
 //
 // A view is considered *invisible* and skipped by the solver if:
-// - the view itself or any its parent is `.hidden`
+// - the view itself or any of its parents is `.hidden`
 // - the view does not intersect `solved_scissor` (completely clipped out)
-// - the view is a child of *invisible* view
+// - the view is a child of an *invisible* view
 //
 // Note: Zero `View.opacity` alone does not make the view *invisible*.
 Visible_View :: struct {
@@ -26,7 +28,7 @@ Visible_Text_Iterator :: struct {
 
 @require_results
 visible_text_iterate :: proc (
-    visible_view    : ^Visible_View,
+    v               : ^Visible_View,
     filter          := bit_set [Text_Token_Type] { .word, .custom },
     measurable_only := true,
     in_scissor_only := true,
@@ -34,13 +36,13 @@ visible_text_iterate :: proc (
     assert(filter != {})
 
     it = {
-        token_it        = text_token_iterate(visible_view.ctx, visible_view.solved_text_tokens, filter),
+        token_it        = text_token_iterate(v, filter),
         measurable_only = measurable_only,
-        content_top_left= content_top_left(visible_view),
+        content_top_left= content_top_left(v),
     }
 
-    if in_scissor_only && visible_view.solved_scissor != {} {
-        it.scissor_rect = visible_view.solved_scissor
+    if in_scissor_only && v.solved_scissor != {} {
+        it.scissor_rect = v.solved_scissor
         it.in_scissor_only = true
     }
 

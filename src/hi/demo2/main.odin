@@ -28,11 +28,11 @@ main :: proc () {
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
-        on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
-            font_height := hi.text_style_font_height(ctx, style)
+        on_text_measure = proc (style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {
+            font_height := hi.text_style_font_height(style)
             return k2.measure_text(text, font_height)
         },
-        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
+        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
             switch cmd {
             case "header":
                 style.align = .center
@@ -41,14 +41,14 @@ main :: proc () {
             }
             return
         },
-        on_text_wordy = proc (ctx: ^hi.Context, v: ^hi.View) -> ^[dynamic] hi.Text_Token {
+        on_text_wordy = proc (v: ^hi.View) -> ^[dynamic] hi.Text_Token {
             if v not_in app.token_buffers do app.token_buffers[v] = make([dynamic] hi.Text_Token)
             return &app.token_buffers[v]
         },
         on_draw_text = proc (v: ^hi.Visible_View) {
             it := hi.visible_text_iterate(v, filter={.word})
             for tok, tok_rect in hi.visible_text_next(&it) {
-                font_height_screen := hi.text_style_font_height_screen(it.ctx, it.style)
+                font_height_screen := hi.text_style_font_height_screen(it.style)
                 k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height_screen, it.style.color)
             }
         },

@@ -63,7 +63,7 @@ Flag :: enum {
     // Core
 
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    hidden,         // The view and all its children are hidden. `View.solved` is not updated for `.hidden` views.
+    hidden,         // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
     updating,       // The view receives `.updated` every `update_context()` while visible
     hovered,        // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
@@ -215,13 +215,13 @@ set_parent :: proc (v, new_parent: ^View) {
         v.sid = _next_view_sid(v.ctx)
     }
 
-    v.ctx.solved = false
+    queue_solve_context(v.ctx)
 }
 
 remove_view :: proc (v: ^View) {
     set_parent(v, nil)
     _remove_detached_view_tree(v)
-    v.ctx.solved = false
+    queue_solve_context(v.ctx)
 }
 
 _remove_detached_view_tree :: proc (v: ^View) {
@@ -319,7 +319,7 @@ bring_to_start :: proc (v: ^View) {
     v.next_sibling = v.parent.first_child
     v.parent.first_child = v
 
-    v.ctx.solved = false
+    queue_solve_context(v.ctx)
 }
 
 // Moves `v` to become `last_child(v.parent)`
@@ -339,7 +339,7 @@ bring_to_end :: proc (v: ^View) {
     last.next_sibling = v
     v.next_sibling = nil
 
-    v.ctx.solved = false
+    queue_solve_context(v.ctx)
 }
 
 // Returns true if `child` is `v` or inside its subtree
@@ -403,7 +403,7 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
         c.strata = strata
         if c.first_child != nil do set_strata(c, strata, { .children })
     }
-    v.ctx.solved = false
+    queue_solve_context(v.ctx)
 }
 
 _emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
@@ -571,7 +571,7 @@ scroll_to :: proc (v: ^View, value: Vec2) -> (scrolled: bool) {
 
     if new_scroll != v.scroll {
         v.scroll = new_scroll
-        v.ctx.solved = false
+        queue_solve_context(v.ctx)
         _emit(v, { type=.scrolled })
         scrolled = true
     }

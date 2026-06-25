@@ -42,11 +42,11 @@ Context_Init :: struct {
     scroll_step: Vec2,
 
     // Event callback
-    on_event: Context_Event_Proc,
+    on_event: proc (ctx: ^Context, event: Context_Event),
 
     // Scissor callback. Scissor should be disabled when `scissor == {}`.
     // The value is in ref units.
-    on_scissor: Context_Scissor_Proc,
+    on_scissor: proc (ctx: ^Context, scissor: Rect),
 
     // Text measure callback. Used only with `.text` views.
     // - `style` Current style
@@ -57,14 +57,14 @@ Context_Init :: struct {
     // - `text` Non-empty string to measure
     //
     // Returned value is in ref units.
-    on_text_measure: Context_Text_Measure_Proc,
+    on_text_measure: proc (style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32),
 
-    // Text style callback. Used only with `.text` views.
+    // Text style init callback. Used only with `.text` views.
     // Allows overriding default style (font, color, align, wrapping).
     //
-    // Called once before traversing the tokens in both phases: updating and drawing.
-    // Check `ctx.drawing` if need to know the phase.
-    on_text_style: Context_Text_Style_Proc,
+    // Called once every time before traversing the tokens.
+    // Expect to be called in both phases: updating and drawing.
+    on_text_style_init: proc (v: ^View, style: ^Text_Style),
 
     // Text custom command callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
@@ -75,15 +75,14 @@ Context_Init :: struct {
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom command in both phases: updating and drawing.
-    // Check `ctx.drawing` if need to know the phase.
-    on_text_custom_command: Context_Text_Custom_Command_Proc,
+    on_text_custom_command: proc (v: ^View, style: ^Text_Style, cmd, args: string) -> (size_scale: [2] f32),
 
     // Text wordy callback. Used only with `.text_wordy` views.
     // Allows specifying a separate text token buffer for large/heavy text views.
     //
     // The buffer will be automatically cleared before use.
-    // `View.solved_text_tokens` will slice into this buffer.
-    on_text_wordy: Context_Text_Wordy_Proc,
+    // `Visible_View.solved_text_tokens` will slice into this buffer.
+    on_text_wordy: proc (v: ^View) -> (buf: ^[dynamic] Text_Token),
 
     // Fallback for all `.text` view drawing.
     // - Use `visible_text_iterate/next()` to iterate over the tokens
@@ -110,8 +109,12 @@ Context :: struct {
     next_view_sid       : View_SID,
     root                : ^View, // Root view, created by `create_context()` and always set
     hit                 : ^View, // Current mouse hit view from the last `update_context()`, or nil. The view and its parents have `.hovered` set.
-    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically for add/remove/re-parent and screen-size changes. Clear it manually after direct layout-affecting mutations, e.g. changing `View.padding`.
-    drawing             : bool, // If true, `draw_context()` phase is currently running; useful when implementing custom text commands which should set some gpu or audio state and this should not be done when updating context, only when drawing
+
+    updating            : bool, // If true, `update_context()` phase is currently running
+    solving             : bool, // If true, `solve_context()` is currently running. If another solve is needed, queue it for later with `queue_solve_context()`.
+    drawing             : bool, // If true, `draw_context()` phase is currently running
+
+    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically at some obvious moments like add/remove/re-parent views, screen-size changes etc. Call `queue_solve_context()` after direct layout-affecting mutations, e.g. changing `View.padding`.
 
     using init: Context_Init,
 
@@ -144,19 +147,6 @@ Mouse_Input :: struct {
     wheel_delta : f32,
 }
 
-// Mouse_Event :: struct {
-//     type: Mouse_Event_Type,
-// }
-
-// Mouse_Event_Type :: enum {
-//     moved,
-//     pressed,
-//     released,
-//     scrolled,
-//     // entered,
-//     // left,
-// }
-
 Context_Event :: struct {
     type: Context_Event_Type,
 }
@@ -164,15 +154,8 @@ Context_Event :: struct {
 Context_Event_Type :: enum {
     screen_size_changed,
     screen_font_height_changed,
-    solved,
+    solved,                     // The context was solved. Note: user call to `solve_context()` is silent.
 }
-
-Context_Event_Proc              :: proc (ctx: ^Context, event: Context_Event)
-Context_Scissor_Proc            :: proc (ctx: ^Context, scissor: Rect)
-Context_Text_Measure_Proc       :: proc (ctx: ^Context, style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32)
-Context_Text_Style_Proc         :: proc (ctx: ^Context, style: ^Text_Style)
-Context_Text_Custom_Command_Proc:: proc (ctx: ^Context, style: ^Text_Style, cmd, args: string) -> (size_scale: [2] f32)
-Context_Text_Wordy_Proc         :: proc (ctx: ^Context, v: ^View) -> (buf: ^[dynamic] Text_Token)
 
 @require_results
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
@@ -200,13 +183,25 @@ destroy_context :: proc (ctx: ^Context) {
 }
 
 update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
+    ensure(!ctx.drawing, "update_context() cannot be called while draw_context() is running")
+    ensure(!ctx.updating, "update_context() is already running")
+
+    ctx.updating = true
+    defer ctx.updating = false
+
     screen_size_changed := screen_size != ctx.screen_size
     if screen_size_changed {
         _set_screen_size(ctx, screen_size)
-        ctx.solved = false
+        queue_solve_context(ctx)
     }
 
-    if !ctx.solved do solve_context(ctx)
+    if !ctx.solved {
+        ctx.solved = solve_context(ctx)
+        if ctx.solved && ctx.on_event != nil {
+            ctx->on_event({ type=.solved })
+        }
+    }
+
     _propagate_visible_views_opacity(ctx)
 
     ctx.dt = dt
@@ -228,9 +223,6 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         ctx.mouse.consumed = click_consumed || wheel_consumed
     }
 
-    // TODO: Animate and layout tree
-    // animate_and_layout_tree(ctx.root, dt)
-
     for &v in ctx.visible_views {
         if .updating in v.flags {
             _emit(v, { type=.updated })
@@ -240,43 +232,35 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     return ctx.mouse.consumed
 }
 
+// Re-solves all the visible state.
 // - Rebuilds `Context.visible_views`
 // - Rebuilds `Context.visible_text_tokens`
 // - Updates `View.solved_*` for every *visible* view
-// - Sets `Context.solved`; the value can be `false` when reaching limit on solve passes
+// - Returns `true` if all sub-solvers passed within internal pass limits
 //
-// Note: This procedure is executed automatically by `update_context()` when `Context.solved` is cleared.
-// Generally, after you do all the manual modifications to the views and at the end you do `ctx.solved = false`.
-// But sometimes you need to solve the context to know updated (solved) values in advance, for example when
-// spawning a tooltip -- after adding dynamic content to the tooltip, you want to reposition it (or re-anchor)
-// if it happens to go partially off-screen, to do that you do manual call to `solve_context()` so your
-// `tooltip.solved_rect` is updated, and now you can check that and re-position/re-anchor the tooltip to fit
-// the screen.
+// Note: This procedure is executed automatically by `update_context()` when context needs
+// solving. Generally, after you do all the manual modifications to the views and at the end
+// you do `queue_solve_context(ctx)`. But sometimes you need to solve the context to know
+// updated (solved) values in advance, for example when spawning a tooltip -- after adding
+// dynamic content to it, you want to reposition it (or re-anchor) if it happens to go partially
+// off-screen, to do that you do manual call to `solve_context()` so your `tooltip.solved_rect`
+// is updated, and now you can re-position/re-anchor the tooltip to fit the screen.
 //
-// Note: The `Context.solved` can be `false` when reaching limit on solve passes. If you have
-// some complex view tree and want to ensure the context is solved, you can do something like:
-//
-//      for i:=0; i<10 && !ctx.solved; i+=1 do solve_context(ctx)
-//
-// Use this only as a fallback when you need fully converged solved values immediately.
-// In normal update flow, this is not necessary: if the context remains unsolved, the next
-// `update_context()` will continue solving it automatically.
-solve_context :: proc (ctx: ^Context) {
+// Note: Use `solve_context_passes()` to allow repeated calling. In normal update flow,
+// this is not necessary: if the context remains unsolved, the next `update_context()` will
+// continue solving it automatically.
+solve_context :: proc (ctx: ^Context) -> (solved: bool) {
     ensure(!ctx.drawing, "solve_context() cannot be called while draw_context() is running")
+    ensure(!ctx.solving, "solve_context() is already running. Use queue_solve_context() to defer an extra pass.")
+
+    ctx.solving = true
+    defer ctx.solving = false
 
     view_solver_passed := true
     scroll_solver_passed := true
 
-    defer {
-        ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
-        ctx.solved = view_solver_passed && scroll_solver_passed
-        if ctx.solved && ctx.on_event != nil {
-            ctx->on_event({ type=.solved })
-        }
-    }
-
     clear(&ctx.visible_views)
-    if .hidden in ctx.root.flags do return
+    if .hidden in ctx.root.flags do return true
 
     ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
     ctx.root.solved_opacity = ctx.root.opacity
@@ -312,9 +296,26 @@ solve_context :: proc (ctx: ^Context) {
     }
 
     _sort_visible_views(ctx)
+
+    ctx.stats.visible_views_peak = max(ctx.stats.visible_views_peak, len(ctx.visible_views))
+    return view_solver_passed && scroll_solver_passed
+}
+
+// Run `solve_context()` up to `max_passes` times.
+solve_context_passes :: proc (ctx: ^Context, max_passes: int) -> (solved: bool) {
+    for _ in 0..<max_passes do if solve_context(ctx) do return true
+    return
+}
+
+// Marks context unsolved for the next `update_context()` to call `solve_context()`
+queue_solve_context :: proc (ctx: ^Context) {
+    ctx.solved = false
 }
 
 draw_context :: proc (ctx: ^Context) {
+    ensure(!ctx.updating, "draw_context() cannot be called while update_context() is running")
+    ensure(!ctx.drawing, "draw_context() is already running")
+
     ctx.drawing = true
     defer ctx.drawing = false
 
@@ -371,7 +372,7 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
         if .text_wordy in v.flags {
             pool: ^[dynamic] Text_Token
             assert(ctx.on_text_wordy != nil, "Context.on_text_wordy must be set when using .text_wordy views")
-            pool = ctx->on_text_wordy(v)
+            pool = ctx.on_text_wordy(v)
             assert(pool != nil, "Context.on_text_wordy must not return nil")
             clear(pool)
             v.solved_text_tokens = _text_tokenize(pool, v.text, .text_raw in v.flags)
@@ -386,10 +387,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
         }
 
-        _text_measure_tokens(ctx, v.solved_text_tokens)
+        _text_measure_tokens(&v)
 
         if .text_fit_x in v.flags {
-            extent := _text_wrap_tokens(ctx, v.solved_text_tokens, 0)
+            extent := _text_wrap_tokens(&v, 0)
             solved_w := extent.x + v.padding[0] + v.padding[2]
             solved_h := extent.y + v.padding[1] + v.padding[3]
             if abs(solved_w-v.solved_rect.w)>.1 || abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
@@ -397,7 +398,7 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             v.solved_rect.h = solved_h
         } else {
             limit_x := v.solved_rect.w - v.padding[0] - v.padding[2]
-            extent := _text_wrap_tokens(ctx, v.solved_text_tokens, limit_x)
+            extent := _text_wrap_tokens(&v, limit_x)
             solved_h := extent.y + v.padding[1] + v.padding[3]
             if abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
             v.solved_rect.h = solved_h

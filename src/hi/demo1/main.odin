@@ -40,17 +40,17 @@ main :: proc () {
                 : nil,
             )
         },
-        on_text_measure = proc (ctx: ^hi.Context, style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
-            font_height := hi.text_style_font_height(ctx, style)
+        on_text_measure = proc (style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> (size: [2] f32) {
+            font_height := hi.text_style_font_height(style)
             size = k2.measure_text(text, font_height)
             // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
         },
-        on_text_custom_command = proc (ctx: ^hi.Context, style: ^hi.Text_Style, cmd, args: string) -> (size_scale: [2] f32) {
+        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string) -> (size_scale: [2] f32) {
             switch cmd {
             case "f": style.font = args
             case "s": style.font_scale, _ = strconv.parse_f32(args)
-            case "c": style.color = core.color_from_hex(args) // or named color
+            case "c": style.color = core.color_from_hex(args)
             case "i": size_scale = 1
             }
             return
@@ -62,7 +62,7 @@ main :: proc () {
                 #partial switch tok.type {
                 case .word:
                     pos_s := hi.ref_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
-                    font_height_screen := hi.text_style_font_height_screen(it.ctx, it.style)
+                    font_height_screen := hi.text_style_font_height_screen(it.style)
                     k2.draw_text(tok.text, pos_s, font_height_screen, it.style.color)
                     // fmt.println("::::", tok.text)
                 case .custom:

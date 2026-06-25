@@ -47,7 +47,7 @@ main_update :: proc () -> (keep_running: bool) {
         debug := .debug not_in app.ui.root.flags
         hi.set_debug(app.ui.root, debug, filter={.self})
         app.ui_panel_list.padding = debug ? {300,0,0,0} : {}
-        app.ui.solved = false
+        hi.queue_solve_context(app.ui)
     }
 
     app.ui.ref_size = screen_size

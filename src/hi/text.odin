@@ -34,24 +34,6 @@ Text_Token_Type :: enum u8 {
     raw_end,    // `|-/raw-|` Raw mode end. Note: the tokenizer never adds this token type to the result stream.
 }
 
-Text_Style :: struct {
-    font        : string,
-    font_scale  : f32, // Font height scale of the `font`
-    color       : Color,
-    align       : Text_Alignment,
-    wrapping    : bool,
-    user_ptr    : rawptr,
-    user_idx    : int,
-}
-
-Text_Style_Default :: Text_Style {
-    font_scale  = 1.0,
-    color       = {255,255,255,255},
-    wrapping    = true,
-}
-
-Text_Alignment :: enum u8 { left, right, center }
-
 // Tokenizes given text.
 // Appends to the `pool` and returns slice of just appended tokens.
 _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclusive: bool) -> [] Text_Token #no_bounds_check {
@@ -136,25 +118,24 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
     return pool[pool_len_start:]
 }
 
-// Measures given tokens.
-// Updates each `Text_Token.size`.
-_text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_check {
+// Measures text tokens of a given view.
+// - Updates each `Text_Token.size`.
+_text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
+    ctx := v.ctx
+    style := _text_style_init(v)
     has_on_text_measure := ctx.on_text_measure != nil
     has_on_text_custom_command := ctx.on_text_custom_command != nil
 
-    style := Text_Style_Default
-    if ctx.on_text_style != nil do ctx->on_text_style(&style)
-
-    for &tok in tokens do #partial switch tok.type {
+    for &tok in v.solved_text_tokens do #partial switch tok.type {
     case .word, .whitespace:
         if has_on_text_measure {
-            tok.size = ctx->on_text_measure(style, tok.type, tok.text)
+            tok.size = ctx.on_text_measure(style, tok.type, tok.text)
         }
     case .br:
         tok.size.y = style.font_scale * ctx.ref_font_height
     case .custom:
         if has_on_text_custom_command {
-            scale := ctx->on_text_custom_command(&style, tok.text, tok.args)
+            scale := ctx.on_text_custom_command(v, &style, tok.text, tok.args)
             if scale != {} {
                 tok.size = scale * style.font_scale * ctx.ref_font_height
             }
@@ -162,25 +143,27 @@ _text_measure_tokens :: proc (ctx: ^Context, tokens: [] Text_Token) #no_bounds_c
     }
 }
 
-// Wraps and aligns given tokens.
+// Wraps and aligns text tokens of a given view.
 // - Updates each `Text_Token.solved_pos`.
 // - Automatic wrapping is applied if `limit_x > 0`.
 // - Alignment commands effective only if `limit_x > 0`.
 // - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
 //
 // Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
-// This works for now as we always re-measure before wrapping; cached re-wrap would need separate storage, e.g. Text_Token.solved_width.
-_text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
+// This works for now as we always re-measure before wrapping; cached re-wrap would need
+// separate storage, e.g. Text_Token.solved_width.
+_text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32
     overflow_cursor_x: f32
     overflow_allowed: bool
     line_height: f32
     line_start_i: int
-    has_on_text_custom_command := ctx.on_text_custom_command != nil
 
-    style := Text_Style_Default
-    if ctx.on_text_style != nil do ctx->on_text_style(&style)
+    ctx := v.ctx
+    tokens := v.solved_text_tokens
+    style := _text_style_init(v)
+    has_on_text_custom_command := ctx.on_text_custom_command != nil
 
     extent.x = limit_x
 
@@ -203,7 +186,7 @@ _text_wrap_tokens :: proc (ctx: ^Context, tokens: [] Text_Token, limit_x: f32) -
 
         case .custom:
             if has_on_text_custom_command {
-                ctx->on_text_custom_command(&style, tok.text, tok.args)
+                ctx.on_text_custom_command(v, &style, tok.text, tok.args)
             }
         }
 
@@ -264,13 +247,13 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, al
     for start_i <= end_i {
         tok := &line_tokens[start_i]
         if _tok_is_trimmed_for_alignment(tok) do start_i += 1
-        else                                  do break
+        else do break
     }
 
     for end_i >= start_i {
         tok := &line_tokens[end_i]
         if _tok_is_trimmed_for_alignment(tok) do end_i -= 1
-        else                                  do break
+        else do break
     }
 
     if start_i > end_i {
@@ -315,9 +298,8 @@ _text_parse_tag_text :: proc (tag_text: string) -> (cmd, args: string) #no_bound
 }
 
 Text_Token_Iterator :: struct {
-    tokens  : [] Text_Token,
+    view    : ^Visible_View,
     style   : Text_Style,
-    ctx     : ^Context,
     filter  : bit_set [Text_Token_Type],
     next_i  : int,
 }
@@ -325,30 +307,28 @@ Text_Token_Iterator :: struct {
 // The `filter` affects only returned tokens; the `.custom` tokens always get processed for `Text_Token_Iterator.style` changes.
 @require_results
 text_token_iterate :: proc (
-    ctx     : ^Context,
-    tokens  : [] Text_Token,
+    v       : ^Visible_View,
     filter  := bit_set [Text_Token_Type] { .word, .custom },
 ) -> (it: Text_Token_Iterator) {
     assert(filter != {})
 
     it = {
-        tokens  = tokens,
-        style   = Text_Style_Default,
-        ctx     = ctx,
+        view    = v,
+        style   = _text_style_init(v),
         filter  = filter,
     }
-
-    if ctx.on_text_style != nil do ctx->on_text_style(&it.style)
 
     return
 }
 
 @require_results
 text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: bool) #no_bounds_check {
-    for i := it.next_i; i < len(it.tokens); i += 1 {
-        tok = &it.tokens[i]
-        if tok.type == .custom && it.ctx.on_text_custom_command != nil {
-            it.ctx->on_text_custom_command(&it.style, tok.text, tok.args)
+    ctx := it.view.ctx
+    tokens := it.view.solved_text_tokens
+    for i := it.next_i; i < len(tokens); i += 1 {
+        tok = &tokens[i]
+        if tok.type == .custom && ctx.on_text_custom_command != nil {
+            ctx.on_text_custom_command(it.view, &it.style, tok.text, tok.args)
         }
         if tok.type in it.filter {
             it.next_i = i + 1
@@ -357,14 +337,4 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
         }
     }
     return
-}
-
-@require_results
-text_style_font_height :: proc (ctx: ^Context, style: Text_Style) -> f32 {
-    return style.font_scale * ctx.ref_font_height
-}
-
-@require_results
-text_style_font_height_screen :: proc (ctx: ^Context, style: Text_Style) -> f32 {
-    return style.font_scale * ctx.ref_font_height * ctx.screen_pixel_scale
 }
