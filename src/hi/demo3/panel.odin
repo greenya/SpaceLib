@@ -2,9 +2,10 @@ package main
 
 import "core:fmt"
 import "core:mem"
+import "core:os"
 import "core:slice"
 import "core:strings"
-import "core:os"
+import "core:time"
 
 import "../../core"
 import hi ".."
@@ -82,7 +83,7 @@ _panel_reload_path :: proc (panel: ^Panel, path: string) {
 
     panel.path = strings.clone(path, panel.allocator)
     path_dir, path_filename := os.split_path(panel.path)
-    panel.ui_title_bar.text = fmt.aprintf("|header||i=Directory| %s", path_filename, allocator=panel.allocator)
+    panel.ui_title_bar.text = fmt.aprintf("|s=large||i=Directory| %s", path_filename, allocator=panel.allocator)
     hi.hide(panel.ui_file_open_btn)
 
     err: os.Error
@@ -171,8 +172,12 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                         "|s=large|%s|s|\n\n"+
                         "|c=#999|Type|c||tab=80||i=%v| %v\n"+
                         "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
-                        "|c=#999|Mode|c||tab=80||perm_bits|",
-                        file.name, file.type, file.type, file.size,
+                        "|c=#999|Mode|c||tab=80||perm_bits|\n"+
+                        "|c=#999|Modified|c||tab=80|%s",
+                        file.name,
+                        file.type, file.type,
+                        file.size,
+                        _format_time(file.modification_time, context.temp_allocator),
                         allocator=panel.allocator,
                     )
                     _panel_update_status_bar(panel)
@@ -197,7 +202,7 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
         sel_file_text = fmt.tprintf("Selected|tab=80|%i / %i\n", 1+file_view.user_idx, len(panel.files))
     }
 
-    mme_allocated, mem_reserved := _panel_mem_usage(panel)
+    mme_allocated, mem_reserved := _dynamic_arena_mem_usage(panel.arena)
     mem_usage_text := fmt.tprintf("Memory|tab=80|%M / %M", mme_allocated, mem_reserved)
 
     // ISSUE: always allocating
@@ -209,10 +214,42 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
     )
 }
 
-_panel_mem_usage :: proc (panel: ^Panel) -> (allocated, reserved: int) {
+_perm_bits_bit_width_scale :: .8
+_perm_bits_gap_width_scale :: .4
+
+_perm_bits_width_scale :: proc () -> f32 {
+    return\
+        _perm_bits_bit_width_scale * len(os.Permission_Flag) +
+        _perm_bits_gap_width_scale * 2
+}
+
+_perm_bits_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
+    bws :: _perm_bits_bit_width_scale
+    gws :: _perm_bits_gap_width_scale
+    for f, i in os.Permission_Flag {
+        b := os.Permission_Flag(len(os.Permission_Flag) - int(f) - 1)
+        r := core.Rect {
+            rect.x + f32(i)*bws*rect.h + f32(i/3)*gws*rect.h,
+            rect.y,
+            rect.h*bws,
+            rect.h,
+        }
+        core.rect_inflate(&r, -1)
+        if b in mode do k2.draw_rect(k2.Rect(r), core.gray8)
+        else         do k2.draw_rect_outline(k2.Rect(r), 1, core.gray6)
+    }
+}
+
+_format_time :: proc (t: time.Time, allocator := context.allocator) -> string {
+    y, m, d := time.date(t)
+    h, i, _ := time.clock(t)
+    m_str := fmt.tprint(m)
+    return fmt.aprintf("%d %s %d %02d:%02d", d, m_str[:3], y, h, i, allocator=allocator)
+}
+
+_dynamic_arena_mem_usage :: proc (a: mem.Dynamic_Arena) -> (allocated, reserved: int) {
     // Proper way would be probably to use Tracking_Allocator,
     // but this seems to give some believable numbers too
-    a := &panel.arena
     allocated = a.block_size - a.bytes_left +
                 a.block_size * (    len(a.used_blocks) + len(a.unused_blocks))
     reserved  = a.block_size * (1 + len(a.used_blocks) + len(a.unused_blocks))

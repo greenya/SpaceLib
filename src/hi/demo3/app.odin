@@ -52,10 +52,6 @@ app_init :: proc () {
             case "i": // icon
                 size_scale = 1
 
-            case "header":
-                style.font_scale = 1.3
-                style.align = .center
-
             case "perm_bits":
                 size_scale = { _perm_bits_width_scale(), 1 }
             }
