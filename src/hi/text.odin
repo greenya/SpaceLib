@@ -3,12 +3,16 @@ package hi
 import "core:strings"
 import "core:strconv"
 
+// TODO: Rename "command" term to "token", as they are equal in the context of this file
+
 Text_Token :: struct {
-    type: Text_Token_Type,
-    text: string,       // Text of the `.word` or `.whitespace`, or the name of a `.custom` command (e.g., "color" for "|color=primary|")
-    args: string,       // `.custom` command arguments (e.g., "primary" for "|color=primary|")
-    size: Vec2,         // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_command()`
-    solved_pos: Vec2,   // Calculated by the wrapping algorithm
+    type        : Text_Token_Type,
+    text        : string,   // Text of the `.word` or `.whitespace`, or the name of a `.custom` command (e.g., "color" for "|color=primary|")
+    args        : string,   // `.custom` command arguments (e.g., "primary" for "|color=primary|")
+    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Text_Custom_Token_Space.scale` via `Context.on_text_custom_command()`
+    ascent      : f32,      // Distance from token top to baseline
+    descent     : f32,      // Distance from baseline to token bottom
+    solved_pos  : Vec2,     // Calculated by the wrapping algorithm
 }
 
 Text_Token_Type :: enum u8 {
@@ -32,6 +36,11 @@ Text_Token_Type :: enum u8 {
 
     raw_start,  // `|-raw-|` Raw mode start. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is the end of raw mode. Note: the tokenizer never adds this token type to the result stream.
     raw_end,    // `|-/raw-|` Raw mode end. Note: the tokenizer never adds this token type to the result stream.
+}
+
+Text_Custom_Token_Space :: struct {
+    scale           : Vec2, // Relative to current text style font height
+    baseline_ratio  : f32,  // From 0 to 1 ratio inside the custom token box
 }
 
 // Tokenizes given text.
@@ -119,7 +128,7 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
 }
 
 // Measures text tokens of a given view.
-// - Updates each `Text_Token.size`.
+// - Updates each `Text_Token.size/ascent/descent`.
 _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
     ctx := v.ctx
     style := _text_style_init(v)
@@ -130,14 +139,21 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
     case .word, .whitespace:
         if has_on_text_measure {
             tok.size = ctx.on_text_measure(style, tok.type, tok.text)
+            tok.ascent = tok.size.y * style.font_baseline_ratio
+            tok.descent = tok.size.y * (1 - style.font_baseline_ratio)
         }
     case .br:
         tok.size.y = style.font_scale * ctx.ref_font_height
+        tok.ascent = tok.size.y * style.font_baseline_ratio
+        tok.descent = tok.size.y * (1 - style.font_baseline_ratio)
     case .custom:
         if has_on_text_custom_command {
-            scale := ctx.on_text_custom_command(v, &style, tok.text, tok.args)
-            if scale != {} {
-                tok.size = scale * style.font_scale * ctx.ref_font_height
+            space := Text_Custom_Token_Space { baseline_ratio=style.font_baseline_ratio }
+            ctx.on_text_custom_command(v, &style, tok.text, tok.args, &space)
+            if space.scale != {} {
+                tok.size = space.scale * style.font_scale * ctx.ref_font_height
+                tok.ascent = tok.size.y * space.baseline_ratio
+                tok.descent = tok.size.y * (1 - space.baseline_ratio)
             }
         }
     }
@@ -157,8 +173,9 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     cursor_y: f32
     overflow_cursor_x: f32
     overflow_allowed: bool
-    line_height: f32
     line_start_i: int
+    line_max_ascent: f32
+    line_max_descent: f32
 
     ctx := v.ctx
     tokens := v.solved_text_tokens
@@ -186,17 +203,26 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
 
         case .custom:
             if has_on_text_custom_command {
-                ctx.on_text_custom_command(v, &style, tok.text, tok.args)
+                ctx.on_text_custom_command(v, &style, tok.text, tok.args, out_space=nil)
             }
         }
 
         if tok.type == .br {
-            extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
+            line_max_ascent = max(line_max_ascent, tok.ascent)
+            line_max_descent = max(line_max_descent, tok.descent)
+
+            extent.x = max(extent.x, _text_finalize_line(
+                tokens[line_start_i:i],
+                limit_x,
+                line_max_ascent,
+                style.align,
+            ))
 
             cursor_x = 0
-            cursor_y += max(line_height, tok.size.y)
+            cursor_y += line_max_ascent + line_max_descent
             overflow_cursor_x = 0
-            line_height = 0
+            line_max_ascent = 0
+            line_max_descent = 0
             line_start_i = i + 1
             overflow_allowed = false
 
@@ -211,16 +237,23 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
             cursor_x + tok.size.x > limit_x
 
         if overflow {
-            extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:i], limit_x, style.align))
+            extent.x = max(extent.x, _text_finalize_line(
+                tokens[line_start_i:i],
+                limit_x,
+                line_max_ascent,
+                style.align,
+            ))
 
             cursor_x = overflow_cursor_x
-            cursor_y += line_height
-            line_height = 0
+            cursor_y += line_max_ascent + line_max_descent
+            line_max_ascent = 0
+            line_max_descent = 0
             line_start_i = i
             overflow_allowed = false
         }
 
-        line_height = max(line_height, tok.size.y)
+        line_max_ascent = max(line_max_ascent, tok.ascent)
+        line_max_descent = max(line_max_descent, tok.descent)
 
         tok.solved_pos = { cursor_x, cursor_y }
         cursor_x += tok.size.x
@@ -228,8 +261,13 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     }
 
     // align very last line and set the total height
-    extent.x = max(extent.x, _text_apply_line_alignment(tokens[line_start_i:], limit_x, style.align))
-    extent.y = cursor_y + line_height
+    extent.x = max(extent.x, _text_finalize_line(
+        tokens[line_start_i:],
+        limit_x,
+        line_max_ascent,
+        style.align,
+    ))
+    extent.y = cursor_y + line_max_ascent + line_max_descent
     return
 
     _tok_starts_printable_content :: proc (tok: Text_Token) -> bool {
@@ -237,8 +275,16 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     }
 }
 
-// Alignment applied only if `limit_x > 0`
-_text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, align: Text_Alignment) -> (extent_x: f32) #no_bounds_check {
+// Finalizes line of tokens:
+// - Applies horizontal alignment only if `limit_x > 0`
+// - Applies baseline alignment
+// - Updates each `Text_Token.solved_pos`
+_text_finalize_line :: proc (
+    line_tokens     : [] Text_Token,
+    limit_x         : f32,
+    line_max_ascent : f32,
+    align           : Text_Alignment,
+) -> (extent_x: f32) #no_bounds_check {
     if len(line_tokens) == 0 do return
 
     start_i: int
@@ -280,8 +326,11 @@ _text_apply_line_alignment :: proc (line_tokens: [] Text_Token, limit_x: f32, al
 
     // shift printable tokens and reset positions of all leading and trailing non-printable ones
     for &tok, i in line_tokens {
-        if i >= start_i && i <= end_i do tok.solved_pos.x += shift_amount
-        else                          do tok.solved_pos = {}
+        if i >= start_i && i <= end_i {
+            tok.solved_pos += { shift_amount, line_max_ascent - tok.ascent }
+        } else {
+            tok.solved_pos = {}
+        }
     }
 
     return line_tokens[end_i].solved_pos.x + line_tokens[end_i].size.x
@@ -328,7 +377,7 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
     for i := it.next_i; i < len(tokens); i += 1 {
         tok = &tokens[i]
         if tok.type == .custom && ctx.on_text_custom_command != nil {
-            ctx.on_text_custom_command(it.view, &it.style, tok.text, tok.args)
+            ctx.on_text_custom_command(it.view, &it.style, tok.text, tok.args, out_space=nil)
         }
         if tok.type in it.filter {
             it.next_i = i + 1

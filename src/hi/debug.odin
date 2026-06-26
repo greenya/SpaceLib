@@ -128,9 +128,14 @@ _debug_draw_view_text :: proc (v: ^Visible_View) {
     if v.ctx.debug_draw_line == nil do return
 
     it := visible_text_iterate(v, in_scissor_only=false)
-    for _, tok_rect in visible_text_next(&it) {
+    for tok, tok_rect in visible_text_next(&it) {
         tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
         _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
+
+        descent_rect := core.rect_bar_bottom(tok_rect, tok.descent)
+        baseline_start_s := ref_pos_to_screen(v.ctx, { descent_rect.x, descent_rect.y })
+        baseline_end_s := ref_pos_to_screen(v.ctx, { descent_rect.x+descent_rect.w, descent_rect.y })
+        _debug_draw_line(v.ctx, baseline_start_s, baseline_end_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
     }
 }
 

@@ -1,21 +1,25 @@
 package hi
 
 Text_Style :: struct {
-    ctx         : ^Context,
-    font        : string,
-    font_scale  : f32,
-    color       : Color,
-    align       : Text_Alignment,
-    wrapping    : bool,
-    user_ptr    : rawptr,
-    user_idx    : int,
+    ctx: ^Context,
+
+    font                : string,
+    font_scale          : f32,
+    font_baseline_ratio : f32, // Baseline position from `0.0` (top) to `1.0` (bottom)
+    color               : Color,
+    align               : Text_Alignment,
+    wrapping            : bool,
+
+    user_ptr: rawptr,
+    user_idx: int,
 }
 
 @rodata
 Text_Style_Default := Text_Style {
-    font_scale  = 1.0,
-    color       = {255,255,255,255},
-    wrapping    = true,
+    font_scale          = 1.0,
+    font_baseline_ratio = 0.8,
+    color               = {255,255,255,255},
+    wrapping            = true,
 }
 
 Text_Alignment :: enum u8 { left, right, center }

@@ -244,7 +244,9 @@ _format_time :: proc (t: time.Time, allocator := context.allocator) -> string {
     y, m, d := time.date(t)
     h, i, _ := time.clock(t)
     m_str := fmt.tprint(m)
-    return fmt.aprintf("%d %s %d %02d:%02d", d, m_str[:3], y, h, i, allocator=allocator)
+    // Testing baseline alignment with different font sizes in a line
+    // (visible token baselines are expected to be in a straight line)
+    return fmt.aprintf("|s=large|%d %s |s=small|%d |s=tiny|%02d:%02d|s|", d, m_str[:3], y, h, i, allocator=allocator)
 }
 
 _dynamic_arena_mem_usage :: proc (a: mem.Dynamic_Arena) -> (allocated, reserved: int) {

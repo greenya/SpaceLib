@@ -69,13 +69,15 @@ Context_Init :: struct {
     // Text custom command callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
-    // - Return non-zero `size_scale` of the current font height for physical space,
-    //   e.g. for `[icon=sword]` you might want to return `size_scale = 1`,
-    //   which would occupy square of physical space for inline icon.
+    // - If `out_space != nil`, you can change its properties. Setting `out_space.scale` to
+    //   non-zero value makes the token occupy physical space, e.g. for `|icon=sword|` you might
+    //   want to set `out_space.scale = 1`, which would occupy square of physical space for
+    //   inline icon. Additionally, you can change `out_space.baseline_ratio` default value,
+    //   which is `style.font_baseline_ratio`.
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom command in both phases: updating and drawing.
-    on_text_custom_command: proc (v: ^View, style: ^Text_Style, cmd, args: string) -> (size_scale: [2] f32),
+    on_text_custom_command: proc (v: ^View, style: ^Text_Style, cmd, args: string, out_space: ^Text_Custom_Token_Space),
 
     // Text wordy callback. Used only with `.text_wordy` views.
     // Allows specifying a separate text token buffer for large/heavy text views.

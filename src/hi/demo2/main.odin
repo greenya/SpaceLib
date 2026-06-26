@@ -25,6 +25,7 @@ main :: proc () {
 
     app.ui = hi.create_context({
         ref_font_height = 24,
+        scroll_step = 60,
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
         },
@@ -32,14 +33,13 @@ main :: proc () {
             font_height := hi.text_style_font_height(style)
             return k2.measure_text(text, font_height)
         },
-        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string) -> (size: [2] f32) {
+        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
             switch cmd {
             case "header":
                 style.align = .center
                 style.color = core.gray2
                 style.font_scale = 2
             }
-            return
         },
         on_text_wordy = proc (v: ^hi.View) -> ^[dynamic] hi.Text_Token {
             if v not_in app.token_buffers do app.token_buffers[v] = make([dynamic] hi.Text_Token)

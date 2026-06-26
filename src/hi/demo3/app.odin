@@ -31,7 +31,7 @@ app_init :: proc () {
             return k2.measure_text(text, font_height)
         },
 
-        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string) -> (size_scale: [2] f32) {
+        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
             switch cmd {
             case "s": // font scale; support only named scalers; empty value resets scale (same as "medium")
                 switch args {
@@ -50,12 +50,17 @@ app_init :: proc () {
                 }
 
             case "i": // icon
-                size_scale = 1
+                if out_space != nil {
+                    out_space.scale = .9
+                    out_space.baseline_ratio = .85
+                }
 
             case "perm_bits":
-                size_scale = { _perm_bits_width_scale(), 1 }
+                if out_space != nil {
+                    out_space.scale = .8 * { _perm_bits_width_scale(), 1 }
+                    out_space.baseline_ratio = 1
+                }
             }
-            return
         },
 
         on_draw_text = proc (v: ^hi.Visible_View) {
