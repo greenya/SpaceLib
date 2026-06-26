@@ -127,7 +127,7 @@ _debug_draw_view_text :: proc (v: ^Visible_View) {
     if .text not_in v.flags do return
     if v.ctx.debug_draw_line == nil do return
 
-    it := visible_text_iterate(v, filter={.word,.whitespace,.custom}, in_scissor_only=false)
+    it := visible_text_iterate(v, in_scissor_only=false)
     for _, tok_rect in visible_text_next(&it) {
         tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
         _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)

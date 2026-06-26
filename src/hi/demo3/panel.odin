@@ -32,54 +32,24 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     mem.dynamic_arena_init(&panel.arena)
     panel.allocator = mem.dynamic_arena_allocator(&panel.arena)
 
-    panel.ui_root = hi.add_view(parent, { flags={.fill_y}, layout={dir=.column}, size={300,0} })
-    r := panel.ui_root
+    panel.ui_root = hi.add_view(parent, { flags={.fill_y,.scissor}, layout={dir=.column}, size={300,0} })
 
-    panel.ui_title_bar = hi.add_view(r, { flags={.fill_x,.text}, padding=10 })
+    panel.ui_title_bar = hi.add_view(panel.ui_root, { flags={.fill_x,.text}, padding=10 })
 
-    panel.ui_file_list = hi.add_view(r, {
+    panel.ui_file_list = hi.add_view(panel.ui_root, {
         flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_layout },
         layout  = { dir=.column },
         on_draw = proc (v: ^hi.Visible_View) {
-            rect := k2.Rect(core.rect_inflated(v.solved_rect, 1))
-            k2.draw_rect_outline(rect, 1, core.gray8)
+            rect := hi.viewport_rect(v)
+            k2.draw_rect_outline(k2.Rect(rect), 1, core.gray4)
         },
     })
 
-    panel.ui_file_info = hi.add_view(r, { flags={.fill_x,.text}, padding=10 })
+    panel.ui_file_info = hi.add_view(panel.ui_root, { flags={.fill_x,.text}, padding=10, user_ptr=panel })
 
-    panel.ui_status_bar = hi.add_view(r, { flags={.fill_x,.text}, padding=10 })
+    panel.ui_status_bar = hi.add_view(panel.ui_root, { flags={.fill_x,.text}, padding=10 })
 
-    panel.ui_file_open_btn = hi.add_view(r, {
-        flags   = { .text, .text_fit_x },
-        text    = "Open",
-        padding = 5,
-        place   = { anchor={1,.5}, pivot={1,.5} },
-        user_ptr= panel,
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .clicked {
-                panel := cast (^Panel) v.user_ptr
-                file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
-                assert(file_view != nil)
-                file := &panel.files[file_view.user_idx]
-                logf("open #%i: %#v", file_view.user_idx, file)
-                if file.type == .Directory {
-                    app_destroy_all_panels_to_the_right(panel)
-                    app_add_panel(file.fullpath)
-                } else {
-                    // TODO: spawn popup
-                }
-                consumed = true
-            }
-            return
-        },
-        on_draw = proc (v: ^hi.Visible_View) {
-            rect := k2.Rect(v.solved_rect)
-            if .hovered in v.flags do k2.draw_rect(rect, core.gray6)
-            else                   do k2.draw_rect(rect, core.gray5)
-            v.ctx.on_draw_text(v)
-        },
-    })
+    panel.ui_file_open_btn = _panel_add_file_open_btn(panel.ui_root, panel)
 
     panel.ui_list_is_empty = hi.add_view(panel.ui_title_bar, {
         flags   = { .text, .text_fit_x },
@@ -90,6 +60,8 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     })
 
     _panel_reload_path(panel, path)
+
+    hi.set_debug(panel.ui_root, .debug in parent.flags)
 
     return panel
 }
@@ -143,6 +115,40 @@ _panel_reload_path :: proc (panel: ^Panel, path: string) {
     _panel_update_status_bar(panel)
 }
 
+_panel_add_file_open_btn :: proc (parent: ^hi.View, panel: ^Panel) -> ^hi.View {
+    return hi.add_view(parent, {
+        flags   = { .text, .text_fit_x },
+        text    = "Open",
+        padding = 5,
+        place   = { anchor={1,.5}, pivot={1,.5} },
+        user_ptr= panel,
+        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+            if event.type != .clicked do return
+
+            panel := cast (^Panel) v.user_ptr
+            file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
+            assert(file_view != nil)
+            file := &panel.files[file_view.user_idx]
+            logf("open #%i: %#v", file_view.user_idx, file)
+
+            if file.type == .Directory {
+                app_destroy_all_panels_to_the_right(panel)
+                app_add_panel(file.fullpath)
+            } else {
+                // TODO: spawn popup
+            }
+
+            return true
+        },
+        on_draw = proc (v: ^hi.Visible_View) {
+            rect := k2.Rect(v.solved_rect)
+            if .hovered in v.flags do k2.draw_rect(rect, core.gray6)
+            else                   do k2.draw_rect(rect, core.gray5)
+            v.ctx.on_draw_text(v)
+        },
+    })
+}
+
 _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
     file := &panel.files[file_idx]
     log(#procedure, file_idx, file.type, file.name, file.size)
@@ -163,10 +169,10 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                     // ISSUE: always allocating
                     panel.ui_file_info.text = fmt.aprintf(
                         "|s=large|%s|s|\n\n"+
-                        "|c=#999|Mode|c||tab=80|%v\n"+
-                        "|c=#999|Type|c||tab=80|%s\n"+
-                        "|c=#999|Size|c||tab=80|%M\n",
-                        file.name, file.mode, file.type, file.size,
+                        "|c=#999|Type|c||tab=80||i=%v| %v\n"+
+                        "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
+                        "|c=#999|Mode|c||tab=80||perm_bits|",
+                        file.name, file.type, file.type, file.size,
                         allocator=panel.allocator,
                     )
                     _panel_update_status_bar(panel)
@@ -204,6 +210,8 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
 }
 
 _panel_mem_usage :: proc (panel: ^Panel) -> (allocated, reserved: int) {
+    // Proper way would be probably to use Tracking_Allocator,
+    // but this seems to give some believable numbers too
     a := &panel.arena
     allocated = a.block_size - a.bytes_left +
                 a.block_size * (    len(a.used_blocks) + len(a.unused_blocks))
