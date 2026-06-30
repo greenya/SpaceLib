@@ -46,7 +46,7 @@ main :: proc () {
             // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
         },
-        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
+        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
             switch cmd {
             case "f": style.font = args
             case "s": style.font_scale, _ = strconv.parse_f32(args)

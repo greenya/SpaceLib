@@ -66,7 +66,7 @@ Context_Init :: struct {
     // Expect to be called in both phases: updating and drawing.
     on_text_style_init: proc (v: ^View, style: ^Text_Style),
 
-    // Text custom command callback. Used only with `.text` views.
+    // Text custom token callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
     // - If `out_space != nil`, you can change its properties. Setting `out_space.scale` to
@@ -76,8 +76,8 @@ Context_Init :: struct {
     //   which is `style.font_baseline_ratio`.
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
-    // Called on every custom command in both phases: updating and drawing.
-    on_text_custom_command: proc (v: ^View, style: ^Text_Style, cmd, args: string, out_space: ^Text_Custom_Token_Space),
+    // Called on every custom token in both phases: updating and drawing.
+    on_text_custom_token: proc (v: ^View, style: ^Text_Style, cmd, args: string, out_space: ^Text_Custom_Token_Space),
 
     // Text wordy callback. Used only with `.text_wordy` views.
     // Allows specifying a separate text token buffer for large/heavy text views.

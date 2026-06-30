@@ -33,7 +33,7 @@ main :: proc () {
             font_height := hi.text_style_font_height(style)
             return k2.measure_text(text, font_height)
         },
-        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
+        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
             switch cmd {
             case "header":
                 style.align = .center

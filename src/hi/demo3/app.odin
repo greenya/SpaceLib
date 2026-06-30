@@ -31,7 +31,7 @@ app_init :: proc () {
             return k2.measure_text(text, font_height)
         },
 
-        on_text_custom_command = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
+        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
             switch cmd {
             case "s": // font scale; support only named scalers; empty value resets scale (same as "medium")
                 switch args {

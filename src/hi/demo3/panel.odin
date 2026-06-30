@@ -156,7 +156,7 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
 
     hi.add_view(parent, {
         flags   = { .text, .fill_x, .radio },
-        text    = fmt.aprintf("|nowrap||i=%v| |-raw-|%s", file.type, file.name, allocator=panel.allocator),
+        text    = fmt.aprintf("|nowrap||i=%v| |raw|%s", file.type, file.name, allocator=panel.allocator),
         padding = {10,5,10,5},
         user_ptr= panel,
         user_idx= file_idx,

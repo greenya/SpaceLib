@@ -3,13 +3,11 @@ package hi
 import "core:strings"
 import "core:strconv"
 
-// TODO: Rename "command" term to "token", as they are equal in the context of this file
-
 Text_Token :: struct {
     type        : Text_Token_Type,
-    text        : string,   // Text of the `.word` or `.whitespace`, or the name of a `.custom` command (e.g., "color" for "|color=primary|")
-    args        : string,   // `.custom` command arguments (e.g., "primary" for "|color=primary|")
-    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Text_Custom_Token_Space.scale` via `Context.on_text_custom_command()`
+    text        : string,   // Text of the `.word` or `.whitespace`, or the name of a `.custom` token (e.g., "color" for "|color=primary|")
+    args        : string,   // `.custom` token arguments (e.g., "primary" for "|color=primary|")
+    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Text_Custom_Token_Space.scale` via `Context.on_text_custom_token()`
     ascent      : f32,      // Distance from token top to baseline
     descent     : f32,      // Distance from baseline to token bottom
     solved_pos  : Vec2,     // Calculated by the wrapping algorithm
@@ -20,22 +18,25 @@ Text_Token_Type :: enum u8 {
 
     word,       // Continuous block of letters/numbers/punctuations between other tokens
     whitespace, // Continuous block of spaces `" "` or tabs `\t`
-    br,         // Newline `\n` or Line break command `|br|`
+    br,         // Newline `\n` or Line break token `|br|`
 
-    // Commands
+    // Alignment and wrapping
 
     left,       // `|left|` Align to the left
     right,      // `|right|` Align to the right
     center,     // `|center|` Align to the center
+    tab,        // `|tab=XXX|` Tab stop. Moves cursor X forward to XXX if current X is lower. In wrapping mode, overflowed continuation lines start at the last tab stop until `\n`, `|br|`, or another tab stop.
     wrap,       // `|wrap|` Enable wrapping mode
     nowrap,     // `|nowrap|` Disable wrapping mode
-    tab,        // `|tab=XXX|` Tab stop. Moves cursor X forward to XXX if current X is lower. In wrapping mode, overflowed continuation lines start at the last tab stop until `\n`, `|br|`, or another tab stop.
-    custom,     // Custom/unknown command, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_command()`.
+
+    // Custom
+
+    custom,     // Custom/unknown token, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_token()`.
 
     // Internal (these tokens are here only for documentation purposes and are never added to the result stream of tokens)
 
-    raw_start,  // `|-raw-|` Raw mode start. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is the end of raw mode. Note: the tokenizer never adds this token type to the result stream.
-    raw_end,    // `|-/raw-|` Raw mode end. Note: the tokenizer never adds this token type to the result stream.
+    raw,        // `|raw|` Enable raw mode. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is `|noraw|`. Note: the tokenizer never adds this token type to the result stream.
+    noraw,      // `|noraw|` Disable raw mode. Note: the tokenizer never adds this token type to the result stream.
 }
 
 Text_Custom_Token_Space :: struct {
@@ -53,7 +54,7 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
     for i := 0; i < text_len; /**/ {
         r := text[i]
 
-        raw_end_tag :: "|-/raw-|"
+        raw_end_tag :: "|noraw|"
         if raw_mode && !is_raw_exclusive && r == '|' && i + len(raw_end_tag) <= text_len {
             if text[i:i+len(raw_end_tag)] == raw_end_tag {
                 i += len(raw_end_tag)
@@ -101,7 +102,7 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
                 case "tab"      : v, _ := strconv.parse_f32(args)
                                   append(pool, Text_Token { type=.tab, size={v,0} })
 
-                case "-raw-"    : raw_mode = true
+                case "raw"      : raw_mode = true
 
                 case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
                 }
@@ -133,7 +134,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
     ctx := v.ctx
     style := _text_style_init(v)
     has_on_text_measure := ctx.on_text_measure != nil
-    has_on_text_custom_command := ctx.on_text_custom_command != nil
+    has_on_text_custom_token := ctx.on_text_custom_token != nil
 
     for &tok in v.solved_text_tokens do #partial switch tok.type {
     case .word, .whitespace:
@@ -147,9 +148,9 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
         tok.ascent = tok.size.y * style.font_baseline_ratio
         tok.descent = tok.size.y * (1 - style.font_baseline_ratio)
     case .custom:
-        if has_on_text_custom_command {
+        if has_on_text_custom_token {
             space := Text_Custom_Token_Space { baseline_ratio=style.font_baseline_ratio }
-            ctx.on_text_custom_command(v, &style, tok.text, tok.args, &space)
+            ctx.on_text_custom_token(v, &style, tok.text, tok.args, &space)
             if space.scale != {} {
                 tok.size = space.scale * style.font_scale * ctx.ref_font_height
                 tok.ascent = tok.size.y * space.baseline_ratio
@@ -162,7 +163,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
 // Wraps and aligns text tokens of a given view.
 // - Updates each `Text_Token.solved_pos`.
 // - Automatic wrapping is applied if `limit_x > 0`.
-// - Alignment commands effective only if `limit_x > 0`.
+// - Alignment tokens effective only if `limit_x > 0`.
 // - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
 //
 // Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
@@ -180,7 +181,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     ctx := v.ctx
     tokens := v.solved_text_tokens
     style := _text_style_init(v)
-    has_on_text_custom_command := ctx.on_text_custom_command != nil
+    has_on_text_custom_token := ctx.on_text_custom_token != nil
 
     extent.x = limit_x
 
@@ -202,8 +203,8 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
             continue
 
         case .custom:
-            if has_on_text_custom_command {
-                ctx.on_text_custom_command(v, &style, tok.text, tok.args, out_space=nil)
+            if has_on_text_custom_token {
+                ctx.on_text_custom_token(v, &style, tok.text, tok.args, out_space=nil)
             }
         }
 
@@ -376,8 +377,8 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
     tokens := it.view.solved_text_tokens
     for i := it.next_i; i < len(tokens); i += 1 {
         tok = &tokens[i]
-        if tok.type == .custom && ctx.on_text_custom_command != nil {
-            ctx.on_text_custom_command(it.view, &it.style, tok.text, tok.args, out_space=nil)
+        if tok.type == .custom && ctx.on_text_custom_token != nil {
+            ctx.on_text_custom_token(it.view, &it.style, tok.text, tok.args, out_space=nil)
         }
         if tok.type in it.filter {
             it.next_i = i + 1
