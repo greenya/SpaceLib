@@ -45,6 +45,7 @@ app_init :: proc () {
             case "c": // color; support named and hex values; empty value resets color
                 switch args {
                 case "muted"    : style.color = core.gray4
+                case "error"    : style.color = { 220, 60, 100, 255 }
                 case ""         : style.color = core.white
                 case            : style.color = core.color_from_hex(args)
                 }

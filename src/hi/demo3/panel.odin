@@ -24,7 +24,7 @@ Panel :: struct {
     ui_file_list    : ^hi.View,
     ui_file_info    : ^hi.View,
     ui_file_open_btn: ^hi.View,
-    ui_list_is_empty: ^hi.View,
+    ui_no_files_note: ^hi.View,
 }
 
 panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
@@ -52,11 +52,10 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
 
     panel.ui_file_open_btn = _panel_add_file_open_btn(panel.ui_root, panel)
 
-    panel.ui_list_is_empty = hi.add_view(panel.ui_title_bar, {
+    panel.ui_no_files_note = hi.add_view(panel.ui_root, {
         flags   = { .text, .text_fit_x },
-        text    = "|c=muted|List is empty",
         padding = 10,
-        place   = { anchor={.5,1}, pivot={.5,0} },
+        place   = { anchor=.5, pivot=.5 },
         strata  = .overlay,
     })
 
@@ -88,32 +87,20 @@ _panel_reload_path :: proc (panel: ^Panel, path: string) {
 
     err: os.Error
     panel.files, err = os.read_all_directory_by_path(panel.path, panel.allocator)
-    assert(err == nil)
-
-    slice.sort_by(panel.files, less=proc (i, j: os.File_Info) -> bool {
-        switch {
-        case i.type == .Directory && j.type == .Directory   : fallthrough
-        case i.type != .Directory && j.type != .Directory   : return i.name < j.name
-        case                                                : return i.type == .Directory
-        }
-    })
-
-    for _, i in panel.files {
-        _panel_add_file_view(panel.ui_file_list, panel, i)
-    }
-
-    if len(panel.files) > 0 {
-        hi.hide(panel.ui_list_is_empty)
-        hi.show(panel.ui_file_open_btn)
-        hi.show(panel.ui_file_info)
-        hi.click(panel.ui_file_list.first_child)
+    if err == nil {
+        slice.sort_by(panel.files, less=proc (i, j: os.File_Info) -> bool {
+            switch {
+            case i.type == .Directory && j.type == .Directory   : fallthrough
+            case i.type != .Directory && j.type != .Directory   : return i.name < j.name
+            case                                                : return i.type == .Directory
+            }
+        })
+        for _, i in panel.files do _panel_add_file_view(panel.ui_file_list, panel, i)
+        if len(panel.files) > 0 do _panel_state_ok_with_files(panel)
+        else                    do _panel_state_ok_no_files(panel)
     } else {
-        hi.show(panel.ui_list_is_empty)
-        hi.hide(panel.ui_file_open_btn)
-        hi.hide(panel.ui_file_info)
+        _panel_state_error(panel, error_msg=fmt.tprint(err))
     }
-
-    _panel_update_status_bar(panel)
 }
 
 _panel_add_file_open_btn :: proc (parent: ^hi.View, panel: ^Panel) -> ^hi.View {
@@ -193,6 +180,31 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
             v.ctx.on_draw_text(v)
         },
     })
+}
+
+_panel_state_ok_with_files :: proc (panel: ^Panel) {
+    hi.hide(panel.ui_no_files_note)
+    hi.show(panel.ui_file_open_btn)
+    hi.show(panel.ui_file_info)
+    assert(panel.ui_file_list.first_child != nil)
+    hi.click(panel.ui_file_list.first_child)
+    _panel_update_status_bar(panel)
+}
+
+_panel_state_ok_no_files :: proc (panel: ^Panel) {
+    panel.ui_no_files_note.text = "|c=muted|List is empty"
+    hi.show(panel.ui_no_files_note)
+    hi.hide(panel.ui_file_open_btn)
+    hi.hide(panel.ui_file_info)
+    _panel_update_status_bar(panel)
+}
+
+_panel_state_error :: proc (panel: ^Panel, error_msg: string) {
+    panel.ui_no_files_note.text = fmt.aprintf("|c=error|%s", error_msg, allocator=panel.allocator)
+    hi.show(panel.ui_no_files_note)
+    hi.hide(panel.ui_file_open_btn)
+    hi.hide(panel.ui_file_info)
+    _panel_update_status_bar(panel)
 }
 
 _panel_update_status_bar :: proc (panel: ^Panel) {
