@@ -100,8 +100,9 @@ Flag :: enum {
 Strata :: enum i8 {
     background  = -1,   // For lowest and generally non-interactive views like artistic decorations, HUD, damage numbers, world object labels
     base        = 0,    // For the most views, e.g. panels, buttons, health bars, action bars, non-modal dialogs
-    overlay     = 1,    // For priority views like menus and dropdowns which should avoid parent clipping (if parent uses different strata). For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
-    tooltip     = 2,    // For topmost and generally non-interactive transient views like tooltips, notifications, system messages
+    high        = 1,    // For elevated views of `.base` parent which should avoid parent layout and clipping
+    overlay     = 2,    // For priority views like menus and dropdowns. For modal dialogs, requiring immediate attention often with screen darkening layer to focus attention and block input.
+    tooltip     = 3,    // For topmost and generally non-interactive transient views like tooltips, notifications, system messages
 }
 
 Place :: struct {
@@ -156,6 +157,9 @@ Event_Type :: enum u8 {
     selection_changed,  // `.selected` has changed
 }
 
+// Following properties are auto-set:
+// - `strata` and `level` are inherited from `parent` if not set
+// - `opacity` set to `1.0` if not set
 add_view :: proc (parent: ^View, init: View_Init) -> ^View {
     v := add_view_detached(parent.ctx, init)
     set_parent(v, parent)

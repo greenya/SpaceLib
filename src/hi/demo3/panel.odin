@@ -56,7 +56,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
         flags   = { .text, .text_fit_x },
         padding = 10,
         place   = { anchor=.5, pivot=.5 },
-        strata  = .overlay,
+        strata  = .high,
     })
 
     _panel_reload_path(panel, path)
