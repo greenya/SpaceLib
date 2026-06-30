@@ -23,7 +23,7 @@ tracks: map [string] Track
 
 when "off" == #config(TIME_TRACKER, "on") {
 
-init    :: proc (skip_ms: int) {}
+init    :: proc (skip_ms := 0) {}
 destroy :: proc () {}
 start   :: proc (name: string) {}
 stop    :: proc (name: string) {}
@@ -39,7 +39,7 @@ print   :: proc (order: Print_Order) {}
 //
 //      import "spacelib:core/time_tracker"
 //      main :: proc () {
-//          time_tracker.init(skip_ms=500) // optional, if not called, skip_ms will be effectively 0
+//          time_tracker.init(skip_ms=500)
 //          defer {
 //              time_tracker.print(.by_max)
 //              time_tracker.destroy()
@@ -49,7 +49,7 @@ print   :: proc (order: Print_Order) {}
 //
 // Note: `-define:TIME_TRACKER=off` disables all the time tracking code.
 
-init :: proc (skip_ms: int) {
+init :: proc (skip_ms := 0) {
     tick_init = time.tick_now()
     tick_skip_until = time.tick_add(tick_init, time.Duration(skip_ms) * time.Millisecond)
     fmt.println("[TT] Initialized")
