@@ -223,6 +223,11 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     _propagate_visible_views_opacity(ctx)
     _emit_visible_views_updated(ctx)
 
+    if !ctx.solved {
+        solve_context(ctx)
+        _propagate_visible_views_opacity(ctx)
+    }
+
     return ctx.mouse.consumed
 }
 

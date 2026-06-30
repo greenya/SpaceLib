@@ -25,6 +25,9 @@ Panel :: struct {
     ui_file_info    : ^hi.View,
     ui_file_open_btn: ^hi.View,
     ui_no_files_note: ^hi.View,
+
+    sb_status_bar   : strings.Builder,
+    sb_file_info    : strings.Builder,
 }
 
 panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
@@ -32,6 +35,8 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
 
     mem.dynamic_arena_init(&panel.arena)
     panel.allocator = mem.dynamic_arena_allocator(&panel.arena)
+    panel.sb_status_bar = strings.builder_make(panel.allocator)
+    panel.sb_file_info = strings.builder_make(panel.allocator)
 
     panel.ui_root = hi.add_view(parent, { flags={.fill_y,.scissor}, layout={dir=.column}, size={300,0} })
 
@@ -59,7 +64,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
         strata  = .high,
     })
 
-    _panel_reload_path(panel, path)
+    _panel_read_directory(panel, path)
 
     hi.set_debug(panel.ui_root, .debug in parent.flags)
 
@@ -72,13 +77,10 @@ panel_destroy :: proc (panel: ^Panel) {
     free(panel)
 }
 
-_panel_reload_path :: proc (panel: ^Panel, path: string) {
+_panel_read_directory :: proc (panel: ^Panel, path: string) {
     path := path
     if path == "" do path, _ = os.user_home_dir(context.temp_allocator)
     log(#procedure, path)
-
-    hi.remove_children(panel.ui_file_list)
-    mem.dynamic_arena_free_all(&panel.arena)
 
     panel.path = strings.clone(path, panel.allocator)
     path_dir, path_filename := os.split_path(panel.path)
@@ -154,8 +156,8 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                 if .selected in v.flags {
                     hi.set_parent(panel.ui_file_open_btn, v)
                     file := &panel.files[v.user_idx]
-                    // ISSUE: always allocating
-                    panel.ui_file_info.text = fmt.aprintf(
+                    strings.builder_reset(&panel.sb_file_info)
+                    hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
                         "|s=large|%s|s|\n\n"+
                         "|c=#999|Type|c||tab=80||i=%v| %v\n"+
                         "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
@@ -165,8 +167,7 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                         file.type, file.type,
                         file.size,
                         _format_time(file.modification_time, context.temp_allocator),
-                        allocator=panel.allocator,
-                    )
+                    ))
                     _panel_update_status_bar(panel)
                 }
             }
@@ -217,13 +218,12 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
     mme_allocated, mem_reserved := _dynamic_arena_mem_usage(panel.arena)
     mem_usage_text := fmt.tprintf("Memory|tab=80|%M / %M", mme_allocated, mem_reserved)
 
-    // ISSUE: always allocating
-    panel.ui_status_bar.text = fmt.aprintf(
+    strings.builder_reset(&panel.sb_status_bar)
+    hi.set_text(panel.ui_status_bar, fmt.sbprintf(&panel.sb_status_bar,
         "|c=muted||s=small|%s%s",
         sel_file_text,
         mem_usage_text,
-        allocator=panel.allocator,
-    )
+    ))
 }
 
 _perm_bits_bit_width_scale :: .8

@@ -413,6 +413,13 @@ set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
     queue_solve_context(v.ctx)
 }
 
+set_text :: proc (v: ^View, text: string) {
+    ensure(!v.ctx.solving)
+    ensure(!v.ctx.drawing)
+    v.text = text
+    queue_solve_context(v.ctx)
+}
+
 _emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
     return v.on_event != nil ? v->on_event(e) : false
 }
