@@ -107,6 +107,15 @@ main_update :: proc () -> (keep_running: bool) {
         hi.set_debug(app.ui.root, debug)
     }
 
+    if k2.key_went_down(.N1) do hi.set_ref_font_height(app.ui, 16)
+    if k2.key_went_down(.N2) do hi.set_ref_font_height(app.ui, 24)
+    if k2.key_went_down(.N3) do hi.set_ref_font_height(app.ui, 32)
+    if k2.key_went_down(.N4) do hi.set_ref_font_height(app.ui, 48)
+    if k2.key_went_down(.N5) do hi.set_ref_font_height(app.ui, 64)
+    if k2.key_went_down(.N6) do hi.set_ref_font_height(app.ui, 72)
+
+    if k2.key_went_down(.N0) do hi.set_ref_font_height(app.ui, 24)
+
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 

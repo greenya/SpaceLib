@@ -1,5 +1,11 @@
 package hi
 
+// FIX: _text_wrap_tokens() should not mutate Text_Token.size.x of a .tab token, instead add Text_Token.solved_width
+// Old comment (now invalid; remove when issue fixed):
+// Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
+// This works for now as we always re-measure before wrapping; cached re-wrap would need
+// separate storage, e.g. Text_Token.solved_width.
+
 import "core:strings"
 import "core:strconv"
 
@@ -165,10 +171,6 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
 // - Automatic wrapping is applied if `limit_x > 0`.
 // - Alignment tokens effective only if `limit_x > 0`.
 // - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
-//
-// Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
-// This works for now as we always re-measure before wrapping; cached re-wrap would need
-// separate storage, e.g. Text_Token.solved_width.
 _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32

@@ -82,7 +82,7 @@ Flag :: enum {
     text,       // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
     text_fit_x, // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
     text_raw,   // Text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|raw|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|noraw|` tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
-    text_wordy, // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of text. It should only be used with `.text`.
+    text_wordy, // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of static text, tokenized and measured tokens are cached. Use `set_text()` to set new text and invalidate all cached data. It should only be used with `.text`.
 
     // Behavior
 
@@ -233,6 +233,14 @@ _remove_detached_view_tree :: proc (v: ^View) {
     for c := v.first_child; c != nil; c = c.next_sibling {
         _remove_detached_view_tree(c)
     }
+
+    // Clear cached wordy tokens before freeing the sparse-array slot.
+    // User may key `on_text_wordy` storage by `^View`; if this slot is reused,
+    // a future `.text_wordy` view could receive a non-empty stale buffer,
+    // which is treated as already tokenized and measured.
+    // P.S.: Maybe we need some `._text_dirty` flag to handle this more cleanly.
+    if .text_wordy in v.flags do clear(_text_wordy_buffer(v))
+
     core.sparse_array_remove(&v.ctx.views, int(v.idx))
 }
 
@@ -417,7 +425,15 @@ set_text :: proc (v: ^View, text: string) {
     ensure(!v.ctx.solving)
     ensure(!v.ctx.drawing)
     v.text = text
+    if .text_wordy in v.flags do clear(_text_wordy_buffer(v))
     queue_solve_context(v.ctx)
+}
+
+_text_wordy_buffer :: proc (v: ^View) -> (buf: ^[dynamic] Text_Token) {
+    assert(v.ctx.on_text_wordy != nil, "Context.on_text_wordy must be set when using .text_wordy views")
+    buf = v.ctx.on_text_wordy(v)
+    assert(buf != nil, "Context.on_text_wordy must not return nil")
+    return
 }
 
 _emit :: proc (v: ^View, e: Event) -> (consumed: bool) {

@@ -82,7 +82,6 @@ Context_Init :: struct {
     // Text wordy callback. Used only with `.text_wordy` views.
     // Allows specifying a separate text token buffer for large/heavy text views.
     //
-    // The buffer will be automatically cleared before use.
     // `Visible_View.solved_text_tokens` will slice into this buffer.
     on_text_wordy: proc (v: ^View) -> (buf: ^[dynamic] Text_Token),
 
@@ -377,6 +376,21 @@ draw_context :: proc (ctx: ^Context) {
     }
 }
 
+set_ref_font_height :: proc (ctx: ^Context, height: f32) {
+    ensure(!ctx.solving)
+    ensure(!ctx.drawing)
+
+    if ctx.ref_font_height == height do return
+    ctx.ref_font_height = height
+
+    it := core.sparse_array_iterate(&ctx.views)
+    for v in core.sparse_array_next(&it) {
+        if .text_wordy in v.flags do clear(_text_wordy_buffer(v))
+    }
+
+    queue_solve_context(ctx)
+}
+
 _sort_visible_views :: proc (ctx: ^Context) {
     slice.sort_by(ctx.visible_views[:], less=proc (i, j: Visible_View) -> bool {
         switch {
@@ -404,30 +418,29 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
         }
 
         if .text_wordy in v.flags {
-            pool: ^[dynamic] Text_Token
-            assert(ctx.on_text_wordy != nil, "Context.on_text_wordy must be set when using .text_wordy views")
-            pool = ctx.on_text_wordy(v)
-            assert(pool != nil, "Context.on_text_wordy must not return nil")
-            clear(pool)
-            when PERF_ON do _perf_track_start(ctx, .text_tokenize)
-            v.solved_text_tokens = _text_tokenize(pool, v.text, .text_raw in v.flags)
-            when PERF_ON do _perf_track_stop(ctx, .text_tokenize)
+            pool := _text_wordy_buffer(v)
+            if len(pool) == 0 {
+                when PERF_ON do _perf_track_start(ctx, .text_tokenize)
+                v.solved_text_tokens = _text_tokenize(pool, v.text, .text_raw in v.flags)
+                when PERF_ON do _perf_track_stop(ctx, .text_tokenize)
+                when PERF_ON do _perf_track_start(ctx, .text_measure)
+                _text_measure_tokens(&v)
+                when PERF_ON do _perf_track_stop(ctx, .text_measure)
+            } else {
+                v.solved_text_tokens = pool[:]
+            }
         } else {
             pool := slice.into_dynamic(ctx.visible_text_tokens[ctx.visible_text_tokens_used:len(ctx.visible_text_tokens)])
             when PERF_ON do _perf_track_start(ctx, .text_tokenize)
             v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_raw in v.flags)
             when PERF_ON do _perf_track_stop(ctx, .text_tokenize)
             ctx.visible_text_tokens_used += len(v.solved_text_tokens)
-            // Note: we use visible_text_tokens for full text measurement, this overflows on any large view even
-            // if technically all the tokens are not visible at once; for games this is fine, as majority of the text
-            // is quite controlled, but for general applications it is not nice
             ctx.stats.visible_text_tokens_peak = max(ctx.stats.visible_text_tokens_peak, ctx.visible_text_tokens_used)
             assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
+            when PERF_ON do _perf_track_start(ctx, .text_measure)
+            _text_measure_tokens(&v)
+            when PERF_ON do _perf_track_stop(ctx, .text_measure)
         }
-
-        when PERF_ON do _perf_track_start(ctx, .text_measure)
-        _text_measure_tokens(&v)
-        when PERF_ON do _perf_track_stop(ctx, .text_measure)
 
         if .text_fit_x in v.flags {
             when PERF_ON do _perf_track_start(ctx, .text_wrap)
