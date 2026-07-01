@@ -4,16 +4,16 @@ import "core:fmt"
 import "../core"
 
 Debug_Draw_Type :: enum u8 {
+    perf,       // Context performance graph and timings. Works only if built with `-define:HI_PERF=true`. Note that correct timings are reported only if you always run `update_context()` and `draw_context()` as a pair, e.g. no double drawing after single update, no double update before single drawing.
     stats,      // Context stats: time, mouse, views, pixel scale etc.
     scissor,    // View's scissor
     padding,    // View's padding
     rect,       // View's solved rect
     info,       // View's name and size
-    text,       // Solved rect of each View's text token
+    text,       // Solved rect and baseline of each View's text token
 }
 
-// Debug_Draw_Filter :: bit_set [Debug_Draw_Type]
-
+_DEBUG_BG_COLOR         :: Color {  25,  25,  25, 255 }
 _DEBUG_VIEW_COLOR       :: Color { 255, 255, 255, 255 }
 _DEBUG_HIT_TEST_COLOR   :: Color { 255, 255,   0, 255 }
 _DEBUG_PADDING_COLOR    :: Color { 255, 255, 255,  80 }
@@ -23,8 +23,6 @@ _DEBUG_TEXT_TOKEN_COLOR :: Color { 255,   0, 255, 255 }
 _DEBUG_STATS_COLOR      :: Color { 255, 255, 255, 255 }
 
 _debug_draw_stats :: proc (ctx: ^Context) {
-    if ctx.debug_draw_text == nil do return
-
     text := fmt.tprintf(
         "ref_size: %vx%v\n" +
         "ref_font_height: %.0f\n" +
@@ -65,9 +63,9 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         ctx.stats.visible_text_tokens_peak,
     )
 
-    pos := Vec2 {4,50}
-    ctx.debug_draw_text(text, pos+1, core.brightness(_DEBUG_STATS_COLOR, -.8))
-    ctx.debug_draw_text(text, pos, _DEBUG_STATS_COLOR)
+    rect := Rect { 5, 50, 250, 360 }
+    _debug_draw_rect_filled(ctx, rect, _DEBUG_BG_COLOR)
+    _debug_draw_text(ctx, text, { rect.x, rect.y }, _DEBUG_STATS_COLOR)
 }
 
 _debug_draw_view :: proc (v: ^Visible_View, filter: bit_set [Debug_Draw_Type] = ~{}) {
@@ -115,12 +113,10 @@ _debug_draw_view_rect :: proc (v: ^View) {
 }
 
 _debug_draw_view_info :: proc (v: ^View) {
-    if v.ctx.debug_draw_text == nil do return
-
     text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
     lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
     color := .hovered in v.flags ? _DEBUG_HIT_TEST_COLOR : _DEBUG_VIEW_COLOR
-    v.ctx.debug_draw_text(text, lt_s+4, color)
+    _debug_draw_text(v.ctx, text, lt_s+4, color)
 }
 
 _debug_draw_view_text :: proc (v: ^Visible_View) {
@@ -151,7 +147,16 @@ _debug_draw_rect :: proc (ctx: ^Context, rect_s: Rect, thick_s: f32, color: Colo
     ctx.debug_draw_line({r,b}, {r,t}, thick_s, color)
 }
 
+_debug_draw_rect_filled :: proc (ctx: ^Context, rect_s: Rect, color: Color) {
+    _debug_draw_rect(ctx, { rect_s.x-1+rect_s.w/2, rect_s.y, 0, rect_s.h }, rect_s.w, color)
+}
+
 _debug_draw_line :: proc (ctx: ^Context, from_s, to_s: Vec2, thick_s: f32, color: Color) {
     if ctx.debug_draw_line == nil do return
     ctx.debug_draw_line(from_s, to_s, thick_s, color)
+}
+
+_debug_draw_text :: proc (ctx: ^Context, text: string, pos_s: Vec2, color: Color) {
+    if ctx.debug_draw_text == nil do return
+    ctx.debug_draw_text(text, pos_s, color)
 }

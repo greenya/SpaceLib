@@ -140,6 +140,8 @@ Context :: struct {
         visible_views_peak      : int,
         visible_text_tokens_peak: int,
     },
+
+    perf: Perf_State,
 }
 
 Mouse_Input :: struct {
@@ -186,6 +188,12 @@ destroy_context :: proc (ctx: ^Context) {
 update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Input, dt: f32) -> (mouse_input_consumed: bool) {
     ensure(!ctx.drawing, "update_context() cannot be called while draw_context() is running")
     ensure(!ctx.updating, "update_context() is already running")
+
+    when PERF_ON {
+        _perf_frame_start(ctx)
+        _perf_track_start(ctx, .update)
+        defer _perf_track_stop(ctx, .update)
+    }
 
     ctx.updating = true
     defer ctx.updating = false
@@ -252,6 +260,11 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 solve_context :: proc (ctx: ^Context) -> (solved: bool) {
     ensure(!ctx.drawing, "solve_context() cannot be called while draw_context() is running")
     ensure(!ctx.solving, "solve_context() is already running. Use queue_solve_context() to defer an extra pass.")
+
+    when PERF_ON {
+        _perf_track_start(ctx, .solve)
+        defer _perf_track_stop(ctx, .solve)
+    }
 
     ctx.solving = true
     defer ctx.solving = false
@@ -320,6 +333,8 @@ draw_context :: proc (ctx: ^Context) {
     ensure(!ctx.updating, "draw_context() cannot be called while update_context() is running")
     ensure(!ctx.drawing, "draw_context() is already running")
 
+    when PERF_ON do _perf_track_start(ctx, .draw)
+
     ctx.drawing = true
     defer ctx.drawing = false
 
@@ -334,9 +349,13 @@ draw_context :: proc (ctx: ^Context) {
         }
 
         if v.on_draw != nil {
+            when PERF_ON do _perf_track_start(ctx, .draw_view)
             v->on_draw()
+            when PERF_ON do _perf_track_stop(ctx, .draw_view)
         } else if .text in v.flags && has_on_draw_text && len(v.solved_text_tokens) > 0 {
+            when PERF_ON do _perf_track_start(ctx, .draw_text)
             ctx.on_draw_text(&v)
+            when PERF_ON do _perf_track_stop(ctx, .draw_text)
         }
 
         if .debug in v.flags {
@@ -346,9 +365,15 @@ draw_context :: proc (ctx: ^Context) {
         }
     }
 
-    if .debug in ctx.root.flags && .stats in ctx.debug_draw_filter {
+    when PERF_ON {
+        _perf_track_stop(ctx, .draw)
+        _perf_frame_stop(ctx)
+    }
+
+    if .debug in ctx.root.flags {
         if has_on_scissor do ctx->on_scissor({})
-        _debug_draw_stats(ctx)
+        if .stats in ctx.debug_draw_filter do _debug_draw_stats(ctx)
+        when PERF_ON do if .perf in ctx.debug_draw_filter do _perf_draw(ctx)
     }
 }
 
@@ -363,6 +388,11 @@ _sort_visible_views :: proc (ctx: ^Context) {
 }
 
 _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: bool) {
+    when PERF_ON {
+        _perf_track_start(ctx, .text_total)
+        defer _perf_track_stop(ctx, .text_total)
+    }
+
     ctx.visible_text_tokens_used = 0
 
     for &v in ctx.visible_views {
@@ -379,10 +409,14 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             pool = ctx.on_text_wordy(v)
             assert(pool != nil, "Context.on_text_wordy must not return nil")
             clear(pool)
+            when PERF_ON do _perf_track_start(ctx, .text_tokenize)
             v.solved_text_tokens = _text_tokenize(pool, v.text, .text_raw in v.flags)
+            when PERF_ON do _perf_track_stop(ctx, .text_tokenize)
         } else {
             pool := slice.into_dynamic(ctx.visible_text_tokens[ctx.visible_text_tokens_used:len(ctx.visible_text_tokens)])
+            when PERF_ON do _perf_track_start(ctx, .text_tokenize)
             v.solved_text_tokens = _text_tokenize(&pool, v.text, .text_raw in v.flags)
+            when PERF_ON do _perf_track_stop(ctx, .text_tokenize)
             ctx.visible_text_tokens_used += len(v.solved_text_tokens)
             // Note: we use visible_text_tokens for full text measurement, this overflows on any large view even
             // if technically all the tokens are not visible at once; for games this is fine, as majority of the text
@@ -391,10 +425,14 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             assert(ctx.visible_text_tokens_used < len(ctx.visible_text_tokens), "Context.visible_text_tokens overflow; increase MAX_VISIBLE_TEXT_TOKENS or use .text_wordy for large text views")
         }
 
+        when PERF_ON do _perf_track_start(ctx, .text_measure)
         _text_measure_tokens(&v)
+        when PERF_ON do _perf_track_stop(ctx, .text_measure)
 
         if .text_fit_x in v.flags {
+            when PERF_ON do _perf_track_start(ctx, .text_wrap)
             extent := _text_wrap_tokens(&v, 0)
+            when PERF_ON do _perf_track_stop(ctx, .text_wrap)
             solved_w := extent.x + v.padding[0] + v.padding[2]
             solved_h := extent.y + v.padding[1] + v.padding[3]
             if abs(solved_w-v.solved_rect.w)>.1 || abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
@@ -402,7 +440,9 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
             v.solved_rect.h = solved_h
         } else {
             limit_x := v.solved_rect.w - v.padding[0] - v.padding[2]
+            when PERF_ON do _perf_track_start(ctx, .text_wrap)
             extent := _text_wrap_tokens(&v, limit_x)
+            when PERF_ON do _perf_track_stop(ctx, .text_wrap)
             solved_h := extent.y + v.padding[1] + v.padding[3]
             if abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
             v.solved_rect.h = solved_h

@@ -88,7 +88,7 @@ app_init :: proc () {
             }
         },
 
-        debug_draw_filter = { .stats, .text },
+        debug_draw_filter = { .perf, .stats, .text },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
             k2.draw_line(from, to, thick, color)
         },

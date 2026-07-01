@@ -6,6 +6,8 @@ import "../../core/tracking_allocator"
 import hi ".."
 import k2 "../../../../karl2d"
 
+Files := #load_directory("..")
+
 App :: struct {
     ui: ^hi.Context,
     container: ^hi.View,
@@ -33,14 +35,6 @@ main :: proc () {
             font_height := hi.text_style_font_height(style)
             return k2.measure_text(text, font_height)
         },
-        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
-            switch cmd {
-            case "header":
-                style.align = .center
-                style.color = core.gray2
-                style.font_scale = 2
-            }
-        },
         on_text_wordy = proc (v: ^hi.View) -> ^[dynamic] hi.Text_Token {
             if v not_in app.token_buffers do app.token_buffers[v] = make([dynamic] hi.Text_Token)
             return &app.token_buffers[v]
@@ -52,6 +46,7 @@ main :: proc () {
                 k2.draw_text(tok.text, {tok_rect.x,tok_rect.y}, font_height_screen, it.style.color)
             }
         },
+        debug_draw_filter = { .perf, .stats, .text },
         debug_draw_line = proc (from, to: [2] f32, thick: f32, color: [4] u8) {
             k2.draw_line(from, to, thick, color)
         },
@@ -69,26 +64,22 @@ main :: proc () {
         delete(app.token_buffers)
     }
 
-    app.ui.root.padding = {80,40,80,40}
+    app.ui.root.padding = 80
     app.ui.root.on_event = proc (v: ^hi.View, e: hi.Event) -> (consumed: bool) {
         if e.type == .wheeled do return hi.wheel_one(app.container)
         return
     }
-    app.container = hi.add_view(app.ui.root, { flags={.fill_x,.fill_y,.scissor,.wheel_scroll_layout}, layout={dir=.column,gap=20}, padding={80,0,80,0}, on_draw=draw_view })
 
-    hi.add_view(app.container, { text="|header|hi.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../hi.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
+    app.container = hi.add_view(app.ui.root, {
+        flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_layout },
+        layout  = { dir=.column, gap=20 },
+        on_draw = draw_container_view,
+    })
 
-    hi.add_view(app.container, { text="|header|content.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../context.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
-
-    hi.add_view(app.container, { text="|header|view.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../view.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
-
-    hi.add_view(app.container, { text="|header|text.odin", flags={.text,.fill_x}, on_draw=draw_view_header })
-    hi.add_view(app.container, { text=#load("../text.odin"), flags={.text,.text_raw,.text_wordy,.fill_x} })
-
-    hi.set_debug(app.ui.root, true)
+    for file, i in Files {
+        hi.add_view(app.container, { text=file.name, flags={.text,.fill_x}, padding={0,20,0,20}, on_draw=draw_header_view })
+        hi.add_view(app.container, { text=string(file.data), flags={.text,.text_raw,.text_wordy,.fill_x} })
+    }
 
     for main_update() {
         main_draw()
@@ -111,6 +102,11 @@ main_update :: proc () -> (keep_running: bool) {
         wheel_delta = wheel_delta,
     }
 
+    if k2.key_went_down(.Tab) {
+        debug := .debug not_in app.ui.root.flags
+        hi.set_debug(app.ui.root, debug)
+    }
+
     app.ui.ref_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
@@ -118,21 +114,21 @@ main_update :: proc () -> (keep_running: bool) {
 }
 
 main_draw :: proc () {
-    k2.clear(k2.DARK_GRAY)
+    k2.clear(core.gray1)
     hi.draw_context(app.ui)
     k2.present()
 }
 
-draw_view :: proc (v: ^hi.Visible_View) {
+draw_container_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(v.solved_rect)
     k2.draw_rect(rect, core.gray2)
 
     v_border :: 16
     v_rect := core.rect_inflated(hi.viewport_rect(v), v_border)
-    k2.draw_rect_outline(k2.Rect(v_rect), v_border, core.gray4)
+    k2.draw_rect_outline(k2.Rect(v_rect), v_border, core.gray6)
 }
 
-draw_view_header :: proc (v: ^hi.Visible_View) {
+draw_header_view :: proc (v: ^hi.Visible_View) {
     rect := k2.Rect(v.solved_rect)
     k2.draw_rect(rect, core.gray4)
     v.ctx.on_draw_text(v)
