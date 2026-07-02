@@ -1,5 +1,6 @@
 package main
 
+import "core:os"
 import "core:slice"
 
 import "../../core"
@@ -7,7 +8,8 @@ import hi ".."
 import k2 "../../../../karl2d"
 
 App :: struct {
-    panels: [dynamic] ^Panel,
+    panels  : [dynamic] ^Panel,
+    popup   : ^Popup,
 
     ui              : ^hi.Context,
     ui_panel_list   : ^hi.View,
@@ -41,7 +43,6 @@ app_init :: proc () {
                 case "large"        : style.font_scale = 1.3
                 case "huge"         : style.font_scale = 1.6
                 }
-
             case "c": // color; support named and hex values; empty value resets color
                 switch args {
                 case "muted"    : style.color = core.gray4
@@ -49,19 +50,27 @@ app_init :: proc () {
                 case ""         : style.color = core.white
                 case            : style.color = core.color_from_hex(args)
                 }
-
             case "i": // icon
                 if out_space != nil {
                     out_space.scale = .9
                     out_space.baseline_ratio = .85
                 }
-
-            case "perm_bits":
+            case "mode_bits":
                 if out_space != nil {
-                    out_space.scale = .8 * { _perm_bits_width_scale(), 1 }
+                    out_space.scale = .8 * { _mode_bits_width_scale(), 1 }
                     out_space.baseline_ratio = 1
                 }
+            case "divider":
+                if out_space != nil {
+                    out_space.scale = 1
+                    out_space.scale_full_line = true
+                }
             }
+        },
+
+        on_text_wordy = proc(v: ^hi.View) -> (buf: ^[dynamic] hi.Text_Token) {
+            if v == app.popup.ui_text do buf = &app.popup.buf_tokens
+            return
         },
 
         on_draw_text = proc (v: ^hi.Visible_View) {
@@ -78,12 +87,15 @@ app_init :: proc () {
                     case "Symlink"  : k2.draw_circle(core.rect_center(tok_rect), tok_rect.w/2, it.style.color, 4)
                     case            : k2.draw_rect(k2.Rect(tok_rect), it.style.color)
                     }
-                case "perm_bits":
+                case "mode_bits":
+                    // TODO: make bits value to be "args", so no need an actual file info value to render the token
                     panel := cast (^Panel) v.user_ptr
                     file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
                     assert(file_view != nil)
                     file := &panel.files[file_view.user_idx]
-                    _perm_bits_draw(file.mode, k2.Rect(tok_rect))
+                    _mode_bits_draw(file.mode, k2.Rect(tok_rect))
+                case "divider":
+                    k2.draw_rect(k2.Rect(tok_rect), it.style.color)
                 }
             }
         },
@@ -106,12 +118,14 @@ app_init :: proc () {
             k2.draw_rect(rect, core.gray1)
         },
     })
+
+    app.popup = popup_create(app.ui_panel_list)
 }
 
 app_destroy :: proc () {
     for p in app.panels do panel_destroy(p)
     delete(app.panels)
-
+    popup_destroy(app.popup)
     hi.destroy_context(app.ui)
 }
 
@@ -128,4 +142,8 @@ app_destroy_all_panels_to_the_right :: proc (last_panel_to_keep: ^Panel) {
     assert(ok)
     for p, i in app.panels do if i > last_i do panel_destroy(p)
     resize(&app.panels, 1 + last_i)
+}
+
+app_open_popup_for_file :: proc (file: ^os.File_Info) {
+    popup_open(app.popup, file)
 }

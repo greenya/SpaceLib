@@ -58,7 +58,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     panel.ui_file_open_btn = _panel_add_file_open_btn(panel.ui_root, panel)
 
     panel.ui_no_files_note = hi.add_view(panel.ui_root, {
-        flags   = { .text, .text_fit_x },
+        flags   = { .text, .text_fit_x, .hitless },
         padding = 10,
         place   = { anchor=.5, pivot=.5 },
         strata  = .high,
@@ -117,13 +117,12 @@ _panel_add_file_open_btn :: proc (parent: ^hi.View, panel: ^Panel) -> ^hi.View {
             file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
             assert(file_view != nil)
             file := &panel.files[file_view.user_idx]
-            logf("open #%i: %#v", file_view.user_idx, file)
 
             if file.type == .Directory {
                 app_destroy_all_panels_to_the_right(panel)
                 app_add_panel(file.fullpath)
             } else {
-                // TODO: spawn popup
+                app_open_popup_for_file(file)
             }
 
             return true
@@ -159,7 +158,7 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                         "|s=large|%s|s|\n\n"+
                         "|c=#999|Type|c||tab=80||i=%v| %v\n"+
                         "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
-                        "|c=#999|Mode|c||tab=80||perm_bits|\n"+
+                        "|c=#999|Mode|c||tab=80||mode_bits|\n"+
                         "|c=#999|Modified|c||tab=80|%s",
                         file.name,
                         file.type, file.type,
@@ -224,18 +223,18 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
     ))
 }
 
-_perm_bits_bit_width_scale :: .8
-_perm_bits_gap_width_scale :: .4
+_mode_bits_bit_width_scale :: .8
+_mode_bits_gap_width_scale :: .4
 
-_perm_bits_width_scale :: proc () -> f32 {
+_mode_bits_width_scale :: proc () -> f32 {
     return\
-        _perm_bits_bit_width_scale * len(os.Permission_Flag) +
-        _perm_bits_gap_width_scale * 2
+        _mode_bits_bit_width_scale * len(os.Permission_Flag) +
+        _mode_bits_gap_width_scale * 2
 }
 
-_perm_bits_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
-    bws :: _perm_bits_bit_width_scale
-    gws :: _perm_bits_gap_width_scale
+_mode_bits_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
+    bws :: _mode_bits_bit_width_scale
+    gws :: _mode_bits_gap_width_scale
     for f, i in os.Permission_Flag {
         b := os.Permission_Flag(len(os.Permission_Flag) - int(f) - 1)
         r := core.Rect {
