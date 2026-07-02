@@ -46,7 +46,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
         flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_layout },
         layout  = { dir=.column },
         on_draw = proc (v: ^hi.Visible_View) {
-            rect := hi.viewport_rect(v)
+            rect := v.solved_rect
             k2.draw_rect_outline(k2.Rect(rect), 1, core.gray4)
         },
     })
@@ -65,8 +65,6 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     })
 
     _panel_read_directory(panel, path)
-
-    hi.set_debug(panel.ui_root, .debug in parent.flags)
 
     return panel
 }

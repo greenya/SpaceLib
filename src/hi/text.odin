@@ -24,25 +24,26 @@ Text_Token_Type :: enum u8 {
 
     word,       // Continuous block of letters/numbers/punctuations between other tokens
     whitespace, // Continuous block of spaces `" "` or tabs `\t`
-    br,         // Newline `\n` or Line break token `|br|`
 
-    // Alignment and wrapping
+    // Commands
+
+    br,         // `|br|` Line break or newline `\n`
 
     left,       // `|left|` Align to the left
     right,      // `|right|` Align to the right
     center,     // `|center|` Align to the center
+
     tab,        // `|tab=XXX|` Tab stop. Moves cursor X forward to XXX if current X is lower. In wrapping mode, overflowed continuation lines start at the last tab stop until `\n`, `|br|`, or another tab stop.
+
     wrap,       // `|wrap|` Enable wrapping mode
     nowrap,     // `|nowrap|` Disable wrapping mode
+
+    raw,        // `|raw|` Enable raw mode. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is `|noraw|`. Note: the tokenizer never adds this token type to the result stream.
+    noraw,      // `|noraw|` Disable raw mode. Note: the tokenizer never adds this token type to the result stream.
 
     // Custom
 
     custom,     // Custom/unknown token, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_token()`.
-
-    // Internal (these tokens are here only for documentation purposes and are never added to the result stream of tokens)
-
-    raw,        // `|raw|` Enable raw mode. In raw mode, tags are not parsed and are treated as text (expecting only `.word`, `.whitespace`, and `.br` tokens). The only tag parsed is `|noraw|`. Note: the tokenizer never adds this token type to the result stream.
-    noraw,      // `|noraw|` Disable raw mode. Note: the tokenizer never adds this token type to the result stream.
 }
 
 Text_Custom_Token_Space :: struct {

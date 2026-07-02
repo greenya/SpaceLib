@@ -98,10 +98,11 @@ app_init :: proc () {
     })
 
     app.ui_panel_list = hi.add_view(app.ui.root, {
-        flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_layout },
+        flags   = { .ratio_x, .ratio_y, .scissor, .wheel_scroll_layout },
+        size    = 1,
         layout  = { dir=.row, gap=10 },
         on_draw = proc (v: ^hi.Visible_View) {
-            rect := k2.Rect(hi.viewport_rect(v))
+            rect := k2.Rect(v.solved_rect)
             k2.draw_rect(rect, core.gray1)
         },
     })
@@ -117,6 +118,7 @@ app_destroy :: proc () {
 app_add_panel :: proc (path: string) {
     new_panel := panel_create(app.ui_panel_list, path)
     append(&app.panels, new_panel)
+    hi.set_debug(new_panel.ui_root, .debug in app.ui.root.flags) // propagate current debug state
     hi.solve_context(app.ui)
     hi.scroll_to_end(app.ui_panel_list)
 }

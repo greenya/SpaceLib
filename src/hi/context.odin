@@ -578,6 +578,7 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
 
 _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
     #reverse for &v in ctx.visible_views {
+        if .hitless in v.flags do continue
         in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
         in_scissor := v.solved_scissor != {}\
             ? core.vec_in_rect(ref_pos, v.solved_scissor)\

@@ -64,8 +64,8 @@ Flag :: enum {
 
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
     hidden,         // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
+    hitless,        // The view cannot be the direct mouse hit-test target, but its children can still make it `.hovered` and can still bubble events through it
     updating,       // The view receives `.updated` every `update_context()` while visible
-    hovered,        // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
 
     // Sizing
@@ -77,7 +77,7 @@ Flag :: enum {
     fill_x,     // Native-strata layout sizing: `solved_rect.w` takes remaining parent viewport width. In row layout, remaining width is shared evenly between native `.fill_x` children.
     fill_y,     // Native-strata layout sizing: `solved_rect.h` takes remaining parent viewport height. In column layout, remaining height is shared evenly between native `.fill_y` children.
 
-    // Rich Text
+    // Text
 
     text,       // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
     text_fit_x, // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
@@ -87,7 +87,9 @@ Flag :: enum {
     // Behavior
 
     disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to the parents until consumed.
+    hovered,    // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
+    captured,   // FIX: [NOT IMPLEMENTED] The view has captured mouse. This state begins when the mouse button is pressed and ends when it is released. Releasing the button over the view triggers `.clicked` event (without this flag, the event is triggered at the moment the mouse button is pressed). Only one view at any given time can capture the mouse.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to parents.
     radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to parents.

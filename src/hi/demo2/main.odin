@@ -133,7 +133,7 @@ draw_container_view :: proc (v: ^hi.Visible_View) {
     k2.draw_rect(rect, core.gray2)
 
     v_border :: 16
-    v_rect := core.rect_inflated(hi.viewport_rect(v), v_border)
+    v_rect := core.rect_inflated(v.solved_rect, v_border)
     k2.draw_rect_outline(k2.Rect(v_rect), v_border, core.gray6)
 }
 
