@@ -128,7 +128,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         }
 
         for c := v.first_child; c != nil; c = c.next_sibling {
-            if .hidden in c.flags do continue
+            if .hidden in c.flags || v.strata != c.strata do continue
             if .text_fit_x not_in c.flags {
                 if .fill_x in c.flags do c.solved_rect.w = fill_child_width
             }

@@ -74,8 +74,8 @@ Flag :: enum {
     ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
     fit_x,      // `solved_rect.w` is set to fit native strata children width
     fit_y,      // `solved_rect.h` is set to fit native strata children height
-    fill_x,     // `solved_rect.w` is set to all remaining parent width. Space is shared evenly between all `.fill_x` native strata views.
-    fill_y,     // `solved_rect.h` is set to all remaining parent height. Space is shared evenly between all `.fill_y` native strata views.
+    fill_x,     // Native-strata layout sizing: `solved_rect.w` takes remaining parent viewport width. In row layout, remaining width is shared evenly between native `.fill_x` children.
+    fill_y,     // Native-strata layout sizing: `solved_rect.h` takes remaining parent viewport height. In column layout, remaining height is shared evenly between native `.fill_y` children.
 
     // Rich Text
 
