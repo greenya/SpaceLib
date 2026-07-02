@@ -109,7 +109,7 @@ Context :: struct {
     visible_text_tokens_used: int,
     next_view_sid       : View_SID,
     root                : ^View, // Root view, created by `create_context()` and always set
-    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or `nil`. The view and its parents have `.hovered` set.
+    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or `nil`. The view and its native strata parents have `.hovered` set.
 
     updating            : bool, // If true, `update_context()` phase is currently running
     solving             : bool, // If true, `solve_context()` is currently running. If another solve is needed, queue it for later with `queue_solve_context()`.
@@ -537,7 +537,7 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
     }
 
     depth :: proc (v: ^View) -> (result: int) {
-        for i := v; i != nil; i = i.parent do result += 1
+        for i := v; i != nil; i = _interaction_parent(i) do result += 1
         return
     }
 
@@ -547,28 +547,28 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
     new_depth := depth(new_path)
 
     for old_depth > new_depth {
-        old_path = old_path.parent
+        old_path = _interaction_parent(old_path)
         old_depth -= 1
     }
 
     for new_depth > old_depth {
-        new_path = new_path.parent
+        new_path = _interaction_parent(new_path)
         new_depth -= 1
     }
 
     for old_path != new_path {
-        old_path = old_path.parent
-        new_path = new_path.parent
+        old_path = _interaction_parent(old_path)
+        new_path = _interaction_parent(new_path)
     }
 
     common_parent := old_path
 
-    for v := old_hit; v != common_parent; v = v.parent {
+    for v := old_hit; v != common_parent; v = _interaction_parent(v) {
         v.flags -= { .hovered }
         _emit(v, { type=.left })
     }
 
-    for v := new_hit; v != common_parent; v = v.parent {
+    for v := new_hit; v != common_parent; v = _interaction_parent(v) {
         v.flags += { .hovered }
         _emit(v, { type=.entered })
     }

@@ -9,8 +9,8 @@ View_Init :: struct {
     flags: Flags,
 
     using _: bit_field u16 {
-        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`.
-        level   : int       | 12,   // Order within `strata`, 12 bits, approx. range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
+        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Input interaction propagates only to native strata parents.
+        level   : int       | 12,   // Order within `strata`, 12 bits, approximate range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
@@ -27,7 +27,7 @@ View_Init :: struct {
 
     // Event callback.
     //
-    // *Mouse Action* events (`.clicked`, `.wheeled`) propagate to the parent unless `consumed=true` is returned.
+    // *Mouse Action* events (`.clicked`, `.wheeled`) propagate to native strata parents unless `consumed=true` is returned.
     // The `consumed` return value is ignored for all other events.
     //
     // Note: Most events are emitted during `update_context()`.
@@ -64,7 +64,7 @@ Flag :: enum {
 
     debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
     hidden,         // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
-    hitless,        // The view cannot be the direct mouse hit-test target, but its children can still make it `.hovered` and can still bubble events through it
+    hitless,        // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
     updating,       // The view receives `.updated` every `update_context()` while visible
     scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
 
@@ -86,13 +86,13 @@ Flag :: enum {
 
     // Behavior
 
-    disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to the parents until consumed.
-    hovered,    // The view or any its children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
+    disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to native strata parents until consumed.
+    hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
     capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
     captured,   // FIX: [NOT IMPLEMENTED] The view has captured mouse. This state begins when the mouse button is pressed and ends when it is released. Releasing the button over the view triggers `.clicked` event (without this flag, the event is triggered at the moment the mouse button is pressed). Only one view at any given time can capture the mouse.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
-    check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to parents.
-    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to parents.
+    check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
     page,       // The view hides all `.page` siblings when gets `show()`
     wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
     wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
@@ -145,8 +145,8 @@ Event_Type :: enum u8 {
 
     // Mouse
 
-    entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any its children. Fired once for each newly-hovered view in the hit tree. This event cannot be consumed.
-    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all its children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
+    entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
+    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
     captured,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button press.
     released,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
@@ -462,13 +462,22 @@ hide :: proc (v: ^View) {
     }
 }
 
+// Returns the next parent in the interaction path.
+//
+// Interaction propagation stops at strata boundaries, because non-native strata
+// views are elevated out of the parent's layout/clipping/input flow.
+_interaction_parent :: proc (v: ^View) -> ^View {
+    if v.parent != nil && v.parent.strata == v.strata do return v.parent
+    return nil
+}
+
 // Fires `.clicked` event for the view as it would be clicked with a mouse.
 //
-// The event will be propagated to the parents until consumed.
+// The event will be propagated to native strata parents until consumed.
 // If you're in a parent view and want to re-route the event to a child view
 // (which might not consume the event), you can `click_one()` to avoid recursive propagation.
 click :: proc (v: ^View) -> (consumed: bool) {
-    for i := v; i != nil; i = i.parent do if click_one(i) do return true
+    for i := v; i != nil; i = _interaction_parent(i) do if click_one(i) do return true
     return
 }
 
@@ -507,11 +516,11 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
 
 // Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
 //
-// The event will be propagated to the parents until consumed.
+// The event will be propagated to native strata parents until consumed.
 // If you're in a parent view and want to re-route the event to a child view
 // (which might not consume the event), you can `wheel_one()` to avoid recursive propagation.
 wheel :: proc (v: ^View) -> (consumed: bool) {
-    for i := v; i != nil; i = i.parent do if wheel_one(i) do return true
+    for i := v; i != nil; i = _interaction_parent(i) do if wheel_one(i) do return true
     return
 }
 
