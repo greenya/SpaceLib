@@ -1,11 +1,5 @@
 package hi
 
-// FIX: _text_wrap_tokens() should not mutate Text_Token.size.x of a .tab token, instead add Text_Token.solved_width
-// Old comment (now invalid; remove when issue fixed):
-// Note: Currently mutates `.tab` token `size.x` from tab stop into solved tab advance.
-// This works for now as we always re-measure before wrapping; cached re-wrap would need
-// separate storage, e.g. Text_Token.solved_width.
-
 import "core:strings"
 import "core:strconv"
 
@@ -17,6 +11,7 @@ Text_Token :: struct {
     ascent      : f32,      // Distance from token top to baseline
     descent     : f32,      // Distance from baseline to token bottom
     solved_pos  : Vec2,     // Calculated by the wrapping algorithm
+    solved_width: f32,      // Calculated by the wrapping algorithm. Usually `size.x`, but can differ for `.tab` and custom tokens.
 }
 
 Text_Token_Type :: enum u8 {
@@ -168,7 +163,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
 }
 
 // Wraps and aligns text tokens of a given view.
-// - Updates each `Text_Token.solved_pos`.
+// - Updates each `Text_Token.solved_*`.
 // - Automatic wrapping is applied if `limit_x > 0`.
 // - Alignment tokens effective only if `limit_x > 0`.
 // - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
@@ -189,6 +184,8 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     extent.x = limit_x
 
     for &tok, i in tokens {
+        tok.solved_width = tok.size.x
+
         #partial switch tok.type {
         case .left      : style.align = .left       ; continue
         case .right     : style.align = .right      ; continue
@@ -199,7 +196,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
         case .tab:
             next_x := max(cursor_x, tok.size.x)
             tok.solved_pos = { cursor_x, cursor_y }
-            tok.size.x = next_x - cursor_x
+            tok.solved_width = next_x - cursor_x
             cursor_x = next_x
             overflow_cursor_x = next_x
             overflow_allowed = false
@@ -238,7 +235,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
             limit_x > 0 &&
             overflow_allowed &&
             _tok_starts_printable_content(tok) &&
-            cursor_x + tok.size.x > limit_x
+            cursor_x + tok.solved_width > limit_x
 
         if overflow {
             extent.x = max(extent.x, _text_finalize_line(
@@ -260,7 +257,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
         line_max_descent = max(line_max_descent, tok.descent)
 
         tok.solved_pos = { cursor_x, cursor_y }
-        cursor_x += tok.size.x
+        cursor_x += tok.solved_width
         overflow_allowed ||= _tok_starts_printable_content(tok)
     }
 
@@ -275,7 +272,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     return
 
     _tok_starts_printable_content :: proc (tok: Text_Token) -> bool {
-        return tok.size.x > 0 && (tok.type!=.whitespace && tok.type!=.tab)
+        return tok.solved_width > 0 && (tok.type!=.whitespace && tok.type!=.tab)
     }
 }
 
@@ -314,7 +311,7 @@ _text_finalize_line :: proc (
 
     printable_line_width: f32
     for i in start_i..=end_i {
-        printable_line_width += line_tokens[i].size.x
+        printable_line_width += line_tokens[i].solved_width
     }
 
     shift_amount: f32
@@ -337,10 +334,10 @@ _text_finalize_line :: proc (
         }
     }
 
-    return line_tokens[end_i].solved_pos.x + line_tokens[end_i].size.x
+    return line_tokens[end_i].solved_pos.x + line_tokens[end_i].solved_width
 
     _tok_is_trimmed_for_alignment :: proc (tok: ^Text_Token) -> bool {
-        return tok.type == .whitespace || tok.size.x == 0
+        return tok.type == .whitespace || tok.solved_width == 0
     }
 }
 

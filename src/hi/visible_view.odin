@@ -57,7 +57,7 @@ visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok
         tok_rect = Rect {
             tok_.solved_pos.x + it.content_top_left.x,
             tok_.solved_pos.y + it.content_top_left.y,
-            tok_.size.x,
+            tok_.solved_width,
             tok_.size.y,
         }
 
