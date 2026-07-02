@@ -5,9 +5,10 @@ import "core:strconv"
 
 Text_Token :: struct {
     type        : Text_Token_Type,
+    flags       : Text_Token_Flags,
     text        : string,   // Text of the `.word` or `.whitespace`, or the name of a `.custom` token (e.g., "color" for "|color=primary|")
     args        : string,   // `.custom` token arguments (e.g., "primary" for "|color=primary|")
-    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Text_Custom_Token_Space.scale` via `Context.on_text_custom_token()`
+    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_token()`. Note: For `.scale_full_line` custom tokens, `size.x` is the unresolved line-width scale. Use `solved_width` for any token type instead.
     ascent      : f32,      // Distance from token top to baseline
     descent     : f32,      // Distance from baseline to token bottom
     solved_pos  : Vec2,     // Calculated by the wrapping algorithm
@@ -41,8 +42,14 @@ Text_Token_Type :: enum u8 {
     custom,     // Custom/unknown token, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_token()`.
 }
 
+Text_Token_Flags :: bit_set [Text_Token_Flag; u32]
+Text_Token_Flag :: enum {
+    scale_full_line, // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
+}
+
 Text_Custom_Token_Space :: struct {
-    scale           : Vec2, // Relative to current text style font height
+    scale           : Vec2, // Relative to current text style font height. If `scale_full_line` is set, `scale.x` is relative to full line width.
+    scale_full_line : bool, // If set, `scale.x` is scaled to full line width instead of font height. This flag should not be used with `.text_fit_x`.
     baseline_ratio  : f32,  // From 0 to 1 ratio inside the custom token box
 }
 
@@ -154,7 +161,15 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
             space := Text_Custom_Token_Space { baseline_ratio=style.font_baseline_ratio }
             ctx.on_text_custom_token(v, &style, tok.text, tok.args, &space)
             if space.scale != {} {
-                tok.size = space.scale * style.font_scale * ctx.ref_font_height
+                if space.scale_full_line {
+                    tok.flags += { .scale_full_line }
+                    tok.size = {
+                        space.scale.x, // Keep scale.x value as-is, for wrapping step
+                        space.scale.y * style.font_scale * ctx.ref_font_height,
+                    }
+                } else {
+                    tok.size = space.scale * style.font_scale * ctx.ref_font_height
+                }
                 tok.ascent = tok.size.y * space.baseline_ratio
                 tok.descent = tok.size.y * (1 - space.baseline_ratio)
             }
@@ -185,6 +200,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
 
     for &tok, i in tokens {
         tok.solved_width = tok.size.x
+        if .scale_full_line in tok.flags do tok.solved_width *= max(limit_x, 0)
 
         #partial switch tok.type {
         case .left      : style.align = .left       ; continue
@@ -194,7 +210,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
         case .nowrap    : style.wrapping = false    ; continue
 
         case .tab:
-            next_x := max(cursor_x, tok.size.x)
+            next_x := max(cursor_x, tok.solved_width)
             tok.solved_pos = { cursor_x, cursor_y }
             tok.solved_width = next_x - cursor_x
             cursor_x = next_x
