@@ -158,11 +158,12 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                         "|s=large|%s|s|\n\n"+
                         "|c=#999|Type|c||tab=80||i=%v| %v\n"+
                         "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
-                        "|c=#999|Mode|c||tab=80||mode_bits|\n"+
+                        "|c=#999|Mode|c||tab=80||file_mode=%x|\n"+
                         "|c=#999|Modified|c||tab=80|%s",
                         file.name,
                         file.type, file.type,
                         file.size,
+                        transmute (u32) file.mode,
                         _format_time(file.modification_time, context.temp_allocator),
                     ))
                     _panel_update_status_bar(panel)
@@ -223,18 +224,18 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
     ))
 }
 
-_mode_bits_bit_width_scale :: .8
-_mode_bits_gap_width_scale :: .4
+_file_mode_bit_width_scale :: .8
+_file_mode_gap_width_scale :: .4
 
-_mode_bits_width_scale :: proc () -> f32 {
+_file_mode_width_scale :: proc () -> f32 {
     return\
-        _mode_bits_bit_width_scale * len(os.Permission_Flag) +
-        _mode_bits_gap_width_scale * 2
+        _file_mode_bit_width_scale * len(os.Permission_Flag) +
+        _file_mode_gap_width_scale * 2
 }
 
-_mode_bits_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
-    bws :: _mode_bits_bit_width_scale
-    gws :: _mode_bits_gap_width_scale
+_file_mode_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
+    bws :: _file_mode_bit_width_scale
+    gws :: _file_mode_gap_width_scale
     for f, i in os.Permission_Flag {
         b := os.Permission_Flag(len(os.Permission_Flag) - int(f) - 1)
         r := core.Rect {

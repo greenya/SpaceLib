@@ -2,6 +2,7 @@ package main
 
 import "core:os"
 import "core:slice"
+import "core:strconv"
 
 import "../../core"
 import hi ".."
@@ -55,9 +56,9 @@ app_init :: proc () {
                     out_space.scale = .9
                     out_space.baseline_ratio = .85
                 }
-            case "mode_bits":
+            case "file_mode":
                 if out_space != nil {
-                    out_space.scale = .8 * { _mode_bits_width_scale(), 1 }
+                    out_space.scale = .8 * { _file_mode_width_scale(), 1 }
                     out_space.baseline_ratio = 1
                 }
             case "divider":
@@ -87,13 +88,10 @@ app_init :: proc () {
                     case "Symlink"  : k2.draw_circle(core.rect_center(tok_rect), tok_rect.w/2, it.style.color, 4)
                     case            : k2.draw_rect(k2.Rect(tok_rect), it.style.color)
                     }
-                case "mode_bits":
-                    // TODO: make bits value to be "args", so no need an actual file info value to render the token
-                    panel := cast (^Panel) v.user_ptr
-                    file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
-                    assert(file_view != nil)
-                    file := &panel.files[file_view.user_idx]
-                    _mode_bits_draw(file.mode, k2.Rect(tok_rect))
+                case "file_mode":
+                    mode, ok := strconv.parse_int(tok.args, base=16)
+                    assert(ok)
+                    _file_mode_draw(transmute (os.Permissions) u32(mode), k2.Rect(tok_rect))
                 case "divider":
                     k2.draw_rect(k2.Rect(tok_rect), it.style.color)
                 }
