@@ -306,6 +306,12 @@ child_by_all_flags :: proc (v: ^View, flags: Flags) -> ^View {
 }
 
 @require_results
+child_count :: proc (v: ^View) -> (count: int) {
+    for c := v.first_child; c != nil; c = c.next_sibling do count += 1
+    return
+}
+
+@require_results
 last_child :: proc (v: ^View) -> ^View {
     for c := v.first_child; c != nil; c = c.next_sibling {
         if c.next_sibling == nil do return c
@@ -446,6 +452,7 @@ show :: proc (v: ^View) {
     if .hidden in v.flags {
         v.flags -= { .hidden }
         _emit(v, { type=.shown })
+        queue_solve_context(v.ctx)
     }
 
     if .page in v.flags && v.parent != nil {
@@ -459,6 +466,7 @@ hide :: proc (v: ^View) {
     if .hidden not_in v.flags {
         v.flags += { .hidden }
         _emit(v, { type=.hidden })
+        queue_solve_context(v.ctx)
     }
 }
 
