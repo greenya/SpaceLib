@@ -34,9 +34,9 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     panel := new(Panel)
 
     mem.dynamic_arena_init(&panel.arena)
-    panel.allocator = mem.dynamic_arena_allocator(&panel.arena)
+    panel.allocator     = mem.dynamic_arena_allocator(&panel.arena)
     panel.sb_status_bar = strings.builder_make(panel.allocator)
-    panel.sb_file_info = strings.builder_make(panel.allocator)
+    panel.sb_file_info  = strings.builder_make(panel.allocator)
 
     panel.ui_root = hi.add_view(parent, { flags={.fill_y,.scissor}, layout={dir=.column}, size={300,0} })
 
@@ -55,7 +55,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
 
     panel.ui_status_bar = hi.add_view(panel.ui_root, { flags={.fill_x,.text}, padding=10 })
 
-    panel.ui_file_open_btn = _panel_add_file_open_btn(panel.ui_root, panel)
+    panel.ui_file_open_btn = _panel_add_file_open_btn(panel, panel.ui_root)
 
     panel.ui_no_files_note = hi.add_view(panel.ui_root, {
         flags   = { .text, .text_fit_x, .hitless },
@@ -95,7 +95,7 @@ _panel_read_directory :: proc (panel: ^Panel, path: string) {
             case                                                : return i.type == .Directory
             }
         })
-        for _, i in panel.files do _panel_add_file_view(panel.ui_file_list, panel, i)
+        for _, i in panel.files do _panel_add_file_view(panel, panel.ui_file_list, i)
         if len(panel.files) > 0 do _panel_state_ok_with_files(panel)
         else                    do _panel_state_ok_no_files(panel)
     } else {
@@ -103,7 +103,7 @@ _panel_read_directory :: proc (panel: ^Panel, path: string) {
     }
 }
 
-_panel_add_file_open_btn :: proc (parent: ^hi.View, panel: ^Panel) -> ^hi.View {
+_panel_add_file_open_btn :: proc (panel: ^Panel, parent: ^hi.View) -> ^hi.View {
     return hi.add_view(parent, {
         flags   = { .text, .text_fit_x },
         text    = "Open",
@@ -136,7 +136,7 @@ _panel_add_file_open_btn :: proc (parent: ^hi.View, panel: ^Panel) -> ^hi.View {
     })
 }
 
-_panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
+_panel_add_file_view :: proc (panel: ^Panel, parent: ^hi.View, file_idx: int) {
     file := &panel.files[file_idx]
     log(#procedure, file_idx, file.type, file.name, file.size)
 
@@ -164,7 +164,7 @@ _panel_add_file_view :: proc (parent: ^hi.View, panel: ^Panel, file_idx: int) {
                         file.type, file.type,
                         file.size,
                         transmute (u32) file.mode,
-                        _format_time(file.modification_time, context.temp_allocator),
+                        _format_time(file.modification_time, fontasize=true, allocator=context.temp_allocator),
                     ))
                     _panel_update_status_bar(panel)
                 }
@@ -233,7 +233,7 @@ _file_mode_width_scale :: proc () -> f32 {
         _file_mode_gap_width_scale * 2
 }
 
-_file_mode_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
+_file_mode_draw :: proc (mode: os.Permissions, rect: k2.Rect, color: k2.Color) {
     bws :: _file_mode_bit_width_scale
     gws :: _file_mode_gap_width_scale
     for f, i in os.Permission_Flag {
@@ -245,18 +245,17 @@ _file_mode_draw :: proc (mode: os.Permissions, rect: k2.Rect) {
             rect.h,
         }
         core.rect_inflate(&r, -1)
-        if b in mode do k2.draw_rect(k2.Rect(r), core.gray8)
-        else         do k2.draw_rect_outline(k2.Rect(r), 1, core.gray6)
+        if b in mode do k2.draw_rect(k2.Rect(r), color)
+        else         do k2.draw_rect_outline(k2.Rect(r), 1, color)
     }
 }
 
-_format_time :: proc (t: time.Time, allocator := context.allocator) -> string {
+_format_time :: proc (t: time.Time, fontasize := false, allocator := context.allocator) -> string {
     y, m, d := time.date(t)
     h, i, _ := time.clock(t)
     m_str := fmt.tprint(m)
-    // Testing baseline alignment with different font sizes in a line
-    // (visible token baselines are expected to be in a straight line)
-    return fmt.aprintf("|s=large|%d %s |s=small|%d |s=tiny|%02d:%02d|s|", d, m_str[:3], y, h, i, allocator=allocator)
+    f := fontasize ? "|s=large|%d %s |s=small|%d |s=tiny|%02d:%02d|s|" : "%d %s %d %02d:%02d"
+    return fmt.aprintf(f, d, m_str[:3], y, h, i, allocator=allocator)
 }
 
 _dynamic_arena_mem_usage :: proc (a: mem.Dynamic_Arena) -> (allocated, reserved: int) {

@@ -51,6 +51,13 @@ app_init :: proc () {
                 case ""         : style.color = core.white
                 case            : style.color = core.color_from_hex(args)
                 }
+            case "b": // baseline; modifies font scale; empty value resets baseline and font scale
+                      // note: doesn't track current font scale, and assumes medium font size
+                switch args {
+                case "super"    : style.font_scale = 0.6; style.font_baseline_ratio = 1.3
+                case "index"    : style.font_scale = 0.6; style.font_baseline_ratio = 0.6
+                case ""         : style.font_scale = 1.0; style.font_baseline_ratio = hi.Text_Style_Default.font_baseline_ratio
+                }
             case "i": // icon
                 if out_space != nil {
                     out_space.scale = .9
@@ -59,18 +66,17 @@ app_init :: proc () {
             case "file_mode":
                 if out_space != nil {
                     out_space.scale = .8 * { _file_mode_width_scale(), 1 }
-                    out_space.baseline_ratio = 1
                 }
             case "divider":
                 if out_space != nil {
-                    out_space.scale = 1
+                    out_space.scale = { 1, .5 }
                     out_space.scale_full_line = true
                 }
             }
         },
 
         on_text_wordy = proc(v: ^hi.View) -> (buf: ^[dynamic] hi.Text_Token) {
-            if v == app.popup.ui_text do buf = &app.popup.buf_tokens
+            if v == app.popup.ui_page_text do return &app.popup.buf_tokens
             return
         },
 
@@ -91,7 +97,7 @@ app_init :: proc () {
                 case "file_mode":
                     mode, ok := strconv.parse_int(tok.args, base=16)
                     assert(ok)
-                    _file_mode_draw(transmute (os.Permissions) u32(mode), k2.Rect(tok_rect))
+                    _file_mode_draw(transmute (os.Permissions) u32(mode), k2.Rect(tok_rect), it.style.color)
                 case "divider":
                     k2.draw_rect(k2.Rect(tok_rect), it.style.color)
                 }
