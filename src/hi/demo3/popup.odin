@@ -122,17 +122,8 @@ popup_destroy :: proc (popup: ^Popup) {
 popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     log(#procedure, file.fullpath)
 
-    // setup title
-
-    strings.builder_reset(&popup.sb_title)
-    hi.set_text(popup.ui_title, fmt.sbprintf(&popup.sb_title,
-        "|s=huge||i=%v| %s",
-        file.type,
-        file.name,
-    ))
-
+    _popup_setup_title(popup, file)
     _popup_setup_page_info(popup, file)
-
     _popup_setup_page_text(popup, file.fullpath)
 
     // Click 1st tab button, this essentially does the following:
@@ -145,12 +136,22 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     hi.show(popup.ui_root)
 }
 
+_popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
+    strings.builder_reset(&popup.sb_title)
+    hi.set_text(popup.ui_title, fmt.sbprintf(&popup.sb_title,
+        "|s=huge||i=%v| %s",
+        file.type,
+        file.name,
+    ))
+}
+
 _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
     strings.builder_reset(&popup.sb_page_info)
+    // popup.ui_page_info.flags += { .text_raw }
     hi.set_text(popup.ui_page_info, fmt.sbprintf(&popup.sb_page_info,
         "Full file path is |c=#ff8|%s|c|. " +
         "File name with icon is |c=#f8f||i=%v| %s|c|. " +
-        "File size is |c=#f88||s=huge|%M|s||c| and its modified time is |c=#88f|%s|c|.\n" +
+        "File size is |c=#f88|%M|c| and its modified time is |c=#88f|%s|c|.\n" +
         "\n" +
         "File mode is |file_mode=%d|. " +
         "We can change colors and custom inline tokens are also automatically wraps. " +
@@ -180,7 +181,7 @@ _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
         "Mixing baselines: " +
         "|tab=150|F|b=index|n|b| = F|b=index|n-1|b| + F|b=index|n-2|b|\n" +
         "|tab=150|A = [ A|b=index|1|b|, A|b=index|2|b|, A|b=index|2|b|, A|b=index|3|b|, ... ]\n" +
-        "|tab=150|B = C|b=index|min|b| + D|b=index|max|b|\n" +
+        "|tab=150|B|b=index|avg|b| = ( B|b=index|min|b| + B|b=index|max|b| ) / 2\n" +
         "|tab=150|z|b=super|2|b| = x|b=super|2|b| + y|b=super|2|b|\n" +
         "|tab=150|e = mc|b=super|2|b|",
         file.fullpath,
