@@ -54,16 +54,27 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
     popup.ui_title = hi.add_view(popup.ui_window, { flags={ .text, .fill_x }, padding=20 })
 
     popup.ui_tabs = hi.add_view(popup.ui_window, { flags={ .fill_x, .fit_y }, layout={ dir=.row }, padding={20,0,20,0} })
-    for text in ([?] string { "Info", "Text" }) {
+
+    popup.ui_pages = hi.add_view(popup.ui_window, {
+        flags   = { .fill_x, .fill_y },
+        padding = 20,
+        on_draw = proc (v: ^hi.Visible_View) {
+            k2.draw_rect(k2.Rect(v.solved_rect), core.gray1)
+        },
+    })
+
+    for p in ([?] struct { title: string, content: ^^hi.View, flags: hi.Flags } {
+        { "Info", &popup.ui_page_info, { .text } },
+        { "Text", &popup.ui_page_text, { .text, .text_wordy } },
+    }) {
         hi.add_view(popup.ui_tabs, {
             flags   = { .text, .text_fit_x, .radio },
             padding = 20,
-            text    = text,
+            text    = p.title,
             user_ptr= popup,
             on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
                 if event.type == .clicked {
                     popup := cast (^Popup) v.user_ptr
-                    // Assuming tab index corresponds to page index
                     idx := hi.view_index(v)
                     page := hi.child_by_index(popup.ui_pages, idx)
                     hi.show(page)
@@ -73,18 +84,18 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
             },
             on_draw = _popup_draw_button_view,
         })
+
+        // Each page consists of two views: container + content
+        // The reason we need container is that we want it to keep scroll position of the content,
+        // because once view is .text, its height is determined by measured text, and such view
+        // cannot provide scrolling window of itself, so we wrap content view into container view.
+        // P.S.: if we skip container and make so ui_pages be a single container for all contents,
+        // every time we switch a page, the scroll will be clamped to the new content bounds,
+        // which is not critical but ugly.
+
+        container := hi.add_view(popup.ui_pages, { flags={ .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y }, size=1 })
+        p.content^ = hi.add_view(container, { flags=p.flags|{.ratio_x}, size=1 })
     }
-
-    popup.ui_pages = hi.add_view(popup.ui_window, {
-        flags   = { .fill_x, .fill_y, .scissor, .wheel_scroll_y },
-        padding = 20,
-        on_draw = proc (v: ^hi.Visible_View) {
-            k2.draw_rect(k2.Rect(v.solved_rect), core.gray1)
-        },
-    })
-
-    popup.ui_page_info = hi.add_view(popup.ui_pages, { flags={ .text, .fill_x, .page } })
-    popup.ui_page_text = hi.add_view(popup.ui_pages, { flags={ .text, .text_wordy, .fill_x, .page } })
 
     footer_bar := hi.add_view(popup.ui_window, { flags={ .fill_x, .fit_y }, layout={ dir=.row, justify=.center, gap=20 } })
     hi.add_view(footer_bar, {
@@ -102,11 +113,6 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         },
         on_draw = _popup_draw_button_view,
     })
-
-    assert(
-        hi.child_count(popup.ui_tabs) == hi.child_count(popup.ui_pages),
-        "We rely on this condition when handling .clicked of a tab button",
-    )
 
     return popup
 }
@@ -132,7 +138,6 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     // - each page has .page, so when shown it hides all other .page siblings
     hi.click(popup.ui_tabs.first_child)
 
-    hi.scroll_to_start(popup.ui_pages)
     hi.show(popup.ui_root)
 }
 
@@ -146,6 +151,7 @@ _popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
 }
 
 _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
+    hi.scroll_to_start(popup.ui_page_info.parent)
     strings.builder_reset(&popup.sb_page_info)
     // popup.ui_page_info.flags += { .text_raw }
     hi.set_text(popup.ui_page_info, fmt.sbprintf(&popup.sb_page_info,
@@ -196,6 +202,7 @@ _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
 }
 
 _popup_setup_page_text :: proc (popup: ^Popup, file_fullpath: string) {
+    hi.scroll_to_start(popup.ui_page_text.parent)
     popup.ui_page_text.flags -= { .text_raw }
 
     f, err := os.open(file_fullpath)
