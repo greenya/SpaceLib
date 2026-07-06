@@ -9,27 +9,34 @@ import hi ".."
 import k2 "../../../../karl2d"
 
 Popup :: struct {
-    ui_root     : ^hi.View,
-    ui_window   : ^hi.View,
-    ui_title    : ^hi.View,
-    ui_tabs     : ^hi.View,
-    ui_pages    : ^hi.View,
-    ui_page_info: ^hi.View,
-    ui_page_text: ^hi.View,
-    // ui_page_image   : ^hi.View, // TODO: Add image view (tab)
+    ui_root         : ^hi.View,
+    ui_window       : ^hi.View,
+    ui_title        : ^hi.View,
+    ui_tabs         : ^hi.View,
+    ui_pages        : ^hi.View,
+    ui_page_info    : ^hi.View,
+    ui_page_text    : ^hi.View,
+    ui_page_image   : ^hi.View,
 
-    sb_title    : strings.Builder,
-    sb_page_info: strings.Builder,
-    buf_tokens  : [dynamic] hi.Text_Token,
-    buf_bytes   : [1_000_000] u8,
+    buf_title       : strings.Builder,
+    buf_info        : strings.Builder,
+    buf_tokens      : [dynamic] hi.Text_Token,
+
+    buf_bytes       : [1_000_000] u8,
+    buf_bytes_used  : int,          // Set only when no `issue`
+    buf_bytes_issue : string,       // If set, contains rich formatted string, slice into `data`
+
+    buf_texture     : k2.Texture,
+    buf_texture_err : strings.Builder,
 }
 
 popup_create :: proc (parent: ^hi.View) -> ^Popup {
     popup := new(Popup)
 
-    popup.sb_title      = strings.builder_make(0, 200)
-    popup.sb_page_info  = strings.builder_make(0, 2_000)
-    popup.buf_tokens    = make([dynamic] hi.Text_Token, 0, 20_000)
+    popup.buf_title         = strings.builder_make(0, 200)
+    popup.buf_info          = strings.builder_make(0, 2_000)
+    popup.buf_texture_err   = strings.builder_make(0, 200)
+    popup.buf_tokens        = make([dynamic] hi.Text_Token, 0, 20_000)
 
     popup.ui_root = hi.add_view(parent, {
         flags   = { .ratio_x, .ratio_y, .hidden },
@@ -63,9 +70,10 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         },
     })
 
-    for p in ([?] struct { title: string, content: ^^hi.View, flags: hi.Flags } {
-        { "Info", &popup.ui_page_info, { .text } },
-        { "Text", &popup.ui_page_text, { .text, .text_wordy } },
+    for p in ([?] struct { title: string, content: ^^hi.View, init: hi.View_Init } {
+        { "Info", &popup.ui_page_info, { flags={ .text, .ratio_x }, size=1 } },
+        { "Text", &popup.ui_page_text, { flags={ .text, .text_wordy, .ratio_x }, size=1 } },
+        { "Image", &popup.ui_page_image, {} },
     }) {
         hi.add_view(popup.ui_tabs, {
             flags   = { .text, .text_fit_x, .radio },
@@ -94,7 +102,19 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         // which is not critical but ugly.
 
         container := hi.add_view(popup.ui_pages, { flags={ .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y }, size=1 })
-        p.content^ = hi.add_view(container, { flags=p.flags|{.ratio_x}, size=1 })
+        p.content^ = hi.add_view(container, p.init)
+    }
+
+    popup.ui_page_image.user_ptr = popup
+    popup.ui_page_image.on_draw = proc (v: ^hi.Visible_View) {
+        popup := cast (^Popup) v.user_ptr
+        if v.text == "" {
+            assert(popup.buf_texture != {})
+            pos := [2] f32 { v.solved_rect.x, v.solved_rect.y }
+            k2.draw_texture(popup.buf_texture, pos)
+        } else {
+            v.ctx.on_draw_text(v)
+        }
     }
 
     footer_bar := hi.add_view(popup.ui_window, { flags={ .fill_x, .fit_y }, layout={ dir=.row, justify=.center, gap=20 } })
@@ -106,7 +126,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
             if event.type == .clicked {
                 popup := cast (^Popup) v.user_ptr
-                hi.hide(popup.ui_root)
+                popup_close(popup)
                 consumed = true
             }
             return
@@ -119,10 +139,19 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 
 popup_destroy :: proc (popup: ^Popup) {
     hi.remove_view(popup.ui_root)
-    strings.builder_destroy(&popup.sb_title)
-    strings.builder_destroy(&popup.sb_page_info)
+    strings.builder_destroy(&popup.buf_title)
+    strings.builder_destroy(&popup.buf_info)
+    strings.builder_destroy(&popup.buf_texture_err)
+    _popup_destroy_buf_texture(popup)
     delete(popup.buf_tokens)
     free(popup)
+}
+
+_popup_destroy_buf_texture :: proc (popup: ^Popup) {
+    if popup.buf_texture != {} {
+        k2.destroy_texture(popup.buf_texture)
+        popup.buf_texture = {}
+    }
 }
 
 popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
@@ -130,7 +159,9 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
 
     _popup_setup_title(popup, file)
     _popup_setup_page_info(popup, file)
-    _popup_setup_page_text(popup, file.fullpath)
+    _popup_setup_buf_bytes(popup, file.fullpath)
+    _popup_setup_page_text(popup) // uses buf_bytes
+    _popup_setup_page_image(popup) // uses buf_bytes
 
     // Click 1st tab button, this essentially does the following:
     // - each button has .radio, when .clicked it gets .selected, while other .radio siblings get de-.selected
@@ -141,9 +172,14 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     hi.show(popup.ui_root)
 }
 
+popup_close :: proc (popup: ^Popup) {
+    hi.hide(popup.ui_root)
+    _popup_destroy_buf_texture(popup)
+}
+
 _popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
-    strings.builder_reset(&popup.sb_title)
-    hi.set_text(popup.ui_title, fmt.sbprintf(&popup.sb_title,
+    strings.builder_reset(&popup.buf_title)
+    hi.set_text(popup.ui_title, fmt.sbprintf(&popup.buf_title,
         "|s=huge||i=%v| %s",
         file.type,
         file.name,
@@ -152,9 +188,9 @@ _popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
 
 _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
     hi.scroll_to_start(popup.ui_page_info.parent)
-    strings.builder_reset(&popup.sb_page_info)
+    strings.builder_reset(&popup.buf_info)
     // popup.ui_page_info.flags += { .text_raw }
-    hi.set_text(popup.ui_page_info, fmt.sbprintf(&popup.sb_page_info,
+    hi.set_text(popup.ui_page_info, fmt.sbprintf(&popup.buf_info,
         "Full file path is |c=#ff8|%s|c|. " +
         "File name with icon is |c=#f8f||i=%v| %s|c|. " +
         "File size is |c=#f88|%M|c| and its modified time is |c=#88f|%s|c|.\n" +
@@ -201,14 +237,55 @@ _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
     ))
 }
 
-_popup_setup_page_text :: proc (popup: ^Popup, file_fullpath: string) {
+_popup_setup_page_text :: proc (popup: ^Popup) {
     hi.scroll_to_start(popup.ui_page_text.parent)
-    popup.ui_page_text.flags -= { .text_raw }
+
+    if popup.buf_bytes_issue == "" {
+        hi.set_text(popup.ui_page_text, string(popup.buf_bytes[:popup.buf_bytes_used]))
+        popup.ui_page_text.flags += { .text_raw }
+    } else {
+        hi.set_text(popup.ui_page_text, popup.buf_bytes_issue)
+        popup.ui_page_text.flags -= { .text_raw }
+    }
+}
+
+_popup_setup_page_image :: proc (popup: ^Popup) {
+    hi.scroll_to_start(popup.ui_page_image.parent)
+    strings.builder_reset(&popup.buf_texture_err)
+    err: string
+
+    defer {
+        hi.set_text(popup.ui_page_image, err)
+        if err != "" {
+            popup.ui_page_image.flags += { .text, .ratio_x }
+            popup.ui_page_image.size = 1
+        }
+    }
+
+    if popup.buf_bytes_issue == "" {
+        assert(popup.buf_texture == {})
+        popup.buf_texture = k2.load_texture_from_bytes(popup.buf_bytes[:popup.buf_bytes_used])
+        if popup.buf_texture != {} {
+            popup.ui_page_image.flags -= { .text, .ratio_x }
+            popup.ui_page_image.size = { f32(popup.buf_texture.width), f32(popup.buf_texture.height) }
+        } else {
+            err = fmt.sbprint(&popup.buf_texture_err, "|c=error||s=large|Failed to k2.load_texture_from_bytes()")
+        }
+    } else {
+        err = fmt.sbprint(&popup.buf_texture_err, popup.buf_bytes_issue)
+    }
+}
+
+_popup_setup_buf_bytes :: proc (popup: ^Popup, file_fullpath: string) {
+    popup.buf_bytes_used = 0
+    popup.buf_bytes_issue = ""
 
     f, err := os.open(file_fullpath)
-    defer os.close(f)
-    defer if err != nil {
-        hi.set_text(popup.ui_page_text, fmt.bprintf(popup.buf_bytes[:], "|c=error|%v", err))
+    defer {
+        if err != nil {
+            popup.buf_bytes_issue = fmt.bprintf(popup.buf_bytes[:], "|c=error||s=large|%v", err)
+        }
+        os.close(f)
     }
 
     if err != nil do return
@@ -217,17 +294,19 @@ _popup_setup_page_text :: proc (popup: ^Popup, file_fullpath: string) {
     f_size, err = os.file_size(f)
     switch {
     case f_size == 0:
-        hi.set_text(popup.ui_page_text, "|c=muted|File is empty")
+        popup.buf_bytes_issue = fmt.bprintf(popup.buf_bytes[:], "|c=muted||s=large|File is empty")
     case f_size > len(popup.buf_bytes):
-        hi.set_text(popup.ui_page_text, "|c=muted|File too large")
+        b1, b2: [32] u8
+        popup.buf_bytes_issue = fmt.bprintf(popup.buf_bytes[:],
+            "|c=error||s=large|File too large|s||c=muted|\n" +
+            "File size is %s bytes\n" +
+            "Size limit is %s bytes",
+            core.format_buf_int(b1[:], f_size),
+            core.format_buf_int(b2[:], len(popup.buf_bytes)),
+        )
     case:
-        n: int
-        n, err = os.read_full(f, popup.buf_bytes[:f_size])
-        if err == nil {
-            assert(i64(n) == f_size)
-            hi.set_text(popup.ui_page_text, string(popup.buf_bytes[:n]))
-            popup.ui_page_text.flags += { .text_raw }
-        }
+        popup.buf_bytes_used, err = os.read_full(f, popup.buf_bytes[:f_size])
+        if err == nil do assert(i64(popup.buf_bytes_used) == f_size)
     }
 }
 
