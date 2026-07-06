@@ -81,7 +81,7 @@ _panel_read_directory :: proc (panel: ^Panel, path: string) {
     log(#procedure, path)
 
     panel.path = strings.clone(path, panel.allocator)
-    path_dir, path_filename := os.split_path(panel.path)
+    _, path_filename := os.split_path(panel.path)
     panel.ui_title_bar.text = fmt.aprintf("|s=large||i=Directory| %s", path_filename, allocator=panel.allocator)
     hi.hide(panel.ui_file_open_btn)
 

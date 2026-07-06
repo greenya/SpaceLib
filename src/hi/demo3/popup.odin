@@ -71,9 +71,9 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
     })
 
     for p in ([?] struct { title: string, content: ^^hi.View, init: hi.View_Init } {
-        { "Info", &popup.ui_page_info, { flags={ .text, .ratio_x }, size=1 } },
         { "Text", &popup.ui_page_text, { flags={ .text, .text_wordy, .ratio_x }, size=1 } },
         { "Image", &popup.ui_page_image, {} },
+        { "Info", &popup.ui_page_info, { flags={ .text, .ratio_x }, size=1 } },
     }) {
         hi.add_view(popup.ui_tabs, {
             flags   = { .text, .text_fit_x, .radio },
