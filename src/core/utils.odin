@@ -63,6 +63,23 @@ format_int :: proc (value: int, thousands_separator := ",", allocator := context
     return strings.to_string(sb)
 }
 
+format_buf_int :: proc (buf: [] u8, value: $T, thousands_sep := u8(',')) -> string where intrinsics.type_is_integer(T) {
+    if abs(value) < 1000 do return fmt.bprint(buf, value)
+
+    sb := strings.builder_from_bytes(buf)
+    if value < 0 do strings.write_byte(&sb, '-')
+
+    digits_buf: [64] u8
+    digits := fmt.bprint(digits_buf[:], abs(value))
+    for d, i in digits {
+        strings.write_byte(&sb, u8(d))
+        i_rev := len(digits) - i + 1
+        if i_rev-2>0 && (i_rev-2)%3==0 do strings.write_byte(&sb, thousands_sep)
+    }
+
+    return strings.to_string(sb)
+}
+
 // cuts-off all `0` decimal digits from the right side;
 // examples:
 // - `123.211100`, `max=3` -> `123.211`
