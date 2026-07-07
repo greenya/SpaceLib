@@ -121,7 +121,6 @@ _debug_draw_view_info :: proc (v: ^View) {
 
 _debug_draw_view_text :: proc (v: ^Visible_View) {
     if .text not_in v.flags do return
-    if v.ctx.debug_draw_line == nil do return
 
     it := visible_text_iterate(v, in_scissor_only=false)
     for tok, tok_rect in visible_text_next(&it) {
@@ -137,6 +136,9 @@ _debug_draw_view_text :: proc (v: ^Visible_View) {
 
 _debug_draw_rect :: proc (ctx: ^Context, rect_s: Rect, thick_s: f32, color: Color) {
     if ctx.debug_draw_line == nil do return
+
+    screen_rect := Rect { 0, 0, **ctx.screen_size }
+    if !core.rects_intersect(screen_rect, rect_s) do return
 
     l, t := rect_s.x, rect_s.y
     r, b := l+rect_s.w, t+rect_s.h
