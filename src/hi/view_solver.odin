@@ -72,11 +72,11 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     non_fill_x_children_width: f32
     non_fill_y_children_height: f32
 
-    // First pass: Update size for ".ratio_*", count "fill" children stats
+    // First pass: update ratio sizes and count layout fill stats.
     for c := v.first_child; c != nil; c = c.next_sibling {
         if .hidden in c.flags do continue
 
-        if v.strata != c.strata {
+        if !_is_layout_child(c) {
             if .text_fit_x not_in c.flags {
                 if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
             }
@@ -128,7 +128,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         }
 
         for c := v.first_child; c != nil; c = c.next_sibling {
-            if .hidden in c.flags || v.strata != c.strata do continue
+            if .hidden in c.flags || !_is_layout_child(c) do continue
             if .text_fit_x not_in c.flags {
                 if .fill_x in c.flags do c.solved_rect.w = fill_child_width
             }
@@ -161,7 +161,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
 
-            if v.strata == c.strata do switch v.layout.dir {
+            if _is_layout_child(c) do switch v.layout.dir {
             case .none:
                 rel_rect := Rect { layout_cursor.x, layout_cursor.y, v_size_x_avail, v_size_y_avail }
                 _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, rel_rect)
@@ -188,7 +188,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 }
                 layout_cursor.y += c.solved_rect.h + v.layout.gap
             } else {
-                // Non-native strata child skips layout cursor and uses fixed positioning without parent padding
+                // Absolute and non-native strata children skip layout cursor, padding, and scroll
                 _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, v.solved_rect)
             }
 
@@ -199,10 +199,10 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 
             if v.strata == c.strata {
                 if .scissor in v.flags {
-                    v_viewport_rect := viewport_rect(v)
+                    v_scissor_rect := .absolute in c.flags ? v.solved_rect : viewport_rect(v)
                     c_solved_scissor = v_solved_scissor != {}\
-                        ? core.rect_intersection(v_solved_scissor, v_viewport_rect)\
-                        : v_viewport_rect
+                        ? core.rect_intersection(v_solved_scissor, v_scissor_rect)\
+                        : v_scissor_rect
                 } else {
                     c_solved_scissor = v_solved_scissor
                 }
@@ -221,14 +221,15 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     }
 }
 
-// - `child_count` Number of non-`.hidden` and native strata children
+// - `child_count` Number of visible layout children
 // - `fit_size` The size to fit those children according to `padding`, `layout.dir` and `layout.gap`
+@require_results
 _view_layout_content_fit :: proc (v: ^View) -> (child_count: i32, fit_size: Vec2) {
     fit_sum: Vec2
     fit_max: Vec2
 
     for c := v.first_child; c != nil; c = c.next_sibling {
-        if .hidden in c.flags || v.strata != c.strata do continue
+        if .hidden in c.flags || !_is_layout_child(c) do continue
         child_count += 1
         fit_sum.x += c.solved_rect.w
         fit_sum.y += c.solved_rect.h
@@ -262,6 +263,12 @@ _view_layout_content_fit :: proc (v: ^View) -> (child_count: i32, fit_size: Vec2
     }
 
     return
+}
+
+@require_results
+_is_layout_child :: proc (child: ^View) -> bool {
+    assert(child.parent != nil)
+    return .absolute not_in child.flags && child.strata == child.parent.strata
 }
 
 _place_rect_pos :: proc (result_rect: ^Rect, place: Place, size: Vec2, rel_rect: Rect) {

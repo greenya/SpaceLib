@@ -9,16 +9,16 @@ View_Init :: struct {
     flags: Flags,
 
     using _: bit_field u16 {
-        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Input interaction propagates only to native strata parents.
+        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Non-native strata children are excluded from parent layout and input propagation.
         level   : int       | 12,   // Order within `strata`, 12 bits, approximate range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
     },
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
-    place   : Place,    // Used only if parent has no layout or for non-native `strata`
+    place   : Place,    // Used only if parent has no layout, or for `.absolute` and non-native `strata` children
     opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved_opacity` of the view and all its children (all stratas).
-    padding : Vec4,     // Padding for native strata children in order: 0=left, 1=top, 2=right, 3=bottom
-    scroll  : Vec2,     // Offset for native strata children
-    layout  : Layout,   // Layout for native strata children
+    padding : Vec4,     // Padding for layout children and text content in order: 0=left, 1=top, 2=right, 3=bottom
+    scroll  : Vec2,     // Offset for layout children
+    layout  : Layout,   // Layout for children. Affects non-`.absolute` native strata children only.
 
     name    : string, // Optional name
     text    : string, // Text with rich formatting if `.text` is used
@@ -54,7 +54,7 @@ View :: struct {
     first_child : ^View,
 
     solved_rect                 : Rect, // Solved position and size in ref units
-    solved_layout_child_count   : i32,  // Solved count of native strata children affected by the layout (excludes `.hidden` views)
+    solved_layout_child_count   : i32,  // Solved count of visible children affected by the parent layout
     solved_opacity              : f32,  // Solved combined hierarchical opacity (0 to 1)
 }
 
@@ -66,16 +66,17 @@ Flag :: enum {
     hidden,         // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
     hitless,        // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
     updating,       // The view receives `.updated` every `update_context()` while visible
-    scissor,        // The view clips native strata children. The clipping is applied according to `viewport_rect()`.
+    scissor,        // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
+    absolute,       // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
 
     // Sizing
 
-    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
-    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. The `parent.padding` included only for native strata children.
-    fit_x,      // `solved_rect.w` is set to fit native strata children width
-    fit_y,      // `solved_rect.h` is set to fit native strata children height
-    fill_x,     // Native-strata layout sizing: `solved_rect.w` takes remaining parent viewport width. In row layout, remaining width is shared evenly between native `.fill_x` children.
-    fill_y,     // Native-strata layout sizing: `solved_rect.h` takes remaining parent viewport height. In column layout, remaining height is shared evenly between native `.fill_y` children.
+    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. `parent.padding` is included only for layout children.
+    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. `parent.padding` is included only for layout children.
+    fit_x,      // `solved_rect.w` is set to fit visible layout children width
+    fit_y,      // `solved_rect.h` is set to fit visible layout children height
+    fill_x,     // Native strata layout sizing: `solved_rect.w` takes remaining parent viewport width. In row layout, remaining width is shared evenly between layout `.fill_x` children.
+    fill_y,     // Native strata layout sizing: `solved_rect.h` takes remaining parent viewport height. In column layout, remaining height is shared evenly between layout `.fill_y` children.
 
     // Text
 
@@ -565,8 +566,8 @@ wheel_one :: proc (v: ^View) -> (consumed: bool) {
     return scrolled || wheeled_consumed
 }
 
-// Padded viewport rect for native strata children.
-// Also a scissor rect if `.scissor` flag is used.
+// Padded viewport rect for layout children.
+// Also a scissor rect for them in case `.scissor` flag is used.
 @require_results
 viewport_rect :: proc (v: ^View) -> Rect {
     return {
@@ -577,7 +578,7 @@ viewport_rect :: proc (v: ^View) -> Rect {
     }
 }
 
-// Total size needed to fit all native strata children
+// Total size needed to fit all layout children
 @require_results
 content_size :: proc (v: ^View) -> Vec2 {
     bottom_right := content_bottom_right(v)
@@ -588,7 +589,7 @@ content_size :: proc (v: ^View) -> Vec2 {
     }
 }
 
-// Padded and scrolled top-left point for native strata children
+// Padded and scrolled top-left point for layout children
 @require_results
 content_top_left :: proc (v: ^View) -> Vec2 {
     return {
@@ -597,11 +598,11 @@ content_top_left :: proc (v: ^View) -> Vec2 {
     }
 }
 
-// Farthest bottom-right point of native strata children
+// Farthest bottom-right point of layout children
 @require_results
 content_bottom_right :: proc (v: ^View) -> (result: Vec2) {
     for c := v.first_child; c != nil; c = c.next_sibling {
-        if .hidden in c.flags || c.strata != v.strata do continue
+        if .hidden in c.flags || !_is_layout_child(c) do continue
         result.x = max(result.x, c.solved_rect.x + c.solved_rect.w)
         result.y = max(result.y, c.solved_rect.y + c.solved_rect.h)
     }

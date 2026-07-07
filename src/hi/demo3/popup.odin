@@ -41,7 +41,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
     popup.ui_root = hi.add_view(parent, {
         flags   = { .ratio_x, .ratio_y, .hidden },
         size    = 1,
-        strata  = .overlay,
+        strata  = .high,
         on_draw = proc (v: ^hi.Visible_View) {
             rect := hi.ref_view_to_screen(v)
             k2.draw_rect(k2.Rect(rect), {255,255,255,120})

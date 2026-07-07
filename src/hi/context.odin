@@ -103,19 +103,19 @@ Context_Init :: struct {
 }
 
 Context :: struct {
-    views               : core.Sparse_Array(View, MAX_VIEWS),
-    visible_views       : [dynamic; MAX_VISIBLE_VIEWS] Visible_View,
+    views           : core.Sparse_Array(View, MAX_VIEWS),
+    visible_views   : [dynamic; MAX_VISIBLE_VIEWS] Visible_View,
     visible_text_tokens : [MAX_VISIBLE_TEXT_TOKENS] Text_Token,
     visible_text_tokens_used: int,
-    next_view_sid       : View_SID,
-    root                : ^View, // Root view, created by `create_context()` and always set
-    hit                 : ^View, // Current mouse hit view from the last `update_context()`, or `nil`. The view and its native strata parents have `.hovered` set.
+    next_view_sid   : View_SID,
+    root            : ^View, // Root view, created by `create_context()` and always set
+    hit             : ^View, // Current mouse hit view from the last `update_context()`, or `nil`. The view and its native strata parents have `.hovered` set.
 
-    updating            : bool, // If true, `update_context()` phase is currently running
-    solving             : bool, // If true, `solve_context()` is currently running. If another solve is needed, queue it for later with `queue_solve_context()`.
-    drawing             : bool, // If true, `draw_context()` phase is currently running
+    updating        : bool, // If true, `update_context()` phase is currently running
+    solving         : bool, // If true, `solve_context()` is currently running. If another solve is needed, queue it for later with `queue_solve_context()`.
+    drawing         : bool, // If true, `draw_context()` phase is currently running
 
-    solved              : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically at some obvious moments like add/remove/re-parent views, screen-size changes etc. Call `queue_solve_context()` after direct layout-affecting mutations, e.g. changing `View.padding`.
+    solved          : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically at some obvious moments like add/remove/re-parent views, screen-size changes etc. Call `queue_solve_context()` after direct layout-affecting mutations, e.g. changing `View.padding`.
 
     using init: Context_Init,
 

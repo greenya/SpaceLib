@@ -57,11 +57,10 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
 
     panel.ui_file_open_btn = _panel_add_file_open_btn(panel, panel.ui_root)
 
-    panel.ui_no_files_note = hi.add_view(panel.ui_root, {
-        flags   = { .text, .text_fit_x, .hitless },
-        padding = 10,
+    panel.ui_no_files_note = hi.add_view(panel.ui_file_list, {
+        flags   = { .absolute, .ratio_x, .text },
         place   = { anchor=.5, pivot=.5 },
-        strata  = .high,
+        size    = { .8, 0 },
     })
 
     _panel_read_directory(panel, path)
@@ -185,13 +184,12 @@ _panel_state_ok_with_files :: proc (panel: ^Panel) {
     hi.hide(panel.ui_no_files_note)
     hi.show(panel.ui_file_open_btn)
     hi.show(panel.ui_file_info)
-    assert(panel.ui_file_list.first_child != nil)
-    hi.click(panel.ui_file_list.first_child)
+    hi.click(hi.child_by_no_flags(panel.ui_file_list, { .absolute }))
     _panel_update_status_bar(panel)
 }
 
 _panel_state_ok_no_files :: proc (panel: ^Panel) {
-    panel.ui_no_files_note.text = "|c=muted|List is empty"
+    panel.ui_no_files_note.text = "|center||c=muted|List is empty."
     hi.show(panel.ui_no_files_note)
     hi.hide(panel.ui_file_open_btn)
     hi.hide(panel.ui_file_info)
@@ -199,7 +197,7 @@ _panel_state_ok_no_files :: proc (panel: ^Panel) {
 }
 
 _panel_state_error :: proc (panel: ^Panel, error_msg: string) {
-    panel.ui_no_files_note.text = fmt.aprintf("|c=error|%s", error_msg, allocator=panel.allocator)
+    panel.ui_no_files_note.text = fmt.aprintf("|center||c=error|%s", error_msg, allocator=panel.allocator)
     hi.show(panel.ui_no_files_note)
     hi.hide(panel.ui_file_open_btn)
     hi.hide(panel.ui_file_info)

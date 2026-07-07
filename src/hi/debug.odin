@@ -79,6 +79,8 @@ _debug_draw_view :: proc (v: ^Visible_View, filter: bit_set [Debug_Draw_Type] = 
 _debug_draw_view_scissor :: proc (v: ^View) {
     if .scissor not_in v.flags do return
 
+    // ISSUE: drawing viewport_rect() of a view, not actual scissor of each child
+    // (.absolute children uses parent's solved_rect for scissor)
     vr_s := ref_rect_to_screen(v.ctx, viewport_rect(v))
     core.rect_inflate(&vr_s, 8/4)
     _debug_draw_rect(v.ctx, vr_s, 8, _DEBUG_SCISSOR_COLOR)
