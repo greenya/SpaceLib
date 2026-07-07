@@ -198,13 +198,13 @@ _popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
         "File mode is |file_mode=%d|. " +
         "We can change colors and custom inline tokens are also automatically wraps. " +
         "Here is File mode again with larger font and different color: |s=large||c=#8ff|Mode is |file_mode=%d||c||s|. " +
-        "The custom token for file mode is |raw|\"|file_mode=%d|\"|noraw|\n" +
+        "The custom token for file mode is \"file_mode=%d\"\n" +
         "\n" +
         "|c=#069||divider||c|\n" +
         "\n" +
         "|center|This popup takes 50%% of width and 100%% of height. " +
         "Resize the app window to see automatic wrapping in action. " +
-        "This paragraph starts and ends with custom token |raw|\"|divider|\"|noraw| which occupies full line. " +
+        "This paragraph starts and ends with custom token \"divider\" which occupies full line. " +
         "Like any other token, it can use any running style info, e.g. color, font, user state.\n|left|" +
         "\n" +
         "|c=#960||divider||c|\n" +
@@ -251,6 +251,8 @@ _popup_setup_page_text :: proc (popup: ^Popup) {
 
 _popup_setup_page_image :: proc (popup: ^Popup) {
     hi.scroll_to_start(popup.ui_page_image.parent)
+
+    _popup_destroy_buf_texture(popup)
     strings.builder_reset(&popup.buf_texture_err)
     err: string
 
@@ -263,7 +265,6 @@ _popup_setup_page_image :: proc (popup: ^Popup) {
     }
 
     if popup.buf_bytes_issue == "" {
-        assert(popup.buf_texture == {})
         popup.buf_texture = k2.load_texture_from_bytes(popup.buf_bytes[:popup.buf_bytes_used])
         if popup.buf_texture != {} {
             popup.ui_page_image.flags -= { .text, .ratio_x }
