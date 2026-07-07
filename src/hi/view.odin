@@ -295,7 +295,19 @@ child_by_any_flags :: proc (v: ^View, flags: Flags) -> ^View {
     return nil
 }
 
-// Returns first child with all `flags` set. Returns `nil` if `flags` is empty.
+// Returns first child which has none of `flags` set.
+// Returns `v.first_child` if `flags` is empty.
+@require_results
+child_by_no_flags :: proc (v: ^View, flags: Flags) -> ^View {
+    if flags == {} do return v.first_child
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.flags & flags == {} do return c
+    }
+    return nil
+}
+
+// Returns first child with all `flags` set.
+// Returns `nil` if `flags` is empty.
 @require_results
 child_by_all_flags :: proc (v: ^View, flags: Flags) -> ^View {
     if flags == {} do return nil
