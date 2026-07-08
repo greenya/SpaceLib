@@ -46,10 +46,10 @@ View :: struct {
     using init: View_Init,
 
     ctx: ^Context,
-    idx: View_IDX, // Reusable index in `ctx.views`
-    sid: View_SID, // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned. The value is `0` for detached views.
+    idx: View_IDX, // Reusable index in `ctx.views`. Value is `0` for the root.
+    sid: View_SID, // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned. The value is `0` for detached views and `1` for the root.
 
-    parent      : ^View,
+    parent      : ^View, // Value is `nil` for the root and detached views
     next_sibling: ^View,
     first_child : ^View,
 
@@ -62,12 +62,12 @@ Flags :: bit_set [Flag; u32]
 Flag :: enum {
     // Core
 
-    debug,          // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
-    hidden,         // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
-    hitless,        // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
-    updating,       // The view receives `.updated` every `update_context()` while visible
-    scissor,        // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
-    absolute,       // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
+    debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
+    hidden,     // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
+    hitless,    // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
+    updating,   // The view receives `.updated` every `update_context()` while visible
+    scissor,    // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
+    absolute,   // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
 
     // Sizing
 
@@ -188,12 +188,14 @@ add_view_detached :: proc (ctx: ^Context, init: View_Init) -> ^View {
 // Detached views are effectively unreachable for `solve_context()` which uses `Context.root` to traverse the tree.
 // Detached views are still part of the Context, and will be destroyed on `destroy_context()`.
 set_parent :: proc (v, new_parent: ^View) {
+    ensure(v.idx != 0, "Cannot re-parent or detach the root view")
+
     if v.parent == new_parent do return
 
     ensure(v != new_parent, "The new parent cannot be the view itself")
     ensure(v.parent != nil || v.parent == nil && v.next_sibling == nil, "Detached view cannot have next_sibling set")
     ensure(!view_tree_contains(v, new_parent), "The new parent cannot be a child of the view")
-    ensure(new_parent == nil || v.ctx == new_parent.ctx, "Cannot parent a view to a view from another context")
+    ensure(new_parent == nil || v.ctx == new_parent.ctx, "Cannot parent a view to a view from another context") // This can be allowed (?). I don't see issues updating context of the view. The view and whole subtree should be moved between contexts (sparse array slots). If we ever allow it, we need to ensure both contexts are not running solve_context(). Probably if allow, make separate proc like move_view_to_context(), and this "ensure" message should hint it.
     ensure(!v.ctx.solving, "Cannot modify view tree while solve_context() is running")
 
     _hit_clear_if_view_tree_contains_hit(v)
