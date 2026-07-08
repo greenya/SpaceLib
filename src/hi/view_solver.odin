@@ -10,6 +10,8 @@ import "../core"
 //
 // Note: The root view `flags`, `size`, `padding` and `layout` are ignored.
 _solve_view_fit_and_fixed_size :: proc (v: ^View) {
+    _reset_view_parent_dependent_size_for_fit_phase(v)
+
     // Recurse to children first
     for c := v.first_child; c != nil; c = c.next_sibling {
         if .hidden not_in c.flags do _solve_view_fit_and_fixed_size(c)
@@ -218,6 +220,18 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 }
             }
         }
+    }
+}
+
+_reset_view_parent_dependent_size_for_fit_phase :: proc (v: ^View) {
+    if v.idx == 0 do return
+
+    if v.flags & { .fit_x, .text_fit_x } == {} && v.flags & { .ratio_x, .fill_x } != {} {
+        v.solved_rect.w = 0
+    }
+
+    if v.flags & { .fit_y, .text } == {} && v.flags & { .ratio_y, .fill_y } != {} {
+        v.solved_rect.h = 0
     }
 }
 
