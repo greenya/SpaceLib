@@ -38,7 +38,7 @@ panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
     panel.sb_status_bar = strings.builder_make(panel.allocator)
     panel.sb_file_info  = strings.builder_make(panel.allocator)
 
-    panel.ui_root = hi.add_view(parent, { flags={.fill_y,.scissor}, layout={dir=.column}, size={300,0} })
+    panel.ui_root = hi.add_view(parent, { flags={.fill_y,.scissor}, layout={dir=.column}, size={APP_DEFAULT_PANEL_WIDTH,0} })
 
     panel.ui_title_bar = hi.add_view(panel.ui_root, { flags={.fill_x,.text}, padding=10 })
 
@@ -146,27 +146,24 @@ _panel_add_file_view :: proc (panel: ^Panel, parent: ^hi.View, file_idx: int) {
         user_ptr= panel,
         user_idx= file_idx,
         on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            #partial switch event.type {
-            case .selection_changed:
+            if event.type == .selection_changed && .selected in v.flags {
                 panel := cast (^Panel) v.user_ptr
-                if .selected in v.flags {
-                    hi.set_parent(panel.ui_file_open_btn, v)
-                    file := &panel.files[v.user_idx]
-                    strings.builder_reset(&panel.sb_file_info)
-                    hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
-                        "|s=large|%s|s|\n\n"+
-                        "|c=#999|Type|c||tab=80||i=%v| %v\n"+
-                        "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
-                        "|c=#999|Mode|c||tab=80||file_mode=%x|\n"+
-                        "|c=#999|Modified|c||tab=80|%s",
-                        file.name,
-                        file.type, file.type,
-                        file.size,
-                        transmute (u32) file.mode,
-                        _format_time(file.modification_time, fontasize=true, allocator=context.temp_allocator),
-                    ))
-                    _panel_update_status_bar(panel)
-                }
+                hi.set_parent(panel.ui_file_open_btn, v)
+                file := &panel.files[v.user_idx]
+                strings.builder_reset(&panel.sb_file_info)
+                hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
+                    "|s=large|%s|s|\n\n"+
+                    "|c=#999|Type|c||tab=80||i=%v| %v\n"+
+                    "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
+                    "|c=#999|Mode|c||tab=80||file_mode=%x|\n"+
+                    "|c=#999|Modified|c||tab=80|%s",
+                    file.name,
+                    file.type, file.type,
+                    file.size,
+                    transmute (u32) file.mode,
+                    _format_time(file.modification_time, fontasize=true, allocator=context.temp_allocator),
+                ))
+                _panel_update_status_bar(panel)
             }
             return
         },

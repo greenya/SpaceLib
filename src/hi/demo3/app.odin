@@ -8,6 +8,9 @@ import "../../core"
 import hi ".."
 import k2 "../../../../karl2d"
 
+APP_DEFAULT_FONT_HEIGHT :: 20
+APP_DEFAULT_PANEL_WIDTH :: 300
+
 App :: struct {
     panels  : [dynamic] ^Panel,
     popup   : ^Popup,
@@ -22,8 +25,8 @@ app_init :: proc () {
     app = {}
 
     app.ui = hi.create_context({
-        ref_font_height = 20,
-        scroll_step = 40,
+        ref_font_height = APP_DEFAULT_FONT_HEIGHT,
+        scroll_step = 2 * APP_DEFAULT_FONT_HEIGHT,
 
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
@@ -136,6 +139,7 @@ app_destroy :: proc () {
 app_add_panel :: proc (path: string) {
     new_panel := panel_create(app.ui_panel_list, path)
     append(&app.panels, new_panel)
+    app_apply_panels_width()
     hi.set_debug(new_panel.ui_root, .debug in app.ui.root.flags) // propagate current debug state
     hi.solve_context(app.ui)
     hi.scroll_to_end(app.ui_panel_list)
@@ -146,6 +150,27 @@ app_destroy_all_panels_to_the_right :: proc (last_panel_to_keep: ^Panel) {
     assert(ok)
     for p, i in app.panels do if i > last_i do panel_destroy(p)
     resize(&app.panels, 1 + last_i)
+}
+
+app_apply_panels_width :: proc (width := f32(0)) {
+    assert(len(app.panels) > 0)
+    p0_v := app.panels[0].ui_root
+
+    // Apply new width to 1st panel if value provided
+    if width > 0 {
+        p0_v.size.x = width
+        if width <= 1 do p0_v.flags += { .ratio_x }
+        else          do p0_v.flags -= { .ratio_x }
+    }
+
+    // Apply current width of 1st panel to all other panels
+    for i := 1; i < len(app.panels); i += 1 {
+        pN_v := app.panels[i].ui_root
+        pN_v.size.x = p0_v.size.x
+        pN_v.flags = (pN_v.flags - { .ratio_x }) | (p0_v.flags & { .ratio_x })
+    }
+
+    hi.queue_solve_context(app.ui)
 }
 
 app_open_popup_for_file :: proc (file: ^os.File_Info) {

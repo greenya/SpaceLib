@@ -14,17 +14,17 @@ Popup :: struct {
     ui_title        : ^hi.View,
     ui_tabs         : ^hi.View,
     ui_pages        : ^hi.View,
-    ui_page_info    : ^hi.View,
     ui_page_text    : ^hi.View,
     ui_page_image   : ^hi.View,
+    ui_page_demo    : ^hi.View,
 
     buf_title       : strings.Builder,
-    buf_info        : strings.Builder,
+    buf_demo        : strings.Builder,
     buf_tokens      : [dynamic] hi.Text_Token,
 
     buf_bytes       : [1_000_000] u8,
-    buf_bytes_used  : int,          // Set only when no `issue`
-    buf_bytes_issue : string,       // If set, contains rich formatted string, slice into `data`
+    buf_bytes_used  : int,      // Set only when `buf_bytes_issue == ""`
+    buf_bytes_issue : string,   // If set, contains rich formatted string, slice into `buf_bytes`
 
     buf_texture     : k2.Texture,
     buf_texture_err : strings.Builder,
@@ -34,7 +34,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
     popup := new(Popup)
 
     popup.buf_title         = strings.builder_make(0, 200)
-    popup.buf_info          = strings.builder_make(0, 2_000)
+    popup.buf_demo          = strings.builder_make(0, 2_000)
     popup.buf_texture_err   = strings.builder_make(0, 200)
     popup.buf_tokens        = make([dynamic] hi.Text_Token, 0, 20_000)
 
@@ -60,20 +60,23 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 
     popup.ui_title = hi.add_view(popup.ui_window, { flags={ .text, .fill_x }, padding=20 })
 
-    popup.ui_tabs = hi.add_view(popup.ui_window, { flags={ .fill_x, .fit_y }, layout={ dir=.row }, padding={20,0,20,0} })
+    popup.ui_tabs = hi.add_view(popup.ui_window, {
+        flags   = { .fill_x, .fit_y, .wheel_scroll_layout },
+        layout  = { dir=.row },
+        padding = { 20,0,20,0 },
+    })
 
     popup.ui_pages = hi.add_view(popup.ui_window, {
         flags   = { .fill_x, .fill_y },
-        padding = 20,
         on_draw = proc (v: ^hi.Visible_View) {
             k2.draw_rect(k2.Rect(v.solved_rect), core.gray1)
         },
     })
 
     for p in ([?] struct { title: string, content: ^^hi.View, init: hi.View_Init } {
-        { "Text", &popup.ui_page_text, { flags={ .text, .text_wordy, .ratio_x }, size=1 } },
-        { "Image", &popup.ui_page_image, {} },
-        { "Info", &popup.ui_page_info, { flags={ .text, .ratio_x }, size=1 } },
+        { "Text\n|s=small|Content as text", &popup.ui_page_text, { flags={ .text, .text_wordy, .ratio_x }, size=1 } },
+        { "Image\n|s=small|Content as image", &popup.ui_page_image, {} },
+        { "Demo\n|s=small|Formatting demo and options", &popup.ui_page_demo, { flags={ .text, .ratio_x }, size=1 } },
     }) {
         hi.add_view(popup.ui_tabs, {
             flags   = { .text, .text_fit_x, .radio },
@@ -101,8 +104,17 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         // every time we switch a page, the scroll will be clamped to the new content bounds,
         // which is not critical but ugly.
 
-        container := hi.add_view(popup.ui_pages, { flags={ .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y }, size=1 })
+        container := hi.add_view(popup.ui_pages, {
+            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y },
+            size    = 1,
+            padding = 20,
+        })
+
         p.content^ = hi.add_view(container, p.init)
+
+        if p.content^ == popup.ui_page_demo {
+            _popup_page_demo_action_bar(popup, container)
+        }
     }
 
     popup.ui_page_image.user_ptr = popup
@@ -140,7 +152,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 popup_destroy :: proc (popup: ^Popup) {
     hi.remove_view(popup.ui_root)
     strings.builder_destroy(&popup.buf_title)
-    strings.builder_destroy(&popup.buf_info)
+    strings.builder_destroy(&popup.buf_demo)
     strings.builder_destroy(&popup.buf_texture_err)
     _popup_destroy_buf_texture(popup)
     delete(popup.buf_tokens)
@@ -158,10 +170,10 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     log(#procedure, file.fullpath)
 
     _popup_setup_title(popup, file)
-    _popup_setup_page_info(popup, file)
     _popup_setup_buf_bytes(popup, file.fullpath)
     _popup_setup_page_text(popup) // uses buf_bytes
     _popup_setup_page_image(popup) // uses buf_bytes
+    _popup_setup_page_demo(popup, file)
 
     // Click 1st tab button, this essentially does the following:
     // - each button has .radio, when .clicked it gets .selected, while other .radio siblings get de-.selected
@@ -177,6 +189,102 @@ popup_close :: proc (popup: ^Popup) {
     _popup_destroy_buf_texture(popup)
 }
 
+_popup_page_demo_action_bar :: proc (popup: ^Popup, parent: ^hi.View) {
+    root := hi.add_view(parent, {
+        // Use higher strata to escape scissor;
+        // if we only needed to escape layout/scroll/padding, the `.absolute` flag is the way
+        strata  = .overlay,
+        place   = { anchor={1,.5}, pivot={0,.5} },
+        flags   = { .fit_x, .fit_y },
+        layout  = { dir=.column },
+        on_draw = proc (v: ^hi.Visible_View) {
+            k2.draw_rect(k2.Rect(v.solved_rect), core.gray2)
+        },
+    })
+
+    // .text_raw toggle
+
+    hi.add_view(root, {
+        flags   = { .text, .fill_x, .check },
+        text    = "[ _ ] .text_raw",
+        padding = 20,
+        user_ptr= popup,
+        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+            if event.type == .selection_changed {
+                popup := cast (^Popup) v.user_ptr
+                if .selected in v.flags {
+                    popup.ui_page_demo.flags += { .text_raw }
+                    hi.set_text(v, "[ x ] .text_raw")
+                } else {
+                    popup.ui_page_demo.flags -= { .text_raw }
+                    hi.set_text(v, "[ _ ] .text_raw")
+                }
+            }
+            return
+        },
+        on_draw = _popup_draw_button_view,
+    })
+
+    // Font scaling
+
+    @static
+    Font_Scale_Options := [?] struct { text: string, scale: f32 } {
+        { "60%", .6 },
+        { "80%", .8 },
+        { "100%", 1 },
+        { "120%", 1.2 },
+        { "140%", 1.4 },
+    }
+
+    hi.add_view(root, { flags={.text,.text_fit_x}, padding={20,20,20,0}, text="Font scale" })
+    fs_bar := hi.add_view(root, { flags={ .fit_x, .fit_y }, layout={ dir=.row, align=.center }, padding=10 })
+    for o, i in Font_Scale_Options {
+        hi.add_view(fs_bar, {
+            flags   = { .text, .text_fit_x, .radio } | (o.scale == 1 ? {.selected} : {}),
+            text    = o.text,
+            padding = 10,
+            user_idx= i,
+            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+                if event.type == .selection_changed && .selected in v.flags {
+                    o := &Font_Scale_Options[v.user_idx]
+                    hi.set_ref_font_height(v.ctx, o.scale * APP_DEFAULT_FONT_HEIGHT)
+                }
+                return
+            },
+            on_draw = _popup_draw_button_view,
+        })
+    }
+
+    // Panel width
+
+    @static
+    Panel_Width_Options := [?] struct { text: string, width: f32 /* Fixed if >1 and Ratio otherwise */ } {
+        { "200px", 200 },
+        { "300px", APP_DEFAULT_PANEL_WIDTH },
+        { "30%", .3 },
+        { "50%", .5 },
+    }
+
+    hi.add_view(root, { flags={.text,.text_fit_x}, padding={20,20,20,0}, text="Panel width" })
+    pw_bar := hi.add_view(root, { flags={ .fit_x, .fit_y }, layout={ dir=.row, align=.center }, padding=10 })
+    for o, i in Panel_Width_Options {
+        hi.add_view(pw_bar, {
+            flags   = { .text, .text_fit_x, .radio } | (o.width == APP_DEFAULT_PANEL_WIDTH ? {.selected} : {}),
+            text    = o.text,
+            padding = 10,
+            user_idx= i,
+            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+                if event.type == .selection_changed && .selected in v.flags {
+                    o := &Panel_Width_Options[v.user_idx]
+                    app_apply_panels_width(o.width)
+                }
+                return
+            },
+            on_draw = _popup_draw_button_view,
+        })
+    }
+}
+
 _popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
     strings.builder_reset(&popup.buf_title)
     hi.set_text(popup.ui_title, fmt.sbprintf(&popup.buf_title,
@@ -186,11 +294,10 @@ _popup_setup_title :: proc (popup: ^Popup, file: ^os.File_Info) {
     ))
 }
 
-_popup_setup_page_info :: proc (popup: ^Popup, file: ^os.File_Info) {
-    hi.scroll_to_start(popup.ui_page_info.parent)
-    strings.builder_reset(&popup.buf_info)
-    // popup.ui_page_info.flags += { .text_raw }
-    hi.set_text(popup.ui_page_info, fmt.sbprintf(&popup.buf_info,
+_popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
+    hi.scroll_to_start(popup.ui_page_demo.parent)
+    strings.builder_reset(&popup.buf_demo)
+    hi.set_text(popup.ui_page_demo, fmt.sbprintf(&popup.buf_demo,
         "Full file path is |c=#ff8|%s|c|. " +
         "File name with icon is |c=#f8f||i=%v| %s|c|. " +
         "File size is |c=#f88|%M|c| and its modified time is |c=#88f|%s|c|.\n" +
@@ -312,9 +419,19 @@ _popup_setup_buf_bytes :: proc (popup: ^Popup, file_fullpath: string) {
 }
 
 _popup_draw_button_view :: proc (v: ^hi.Visible_View) {
+    bg_color: [4] u8
+
     switch {
-    case .selected in v.flags   : k2.draw_rect(k2.Rect(v.solved_rect), core.gray1)
-    case .hovered in v.flags    : k2.draw_rect(k2.Rect(v.solved_rect), core.gray4)
+    case .radio in v.flags:
+        // .radio button: show .hovered only if not .selected
+        if .selected in v.flags     do bg_color = core.gray1
+        else if .hovered in v.flags do bg_color = core.gray4
+    case:
+        // .check/normal button: always show .hovered
+        if .selected in v.flags     do bg_color = core.gray1
+        if .hovered in v.flags      do bg_color = core.gray4
     }
+
+    k2.draw_rect(k2.Rect(v.solved_rect), bg_color)
     v.ctx.on_draw_text(v)
 }

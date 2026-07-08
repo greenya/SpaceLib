@@ -2,9 +2,6 @@
 
 ## TODOs
 
-TODO: demo3: Add .text_raw toggle
-TODO: demo3: Add ref font size selector (?)
-
 TODO: View: Add .modal flag, should block any events propagation to parent views
 
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
