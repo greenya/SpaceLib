@@ -37,8 +37,8 @@ app_init :: proc () {
             return k2.measure_text(text, font_height)
         },
 
-        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
-            switch cmd {
+        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, name, args: string, out_hint: ^hi.Text_Custom_Token_Hint) {
+            switch name {
             case "s": // font scale; support only named scalers; empty value resets scale (same as "medium")
                 switch args {
                 case "tiny"         : style.font_scale = 0.6
@@ -62,18 +62,28 @@ app_init :: proc () {
                 case ""         : style.font_scale = 1.0; style.font_baseline_ratio = hi.Text_Style_Default.font_baseline_ratio
                 }
             case "i": // icon
-                if out_space != nil {
-                    out_space.scale = .9
-                    out_space.baseline_ratio = .85
+                if out_hint != nil {
+                    out_hint.scale = .9
+                    out_hint.baseline_ratio = .85
                 }
             case "file_mode":
-                if out_space != nil {
-                    out_space.scale = .8 * { _file_mode_width_scale(), 1 }
+                if out_hint != nil {
+                    out_hint.scale = .8 * { _file_mode_width_scale(), 1 }
                 }
             case "divider":
-                if out_space != nil {
-                    out_space.scale = { 1, .5 }
-                    out_space.scale_full_line = true
+                if out_hint != nil {
+                    out_hint.scale = { 1, .5 }
+                    out_hint.scale_full_line = true
+                }
+            case "counter":
+                if out_hint != nil {
+                    assert(v == app.popup.ui_page_demo && args == "value")
+                    out_hint.intext_view = app.popup.ui_page_demo_counter
+                }
+            case "button":
+                if out_hint != nil {
+                    assert(v == app.popup.ui_page_demo)
+                    out_hint.intext_view = hi.child_by_name(v, args)
                 }
             }
         },

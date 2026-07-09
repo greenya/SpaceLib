@@ -2,6 +2,10 @@
 
 ## TODOs
 
+TODO: Text: Add .intext_full modification to .intext. Also refactor "Text_Custom_Token_Hint.scale_full_line" to "full_line" and it should be used for both cases: "intext_view" and "scale". At the moment "intext_view" ignores "scale" and "scale_full_line".
+
+When .intext_full is used, the token should dictate not only position for the view, but also width; the view only dictates height for the token.
+
 TODO: View: Add .modal flag, should block any events propagation to parent views
 
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)

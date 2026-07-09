@@ -163,33 +163,38 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
 
-            if _is_layout_child(c) do switch v.layout.dir {
-            case .none:
-                rel_rect := Rect { layout_cursor.x, layout_cursor.y, v_size_x_avail, v_size_y_avail }
-                _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, rel_rect)
+            switch {
+            case _is_layout_child(c):
+                switch v.layout.dir {
+                case .none:
+                    rel_rect := Rect { layout_cursor.x, layout_cursor.y, v_size_x_avail, v_size_y_avail }
+                    _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, rel_rect)
 
-            case .row:
-                c.solved_rect.x = layout_cursor.x
-                c.solved_rect.y = layout_cursor.y
-                // Offset child by Y axis, e.g. cross-axis alignment (layout.align)
-                if v.layout.align != .start {
-                    d := v_size_y_avail - c.solved_rect.h
-                    if v.layout.align == .center do d /= 2
-                    c.solved_rect.y += d
-                }
-                layout_cursor.x += c.solved_rect.w + v.layout.gap
+                case .row:
+                    c.solved_rect.x = layout_cursor.x
+                    c.solved_rect.y = layout_cursor.y
+                    // Offset child by Y axis, e.g. cross-axis alignment (layout.align)
+                    if v.layout.align != .start {
+                        d := v_size_y_avail - c.solved_rect.h
+                        if v.layout.align == .center do d /= 2
+                        c.solved_rect.y += d
+                    }
+                    layout_cursor.x += c.solved_rect.w + v.layout.gap
 
-            case .column:
-                c.solved_rect.x = layout_cursor.x
-                c.solved_rect.y = layout_cursor.y
-                // Offset child by X axis, e.g. cross-axis alignment (layout.align)
-                if v.layout.align != .start {
-                    d := v_size_x_avail - c.solved_rect.w
-                    if v.layout.align == .center do d /= 2
-                    c.solved_rect.x += d
+                case .column:
+                    c.solved_rect.x = layout_cursor.x
+                    c.solved_rect.y = layout_cursor.y
+                    // Offset child by X axis, e.g. cross-axis alignment (layout.align)
+                    if v.layout.align != .start {
+                        d := v_size_x_avail - c.solved_rect.w
+                        if v.layout.align == .center do d /= 2
+                        c.solved_rect.x += d
+                    }
+                    layout_cursor.y += c.solved_rect.h + v.layout.gap
                 }
-                layout_cursor.y += c.solved_rect.h + v.layout.gap
-            } else {
+            case .intext in c.flags:
+                // Text token owns c.solved_rect.x/y
+            case:
                 // Absolute and non-native strata children skip layout cursor, padding, and scroll
                 _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, v.solved_rect)
             }
@@ -208,7 +213,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 } else {
                     c_solved_scissor = v_solved_scissor
                 }
-                if c_solved_scissor != {} {
+                if c_solved_scissor != {} && .intext not_in c.flags {
                     in_scissor = core.rects_intersect(c_solved_scissor, c.solved_rect)
                 }
             }
@@ -282,7 +287,9 @@ _view_layout_content_fit :: proc (v: ^View) -> (child_count: i32, fit_size: Vec2
 @require_results
 _is_layout_child :: proc (child: ^View) -> bool {
     assert(child.parent != nil)
-    return .absolute not_in child.flags && child.strata == child.parent.strata
+    return .absolute not_in child.flags\
+        && .intext not_in child.flags\
+        && child.strata == child.parent.strata
 }
 
 _place_rect_pos :: proc (result_rect: ^Rect, place: Place, size: Vec2, rel_rect: Rect) {

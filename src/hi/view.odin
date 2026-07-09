@@ -68,6 +68,7 @@ Flag :: enum {
     updating,   // The view receives `.updated` every `update_context()` while visible
     scissor,    // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
     absolute,   // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
+    intext,     // The view is positioned by a custom token in the parent `.text` view and excluded from normal layout. In a stable solve, the view provides token size while the token provides view position. With `.text_wordy` parents, token size is cached: use static `.intext` sizes, or call `set_text()` on the parent after an `.intext` child size changes.
 
     // Sizing
 

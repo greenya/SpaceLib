@@ -69,15 +69,15 @@ Context_Init :: struct {
     // Text custom token callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
-    // - If `out_space != nil`, you can change its properties. Setting `out_space.scale` to
+    // - If `out_hint != nil`, you can change its properties. Setting `out_hint.scale` to
     //   non-zero value makes the token occupy physical space, e.g. for `|icon=sword|` you might
-    //   want to set `out_space.scale = 1`, which would occupy square of physical space for
-    //   inline icon. Additionally, you can change `out_space.baseline_ratio` default value,
+    //   want to set `out_hint.scale = 1`, which would occupy square of physical space for
+    //   inline icon. Additionally, you can change `out_hint.baseline_ratio` default value,
     //   which is `style.font_baseline_ratio`.
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom token in both phases: updating and drawing.
-    on_text_custom_token: proc (v: ^View, style: ^Text_Style, cmd, args: string, out_space: ^Text_Custom_Token_Space),
+    on_text_custom_token: proc (v: ^View, style: ^Text_Style, name, args: string, out_hint: ^Text_Custom_Token_Hint),
 
     // Text wordy callback. Used only with `.text_wordy` views.
     // Allows specifying a separate text token buffer for large/heavy text views.
@@ -289,9 +289,9 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
             if j > 0 do resize(&ctx.visible_views, 1) // keep root only
             _solve_view_fit_and_fixed_size(ctx.root)
             _solve_children_fill_and_ratio_size(ctx.root, {})
-            extent_mismatch := _regenerate_visible_text_tokens(ctx)
-            view_solver_passed = !extent_mismatch
-            if !extent_mismatch do break
+            extent_mismatch, intext_mismatch := _regenerate_visible_text_tokens(ctx)
+            view_solver_passed = !extent_mismatch && !intext_mismatch
+            if view_solver_passed do break
         }
 
         scroll_solver_passed = true
@@ -401,7 +401,7 @@ _sort_visible_views :: proc (ctx: ^Context) {
     })
 }
 
-_regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: bool) {
+_regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, intext_mismatch: bool) {
     when PERF_ON {
         _perf_track_start(ctx, .text_total)
         defer _perf_track_stop(ctx, .text_total)
@@ -444,20 +444,22 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch: boo
 
         if .text_fit_x in v.flags {
             when PERF_ON do _perf_track_start(ctx, .text_wrap)
-            extent := _text_wrap_tokens(&v, 0)
+            extent, v_intext_mismatch := _text_wrap_tokens(&v, 0)
             when PERF_ON do _perf_track_stop(ctx, .text_wrap)
             solved_w := extent.x + v.padding[0] + v.padding[2]
             solved_h := extent.y + v.padding[1] + v.padding[3]
-            if abs(solved_w-v.solved_rect.w)>.1 || abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
+            extent_mismatch ||= abs(solved_w-v.solved_rect.w)>.1 || abs(solved_h-v.solved_rect.h)>.1
+            intext_mismatch ||= v_intext_mismatch
             v.solved_rect.w = solved_w
             v.solved_rect.h = solved_h
         } else {
             limit_x := v.solved_rect.w - v.padding[0] - v.padding[2]
             when PERF_ON do _perf_track_start(ctx, .text_wrap)
-            extent := _text_wrap_tokens(&v, limit_x)
+            extent, v_intext_mismatch := _text_wrap_tokens(&v, limit_x)
             when PERF_ON do _perf_track_stop(ctx, .text_wrap)
             solved_h := extent.y + v.padding[1] + v.padding[3]
-            if abs(solved_h-v.solved_rect.h)>.1 do extent_mismatch = true
+            extent_mismatch ||= abs(solved_h-v.solved_rect.h)>.1
+            intext_mismatch ||= v_intext_mismatch
             v.solved_rect.h = solved_h
         }
     }

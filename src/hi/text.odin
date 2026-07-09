@@ -11,6 +11,7 @@ Text_Token :: struct {
     size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_token()`. Note: For `.scale_full_line` custom tokens, `size.x` is the unresolved line-width scale. Use `solved_width` for any token type instead.
     ascent      : f32,      // Distance from token top to baseline
     descent     : f32,      // Distance from baseline to token bottom
+    intext_view : ^View,    // `.intext` view this token is bound with
     solved_pos  : Vec2,     // Calculated by the wrapping algorithm
     solved_width: f32,      // Calculated by the wrapping algorithm. Usually `size.x`, but can differ for `.tab` and custom tokens.
 }
@@ -47,10 +48,11 @@ Text_Token_Flag :: enum {
     scale_full_line, // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
 }
 
-Text_Custom_Token_Space :: struct {
-    scale           : Vec2, // Relative to current text style font height. If `scale_full_line` is set, `scale.x` is relative to full line width.
-    scale_full_line : bool, // If set, `scale.x` is scaled to full line width instead of font height. This flag should not be used with `.text_fit_x`.
-    baseline_ratio  : f32,  // From 0 to 1 ratio inside the custom token box
+Text_Custom_Token_Hint :: struct {
+    intext_view     : ^View,    // If set, the view defines token size while the token defines view's position. The view must have `.intext` flag and be a child of `.text` view this token is part of. Using `intext_view` makes `scale` and `scale_full_line` to be ignored.
+    scale           : Vec2,     // Relative to current text style font height. If `scale_full_line` is set, `scale.x` is relative to full line width.
+    scale_full_line : bool,     // If set, `scale.x` is scaled to full line width instead of font height. This flag should not be used with `.text_fit_x`.
+    baseline_ratio  : f32,      // From 0 to 1 ratio inside the custom token box
 }
 
 // Tokenizes given text.
@@ -95,8 +97,8 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
 
             if j < text_len && text[j]=='|' {
                 tag_text := text[i+1:j]
-                cmd, args := _text_parse_tag_text(tag_text)
-                switch cmd {
+                tag_name, tag_args := _text_parse_tag_text(tag_text)
+                switch tag_name {
                 case ""         : append(pool, Text_Token { type=.word, text=text[i:i+1] }) // double pipe ("||")
 
                 case "br"       : append(pool, Text_Token { type=.br, text="\n" })
@@ -108,12 +110,12 @@ _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclus
                 case "wrap"     : append(pool, Text_Token { type=.wrap })
                 case "nowrap"   : append(pool, Text_Token { type=.nowrap })
 
-                case "tab"      : v, _ := strconv.parse_f32(args)
+                case "tab"      : v, _ := strconv.parse_f32(tag_args)
                                   append(pool, Text_Token { type=.tab, size={v,0} })
 
                 case "raw"      : raw_mode = true
 
-                case            : append(pool, Text_Token { type=.custom, text=cmd, args=args })
+                case            : append(pool, Text_Token { type=.custom, text=tag_name, args=tag_args })
                 }
                 i = j + 1 // Move cursor after closing '|'
             } else {
@@ -149,40 +151,51 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
     case .word, .whitespace:
         if has_on_text_measure {
             tok.size = ctx.on_text_measure(style, tok.type, tok.text)
-            tok.ascent = tok.size.y * style.font_baseline_ratio
-            tok.descent = tok.size.y * (1 - style.font_baseline_ratio)
+            _tok_setup_ascent_descent(&tok, style.font_baseline_ratio)
         }
     case .br:
         tok.size.y = style.font_scale * ctx.ref_font_height
-        tok.ascent = tok.size.y * style.font_baseline_ratio
-        tok.descent = tok.size.y * (1 - style.font_baseline_ratio)
+        _tok_setup_ascent_descent(&tok, style.font_baseline_ratio)
     case .custom:
         if has_on_text_custom_token {
-            space := Text_Custom_Token_Space { baseline_ratio=style.font_baseline_ratio }
-            ctx.on_text_custom_token(v, &style, tok.text, tok.args, &space)
-            if space.scale != {} {
-                if space.scale_full_line {
+            hint := Text_Custom_Token_Hint { baseline_ratio=style.font_baseline_ratio }
+            ctx.on_text_custom_token(v, &style, tok.text, tok.args, &hint)
+            switch {
+            case hint.intext_view != nil:
+                iv := hint.intext_view
+                assert(.intext in iv.flags, "Text_Custom_Token_Hint.intext_view must have .intext flag")
+                assert(iv.parent == v.view, "Text_Custom_Token_Hint.intext_view must be child of the .text view it is used in")
+                tok.intext_view = iv
+                tok.size = { iv.solved_rect.w, iv.solved_rect.h }
+                _tok_setup_ascent_descent(&tok, hint.baseline_ratio)
+            case hint.scale != {}:
+                if hint.scale_full_line {
                     tok.flags += { .scale_full_line }
                     tok.size = {
-                        space.scale.x, // Keep scale.x value as-is, for wrapping step
-                        space.scale.y * style.font_scale * ctx.ref_font_height,
+                        hint.scale.x, // Keep scale.x value as-is, for wrapping step
+                        hint.scale.y * style.font_scale * ctx.ref_font_height,
                     }
                 } else {
-                    tok.size = space.scale * style.font_scale * ctx.ref_font_height
+                    tok.size = hint.scale * style.font_scale * ctx.ref_font_height
                 }
-                tok.ascent = tok.size.y * space.baseline_ratio
-                tok.descent = tok.size.y * (1 - space.baseline_ratio)
+                _tok_setup_ascent_descent(&tok, hint.baseline_ratio)
             }
         }
+    }
+
+    _tok_setup_ascent_descent :: proc (tok: ^Text_Token, baseline_ratio: f32) {
+        tok.ascent = tok.size.y * baseline_ratio
+        tok.descent = tok.size.y * (1 - baseline_ratio)
     }
 }
 
 // Wraps and aligns text tokens of a given view.
-// - Updates each `Text_Token.solved_*`.
-// - Automatic wrapping is applied if `limit_x > 0`.
-// - Alignment tokens effective only if `limit_x > 0`.
-// - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`.
-_text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no_bounds_check {
+// - Updates each `Text_Token.solved_*`
+// - Updates each `Text_Token.intext_view.solved_rect.x/y`
+// - Automatic wrapping is applied if `limit_x > 0`
+// - Alignment tokens effective only if `limit_x > 0`
+// - Returns total `extent` fitting all the tokens; expect `extent.x >= limit_x`
+_text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, intext_mismatch: bool) #no_bounds_check {
     cursor_x: f32
     cursor_y: f32
     overflow_cursor_x: f32
@@ -195,6 +208,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     tokens := v.solved_text_tokens
     style := _text_style_init(v)
     has_on_text_custom_token := ctx.on_text_custom_token != nil
+    has_intext_views: bool
 
     extent.x = limit_x
 
@@ -220,7 +234,8 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
 
         case .custom:
             if has_on_text_custom_token {
-                ctx.on_text_custom_token(v, &style, tok.text, tok.args, out_space=nil)
+                ctx.on_text_custom_token(v, &style, tok.text, tok.args, out_hint=nil)
+                has_intext_views ||= tok.intext_view != nil
             }
         }
 
@@ -278,13 +293,28 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2) #no
     }
 
     // align very last line and set the total height
-    extent.x = max(extent.x, _text_finalize_line(
-        tokens[line_start_i:],
-        limit_x,
-        line_max_ascent,
-        style.align,
-    ))
-    extent.y = cursor_y + line_max_ascent + line_max_descent
+    extent = {
+        max(extent.x, _text_finalize_line(
+            tokens[line_start_i:],
+            limit_x,
+            line_max_ascent,
+            style.align,
+        )),
+        cursor_y + line_max_ascent + line_max_descent,
+    }
+
+    if has_intext_views {
+        top_left := content_top_left(v)
+        for tok in tokens {
+            if tok.intext_view == nil do continue
+            tok_pos_ref := tok.solved_pos + top_left
+            intext_mismatch ||= abs(tok_pos_ref.x-tok.intext_view.solved_rect.x)>.1\
+                            ||  abs(tok_pos_ref.y-tok.intext_view.solved_rect.y)>.1
+            tok.intext_view.solved_rect.x = tok_pos_ref.x
+            tok.intext_view.solved_rect.y = tok_pos_ref.y
+        }
+    }
+
     return
 
     _tok_starts_printable_content :: proc (tok: Text_Token) -> bool {
@@ -357,7 +387,7 @@ _text_finalize_line :: proc (
     }
 }
 
-_text_parse_tag_text :: proc (tag_text: string) -> (cmd, args: string) #no_bounds_check {
+_text_parse_tag_text :: proc (tag_text: string) -> (name, args: string) #no_bounds_check {
     i := strings.index_byte(tag_text, '=')
     if i >= 0   do return tag_text[0:i], tag_text[i+1:]
     else        do return tag_text, ""
@@ -394,7 +424,7 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
     for i := it.next_i; i < len(tokens); i += 1 {
         tok = &tokens[i]
         if tok.type == .custom && ctx.on_text_custom_token != nil {
-            ctx.on_text_custom_token(it.view, &it.style, tok.text, tok.args, out_space=nil)
+            ctx.on_text_custom_token(it.view, &it.style, tok.text, tok.args, out_hint=nil)
         }
         if tok.type in it.filter {
             it.next_i = i + 1

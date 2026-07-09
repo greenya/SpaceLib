@@ -46,12 +46,12 @@ main :: proc () {
             // fmt.printfln("measure |%16s| %v %v", text == "\n" ? "\\n" : text, size, type)
             return
         },
-        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, cmd, args: string, out_space: ^hi.Text_Custom_Token_Space) {
-            switch cmd {
+        on_text_custom_token = proc (v: ^hi.View, style: ^hi.Text_Style, name, args: string, out_hint: ^hi.Text_Custom_Token_Hint) {
+            switch name {
             case "f": style.font = args
             case "s": style.font_scale, _ = strconv.parse_f32(args)
             case "c": style.color = core.color_from_hex(args)
-            case "i": if out_space != nil do out_space.scale = 1
+            case "i": if out_hint != nil do out_hint.scale = 1
             }
         },
         on_draw_text = proc (v: ^hi.Visible_View) {

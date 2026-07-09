@@ -17,9 +17,11 @@ Popup :: struct {
     ui_page_text    : ^hi.View,
     ui_page_image   : ^hi.View,
     ui_page_demo    : ^hi.View,
+    ui_page_demo_counter: ^hi.View,
 
     buf_title       : strings.Builder,
     buf_demo        : strings.Builder,
+    buf_demo_counter: strings.Builder,
     buf_tokens      : [dynamic] hi.Text_Token,
 
     buf_bytes       : [1_000_000] u8,
@@ -35,6 +37,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 
     popup.buf_title         = strings.builder_make(0, 200)
     popup.buf_demo          = strings.builder_make(0, 2_000)
+    popup.buf_demo_counter  = strings.builder_make(0, 20)
     popup.buf_texture_err   = strings.builder_make(0, 200)
     popup.buf_tokens        = make([dynamic] hi.Text_Token, 0, 20_000)
 
@@ -113,7 +116,8 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         p.content^ = hi.add_view(container, p.init)
 
         if p.content^ == popup.ui_page_demo {
-            _popup_page_demo_action_bar(popup, container)
+            _popup_page_demo_add_intext_views(popup)
+            _popup_page_demo_add_action_bar(popup)
         }
     }
 
@@ -153,6 +157,7 @@ popup_destroy :: proc (popup: ^Popup) {
     hi.remove_view(popup.ui_root)
     strings.builder_destroy(&popup.buf_title)
     strings.builder_destroy(&popup.buf_demo)
+    strings.builder_destroy(&popup.buf_demo_counter)
     strings.builder_destroy(&popup.buf_texture_err)
     _popup_destroy_buf_texture(popup)
     delete(popup.buf_tokens)
@@ -189,8 +194,63 @@ popup_close :: proc (popup: ^Popup) {
     _popup_destroy_buf_texture(popup)
 }
 
-_popup_page_demo_action_bar :: proc (popup: ^Popup, parent: ^hi.View) {
-    root := hi.add_view(parent, {
+_popup_page_demo_update_counter :: proc (popup: ^Popup, step := 0) {
+    popup.ui_page_demo_counter.user_idx += step
+
+    buf: [32] u8
+    strings.builder_reset(&popup.buf_demo_counter)
+    hi.set_text(popup.ui_page_demo_counter, fmt.sbprintf(&popup.buf_demo_counter,
+        "|c=#8bf|%s",
+        core.format_buf_int(buf[:], popup.ui_page_demo_counter.user_idx),
+    ))
+}
+
+_popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
+    for b in ([?] struct { name, text: string, step: int } {
+        { "plus_1", "|c=#8f8|+1", 1 },
+        { "plus_10", "|c=#8f8|+10", 10 },
+        { "plus_100", "|c=#8f8|+100", 100 },
+        { "plus_1k", "|c=#8f8|+1,000", 1000 },
+        { "minus_1k", "|c=#f88|-1,000", -1000 },
+        { "minus_100", "|c=#f88|-100", -100 },
+        { "minus_10", "|c=#f88|-10", -10 },
+        { "minus_1", "|c=#f88|-1", -1 },
+    }) {
+        hi.add_view(popup.ui_page_demo, {
+            flags   = { .intext, .text, .text_fit_x },
+            name    = b.name,
+            text    = b.text,
+            padding = { 5, 0, 5, 0 },
+            user_ptr= popup,
+            user_idx= b.step,
+            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+                if event.type == .clicked {
+                    popup := cast (^Popup) v.user_ptr
+                    _popup_page_demo_update_counter(popup, step=v.user_idx)
+                    consumed = true
+                }
+                return
+            },
+            on_draw = _popup_draw_button_view,
+        })
+    }
+
+    popup.ui_page_demo_counter = hi.add_view(popup.ui_page_demo, {
+        flags   = { .intext, .text, .text_fit_x },
+        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+            if event.type == .wheeled {
+                log("Demo counter label just consumed .wheeled event")
+                consumed = true
+            }
+            return
+        },
+    })
+
+    _popup_page_demo_update_counter(popup)
+}
+
+_popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
+    root := hi.add_view(popup.ui_page_demo.parent, {
         // Use higher strata to escape scissor;
         // if we only needed to escape layout/scroll/padding, the `.absolute` flag is the way
         strata  = .overlay,
@@ -320,19 +380,39 @@ _popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
         "each text token has |c=#0ff|baseline_ratio|c| for proper vertical alignment, " +
         "normal text uses current style font baseline, while custom tokens can override it.\n|left|" +
         "\n" +
-        "Mixing font sizes: " +
+        "|s=large|Mixing font sizes|s|\n" +
+        "\n" +
+        "111 222 333 444 555 Aaa Bbb Ccc Jjj Qqq Yyy Www " +
         "|s=tiny|Tiny |s|Normal |s=large|Large |s=huge|Huge " +
-        "|s=large|Large |s|Normal |s=tiny|Tiny|s|\n" +
+        "|s=large|Large |s|Normal |s=tiny|Tiny|s| " +
+        "111 222 333 444 555 Aaa Bbb Ccc Jjj Qqq Yyy Www\n" +
         "\n" +
         "Press |c=#f0f|TAB|c| to enable Debug mode to see token baselines. " +
         "Any printed text line aligns all its token baselines in a strait line.\n" +
         "\n" +
-        "Mixing baselines: " +
-        "|tab=150|F|b=index|n|b| = F|b=index|n-1|b| + F|b=index|n-2|b|\n" +
-        "|tab=150|A = [ A|b=index|1|b|, A|b=index|2|b|, A|b=index|2|b|, A|b=index|3|b|, ... ]\n" +
-        "|tab=150|B|b=index|avg|b| = ( B|b=index|min|b| + B|b=index|max|b| ) / 2\n" +
-        "|tab=150|z|b=super|2|b| = x|b=super|2|b| + y|b=super|2|b|\n" +
-        "|tab=150|e = mc|b=super|2|b|",
+        "|s=large|Mixing baselines|s|\n" +
+        "\n" +
+        "|tab=40||c=#888|1.|c| F|b=index|n|b| = F|b=index|n-1|b| + F|b=index|n-2|b|\n" +
+        "|tab=40||c=#888|2.|c| A = [ A|b=index|1|b|, A|b=index|2|b|, A|b=index|2|b|, A|b=index|3|b|, ... ]\n" +
+        "|tab=40||c=#888|3.|c| B|b=index|avg|b| = ( B|b=index|min|b| + B|b=index|max|b| ) / 2\n" +
+        "|tab=40||c=#888|4.|c| z|b=super|2|b| = x|b=super|2|b| + y|b=super|2|b|\n" +
+        "|tab=40||c=#888|5.|c| e = mc|b=super|2|b|\n" +
+        "\n" +
+        "|s=large|Mixing text and views|s|\n" +
+        "\n" +
+        "You can click these buttons |button=plus_1k| |button=plus_100| |button=plus_10| and |button=plus_1| " +
+        "to increment the number |counter=value|. These buttons do the opposite: " +
+        "|button=minus_1| |button=minus_10| |button=minus_100| and |button=minus_1k|. " +
+        "There are nine views involved above. " +
+        "Enabled by |c=#ff8|.intext|c| flag and allows to bound a child view to a custom text token, " +
+        "their solved rectangles will be kept synchronized in the following way:\n" +
+        "|tab=40|- text token provides position\n" +
+        "|tab=40|- bound view provides size\n" +
+        "Resize window to see the wrapping in action. " +
+        "The mouse click is consumed but the scrolling is propagated to the parent, " +
+        "so whole text gets scrolled even when mouse cursor is above the inline view. " +
+        "A view can manually consume the event if needed: the counter value does it for demo purposes, " +
+        "e.g. when mouse hovers the counter, .wheeled event blocked and text scrolling doesn't work.",
         file.fullpath,
         file.type,
         file.name,
