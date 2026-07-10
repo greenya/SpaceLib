@@ -62,7 +62,7 @@ Flags :: bit_set [Flag; u32]
 Flag :: enum {
     // Core
 
-    debug,      // The view drawing will be additionally overdrawn via `Context.debug_draw_rect()`
+    debug,      // The view drawing will be additionally overdrawn with debug information. Only works when `Context.debug_draw_*` callbacks are set. And the `Context.debug_draw_filter` specifies what is drawn.
     hidden,     // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
     hitless,    // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
     updating,   // The view receives `.updated` every `update_context()` while visible
