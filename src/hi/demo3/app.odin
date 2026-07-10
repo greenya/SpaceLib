@@ -88,7 +88,7 @@ app_init :: proc () {
             }
         },
 
-        on_text_wordy = proc(v: ^hi.View) -> (buf: ^[dynamic] hi.Text_Token) {
+        on_text_wordy = proc (v: ^hi.View) -> (buf: ^[dynamic] hi.Text_Token) {
             if v == app.popup.ui_page_text do return &app.popup.buf_tokens
             return
         },

@@ -294,6 +294,8 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
             if view_solver_passed do break
         }
 
+        _filter_intext_bound_views(ctx)
+
         scroll_solver_passed = true
         for v in ctx.visible_views {
             scroll_min_ := scroll_min(v)
@@ -391,16 +393,6 @@ set_ref_font_height :: proc (ctx: ^Context, height: f32) {
     queue_solve_context(ctx)
 }
 
-_sort_visible_views :: proc (ctx: ^Context) {
-    slice.sort_by(ctx.visible_views[:], less=proc (i, j: Visible_View) -> bool {
-        switch {
-        case i.strata != j.strata   : return i.strata < j.strata
-        case i.level  != j.level    : return i.level  < j.level
-        case                        : return i.sid    < j.sid
-        }
-    })
-}
-
 _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, intext_mismatch: bool) {
     when PERF_ON {
         _perf_track_start(ctx, .text_total)
@@ -411,6 +403,8 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, int
 
     for &v in ctx.visible_views {
         if .text not_in v.flags do continue
+
+        _clear_children_intext_bound_flag(&v)
 
         if v.text == "" {
             v.solved_text_tokens = nil
@@ -465,6 +459,39 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, int
     }
 
     return
+}
+
+// Modifies `ctx.visible_views`, removes `.intext` views with their subtree if they are not `._intext_bound`
+_filter_intext_bound_views :: proc (ctx: ^Context) {
+    keep_i: int
+    skip_root: ^View
+
+    for v in ctx.visible_views {
+        if skip_root != nil {
+            if view_tree_contains(skip_root, v.view) do continue
+            skip_root = nil
+        }
+
+        if .intext in v.flags && ._intext_bound not_in v.flags {
+            skip_root = v.view
+            continue
+        }
+
+        ctx.visible_views[keep_i] = v
+        keep_i += 1
+    }
+
+    resize(&ctx.visible_views, keep_i)
+}
+
+_sort_visible_views :: proc (ctx: ^Context) {
+    slice.sort_by(ctx.visible_views[:], less=proc (i, j: Visible_View) -> bool {
+        switch {
+        case i.strata != j.strata   : return i.strata < j.strata
+        case i.level  != j.level    : return i.level  < j.level
+        case                        : return i.sid    < j.sid
+        }
+    })
 }
 
 _propagate_visible_views_opacity :: proc (ctx: ^Context) {

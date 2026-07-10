@@ -69,6 +69,7 @@ Flag :: enum {
     scissor,    // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
     absolute,   // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
     intext,     // The view is positioned by a custom token in the parent `.text` view and excluded from normal layout. In a stable solve, the view provides token size while the token provides view position. With `.text_wordy` parents, token size is cached: use static `.intext` sizes, or call `set_text()` on the parent after an `.intext` child size changes.
+    _intext_bound, // Internal solver flag. Used for tracking `.intext` view is actually bound to a token of the parent `.text` view. If `.intext` view is not bound to a token, the view itself and its subtree gets removed from `Context.visible_views`.
 
     // Sizing
 
@@ -383,16 +384,31 @@ bring_to_end :: proc (v: ^View) {
 
 // Returns true if `child` is `v` or inside its subtree
 @require_results
-view_tree_contains :: proc(v, child: ^View) -> bool {
+view_tree_contains :: proc (v, child: ^View) -> bool {
     for c := child; c != nil; c = c.parent {
         if c == v do return true
     }
     return false
 }
 
-_hit_clear_if_view_tree_contains_hit :: proc(v: ^View) {
+// Returns the next parent in the interaction path.
+//
+// Interaction propagation stops at strata boundaries, because non-native strata
+// views are elevated out of the parent's layout/clipping/input flow.
+_interaction_parent :: proc (v: ^View) -> ^View {
+    if v.parent != nil && v.parent.strata == v.strata do return v.parent
+    return nil
+}
+
+_hit_clear_if_view_tree_contains_hit :: proc (v: ^View) {
     if v.ctx.hit != nil && view_tree_contains(v, v.ctx.hit) {
         _hit_set_view(v.ctx, nil)
+    }
+}
+
+_clear_children_intext_bound_flag :: proc (v: ^View) {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .intext in c.flags do c.flags -= { ._intext_bound }
     }
 }
 
@@ -484,15 +500,6 @@ hide :: proc (v: ^View) {
         _emit(v, { type=.hidden })
         queue_solve_context(v.ctx)
     }
-}
-
-// Returns the next parent in the interaction path.
-//
-// Interaction propagation stops at strata boundaries, because non-native strata
-// views are elevated out of the parent's layout/clipping/input flow.
-_interaction_parent :: proc (v: ^View) -> ^View {
-    if v.parent != nil && v.parent.strata == v.strata do return v.parent
-    return nil
 }
 
 // Fires `.clicked` event for the view as it would be clicked with a mouse.

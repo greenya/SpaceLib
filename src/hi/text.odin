@@ -305,8 +305,10 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
 
     if has_intext_views {
         top_left := content_top_left(v)
-        for tok in tokens {
-            if tok.intext_view == nil do continue
+        for tok in tokens do if tok.intext_view != nil {
+            assert(._intext_bound not_in tok.intext_view.flags, "Text_Token.intext_view is already bound to another text token")
+            tok.intext_view.flags += { ._intext_bound }
+
             tok_pos_ref := tok.solved_pos + top_left
             intext_mismatch ||= abs(tok_pos_ref.x-tok.intext_view.solved_rect.x)>.1\
                             ||  abs(tok_pos_ref.y-tok.intext_view.solved_rect.y)>.1
