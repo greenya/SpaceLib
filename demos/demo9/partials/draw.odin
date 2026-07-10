@@ -611,7 +611,7 @@ draw_slot_volume :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32, 
     rect = Rect { rect.x+pad, rect.y+rect.h-bar_h-pad, bar_w, bar_h }
 
     if in_tooltip {
-        volume_text := core.format_f32(volume, 3, allocator=context.temp_allocator)
+        volume_text := core.tprint_float(volume, max_decimal_digits=3)
         text := fmt.tprintf("%sV", volume_text)
         text_pos := core.rect_bottom_right(rect) + {4,6}
         text_font := fonts.get(.text_4l)
@@ -657,7 +657,7 @@ draw_slot_icon :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
 draw_slot_stack_count :: proc (slot: ^data.Container_Slot, rect: Rect, opacity: f32) {
     if slot.count < 1 do return
 
-    text := core.format_int(slot.count, allocator=context.temp_allocator)
+    text := core.tprint_int(slot.count)
     text_pos := core.rect_bottom_right(rect) - {8,2}
     text_font := fonts.get(.text_4r)
     text_color := colors.get(.primary, alpha=opacity)

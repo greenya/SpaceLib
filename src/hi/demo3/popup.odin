@@ -201,7 +201,7 @@ _popup_page_demo_update_counter :: proc (popup: ^Popup, step := 0) {
     strings.builder_reset(&popup.buf_demo_counter)
     hi.set_text(popup.ui_page_demo_counter, fmt.sbprintf(&popup.buf_demo_counter,
         "|c=#8bf|%s",
-        core.format_buf_int(buf[:], popup.ui_page_demo_counter.user_idx),
+        core.bprint_int(buf[:], popup.ui_page_demo_counter.user_idx),
     ))
 }
 
@@ -392,11 +392,11 @@ _popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
         "\n" +
         "|s=large|Mixing baselines|s|\n" +
         "\n" +
-        "|tab=40||c=#888|1.|c| F|b=index|n|b| = F|b=index|n-1|b| + F|b=index|n-2|b|\n" +
-        "|tab=40||c=#888|2.|c| A = [ A|b=index|1|b|, A|b=index|2|b|, A|b=index|2|b|, A|b=index|3|b|, ... ]\n" +
-        "|tab=40||c=#888|3.|c| B|b=index|avg|b| = ( B|b=index|min|b| + B|b=index|max|b| ) / 2\n" +
-        "|tab=40||c=#888|4.|c| z|b=super|2|b| = x|b=super|2|b| + y|b=super|2|b|\n" +
-        "|tab=40||c=#888|5.|c| e = mc|b=super|2|b|\n" +
+        "|tab=40||c=#888|a)|c|  F|b=index|n|b| = F|b=index|n-1|b| + F|b=index|n-2|b|\n" +
+        "|tab=40||c=#888|b)|c|  A = [ A|b=index|1|b|, A|b=index|2|b|, A|b=index|2|b|, A|b=index|3|b|, ... ]\n" +
+        "|tab=40||c=#888|c)|c|  B|b=index|avg|b| = ( B|b=index|min|b| + B|b=index|max|b| ) / 2\n" +
+        "|tab=40||c=#888|d)|c|  z|b=super|2|b| = x|b=super|2|b| + y|b=super|2|b|\n" +
+        "|tab=40||c=#888|e)|c|  e = mc|b=super|2|b|\n" +
         "\n" +
         "|s=large|Mixing text and views|s|\n" +
         "\n" +
@@ -489,8 +489,8 @@ _popup_setup_buf_bytes :: proc (popup: ^Popup, file_fullpath: string) {
             "|c=error||s=large|File too large|s||c=muted|\n" +
             "File size is %s bytes\n" +
             "Size limit is %s bytes",
-            core.format_buf_int(b1[:], f_size),
-            core.format_buf_int(b2[:], len(popup.buf_bytes)),
+            core.bprint_int(b1[:], f_size),
+            core.bprint_int(b2[:], len(popup.buf_bytes)),
         )
     case:
         popup.buf_bytes_used, err = os.read_full(f, popup.buf_bytes[:f_size])

@@ -228,7 +228,7 @@ show_tooltip_attr_int :: proc (title: string, value: int, format := "", keep_zer
 
     value_text := format != ""\
         ? fmt.tprintf(format, value)\
-        : core.format_int(value, allocator=context.temp_allocator)
+        : core.tprint_int(value)
     ui.set_text(ui.get(attr, "value"), value_text)
 
     ui.show(attr)
@@ -242,7 +242,7 @@ show_tooltip_attr_f32 :: proc (title: string, value: f32, format := "", keep_zer
 
     value_text := format != ""\
         ? fmt.tprintf(format, value)\
-        : core.format_f32(value, max_decimal_digits=2, allocator=context.temp_allocator)
+        : core.tprint_float(value, max_decimal_digits=2)
     ui.set_text(ui.get(attr, "value"), value_text)
 
     ui.show(attr)

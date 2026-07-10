@@ -61,12 +61,12 @@ print_stats :: proc () {
     table.caption(&tbl, "Tracking Allocator Stats")
     table.padding(&tbl, 1, 1)
 
-    table.row(&tbl, "Current memory allocated"  , fmt_i64(_track.current_memory_allocated))
-    table.row(&tbl, "Peak memory allocated"     , fmt_i64(_track.peak_memory_allocated))
-    table.row(&tbl, "Total memory allocated"    , fmt_i64(_track.total_memory_allocated))
-    table.row(&tbl, "Total memory freed"        , fmt_i64(_track.total_memory_freed))
-    table.row(&tbl, "Total allocation count"    , fmt_i64(_track.total_allocation_count))
-    table.row(&tbl, "Total free count"          , fmt_i64(_track.total_free_count))
+    table.row(&tbl, "Current memory allocated"  , core.tprint_int(_track.current_memory_allocated))
+    table.row(&tbl, "Peak memory allocated"     , core.tprint_int(_track.peak_memory_allocated))
+    table.row(&tbl, "Total memory allocated"    , core.tprint_int(_track.total_memory_allocated))
+    table.row(&tbl, "Total memory freed"        , core.tprint_int(_track.total_memory_freed))
+    table.row(&tbl, "Total allocation count"    , core.tprint_int(_track.total_allocation_count))
+    table.row(&tbl, "Total free count"          , core.tprint_int(_track.total_free_count))
 
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
@@ -78,16 +78,16 @@ print_not_freed_allocations :: proc (max_rows: int) {
 
     tbl: table.Table
     table.init(&tbl, table_allocator=context.temp_allocator)
-    table.caption(&tbl, fmt.tprintf("Tracking Allocator: %s allocation(s) not freed", fmt_int(allocation_map_len)))
+    table.caption(&tbl, fmt.tprintf("Tracking Allocator: %s allocation(s) not freed", core.tprint_int(allocation_map_len)))
     table.padding(&tbl, 1, 1)
 
     table.header(&tbl, "Bytes", "Location")
 
     i := 0; for _, entry in _track.allocation_map {
-        table.row(&tbl, fmt_int(entry.size), entry.location)
+        table.row(&tbl, core.tprint_int(entry.size), entry.location)
         i += 1; if i == max_rows {
             skip_row_count := allocation_map_len - max_rows
-            table.row(&tbl, "...", fmt.tprintf("... (+ %s rows)", fmt_int(skip_row_count)))
+            table.row(&tbl, "...", fmt.tprintf("... (+ %s rows)", core.tprint_int(skip_row_count)))
             break
         }
     }
@@ -102,7 +102,7 @@ print_bad_frees :: proc (max_rows: int) {
 
     tbl: table.Table
     table.init(&tbl, table_allocator=context.temp_allocator)
-    table.caption(&tbl, fmt.tprintf("Tracking Allocator: %s incorrect free(s)", fmt_int(bad_free_array_len)))
+    table.caption(&tbl, fmt.tprintf("Tracking Allocator: %s incorrect free(s)", core.tprint_int(bad_free_array_len)))
     table.padding(&tbl, 1, 1)
 
     table.header(&tbl, "Address", "Location")
@@ -111,21 +111,10 @@ print_bad_frees :: proc (max_rows: int) {
         table.row(&tbl, entry.memory, entry.location)
         if i == max_rows {
             skip_row_count := bad_free_array_len - max_rows
-            table.row(&tbl, "...", fmt.tprintf("... (+ %s rows)", fmt_int(skip_row_count)))
+            table.row(&tbl, "...", fmt.tprintf("... (+ %s rows)", core.tprint_int(skip_row_count)))
             break
         }
     }
 
     table.write_plain_table(table.stdio_writer(), &tbl)
-}
-
-@private
-fmt_int :: proc (i: int) -> string {
-    return core.format_int(i, allocator=context.temp_allocator)
-}
-
-@private
-fmt_i64 :: proc (i: i64) -> string {
-    assert(i == i64(int(i)))
-    return core.format_int(int(i), allocator=context.temp_allocator)
 }

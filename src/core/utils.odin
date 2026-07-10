@@ -1,7 +1,6 @@
 package spacelib_core
 
 import "base:intrinsics"
-import "core:fmt"
 import "core:reflect"
 import "core:slice"
 import "core:strings"
@@ -45,57 +44,6 @@ extract_hrs_mins_secs_from_total_seconds :: proc (time_total_sec: f32) -> (hrs: 
     mins, total_sec     = total_sec/60, total_sec%60
     secs                = total_sec
     return
-}
-
-format_int :: proc (value: int, thousands_separator := ",", allocator := context.allocator) -> string {
-    if abs(value) < 1000 do return fmt.aprint(value, allocator=allocator)
-
-    sb := strings.builder_make(allocator)
-    if value < 0 do strings.write_byte(&sb, '-')
-
-    digits := fmt.tprint(abs(value))
-    for digit, i in digits {
-        strings.write_rune(&sb, digit)
-        i_rev := len(digits) - i + 1
-        if i_rev-2>0 && (i_rev-2)%3==0 do strings.write_string(&sb, thousands_separator)
-    }
-
-    return strings.to_string(sb)
-}
-
-format_buf_int :: proc (buf: [] u8, value: $T, thousands_sep := u8(',')) -> string where intrinsics.type_is_integer(T) {
-    if abs(value) < 1000 do return fmt.bprint(buf, value)
-
-    sb := strings.builder_from_bytes(buf)
-    if value < 0 do strings.write_byte(&sb, '-')
-
-    digits_buf: [64] u8
-    digits := fmt.bprint(digits_buf[:], abs(value))
-    for d, i in digits {
-        strings.write_byte(&sb, u8(d))
-        i_rev := len(digits) - i + 1
-        if i_rev-2>0 && (i_rev-2)%3==0 do strings.write_byte(&sb, thousands_sep)
-    }
-
-    return strings.to_string(sb)
-}
-
-// cuts-off all `0` decimal digits from the right side;
-// examples:
-// - `123.211100`, `max=3` -> `123.211`
-// - `123.210000`, `max=3` -> `123.21`
-// - `123.000000`, `max=3` -> `123`
-format_f32 :: proc (value: f32, max_decimal_digits: int, allocator := context.allocator) -> string {
-    format := fmt.tprintf("%%.%if", max_decimal_digits)
-    text := fmt.aprintf(format, value, allocator=allocator)
-    if max_decimal_digits > 0 {
-        // cut-off zeros from the end until non-'0' is met (a digit or '.')
-        #reverse for c, i in text do if c != '0' { text=text[:i+1]; break }
-        // cut-off possible last '.' (when all decimal digits are 0)
-        last_i := len(text)-1
-        if last_i > 0 && text[last_i] == '.' do text = text[:last_i]
-    }
-    return text
 }
 
 // Converts given `int` to `string` using provided alphabet base.
