@@ -294,7 +294,7 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
             if view_solver_passed do break
         }
 
-        _filter_intext_bound_views(ctx)
+        _filter_intext_views(ctx)
 
         scroll_solver_passed = true
         for v in ctx.visible_views {
@@ -461,8 +461,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, int
     return
 }
 
-// Modifies `ctx.visible_views`, removes `.intext` views with their subtree if they are not `._intext_bound`
-_filter_intext_bound_views :: proc (ctx: ^Context) {
+// Modifies `ctx.visible_views`, removes `.intext` views with their subtree if they are
+// not `._intext_bound` or are fully clipped out. This must run after text wrapping so
+// `.intext` views have their token-driven position.
+_filter_intext_views :: proc (ctx: ^Context) {
     keep_i: int
     skip_root: ^View
 
@@ -472,9 +474,18 @@ _filter_intext_bound_views :: proc (ctx: ^Context) {
             skip_root = nil
         }
 
-        if .intext in v.flags && ._intext_bound not_in v.flags {
-            skip_root = v.view
-            continue
+        if .intext in v.flags {
+            // We need to clip out bound .intext views here, because the solver skips scissor test
+            // for .intext views as their position assigned later by text wrapping step
+
+            clipped_out :=\
+                v.solved_scissor != {} &&
+                !core.rects_intersect(v.solved_scissor, v.solved_rect)
+
+            if clipped_out || ._intext_bound not_in v.flags {
+                skip_root = v.view
+                continue
+            }
         }
 
         ctx.visible_views[keep_i] = v
