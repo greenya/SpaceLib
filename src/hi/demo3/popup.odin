@@ -18,6 +18,7 @@ Popup :: struct {
     ui_page_image   : ^hi.View,
     ui_page_demo    : ^hi.View,
     ui_page_demo_counter: ^hi.View,
+    ui_page_demo_panel: ^Panel,
 
     buf_title       : strings.Builder,
     buf_demo        : strings.Builder,
@@ -154,13 +155,19 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 }
 
 popup_destroy :: proc (popup: ^Popup) {
+    // We destroy panel before own ui_root, because panel.ui_root is part of our ui_root subtree.
+    // If for some reason we would like to destroy ui_root before the panel, we need to detach the panel first.
+
+    panel_destroy(popup.ui_page_demo_panel)
     hi.remove_view(popup.ui_root)
+
     strings.builder_destroy(&popup.buf_title)
     strings.builder_destroy(&popup.buf_demo)
     strings.builder_destroy(&popup.buf_demo_counter)
     strings.builder_destroy(&popup.buf_texture_err)
     _popup_destroy_buf_texture(popup)
     delete(popup.buf_tokens)
+
     free(popup)
 }
 
@@ -181,8 +188,8 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     _popup_setup_page_demo(popup, file)
 
     // Click 1st tab button, this essentially does the following:
-    // - each button has .radio, when .clicked it gets .selected, while other .radio siblings get de-.selected
-    // - button receives .clicked where we do show(page)
+    // - each .radio button, gets .selected when .clicked, while other .radio siblings get de-.selected
+    // - button receives .clicked where we do "show(page)"
     // - each page has .page, so when shown it hides all other .page siblings
     hi.click(popup.ui_tabs.first_child)
 
@@ -351,13 +358,24 @@ _popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
         "There are nine views involved above. " +
         "Enabled by |c=#ff8|.intext|c| flag and allows to bound a child view to a custom text token, " +
         "their solved rectangles will be kept synchronized in the following way:\n" +
-        "|tab=40|- text token provides position\n" +
-        "|tab=40|- bound view provides size\n" +
+        "\n" +
+        "|tab=40|- Text token provides position\n" +
+        "|tab=40|- Bound view provides size\n" +
+        "|tab=40|- |c=#ff8|.intext_full|c| allows the view to take whole line so its solved width is set " +
+        "from the parent |c=#ff8|.text|c| view content width (file panel below uses this flag)\n" +
+        "\n" +
+        "|panel|\n" +
+        "\n" +
         "Resize window to see the wrapping in action. " +
-        "The mouse click is consumed but the scrolling is propagated to the parent, " +
-        "so whole text gets scrolled even when mouse cursor is above the inline view. " +
-        "A view can manually consume the event if needed: the counter value does it for demo purposes, " +
-        "e.g. when mouse hovers the counter, .wheeled event blocked and text scrolling doesn't work.",
+        "The mouse scrolling is propagated to the parent, so whole text gets scrolled even when " +
+        "mouse cursor is above the inline view. A view can manually consume the event if needed: " +
+        "the counter value does it for demo purposes, e.g. when mouse hovers the counter, |c=#ff8|.wheeled|c| " +
+        "event blocked and text scrolling doesn't happen.\n" +
+        "\n" +
+        "A file panel is another example of using |c=#ff8|.wheeled|c| for own purposes and bubbling " +
+        "the event up only when it is not consumed (the file list actually wasn't able to scroll).\n" +
+        "\n" +
+        "|c=#888|/* This is the final line of this text. */|c|",
         file.fullpath,
         file.type,
         file.name,
@@ -370,6 +388,8 @@ _popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
 }
 
 _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
+    // Counter buttons
+
     for b in ([?] struct { name, text: string, step: int } {
         { "plus_1", "|c=#8f8|+1", 1 },
         { "plus_10", "|c=#8f8|+10", 10 },
@@ -399,6 +419,8 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
         })
     }
 
+    // Counter value
+
     popup.ui_page_demo_counter = hi.add_view(popup.ui_page_demo, {
         flags   = { .intext, .text, .text_fit_x },
         on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
@@ -411,6 +433,21 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
     })
 
     _popup_page_demo_update_counter(popup)
+
+    // File panel
+
+    user_home_dir, err := os.user_home_dir(context.temp_allocator)
+    assert(err == nil)
+
+    popup.ui_page_demo_panel = panel_create(popup.ui_page_demo,
+        path    = user_home_dir,
+        on_open = proc (panel: ^Panel, file: ^os.File_Info) {
+            log("Demo panel open clicked for:", file.type, file.fullpath)
+        },
+    )
+    popup.ui_page_demo_panel.ui_root.flags += { .intext, .intext_full }
+    popup.ui_page_demo_panel.ui_root.flags -= { .fill_y }
+    popup.ui_page_demo_panel.ui_root.size.y = 500
 }
 
 _popup_page_demo_update_counter :: proc (popup: ^Popup, step := 0) {

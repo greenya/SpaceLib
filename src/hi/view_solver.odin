@@ -24,7 +24,7 @@ _solve_view_fit_and_fixed_size :: proc (v: ^View) {
         return
     }
 
-    if .text_fit_x not_in v.flags {
+    if .text_fit_x not_in v.flags && .intext_full not_in v.flags {
         if .fit_x in v.flags {
             v.solved_rect.w = fit_size.x
         } else if v.flags & { .ratio_x, .fill_x } != {} {
@@ -78,14 +78,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     for c := v.first_child; c != nil; c = c.next_sibling {
         if .hidden in c.flags do continue
 
-        if !_is_layout_child(c) {
-            if .text_fit_x not_in c.flags {
-                if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
-            }
-            if .text not_in c.flags {
-                if .ratio_y in c.flags do c.solved_rect.h = c.size.y * v.solved_rect.h
-            }
-        } else {
+        if _is_layout_child(c) {
             if .text_fit_x in c.flags {
                 non_fill_x_children_width += c.solved_rect.w
             } else if .fill_x in c.flags {
@@ -106,6 +99,13 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                     c.solved_rect.h = c.size.y * v_size_y_avail_no_gaps
                 }
                 non_fill_y_children_height += c.solved_rect.h
+            }
+        } else {
+            if .text_fit_x not_in c.flags && .intext_full not_in c.flags {
+                if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
+            }
+            if .text not_in c.flags {
+                if .ratio_y in c.flags do c.solved_rect.h = c.size.y * v.solved_rect.h
             }
         }
     }
@@ -232,7 +232,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 _reset_view_parent_dependent_size_for_fit_phase :: proc (v: ^View) {
     if v.idx == 0 do return
 
-    if v.flags & { .fit_x, .text_fit_x } == {} && v.flags & { .ratio_x, .fill_x } != {} {
+    if v.flags & { .fit_x, .text_fit_x, .intext_full } == {} && v.flags & { .ratio_x, .fill_x } != {} {
         v.solved_rect.w = 0
     }
 

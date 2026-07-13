@@ -17,6 +17,7 @@ Panel :: struct {
 
     path    : string,
     files   : [] os.File_Info,
+    on_open : Panel_Open_Proc,
 
     ui_root         : ^hi.View,
     ui_title_bar    : ^hi.View,
@@ -30,8 +31,11 @@ Panel :: struct {
     sb_file_info    : strings.Builder,
 }
 
-panel_create :: proc (parent: ^hi.View, path: string) -> ^Panel {
+Panel_Open_Proc :: proc (panel: ^Panel, file: ^os.File_Info)
+
+panel_create :: proc (parent: ^hi.View, path: string, on_open: Panel_Open_Proc) -> ^Panel {
     panel := new(Panel)
+    panel.on_open = on_open
 
     mem.dynamic_arena_init(&panel.arena)
     panel.allocator     = mem.dynamic_arena_allocator(&panel.arena)
@@ -110,21 +114,16 @@ _panel_add_file_open_btn :: proc (panel: ^Panel, parent: ^hi.View) -> ^hi.View {
         place   = { anchor={1,.5}, pivot={1,.5} },
         user_ptr= panel,
         on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type != .clicked do return
-
-            panel := cast (^Panel) v.user_ptr
-            file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
-            assert(file_view != nil)
-            file := &panel.files[file_view.user_idx]
-
-            if file.type == .Directory {
-                app_destroy_all_panels_to_the_right(panel)
-                app_add_panel(file.fullpath)
-            } else {
-                app_open_popup_for_file(file)
+            if event.type == .clicked {
+                panel := cast (^Panel) v.user_ptr
+                file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
+                assert(file_view != nil)
+                file := &panel.files[file_view.user_idx]
+                assert(panel.on_open != nil)
+                panel->on_open(file)
+                consumed = true
             }
-
-            return true
+            return
         },
         on_draw = proc (v: ^hi.Visible_View) {
             rect := k2.Rect(v.solved_rect)
@@ -153,10 +152,10 @@ _panel_add_file_view :: proc (panel: ^Panel, parent: ^hi.View, file_idx: int) {
                 strings.builder_reset(&panel.sb_file_info)
                 hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
                     "|s=large|%s|s|\n\n"+
-                    "|c=#999|Type|c||tab=80||i=%v| %v\n"+
-                    "|c=#999|Size|c||tab=80||s=huge|%M|s|\n"+
-                    "|c=#999|Mode|c||tab=80||file_mode=%x|\n"+
-                    "|c=#999|Modified|c||tab=80|%s",
+                    "|c=#999|Type|c||tab=100||i=%v| %v\n"+
+                    "|c=#999|Size|c||tab=100||s=huge|%M|s|\n"+
+                    "|c=#999|Mode|c||tab=100||file_mode=%x|\n"+
+                    "|c=#999|Modified|c||tab=100|%s",
                     file.name,
                     file.type, file.type,
                     file.size,
@@ -205,11 +204,11 @@ _panel_update_status_bar :: proc (panel: ^Panel) {
     sel_file_text: string
     file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
     if file_view != nil {
-        sel_file_text = fmt.tprintf("Selected|tab=80|%i / %i\n", 1+file_view.user_idx, len(panel.files))
+        sel_file_text = fmt.tprintf("Selected|tab=100|%i / %i\n", 1+file_view.user_idx, len(panel.files))
     }
 
     mme_allocated, mem_reserved := _dynamic_arena_mem_usage(panel.arena)
-    mem_usage_text := fmt.tprintf("Memory|tab=80|%M / %M", mme_allocated, mem_reserved)
+    mem_usage_text := fmt.tprintf("Memory|tab=100|%M / %M", mme_allocated, mem_reserved)
 
     strings.builder_reset(&panel.sb_status_bar)
     hi.set_text(panel.ui_status_bar, fmt.sbprintf(&panel.sb_status_bar,

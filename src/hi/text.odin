@@ -8,7 +8,7 @@ Text_Token :: struct {
     flags       : Text_Token_Flags,
     text        : string,   // Text of the `.word` or `.whitespace`, or the name of a `.custom` token (e.g., "color" for "|color=primary|")
     args        : string,   // `.custom` token arguments (e.g., "primary" for "|color=primary|")
-    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_token()`. Note: For `.scale_full_line` custom tokens, `size.x` is the unresolved line-width scale. Use `solved_width` for any token type instead.
+    size        : Vec2,     // Occupied size received from `Context.on_text_measure()` and `Context.on_text_custom_token()`. Note: For `.full_line` custom tokens, `size.x` is the unresolved line-width scale. Use `solved_width` for any token type instead.
     ascent      : f32,      // Distance from token top to baseline
     descent     : f32,      // Distance from baseline to token bottom
     intext_view : ^View,    // `.intext` view this token is bound with
@@ -43,16 +43,31 @@ Text_Token_Type :: enum u8 {
     custom,     // Custom/unknown token, e.g., `|icon=sword|` or `|item=#1234|`. Values are stored in `Text_Token.text` and `Text_Token.args`, and should be processed in `Context.on_text_custom_token()`.
 }
 
-Text_Token_Flags :: bit_set [Text_Token_Flag; u32]
+Text_Token_Flags :: bit_set [Text_Token_Flag; u8]
 Text_Token_Flag :: enum {
-    scale_full_line, // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
+    full_line, // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
 }
 
 Text_Custom_Token_Hint :: struct {
-    intext_view     : ^View,    // If set, the view defines token size while the token defines view's position. The view must have `.intext` flag and be a child of `.text` view this token is part of. Using `intext_view` makes `scale` and `scale_full_line` to be ignored.
-    scale           : Vec2,     // Relative to current text style font height. If `scale_full_line` is set, `scale.x` is relative to full line width.
-    scale_full_line : bool,     // If set, `scale.x` is scaled to full line width instead of font height. This flag should not be used with `.text_fit_x`.
-    baseline_ratio  : f32,      // From 0 to 1 ratio inside the custom token box
+    // If set, `scale` and `scale_full_line` are ignored.
+    // The view provides token size. If view is `.intext_full`, it provides only height.
+    // The view must have `.intext` flag and be a child of `.text` view this token is part of.
+    intext_view: ^View,
+
+    // Ignored if `intext_view` is set.
+    // Relative to current text style font height.
+    // If `scale_full_line` is set, `scale.x` is relative to full line width.
+    scale: Vec2,
+
+    // Ignored if `intext_view` is set.
+    // If set, `scale.x` is scaled to full line width instead of font height.
+    // This flag should not be used with `.text_fit_x`.
+    scale_full_line: bool,
+
+    // Generally value from 0 to 1 ratio inside the custom token box; but can be <0 or >1 too.
+    // This value defines vertical alignment of the token in a row of tokens on the same text line.
+    // This value essentially has no visible effect when the token is the only measurable token on its line, e.g. full-line tokens.
+    baseline_ratio: f32,
 }
 
 // Tokenizes given text.
@@ -165,12 +180,19 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                 iv := hint.intext_view
                 assert(.intext in iv.flags, "Text_Custom_Token_Hint.intext_view must have .intext flag")
                 assert(iv.parent == v.view, "Text_Custom_Token_Hint.intext_view must be child of the .text view it is used in")
+                assert(iv.flags & { .ratio_y, .fill_y } == {}, "Text_Custom_Token_Hint.intext_view must not have .ratio_y or .fill_y flags")
                 tok.intext_view = iv
-                tok.size = { iv.solved_rect.w, iv.solved_rect.h }
+                if .intext_full in iv.flags {
+                    assert(.text_fit_x not_in v.flags, "Text_Custom_Token_Hint.intext_view cannot be .intext_full with .text_fit_x parent")
+                    tok.flags += { .full_line }
+                    tok.size = { 1, iv.solved_rect.h } // Set scale.x value for wrapping step
+                } else {
+                    tok.size = { iv.solved_rect.w, iv.solved_rect.h }
+                }
                 _tok_setup_ascent_descent(&tok, hint.baseline_ratio)
             case hint.scale != {}:
                 if hint.scale_full_line {
-                    tok.flags += { .scale_full_line }
+                    tok.flags += { .full_line }
                     tok.size = {
                         hint.scale.x, // Keep scale.x value as-is, for wrapping step
                         hint.scale.y * style.font_scale * ctx.ref_font_height,
@@ -214,7 +236,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
 
     for &tok, i in tokens {
         tok.solved_width = tok.size.x
-        if .scale_full_line in tok.flags do tok.solved_width *= max(limit_x, 0)
+        if .full_line in tok.flags do tok.solved_width *= max(limit_x, 0)
 
         #partial switch tok.type {
         case .left      : style.align = .left       ; continue
@@ -314,6 +336,11 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
                             ||  abs(tok_pos_ref.y-tok.intext_view.solved_rect.y)>.1
             tok.intext_view.solved_rect.x = tok_pos_ref.x
             tok.intext_view.solved_rect.y = tok_pos_ref.y
+
+            if .intext_full in tok.intext_view.flags {
+                intext_mismatch ||= abs(tok.solved_width-tok.intext_view.solved_rect.w)>.1
+                tok.intext_view.solved_rect.w = tok.solved_width
+            }
         }
     }
 

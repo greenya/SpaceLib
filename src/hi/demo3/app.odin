@@ -85,6 +85,11 @@ app_init :: proc () {
                     assert(v == app.popup.ui_page_demo)
                     out_hint.intext_view = hi.child_by_name(v, args)
                 }
+            case "panel":
+                if out_hint != nil {
+                    assert(v == app.popup.ui_page_demo)
+                    out_hint.intext_view = app.popup.ui_page_demo_panel.ui_root
+                }
             }
         },
 
@@ -147,12 +152,21 @@ app_destroy :: proc () {
 }
 
 app_add_panel :: proc (path: string) {
-    new_panel := panel_create(app.ui_panel_list, path)
+    new_panel := panel_create(app.ui_panel_list, path, app_panel_on_open)
     append(&app.panels, new_panel)
     app_apply_panels_width()
     hi.set_debug(new_panel.ui_root, .debug in app.ui.root.flags) // propagate current debug state
     hi.solve_context(app.ui)
     hi.scroll_to_end(app.ui_panel_list)
+}
+
+app_panel_on_open :: proc (panel: ^Panel, file: ^os.File_Info) {
+    if file.type == .Directory {
+        app_destroy_all_panels_to_the_right(panel)
+        app_add_panel(file.fullpath)
+    } else {
+        app_open_popup_for_file(file)
+    }
 }
 
 app_destroy_all_panels_to_the_right :: proc (last_panel_to_keep: ^Panel) {
