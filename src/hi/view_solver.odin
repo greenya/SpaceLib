@@ -211,10 +211,14 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                     c_solved_scissor = v_solved_scissor != {}\
                         ? core.rect_intersection(v_solved_scissor, v_scissor_rect)\
                         : v_scissor_rect
+
+                    // An enabled scissor with no area clips the entire child subtree.
+                    // We do not let its empty rect reach Visible_View, where `{}` means the scissor is disabled.
+                    in_scissor = c_solved_scissor.w > 0 && c_solved_scissor.h > 0
                 } else {
                     c_solved_scissor = v_solved_scissor
                 }
-                if c_solved_scissor != {} && .intext not_in c.flags {
+                if in_scissor && c_solved_scissor != {} && .intext not_in c.flags {
                     in_scissor = core.rects_intersect(c_solved_scissor, c.solved_rect)
                 }
             }
