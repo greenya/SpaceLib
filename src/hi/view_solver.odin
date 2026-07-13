@@ -162,6 +162,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags do continue
+            if .intext in c.flags do c.flags -= { ._intext_bound }
 
             switch {
             case _is_layout_child(c):
