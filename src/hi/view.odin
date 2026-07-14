@@ -92,8 +92,7 @@ Flag :: enum {
 
     disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to native strata parents until consumed.
     hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured.
-    captured,   // FIX: [NOT IMPLEMENTED] The view has captured mouse. This state begins when the mouse button is pressed and ends when it is released. Releasing the button over the view triggers `.clicked` event (without this flag, the event is triggered at the moment the mouse button is pressed). Only one view at any given time can capture the mouse.
+    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
     radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
@@ -151,10 +150,8 @@ Event_Type :: enum u8 {
 
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
     left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
-    clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired after `.released` over the view.
-    captured,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button press.
-    released,   // FIX: [NOT IMPLEMENTED] Fired when `.capture` view gets mouse button release. If it occurred over the view, the `.clicked` is fired too.
-    dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view between `.captured` and `.released`.
+    clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired on mouse button release over the view.
+    dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view for whole lifetime of a drag operation
     wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 
     // Behavior
