@@ -27,8 +27,8 @@ View_Init :: struct {
 
     // Event callback.
     //
-    // *Mouse Action* events (`.clicked`, `.wheeled`) propagate to native strata parents unless `consumed=true` is returned.
-    // The `consumed` return value is ignored for all other events.
+    // - *Mouse Action* events (`.clicked`, `.wheeled`) propagate to native strata parents unless `consumed=true` is returned
+    // - `.drop_query` return value defines drop acceptance of `Context.drag.source`
     //
     // Note: Most events are emitted during `update_context()`.
     // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
@@ -90,9 +90,10 @@ Flag :: enum {
 
     // Behavior
 
-    disabled,   // The view is disabled, it will not receive *Mouse Action* events `.clicked` and `.wheeled`, instead such event will be propagated up to native strata parents until consumed.
+    disabled,   // The view is disabled. It does not receive `.clicked`, `.wheeled`, or `.drop_query`, and cannot capture the mouse. `.clicked` and `.wheeled` continue propagating to interaction parents.
     hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    capture,    // FIX: [NOT IMPLEMENTED] The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse.
+    capture,    // The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse.
+    drop_target,// The view can be a drop target of a drag operation. The nearest `.drop_target` under the drag pointer becomes `Context.drag.target` and receives `.drop_query` every update, unless `.disabled`.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
     radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
@@ -151,7 +152,8 @@ Event_Type :: enum u8 {
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
     left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired on mouse button release over the view.
-    dragged,    // FIX: [NOT IMPLEMENTED] Continuously fired for `.capture` view for whole lifetime of a drag operation
+    dragged,    // Continuously fired for `Context.drag.source` while drag operation is `.active`
+    drop_query, // Continuously fired for the nearest `.drop_target` under the drag pointer. Does not propagate. Return `consumed=true` to accept `Context.drag.source`.
     wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 
     // Behavior
@@ -393,9 +395,32 @@ view_tree_contains :: proc (v, child: ^View) -> bool {
 //
 // Interaction propagation stops at strata boundaries, because non-native strata
 // views are elevated out of the parent's layout/clipping/input flow.
+@require_results
 _interaction_parent :: proc (v: ^View) -> ^View {
     if v.parent != nil && v.parent.strata == v.strata do return v.parent
     return nil
+}
+
+// Returns `v` or its first interaction parent containing any `include` flag
+// and none of the `exclude` flags. Empty flag sets are ignored.
+@require_results
+_interaction_parent_by_any_flags :: proc (v: ^View, include := Flags {}, exclude := Flags {}) -> ^View {
+    for p := v; p != nil; p = _interaction_parent(p) {
+        if (include == {} || p.flags & include != {}) &&
+           (exclude == {} || p.flags & exclude == {}) {
+            return p
+        }
+    }
+    return nil
+}
+
+// Returns true if `parent` is `v` or inside its interaction path
+@require_results
+_interaction_path_contains :: proc (v, parent: ^View) -> bool {
+    for p := v; p != nil; p = _interaction_parent(p) {
+        if p == parent do return true
+    }
+    return false
 }
 
 _hit_clear_if_view_tree_contains_hit :: proc (v: ^View) {

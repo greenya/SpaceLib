@@ -2,6 +2,11 @@
 
 ## TODOs
 
+TODO: Add support for drag operation:
+
+    - FIX: handle removing stored views (source and target), in set_parent()
+    - FIX: drag_drop() and drag_cancel() are unsafe inside user callbacks; deferred/pending approach is needed
+
 TODO: View: Add .modal flag, should block any events propagation to parent views
 
 TODO: Context: add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size (for dev ui)
