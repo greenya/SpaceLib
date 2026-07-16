@@ -14,12 +14,13 @@ Debug_Draw_Type :: enum u8 {
 }
 
 _DEBUG_BG_COLOR         :: Color {  25,  25,  25, 255 }
-_DEBUG_VIEW_COLOR       :: Color { 255, 255, 255, 255 }
-_DEBUG_HIT_TEST_COLOR   :: Color { 255, 255,   0, 255 }
+_DEBUG_VIEW_COLOR       :: Color {  80,  80,  80, 255 }
+_DEBUG_HOVERED_COLOR    :: Color { 255, 255,   0, 255 }
 _DEBUG_PADDING_COLOR    :: Color { 255, 255, 255,  80 }
-_DEBUG_SCISSOR_COLOR    :: Color {   0, 255, 255, 255 }
-// _DEBUG_CAPTURE_COLOR :: Color { 255, 120, 120, 255 }
-_DEBUG_TEXT_TOKEN_COLOR :: Color { 255,   0, 255, 255 }
+_DEBUG_SCISSOR_COLOR    :: Color {  40, 255, 255, 255 }
+_DEBUG_DRAG_SOURCE_COLOR:: Color { 255,  80,  80, 255 }
+_DEBUG_DROP_TARGET_COLOR:: Color {  80,  80, 255, 255 }
+_DEBUG_TEXT_TOKEN_COLOR :: Color { 160,  40, 160, 255 }
 _DEBUG_STATS_COLOR      :: Color { 255, 255, 255, 255 }
 
 _debug_draw_stats :: proc (ctx: ^Context) {
@@ -69,21 +70,11 @@ _debug_draw_stats :: proc (ctx: ^Context) {
 }
 
 _debug_draw_view :: proc (v: ^Visible_View, filter: bit_set [Debug_Draw_Type] = ~{}) {
-    if .scissor in filter   do _debug_draw_view_scissor(v)
     if .padding in filter   do _debug_draw_view_padding(v)
+    if .scissor in filter   do _debug_draw_view_scissor(v)
     if .rect in filter      do _debug_draw_view_rect(v)
     if .info in filter      do _debug_draw_view_info(v)
     if .text in filter      do _debug_draw_view_text(v)
-}
-
-_debug_draw_view_scissor :: proc (v: ^View) {
-    if .scissor not_in v.flags do return
-
-    // ISSUE: drawing viewport_rect() of a view, not actual scissor of each child
-    // (.absolute children uses parent's solved_rect for scissor)
-    vr_s := ref_rect_to_screen(v.ctx, viewport_rect(v))
-    core.rect_inflate(&vr_s, 8/4)
-    _debug_draw_rect(v.ctx, vr_s, 8, _DEBUG_SCISSOR_COLOR)
 }
 
 _debug_draw_view_padding :: proc (v: ^View) {
@@ -107,17 +98,32 @@ _debug_draw_view_padding :: proc (v: ^View) {
     }
 }
 
+_debug_draw_view_scissor :: proc (v: ^View) {
+    if .scissor not_in v.flags do return
+
+    // ISSUE: drawing viewport_rect() of a view, not actual scissor of each child
+    // (.absolute children uses parent's solved_rect for scissor)
+    vr_s := ref_rect_to_screen(v.ctx, viewport_rect(v))
+    core.rect_inflate(&vr_s, 2)
+    _debug_draw_rect(v.ctx, vr_s, 1, _DEBUG_SCISSOR_COLOR)
+}
+
 _debug_draw_view_rect :: proc (v: ^View) {
     rect_s := ref_view_to_screen(v)
-    color := .hovered in v.flags ? _DEBUG_HIT_TEST_COLOR : _DEBUG_VIEW_COLOR
-    thick: f32 = .hovered in v.flags ? 4 : 1
-    _debug_draw_rect(v.ctx, rect_s, thick, color)
+    color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
+    _debug_draw_rect(v.ctx, rect_s, 1, color)
+
+    if .active in v.ctx.drag.flags {
+        core.rect_inflate(&rect_s, 2)
+        if .drop_target in v.flags do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_DROP_TARGET_COLOR)
+        if v == v.ctx.drag.source  do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_DRAG_SOURCE_COLOR)
+    }
 }
 
 _debug_draw_view_info :: proc (v: ^View) {
     text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
     lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
-    color := .hovered in v.flags ? _DEBUG_HIT_TEST_COLOR : _DEBUG_VIEW_COLOR
+    color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
     _debug_draw_text(v.ctx, text, lt_s+4, color)
 }
 
