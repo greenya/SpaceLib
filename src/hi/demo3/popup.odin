@@ -109,16 +109,22 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         // which is not critical but ugly.
 
         container := hi.add_view(popup.ui_pages, {
-            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y },
+            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y, .capture },
             size    = 1,
             padding = 20,
+            on_event = proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+                if event.type == .dragged {
+                    hi.scroll_to(v, v.ctx.drag.source_start_scroll + v.ctx.drag.total_offset)
+                }
+                return
+            },
         })
 
         p.content^ = hi.add_view(container, p.init)
 
         switch p.content^ {
         case popup.ui_page_image:
-            _popup_page_image_add_dragging_and_drawing(popup)
+            _popup_page_image_add_drawing(popup)
 
         case popup.ui_page_demo:
             _popup_page_demo_add_intext_views(popup)
@@ -193,15 +199,7 @@ popup_close :: proc (popup: ^Popup) {
     _popup_destroy_buf_texture(popup)
 }
 
-_popup_page_image_add_dragging_and_drawing :: proc (popup: ^Popup) {
-    popup.ui_page_image.parent.flags += { .capture }
-    popup.ui_page_image.parent.on_event = proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-        if event.type == .dragged {
-            hi.scroll_to(v, v.ctx.drag.source_start_scroll + v.ctx.drag.total_offset)
-        }
-        return
-    }
-
+_popup_page_image_add_drawing :: proc (popup: ^Popup) {
     popup.ui_page_image.user_ptr = popup
     popup.ui_page_image.on_draw = proc (v: ^hi.Visible_View) {
         popup := cast (^Popup) v.user_ptr

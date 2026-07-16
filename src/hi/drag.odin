@@ -8,7 +8,7 @@ Drag_State :: struct {
     total_offset        : Vec2,     // Current `Context.mouse.ref_pos - start_ref_pos`
     delta               : Vec2,     // Change in `total_offset` since the previous update
 
-    source              : ^View,    // The view the drag started from. Note: while a view is the active drag source, its `.wheel_scroll_*` flags are ignored, the `.wheeled` event is still emitted.
+    source              : ^View,    // The view the drag started from
     source_start_scroll : Vec2,     // `source.scroll` when the drag started
     source_start_pos    : Vec2,     // Starting mouse position relative to the top-left of `source.solved_rect`
     source_pos          : Vec2,     // Current mouse position relative to the top-left of `source.solved_rect`
@@ -32,6 +32,15 @@ Drag_Cancel_Reason :: enum u8 {
     no_target,  // Released without any `.drop_target` under the pointer
     rejected,   // Released over a `.drop_target` that rejected `source`
     requested,  // Canceled programmatically with `drag_cancel()`
+}
+
+_drag_cleanup_state_from_prev_frame :: proc (ctx: ^Context) {
+    if .active not_in ctx.drag.flags do return
+    if ctx.drag.flags & { .dropped, .canceled } != {} {
+        ctx.drag = {}
+    } else {
+        ctx.drag.flags -= { .started }
+    }
 }
 
 _drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View) {

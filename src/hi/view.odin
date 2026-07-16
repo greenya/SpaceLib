@@ -92,7 +92,7 @@ Flag :: enum {
 
     disabled,   // The view is disabled. It does not receive `.clicked`, `.wheeled`, or `.drop_query`, and cannot capture the mouse. `.clicked` and `.wheeled` continue propagating to interaction parents.
     hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    capture,    // The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse.
+    capture,    // The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse. Descendant `.clicked` handlers are dispatched first and can prevent capture by consuming the event.
     drop_target,// The view can be a drop target of a drag operation. The nearest `.drop_target` under the drag pointer becomes `Context.drag.target` and receives `.drop_query` every update, unless `.disabled`.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
@@ -566,6 +566,14 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
 
     clicked_consumed := _emit(v, { type=.clicked })
     return check_consumed || radio_consumed || clicked_consumed
+}
+
+// Bubbles click_one() from `v` up to `stop_before` (which is excluded)
+_click_one_before :: proc (v, stop_before: ^View) -> bool {
+    for i := v; i != nil && i != stop_before; i = _interaction_parent(i) {
+        if click_one(i) do return true
+    }
+    return false
 }
 
 // Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
