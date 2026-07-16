@@ -152,7 +152,7 @@ Event_Type :: enum u8 {
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
     left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
     clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired on mouse button release over the view.
-    dragged,    // Continuously fired for `Context.drag.source` while drag operation is `.active`
+    dragged,    // Continuously fired for `Context.drag.source` while drag operation is `.active`. A view with `.capture` flag can initiate drag operation from mouse button press.
     drop_query, // Continuously fired for the nearest `.drop_target` under the drag pointer. Does not propagate. Return `consumed=true` to accept `Context.drag.source`.
     wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 

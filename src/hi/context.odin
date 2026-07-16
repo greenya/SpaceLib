@@ -170,6 +170,7 @@ Context_Drag_State :: struct {
     delta           : Vec2,     // Change in `total_offset` since the previous update
 
     source          : ^View,    // The view the drag started from
+    source_start_scroll: Vec2,  // `source.scroll` when the drag started
     source_start_pos: Vec2,     // Starting mouse position relative to the top-left of `source.solved_rect`
     source_pos      : Vec2,     // Current mouse position relative to the top-left of `source.solved_rect`
 
@@ -701,6 +702,7 @@ _drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View) {
         flags               = { .active, .started },
         start_ref_pos       = ctx.mouse.ref_pos,
         source              = source,
+        source_start_scroll = source.scroll,
         source_start_pos    = source_start_pos,
         source_pos          = source_start_pos,
     }
