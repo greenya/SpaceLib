@@ -116,21 +116,13 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 
         p.content^ = hi.add_view(container, p.init)
 
-        if p.content^ == popup.ui_page_demo {
+        switch p.content^ {
+        case popup.ui_page_image:
+            _popup_page_image_add_dragging_and_drawing(popup)
+
+        case popup.ui_page_demo:
             _popup_page_demo_add_intext_views(popup)
             _popup_page_demo_add_action_bar(popup)
-        }
-    }
-
-    popup.ui_page_image.user_ptr = popup
-    popup.ui_page_image.on_draw = proc (v: ^hi.Visible_View) {
-        popup := cast (^Popup) v.user_ptr
-        if v.text == "" {
-            assert(popup.buf_texture != {})
-            pos := [2] f32 { v.solved_rect.x, v.solved_rect.y }
-            k2.draw_texture(popup.buf_texture, pos)
-        } else {
-            v.ctx.on_draw_text(v)
         }
     }
 
@@ -199,6 +191,28 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
 popup_close :: proc (popup: ^Popup) {
     hi.hide(popup.ui_root)
     _popup_destroy_buf_texture(popup)
+}
+
+_popup_page_image_add_dragging_and_drawing :: proc (popup: ^Popup) {
+    popup.ui_page_image.parent.flags += { .capture }
+    popup.ui_page_image.parent.on_event = proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
+        if event.type == .dragged {
+            hi.scroll_to(v, v.ctx.drag.source_start_scroll + v.ctx.drag.total_offset)
+        }
+        return
+    }
+
+    popup.ui_page_image.user_ptr = popup
+    popup.ui_page_image.on_draw = proc (v: ^hi.Visible_View) {
+        popup := cast (^Popup) v.user_ptr
+        if v.text == "" {
+            assert(popup.buf_texture != {})
+            pos := [2] f32 { v.solved_rect.x, v.solved_rect.y }
+            k2.draw_texture(popup.buf_texture, pos)
+        } else {
+            v.ctx.on_draw_text(v)
+        }
+    }
 }
 
 _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
