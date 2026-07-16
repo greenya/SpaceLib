@@ -109,15 +109,9 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         // which is not critical but ugly.
 
         container := hi.add_view(popup.ui_pages, {
-            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y, .capture },
+            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y, .capture, .drag_pan },
             size    = 1,
             padding = 20,
-            on_event = proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-                if event.type == .dragged {
-                    hi.scroll_to(v, v.ctx.drag.source_start_scroll + v.ctx.drag.total_offset)
-                }
-                return
-            },
         })
 
         p.content^ = hi.add_view(container, p.init)

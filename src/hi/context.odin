@@ -230,11 +230,8 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 
     if .active in ctx.drag.flags {
         _hit_set_view(ctx, ctx.drag.source) // Keep source hit path while drag operation
-
         _drag_update(ctx, hit_view)
-        if ctx.mouse.lmb_down do _emit(ctx.drag.source, { type=.dragged })
-        else                  do _drag_stop(ctx, hit_view)
-
+        _drag_step(ctx, hit_view)
         wheel_consumed = ctx.mouse.wheel_delta != 0 && wheel(hit_view) // Allow mouse wheeling of the view we are dragging over
         lmb_consumed = true // While drag active, lmb interaction is always consumed
     } else {
@@ -248,7 +245,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
                 case _click_one_before(ctx.hit, capture_view): // Child view consumed interaction via click_one()
                     lmb_consumed = true
                 case: // Interaction was not consumed before the capture boundary
-                    _drag_start(ctx, source=capture_view, hit=ctx.hit)
+                    _drag_start(ctx, source=capture_view, hit=ctx.hit, lmb_controlled=true)
                     lmb_consumed = true
                 }
             }

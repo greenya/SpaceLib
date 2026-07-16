@@ -20,10 +20,11 @@ Drag_State :: struct {
 
 Drag_Flags :: bit_set [Drag_Flag; u8]
 Drag_Flag :: enum u8 {
-    active,     // Set on every drag frame, including started and terminal frames. If this flag is not set, all other fields of `Context.drag` are invalid (zero)
-    started,    // First active frame only
-    dropped,    // Terminal frame: released with `target` and `target_accepts_source` set
-    canceled,   // Terminal frame: canceled because of `cancel_reason`
+    active,         // Set on every drag frame, including started and terminal frames. If this flag is not set, all other fields of `Context.drag` are invalid (zero)
+    lmb_controlled, // The drag automatically ends when LMB is released. It can still be ended earlier with `drag_drop()` or `drag_cancel()`.
+    started,        // Initial `.active` frame
+    dropped,        // Terminal `.active` frame: completed with `target` and `target_accepts_source` set
+    canceled,       // Terminal `.active` frame: canceled because of `cancel_reason`
 }
 
 Drag_Cancel_Reason :: enum u8 {
@@ -43,7 +44,7 @@ _drag_cleanup_state_from_prev_frame :: proc (ctx: ^Context) {
     }
 }
 
-_drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View) {
+_drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View, lmb_controlled: bool) {
     assert(.active not_in ctx.drag.flags)
 
     source_start_pos := ctx.mouse.ref_pos - { source.solved_rect.x, source.solved_rect.y }
@@ -56,9 +57,15 @@ _drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View) {
         source_pos          = source_start_pos,
     }
 
+    if lmb_controlled do ctx.drag.flags += { .lmb_controlled }
+
     _drag_update(ctx, hit)
 
     _emit(source, { type=.dragged })
+}
+
+drag_start :: proc (v: ^View) {
+    _drag_start(v.ctx, source=v, hit=v.ctx.hit, lmb_controlled=false)
 }
 
 _drag_update :: proc (ctx: ^Context, hit: ^View) {
@@ -85,6 +92,18 @@ _drag_update :: proc (ctx: ^Context, hit: ^View) {
         if .disabled not_in ctx.drag.target.flags {
             ctx.drag.target_accepts_source = _emit(ctx.drag.target, { type=.drop_query })
         }
+    }
+}
+
+_drag_step :: proc (ctx: ^Context, hit: ^View) {
+    if .drag_pan in ctx.drag.source.flags {
+        scroll_to(ctx.drag.source, ctx.drag.source_start_scroll + ctx.drag.total_offset)
+    }
+
+    if .lmb_controlled in ctx.drag.flags && !ctx.mouse.lmb_down {
+        _drag_stop(ctx, hit)
+    } else {
+        _emit(ctx.drag.source, { type=.dragged })
     }
 }
 

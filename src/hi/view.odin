@@ -92,7 +92,8 @@ Flag :: enum {
 
     disabled,   // The view is disabled. It does not receive `.clicked`, `.wheeled`, or `.drop_query`, and cannot capture the mouse. `.clicked` and `.wheeled` continue propagating to interaction parents.
     hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    capture,    // The view can capture mouse on button press. The `.clicked` event is fired on mouse button release. The `.dragged` event continuously fired while mouse is captured. Only one view at any given time can capture the mouse. Descendant `.clicked` handlers are dispatched first and can prevent capture by consuming the event.
+    capture,    // The view automatically starts an LMB-controlled drag operation when the view is pressed. Descendant `.clicked` handlers can prevent capture by consuming the event. The `.dragged` event is continuously fired while mouse is captured. The `.clicked` event is fired on mouse button release if drag ends over the source view. Only one view at any given time can capture the mouse.
+    drag_pan,   // The view automatically updates `View.scroll` while it is `Context.drag.source`. The flag does not start drag operation on its own. Combine with `.capture` for mouse-driven panning or start the drag with `drag_start()`.
     drop_target,// The view can be a drop target of a drag operation. The nearest `.drop_target` under the drag pointer becomes `Context.drag.target` and receives `.drop_query` every update, unless `.disabled`.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.

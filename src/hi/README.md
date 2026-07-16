@@ -6,6 +6,7 @@ TODO: Add support for drag operation:
 
     - FIX: handle removing stored views (source and target), in set_parent()
     - FIX: drag_drop() and drag_cancel() are unsafe inside user callbacks; deferred/pending approach is needed
+    - FIX: drag_start() is fine to call only on .clicked and .wheeled; calling it in .entered, .left, .solved will make os it operates on stale hit view; also _drag_cleanup_state_from_prev_frame() cleans ".started" state; deferred/pending approach is needed
 
 TODO: View: Add .modal flag, should block any events propagation to parent views
 
