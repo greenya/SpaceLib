@@ -8,7 +8,7 @@ Drag_State :: struct {
     total_offset        : Vec2,     // Current `Context.mouse.ref_pos - start_ref_pos`
     delta               : Vec2,     // Change in `total_offset` since the previous update
 
-    source              : ^View,    // The view the drag started from
+    source              : ^View,    // The view the drag started from. Note: while a view is the active drag source, its `.wheel_scroll_*` flags are ignored, the `.wheeled` event is still emitted.
     source_start_scroll : Vec2,     // `source.scroll` when the drag started
     source_start_pos    : Vec2,     // Starting mouse position relative to the top-left of `source.solved_rect`
     source_pos          : Vec2,     // Current mouse position relative to the top-left of `source.solved_rect`

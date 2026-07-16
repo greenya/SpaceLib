@@ -98,9 +98,9 @@ Flag :: enum {
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
     radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
     page,       // The view hides all `.page` siblings when gets `show()`
-    wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
-    wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`.
-    wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`.
+    wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
+    wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
+    wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
 }
 
 Strata :: enum i8 {
@@ -584,7 +584,7 @@ wheel_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
     scrolled: bool
-    switch {
+    if v != v.ctx.drag.source do switch {
     case .wheel_scroll_x in v.flags:
         scrolled = scroll_by_step(v, { v.ctx.mouse.wheel_delta, 0 })
     case .wheel_scroll_y in v.flags:
