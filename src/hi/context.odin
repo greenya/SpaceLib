@@ -105,7 +105,7 @@ Context_Init :: struct {
 Context :: struct {
     views           : core.Sparse_Array(View, MAX_VIEWS),
     visible_views   : [dynamic; MAX_VISIBLE_VIEWS] Visible_View,
-    visible_text_tokens : [MAX_VISIBLE_TEXT_TOKENS] Text_Token,
+    visible_text_tokens: [MAX_VISIBLE_TEXT_TOKENS] Text_Token,
     visible_text_tokens_used: int,
     next_view_sid   : View_SID,
     root            : ^View, // Root view, created by `create_context()` and always set
@@ -134,7 +134,7 @@ Context :: struct {
         consumed        : bool,         // For this frame only
     },
 
-    drag: Context_Drag_State, // Current drag operation. Valid only if `.active in drag.flags`.
+    drag: Drag_State, // Current drag operation. Valid only if `.active in drag.flags`.
 
     stats: struct {
         views_peak              : int,
@@ -159,40 +159,6 @@ Context_Event_Type :: enum {
     screen_size_changed,
     screen_pixel_scale_changed,
     solved, // The context was solved. Note: user call to `solve_context()` is silent.
-}
-
-Context_Drag_State :: struct {
-    flags           : Context_Drag_Flags, // If `.active`, drag operation is happening now
-    cancel_reason   : Context_Drag_Cancel_Reason, // Set only for `.canceled` drag operation
-
-    start_ref_pos   : Vec2,     // `Context.mouse.ref_pos` when the drag started
-    total_offset    : Vec2,     // Current `Context.mouse.ref_pos - start_ref_pos`
-    delta           : Vec2,     // Change in `total_offset` since the previous update
-
-    source          : ^View,    // The view the drag started from
-    source_start_scroll: Vec2,  // `source.scroll` when the drag started
-    source_start_pos: Vec2,     // Starting mouse position relative to the top-left of `source.solved_rect`
-    source_pos      : Vec2,     // Current mouse position relative to the top-left of `source.solved_rect`
-
-    target          : ^View,    // The view the drag is targeting now. Set to the nearest `.drop_target` in the hit path if any.
-    target_pos      : Vec2,     // Current mouse position relative to the top-left of `target.solved_rect`
-    target_accepts_source: bool, // `.drop_query` result from `target`
-}
-
-Context_Drag_Flags :: bit_set [Context_Drag_Flag; u8]
-Context_Drag_Flag :: enum u8 {
-    active,     // Set on every drag frame, including started and terminal frames. If this flag is not set, all other fields of `Context.drag` are invalid (zero)
-    started,    // First active frame only
-    dropped,    // Terminal frame: released with `target` and `target_accepts_source` set
-    canceled,   // Terminal frame: canceled because of `cancel_reason`
-}
-
-Context_Drag_Cancel_Reason :: enum u8 {
-    none,
-    clicked,    // Released over `source` and `.clicked` was emitted
-    no_target,  // Released without any `.drop_target` under the pointer
-    rejected,   // Released over a `.drop_target` that rejected `source`
-    requested,  // Canceled programmatically with `drag_cancel()`
 }
 
 @require_results
@@ -272,7 +238,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         if ctx.mouse.lmb_down do _emit(ctx.drag.source, { type=.dragged })
         else                  do _drag_stop(ctx, hit_view)
 
-        if ctx.mouse.wheel_delta != 0 do wheel(hit_view) // Allow mouse wheeling
+        if ctx.mouse.wheel_delta != 0 do wheel(hit_view) // Allow mouse wheeling of the view we are dragging over
         ctx.mouse.consumed = true // While drag active, mouse is always consumed
     } else {
         _hit_set_view(ctx, hit_view)
@@ -692,92 +658,6 @@ _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
         if in_rect && in_scissor do return &v
     }
     return nil
-}
-
-_drag_start :: proc (ctx: ^Context, source: ^View, hit: ^View) {
-    assert(.active not_in ctx.drag.flags)
-
-    source_start_pos := ctx.mouse.ref_pos - { source.solved_rect.x, source.solved_rect.y }
-    ctx.drag = {
-        flags               = { .active, .started },
-        start_ref_pos       = ctx.mouse.ref_pos,
-        source              = source,
-        source_start_scroll = source.scroll,
-        source_start_pos    = source_start_pos,
-        source_pos          = source_start_pos,
-    }
-
-    _drag_update(ctx, hit)
-
-    _emit(source, { type=.dragged })
-}
-
-_drag_update :: proc (ctx: ^Context, hit: ^View) {
-    assert(.active in ctx.drag.flags)
-
-    // offsets
-
-    new_total_offset := ctx.mouse.ref_pos - ctx.drag.start_ref_pos
-    ctx.drag.delta = new_total_offset - ctx.drag.total_offset
-    ctx.drag.total_offset = new_total_offset
-
-    // source view
-
-    ctx.drag.source_pos = ctx.mouse.ref_pos - { ctx.drag.source.solved_rect.x, ctx.drag.source.solved_rect.y }
-
-    // target view
-
-    ctx.drag.target_pos = {}
-    ctx.drag.target_accepts_source = false
-    ctx.drag.target = _interaction_parent_by_any_flags(hit, include={ .drop_target })
-
-    if ctx.drag.target != nil {
-        ctx.drag.target_pos = ctx.mouse.ref_pos - { ctx.drag.target.solved_rect.x, ctx.drag.target.solved_rect.y }
-        if .disabled not_in ctx.drag.target.flags {
-            ctx.drag.target_accepts_source = _emit(ctx.drag.target, { type=.drop_query })
-        }
-    }
-}
-
-_drag_stop :: proc (ctx: ^Context, hit: ^View) {
-    assert(.active in ctx.drag.flags)
-
-    switch {
-    case _interaction_path_contains(hit, ctx.drag.source):
-        click(ctx.drag.source)
-        _drag_cancel(ctx, .clicked)
-
-    case ctx.drag.target == nil:
-        _drag_cancel(ctx, .no_target)
-
-    case !ctx.drag.target_accepts_source:
-        _drag_cancel(ctx, .rejected)
-
-    case:
-        drag_drop(ctx)
-    }
-}
-
-drag_drop :: proc (ctx: ^Context) {
-    assert(.active in ctx.drag.flags)
-    assert(ctx.drag.target != nil, "The target must exist")
-    assert(ctx.drag.target_accepts_source, "The target doesn't accept the source. Did you mean `drag_cancel()`?")
-
-    ctx.drag.flags += { .dropped }
-    _emit(ctx.drag.source, { type=.dragged })
-}
-
-drag_cancel :: proc (ctx: ^Context) {
-    _drag_cancel(ctx, .requested)
-}
-
-_drag_cancel :: proc (ctx: ^Context, reason: Context_Drag_Cancel_Reason) {
-    assert(.active in ctx.drag.flags)
-    assert(reason != .none)
-
-    ctx.drag.flags += { .canceled }
-    ctx.drag.cancel_reason = reason
-    _emit(ctx.drag.source, { type=.dragged })
 }
 
 @require_results
