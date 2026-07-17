@@ -195,6 +195,7 @@ _perf_draw :: proc (ctx: ^Context) #no_bounds_check {
     _debug_draw_text(ctx, text, { text_rect.x, text_rect.y }, _DEBUG_STATS_COLOR)
 }
 
+@require_results
 _perf_frame :: proc (ctx: ^Context, i: int) -> _Perf_Frame {
     assert(i >= 0 && i < ctx.perf.count)
     oldest := ctx.perf.head - ctx.perf.count
@@ -202,12 +203,14 @@ _perf_frame :: proc (ctx: ^Context, i: int) -> _Perf_Frame {
     return ctx.perf.frames[(oldest + i) % _PERF_MAX_FRAMES]
 }
 
+@require_results
 _perf_untracked :: proc (frame: _Perf_Frame) -> time.Duration {
     tracked := frame.tracks[.update].dur + frame.tracks[.draw].dur
     if tracked >= frame.dur do return 0
     return frame.dur - tracked
 }
 
+@require_results
 _perf_graph_height :: proc (dur, max_dur: time.Duration, graph_h: f32) -> f32 {
     if max_dur <= 0 do return 0
     return f32(f64(graph_h) * time.duration_milliseconds(dur) / time.duration_milliseconds(max_dur))

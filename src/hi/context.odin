@@ -397,12 +397,12 @@ draw_context :: proc (ctx: ^Context) {
         }
     }
 
+    if has_on_scissor do ctx->on_scissor(SCISSOR_DISABLED)
+
     when PERF_ON {
         _perf_track_stop(ctx, .draw)
         _perf_frame_stop(ctx)
     }
-
-    if has_on_scissor do ctx->on_scissor(SCISSOR_DISABLED)
 
     if .debug in ctx.root.flags {
         if .stats in ctx.debug_draw_filter do _debug_draw_stats(ctx)
@@ -645,6 +645,7 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
     ctx.hit = new_hit
 }
 
+@require_results
 _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
     #reverse for &v in ctx.visible_views {
         if .hitless in v.flags do continue

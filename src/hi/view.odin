@@ -493,6 +493,7 @@ set_text :: proc (v: ^View, text: string) {
     queue_solve_context(v.ctx)
 }
 
+@require_results
 _text_wordy_buffer :: proc (v: ^View) -> (buf: ^[dynamic] Text_Token) {
     assert(v.ctx.on_text_wordy != nil, "Context.on_text_wordy must be set when using .text_wordy views")
     buf = v.ctx.on_text_wordy(v)
@@ -519,11 +520,11 @@ show :: proc (v: ^View) {
 }
 
 hide :: proc (v: ^View) {
-    if .hidden not_in v.flags {
-        v.flags += { .hidden }
-        _emit(v, { type=.hidden })
-        queue_solve_context(v.ctx)
-    }
+    if .hidden in v.flags do return
+
+    v.flags += { .hidden }
+    _emit(v, { type=.hidden })
+    queue_solve_context(v.ctx)
 }
 
 // Fires `.clicked` event for the view as it would be clicked with a mouse.

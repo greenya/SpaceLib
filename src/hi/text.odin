@@ -416,6 +416,7 @@ _text_finalize_line :: proc (
     }
 }
 
+@require_results
 _text_parse_tag_text :: proc (tag_text: string) -> (name, args: string) #no_bounds_check {
     i := strings.index_byte(tag_text, '=')
     if i >= 0   do return tag_text[0:i], tag_text[i+1:]

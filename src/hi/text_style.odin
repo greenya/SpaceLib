@@ -24,6 +24,7 @@ Text_Style_Default := Text_Style {
 
 Text_Alignment :: enum u8 { left, right, center }
 
+@require_results
 _text_style_init :: proc (v: ^View) -> Text_Style {
     style := Text_Style_Default
     style.ctx = v.ctx
