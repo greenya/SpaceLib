@@ -52,7 +52,7 @@ _solve_view_fit_and_fixed_size :: proc (v: ^View) {
 // - `solved_rect.x/y`
 // - `solved_scissor`
 //
-// Also appends child to `Context.visible_views` in case it intersects `solved_scissor`.
+// Also appends children to `Context.visible_views` if in-scissor check passes.
 _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     v_size_x_avail := max(0, v.solved_rect.w - (v.padding[0] + v.padding[2]))
     v_size_y_avail := max(0, v.solved_rect.h - (v.padding[1] + v.padding[3]))
@@ -203,22 +203,21 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
             // Scissor calculation and in-scissor check
 
             in_scissor := true
-            c_solved_scissor: Rect
+            c_solved_scissor := SCISSOR_DISABLED
 
             if v.strata == c.strata {
                 if .scissor in v.flags {
                     v_scissor_rect := .absolute in c.flags ? v.solved_rect : viewport_rect(v)
-                    c_solved_scissor = v_solved_scissor != {}\
+                    c_solved_scissor = scissor_enabled(v_solved_scissor)\
                         ? core.rect_intersection(v_solved_scissor, v_scissor_rect)\
                         : v_scissor_rect
-
-                    // An enabled scissor with no area clips the entire child subtree.
-                    // We do not let its empty rect reach Visible_View, where `{}` means the scissor is disabled.
-                    in_scissor = c_solved_scissor.w > 0 && c_solved_scissor.h > 0
                 } else {
                     c_solved_scissor = v_solved_scissor
                 }
-                if in_scissor && c_solved_scissor != {} && .intext not_in c.flags {
+
+                // Empty-scissor children still participate in layout and text solving;
+                // `_filter_visible_views()` removes them before interaction and drawing.
+                if scissor_has_area(c_solved_scissor) && .intext not_in c.flags {
                     in_scissor = core.rects_intersect(c_solved_scissor, c.solved_rect)
                 }
             }

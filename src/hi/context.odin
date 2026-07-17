@@ -44,7 +44,8 @@ Context_Init :: struct {
     // Event callback
     on_event: proc (ctx: ^Context, event: Context_Event),
 
-    // Scissor callback. Scissor should be disabled when `scissor == {}`.
+    // Scissor callback.
+    // Scissor should be applied if `scissor_enabled(scissor)`, and disabled otherwise.
     // The value is in ref units.
     on_scissor: proc (ctx: ^Context, scissor: Rect),
 
@@ -308,7 +309,7 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
     ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
     ctx.root.solved_opacity = ctx.root.opacity
     ctx.root.solved_layout_child_count = 0
-    append(&ctx.visible_views, Visible_View { ctx.root, {}, nil })
+    append(&ctx.visible_views, Visible_View { ctx.root, SCISSOR_DISABLED, nil })
 
     for i in 0..<MAX_SCROLL_SOLVER_PASSES {
         if i > 0 do resize(&ctx.visible_views, 1) // keep root only
@@ -316,13 +317,13 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
         for j in 0..<MAX_VIEW_SOLVER_PASSES {
             if j > 0 do resize(&ctx.visible_views, 1) // keep root only
             _solve_view_fit_and_fixed_size(ctx.root)
-            _solve_children_fill_and_ratio_size(ctx.root, {})
+            _solve_children_fill_and_ratio_size(ctx.root, SCISSOR_DISABLED)
             extent_mismatch, intext_mismatch := _regenerate_visible_text_tokens(ctx)
             view_solver_passed = !extent_mismatch && !intext_mismatch
             if view_solver_passed do break
         }
 
-        _filter_intext_views(ctx)
+        _filter_visible_views(ctx)
 
         scroll_solver_passed = true
         for v in ctx.visible_views {
@@ -367,9 +368,11 @@ draw_context :: proc (ctx: ^Context) {
     ctx.drawing = true
     defer ctx.drawing = false
 
-    solved_scissor: Rect = {-1,-1,-1,-1}
+    solved_scissor := SCISSOR_DISABLED
     has_on_scissor := ctx.on_scissor != nil
     has_on_draw_text := ctx.on_draw_text != nil
+
+    if has_on_scissor do ctx->on_scissor(SCISSOR_DISABLED)
 
     for &v in ctx.visible_views {
         if solved_scissor != v.solved_scissor {
@@ -388,9 +391,9 @@ draw_context :: proc (ctx: ^Context) {
         }
 
         if .debug in v.flags {
-            if solved_scissor != {} && has_on_scissor do ctx->on_scissor({})
+            if scissor_enabled(solved_scissor) && has_on_scissor do ctx->on_scissor(SCISSOR_DISABLED)
             _debug_draw_view(&v, ctx.debug_draw_filter)
-            if solved_scissor != {} && has_on_scissor do ctx->on_scissor(solved_scissor)
+            if scissor_enabled(solved_scissor) && has_on_scissor do ctx->on_scissor(solved_scissor)
         }
     }
 
@@ -399,8 +402,9 @@ draw_context :: proc (ctx: ^Context) {
         _perf_frame_stop(ctx)
     }
 
+    if has_on_scissor do ctx->on_scissor(SCISSOR_DISABLED)
+
     if .debug in ctx.root.flags {
-        if has_on_scissor do ctx->on_scissor({})
         if .stats in ctx.debug_draw_filter do _debug_draw_stats(ctx)
         when PERF_ON do if .perf in ctx.debug_draw_filter do _perf_draw(ctx)
     }
@@ -489,10 +493,10 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, int
     return
 }
 
-// Modifies `ctx.visible_views`, removes `.intext` views with their subtree if they are
-// not `._intext_bound` or are fully clipped out. This must run after text wrapping so
-// `.intext` views have their token-driven position.
-_filter_intext_views :: proc (ctx: ^Context) {
+// Removes fully clipped and unbound `.intext` views with their subtrees from
+// `ctx.visible_views`. This must run after text wrapping so `.intext` views have their
+// token-driven position, while empty-scissor views have participated in text solving.
+_filter_visible_views :: proc (ctx: ^Context) {
     keep_i: int
     skip_root: ^View
 
@@ -502,18 +506,15 @@ _filter_intext_views :: proc (ctx: ^Context) {
             skip_root = nil
         }
 
-        if .intext in v.flags {
-            // We need to clip out bound .intext views here, because the solver skips scissor test
-            // for .intext views as their position assigned later by text wrapping step
+        clipped_out := scissor_enabled(v.solved_scissor) && (\
+            !scissor_has_area(v.solved_scissor) ||
+            !core.rects_intersect(v.solved_scissor, v.solved_rect)
+        )
+        unbound_intext := .intext in v.flags && ._intext_bound not_in v.flags
 
-            clipped_out :=\
-                v.solved_scissor != {} &&
-                !core.rects_intersect(v.solved_scissor, v.solved_rect)
-
-            if clipped_out || ._intext_bound not_in v.flags {
-                skip_root = v.view
-                continue
-            }
+        if clipped_out || unbound_intext {
+            skip_root = v.view
+            continue
         }
 
         ctx.visible_views[keep_i] = v
@@ -648,9 +649,10 @@ _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
     #reverse for &v in ctx.visible_views {
         if .hitless in v.flags do continue
         in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
-        in_scissor := v.solved_scissor != {}\
-            ? core.vec_in_rect(ref_pos, v.solved_scissor)\
-            : true
+        in_scissor := !scissor_enabled(v.solved_scissor) || (\
+            scissor_has_area(v.solved_scissor) &&
+            core.vec_in_rect(ref_pos, v.solved_scissor)
+        )
         if in_rect && in_scissor do return &v
     }
     return nil

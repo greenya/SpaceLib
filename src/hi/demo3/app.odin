@@ -29,7 +29,7 @@ app_init :: proc () {
         scroll_step = 2 * APP_DEFAULT_FONT_HEIGHT,
 
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
-            k2.set_scissor_rect(scissor != {} ? k2.Rect(scissor) : nil)
+            k2.set_scissor_rect(hi.scissor_enabled(scissor) ? k2.Rect(scissor) : nil)
         },
 
         on_text_measure = proc (style: hi.Text_Style, type: hi.Text_Token_Type, text: string) -> [2] f32 {

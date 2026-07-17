@@ -35,7 +35,7 @@ main :: proc () {
         },
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(
-                scissor != {}\
+                hi.scissor_enabled(scissor)\
                 ? k2.Rect(hi.ref_rect_to_screen(ctx, scissor))\
                 : nil,
             )

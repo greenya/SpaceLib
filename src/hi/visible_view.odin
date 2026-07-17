@@ -6,7 +6,7 @@ import "../core"
 //
 // Do not store `Visible_View` references: all visible views are rebuilt on every `solve_context()`.
 //
-// A view is considered *invisible* and skipped by the solver if:
+// A view is considered *invisible* and omitted from the final visible state if:
 // - the view itself or any of its parents is `.hidden`
 // - the view does not intersect `solved_scissor` (completely clipped out)
 // - the view is a child of an *invisible* view
@@ -14,7 +14,7 @@ import "../core"
 // Note: Zero `View.opacity` alone does not make the view *invisible*.
 Visible_View :: struct {
     using view          : ^View,
-    solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. If empty, the scissor is disabled.
+    solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. Used only if `scissor_enabled()`.
     solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
 }
 
@@ -41,7 +41,7 @@ visible_text_iterate :: proc (
         content_top_left= content_top_left(v),
     }
 
-    if in_scissor_only && v.solved_scissor != {} {
+    if in_scissor_only && scissor_enabled(v.solved_scissor) {
         it.scissor_rect = v.solved_scissor
         it.in_scissor_only = true
     }
@@ -61,11 +61,28 @@ visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok
             tok_.size.y,
         }
 
-        if it.in_scissor_only && !core.rects_intersect(it.scissor_rect, tok_rect) do continue
+        if it.in_scissor_only && (\
+            !scissor_has_area(it.scissor_rect) ||
+            !core.rects_intersect(it.scissor_rect, tok_rect)
+        ) {
+            continue
+        }
 
         tok = tok_
         ok = true
         return
     }
     return
+}
+
+SCISSOR_DISABLED :: Rect { 0, 0, -1, -1 }
+
+@require_results
+scissor_enabled :: proc (scissor_rect: Rect) -> bool {
+    return scissor_rect.w >= 0 && scissor_rect.h >= 0
+}
+
+@require_results
+scissor_has_area :: proc (scissor_rect: Rect) -> bool {
+    return scissor_rect.w > 0 && scissor_rect.h > 0
 }
