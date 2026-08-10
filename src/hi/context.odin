@@ -45,9 +45,9 @@ Context_Init :: struct {
     on_event: proc (ctx: ^Context, event: Context_Event),
 
     // Scissor callback.
-    // Scissor should be applied if `scissor_enabled(scissor)`, and disabled otherwise.
+    // Scissor should be applied if `scissor_enabled(rect)`, and disabled otherwise.
     // The value is in ref units.
-    on_scissor: proc (ctx: ^Context, scissor: Rect),
+    on_scissor: proc (ctx: ^Context, rect: Rect),
 
     // Text measure callback. Used only with `.text` views.
     // - `style` Current style
