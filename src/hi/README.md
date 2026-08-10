@@ -21,9 +21,9 @@ Observations:
 - In Mozilla Firefox, when context menu opened, the page underneath does receive hover events but not wheel; clicking on hovered element dismisses context menu and doesn't click the element; second click needed.
 - In VS Code, when context menu opened, wheel continue work for underneath opened file; no hover effects work; click outside close the menu.
 
-## [todo] Context: Add support for ref_size={}, when it is zero, it is effectively means ref_size==screen_size
+## [todo] Context: Add support for ref_screen_size={}, when it is zero, it is effectively means ref_screen_size==screen_size
 
-At the moment, user can achieve this easily just by doing `ctx.ref_size = screen_size` just before calling `update_context()`. Maybe keep like this, and do not add extra logic (?)
+At the moment, user can achieve this easily just by doing `ctx.ref_screen_size = screen_size` just before calling `update_context()`. Maybe keep like this, and do not add extra logic (?)
 
 ## [todo] Context: Make `Context.views` sparse array size to be a parameter somehow (now it is hardcoded)
 

@@ -50,7 +50,7 @@ main_update :: proc () -> (keep_running: bool) {
         hi.queue_solve_context(app.ui)
     }
 
-    app.ui.ref_size = screen_size
+    app.ui.ref_screen_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
     return

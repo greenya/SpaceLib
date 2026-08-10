@@ -25,7 +25,7 @@ _DEBUG_STATS_COLOR      :: Color { 255, 255, 255, 255 }
 
 _debug_draw_stats :: proc (ctx: ^Context) {
     text := fmt.tprintf(
-        "ref_size: %vx%v\n" +
+        "ref_screen_size: %vx%v\n" +
         "ref_font_height: %.0f\n" +
         "\n" +
         "screen_size: %.0fx%.0f\n" +
@@ -44,7 +44,7 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         "visible text tokens: %i of %i\n" +
         "visible text tokens peak: %i",
 
-        ctx.ref_size.x, ctx.ref_size.y,
+        ctx.ref_screen_size.x, ctx.ref_screen_size.y,
         ctx.ref_font_height,
 
         ctx.screen_size.x, ctx.screen_size.y,
@@ -121,7 +121,7 @@ _debug_draw_view_rect :: proc (v: ^View) {
 }
 
 _debug_draw_view_info :: proc (v: ^View) {
-    text := fmt.tprintf("%s\n%vx%v", v.name, v.solved_rect.w, v.solved_rect.h)
+    text := fmt.tprintf("%.0fx%.0f\n%s", v.solved_rect.w, v.solved_rect.h, v.name)
     lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
     color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
     _debug_draw_text(v.ctx, text, lt_s+4, color)

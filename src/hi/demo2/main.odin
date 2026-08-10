@@ -116,7 +116,7 @@ main_update :: proc () -> (keep_running: bool) {
 
     if k2.key_went_down(.N0) do hi.set_ref_font_height(app.ui, 24)
 
-    app.ui.ref_size = screen_size
+    app.ui.ref_screen_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
     return

@@ -26,7 +26,7 @@ main :: proc () {
     k2.init(1280, 720, "demo1", { window_mode=.Windowed_Resizable })
 
     ctx = hi.create_context({
-        ref_size = {320,180},
+        ref_screen_size = { 320, 180 },
         ref_font_height = 12,
         align_center = true,
         aspect_ratio_matching = -1,

@@ -13,8 +13,8 @@ MAX_VIEW_SOLVER_PASSES      :: 2
 MAX_SCROLL_SOLVER_PASSES    :: 4
 
 Context_Init :: struct {
-    // Reference size, e.g. 320x180, 1280x720
-    ref_size: Vec2,
+    // Reference screen size, e.g. 320x180, 1280x720
+    ref_screen_size: Vec2,
 
     // Reference font height, e.g. 8, 10, 16
     // This value is also used as a fallback for empty `scroll_step`.
@@ -306,7 +306,7 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
         return true
     }
 
-    ctx.root.solved_rect = { 0, 0, ctx.ref_size.x, ctx.ref_size.y }
+    ctx.root.solved_rect = { 0, 0, ctx.ref_screen_size.x, ctx.ref_screen_size.y }
     ctx.root.solved_opacity = ctx.root.opacity
     ctx.root.solved_layout_child_count = 0
     append(&ctx.visible_views, Visible_View { ctx.root, SCISSOR_DISABLED, nil })
@@ -569,7 +569,7 @@ _next_view_sid :: proc (ctx: ^Context) -> View_SID {
 }
 
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
-    new_scale := new_size / ctx.ref_size
+    new_scale := new_size / ctx.ref_screen_size
 
     new_pixel_scale := ctx.aspect_ratio_matching < 0\
         ? min(new_scale.x, new_scale.y)\
@@ -585,7 +585,7 @@ _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     ctx.screen_pixel_scale = new_pixel_scale
     ctx.screen_size = new_size
     ctx.screen_top_left = ctx.align_center\
-        ? 0.5 * (new_size - ctx.ref_size * new_pixel_scale)\
+        ? 0.5 * (new_size - ctx.ref_screen_size * new_pixel_scale)\
         : {}
 
     if ctx.on_event != nil {
