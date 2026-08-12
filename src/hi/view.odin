@@ -47,7 +47,10 @@ View :: struct {
 
     ctx: ^Context,
     idx: View_IDX, // Reusable index in `ctx.views`. Value is `0` for the root.
-    sid: View_SID, // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned. The value is `0` for detached views and `1` for the root.
+    // Serial number. Each time view gets `set_parent()`, the new `sid` is assigned.
+    // * The value is `0` for detached subtree root, while its children store the _difference_. The _difference_ is reapplied once view is attached back to the tree.
+    // * The value is `1` for the context root.
+    sid: View_SID,
 
     parent      : ^View, // Value is `nil` for the root and detached views
     next_sibling: ^View,
@@ -213,6 +216,7 @@ set_parent :: proc (v, new_parent: ^View) {
         }
         v.parent = nil
         v.next_sibling = nil
+        _apply_sid_delta_view_tree(v, -v.sid)
         v.sid = 0
     }
 
@@ -226,9 +230,20 @@ set_parent :: proc (v, new_parent: ^View) {
         }
         v.parent = new_parent
         v.sid = _next_view_sid(v.ctx)
+        max_child_sid := _apply_sid_delta_view_tree(v, v.sid)
+        _next_view_sid_adjust(v.ctx, max_child_sid)
     }
 
     queue_solve_context(v.ctx)
+}
+
+_apply_sid_delta_view_tree :: proc (v: ^View, delta: View_SID) -> (max_sid: View_SID) {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        c.sid += delta
+        max_child_sid := _apply_sid_delta_view_tree(c, delta)
+        max_sid = max(max_sid, c.sid, max_child_sid)
+    }
+    return
 }
 
 remove_view :: proc (v: ^View) {

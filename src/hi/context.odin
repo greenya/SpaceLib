@@ -568,6 +568,10 @@ _next_view_sid :: proc (ctx: ^Context) -> View_SID {
     return n
 }
 
+_next_view_sid_adjust :: proc (ctx: ^Context, max_in_use: View_SID) {
+    ctx.next_view_sid = max(ctx.next_view_sid, max_in_use + 1)
+}
+
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
     new_scale := new_size / ctx.ref_screen_size
 
