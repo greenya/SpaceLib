@@ -6,24 +6,24 @@ import "core:math/bits"
 _ :: fmt
 _ :: bits
 
-// TODO: Add `size_of(T) > 0` to the struct constraint once Odin can compile it reliably.
-// Zero-sized elements are unsupported: every element has the same address, so references returned by
-// sparse_array_add() and sparse_array_next() cannot identify slots, and sparse_array_remove_by_ref()
-// cannot derive a slot index from a reference.
-
 Sparse_Array :: struct ($T: typeid, $N: int) where N > 0 {
     items       : [N] T,
-    slot_chunks : [ (N+63) / 64 ] u64, // ensure slot_chunks bits are always multiple of 64
+    slot_chunks : [ (N+63) / 64 ] u64, // Ensure slot_chunks bits are always multiple of 64
     free_list   : [dynamic; N] i32,
 }
 
-Sparse_Array_Iterator :: struct ($T: typeid, $N: int) where N > 0 {
+Sparse_Array_Iterator :: struct ($T: typeid, $N: int) {
     sa          : ^Sparse_Array(T, N),
     chunk_idx   : int,
     remaining   : u64,
 }
 
 sparse_array_init :: proc (sa: ^Sparse_Array($T, $N)) {
+    // Check `size_of(T) > 0` here instead of in `where` because it currently
+    // causes the Odin compiler to crash. The issue has not yet been minimized;
+    // it is currently reproduced through `spacelib:hi.Context`.
+    // Last reproduced: 2026-08.
+    #assert(size_of(T) > 0, "Sparse array element type must have a non-zero size")
     sparse_array_clear(sa)
 }
 
