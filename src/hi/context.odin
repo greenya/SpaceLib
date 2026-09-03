@@ -674,6 +674,11 @@ screen_size_to_ref :: proc (ctx: ^Context, screen_size: Vec2) -> Vec2 {
 }
 
 @require_results
+ref_scalar_to_screen :: proc (ctx: ^Context, ref_scalar: f32) -> f32 {
+    return ref_scalar * ctx.screen_pixel_scale
+}
+
+@require_results
 ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: Vec2) -> Vec2 {
     return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
 }
