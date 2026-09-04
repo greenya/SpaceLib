@@ -64,9 +64,10 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         ctx.stats.visible_text_tokens_peak,
     )
 
-    rect := Rect { 5, 50, 250, 360 }
+    rect := Rect { 0, 40, 180, 240 }
     _debug_draw_rect_filled(ctx, rect, _DEBUG_BG_COLOR)
-    _debug_draw_text(ctx, text, { rect.x, rect.y }, _DEBUG_STATS_COLOR)
+    _debug_draw_rect(ctx, rect, 1, _DEBUG_STATS_COLOR)
+    _debug_draw_text(ctx, text, { rect.x, rect.y } + 4, _DEBUG_STATS_COLOR)
 }
 
 _debug_draw_view :: proc (v: ^Visible_View, filter: bit_set [Debug_Draw_Type] = ~{}) {
@@ -124,7 +125,7 @@ _debug_draw_view_info :: proc (v: ^View) {
     text := fmt.tprintf("%.0fx%.0f\n%s", v.solved_rect.w, v.solved_rect.h, v.name)
     lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
     color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
-    _debug_draw_text(v.ctx, text, lt_s+4, color)
+    _debug_draw_text(v.ctx, text, lt_s+2, color)
 }
 
 _debug_draw_view_text :: proc (v: ^Visible_View) {
