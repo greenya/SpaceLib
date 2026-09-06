@@ -1,5 +1,6 @@
 package hi
 
+import "base:intrinsics"
 import "../core"
 
 View_IDX :: distinct i32
@@ -20,10 +21,17 @@ View_Init :: struct {
     scroll  : Vec2,     // Offset for layout children
     layout  : Layout,   // Layout for children. Affects non-`.absolute` native strata children only.
 
-    name    : string, // Optional name
-    text    : string, // Text with rich formatting if `.text` is used
+    name    : string,   // Optional name
+    text    : string,   // Text with rich formatting if `.text` is used
+
+    // User pointer.
+    //
+    // - Cast directly when you know the datatype.
+    // - Use `set_user_ptr()` and `user_ptr()` for type validation.
+    //
+    // Note: `set_user_ptr()` uses `user_idx` for storing the `typeid` needed for proper validation.
     user_ptr: rawptr,
-    user_idx: int,
+    user_idx: int, // User integer. Note: this value is overwritten by `set_user_ptr()` when used.
 
     // Event callback.
     //
@@ -770,4 +778,23 @@ scroll_layout_by_step :: proc (v: ^View, magnitude: f32) -> (scrolled: bool) {
     case .column: return scroll_by_step(v, { 0, magnitude })
     }
     return
+}
+
+// Sets both `v.user_ptr` and `v.user_idx` for later validation by `user_ptr()`
+set_user_ptr :: proc (v: ^View, ptr: $T) where intrinsics.type_is_pointer(T) {
+    v.user_ptr = ptr
+    v.user_idx = int(transmute (u64) typeid_of(T))
+}
+
+// Uses both `v.user_ptr` and `v.user_idx` for validation.
+// Returns `nil` if pointer is not set or its type is different.
+user_ptr :: proc (v: ^View, $T: typeid) -> T where intrinsics.type_is_pointer(T) {
+    if v != nil && v.user_ptr != nil {
+        t_id := typeid_of(T)
+        t_idx := int(transmute (u64) t_id)
+        if t_idx == v.user_idx {
+            return T(v.user_ptr)
+        }
+    }
+    return nil
 }
