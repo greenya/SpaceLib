@@ -68,6 +68,14 @@ drag_start :: proc (v: ^View) {
     _drag_start(v.ctx, source=v, hit=v.ctx.hit, lmb_controlled=false)
 }
 
+dragging :: proc (v: ^View) -> bool {
+    assert(v != nil)
+    return v == v.ctx.drag.source
+}
+
+// Alias of `dragging()`
+pressed :: dragging
+
 _drag_update :: proc (ctx: ^Context, hit: ^View) {
     assert(.active in ctx.drag.flags)
 
