@@ -37,7 +37,8 @@ Drag_Flag :: enum u8 {
 
 Drag_Cancel_Reason :: enum u8 {
     none,
-    no_target,  // Released without an eligible `.drop_target`, including release over `source`
+    no_target,  // Released without an eligible `.drop_target`, excluding `source`. When self targeting, `.target_self` reason is used.
+    target_self,// Released over `source` itself which is also a `.drop_target`, essentially no-op. Note: `.drag_query` is not emitted when self targeting.
     rejected,   // Released over a `.drop_target` that rejected `source`
     requested,  // Canceled programmatically with `drag_cancel()`
 }
@@ -94,6 +95,15 @@ pressed :: proc (v: ^View) -> bool {
 dragged :: proc (v: ^View) -> bool {
     assert(v != nil)
     return v == v.ctx.capture.source && v.ctx.capture.phase == .drag
+}
+
+// Drag target status of the view
+drag_targeted :: proc (v: ^View) -> (targeted: bool, accepted: bool) {
+    assert(v != nil)
+    if v.ctx.capture.phase == .drag {
+        return v == v.ctx.capture.target, v.ctx.capture.target_accepts_source
+    }
+    return
 }
 
 _capture_update :: proc (ctx: ^Context, hit: ^View) {
@@ -186,7 +196,10 @@ _drag_stop :: proc (ctx: ^Context, hit: ^View) {
     assert(ctx.capture.phase == .drag)
 
     switch {
-    case _interaction_path_contains(hit, ctx.capture.source), ctx.capture.target == nil:
+    case _interaction_path_contains(hit, ctx.capture.source):
+        _drag_cancel(ctx, .target_self)
+
+    case ctx.capture.target == nil:
         _drag_cancel(ctx, .no_target)
 
     case !ctx.capture.target_accepts_source:
