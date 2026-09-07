@@ -13,15 +13,15 @@ Debug_Draw_Type :: enum u8 {
     text,       // Solved rect and baseline of each View's text token
 }
 
-_DEBUG_BG_COLOR         :: Color {  25,  25,  25, 255 }
-_DEBUG_VIEW_COLOR       :: Color {  80,  80,  80, 255 }
-_DEBUG_HOVERED_COLOR    :: Color { 255, 255,   0, 255 }
-_DEBUG_PADDING_COLOR    :: Color { 255, 255, 255,  80 }
-_DEBUG_SCISSOR_COLOR    :: Color {  40, 255, 255, 255 }
-_DEBUG_DRAG_SOURCE_COLOR:: Color { 255,  80,  80, 255 }
-_DEBUG_DROP_TARGET_COLOR:: Color {  80,  80, 255, 255 }
-_DEBUG_TEXT_TOKEN_COLOR :: Color { 160,  40, 160, 255 }
-_DEBUG_STATS_COLOR      :: Color { 255, 255, 255, 255 }
+_DEBUG_BG_COLOR             :: Color {  25,  25,  25, 255 }
+_DEBUG_VIEW_COLOR           :: Color {  80,  80,  80, 255 }
+_DEBUG_HOVERED_COLOR        :: Color { 255, 255,   0, 255 }
+_DEBUG_PADDING_COLOR        :: Color { 255, 255, 255,  80 }
+_DEBUG_SCISSOR_COLOR        :: Color {  40, 255, 255, 255 }
+_DEBUG_CAPTURE_SOURCE_COLOR :: Color { 255,  80,  80, 255 }
+_DEBUG_DROP_TARGET_COLOR    :: Color {  80,  80, 255, 255 }
+_DEBUG_TEXT_TOKEN_COLOR     :: Color { 160,  40, 160, 255 }
+_DEBUG_STATS_COLOR          :: Color { 255, 255, 255, 255 }
 
 _debug_draw_stats :: proc (ctx: ^Context) {
     text := fmt.tprintf(
@@ -114,10 +114,10 @@ _debug_draw_view_rect :: proc (v: ^View) {
     color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
     _debug_draw_rect(v.ctx, rect_s, 1, color)
 
-    if .active in v.ctx.drag.flags {
+    if v.ctx.capture.phase != .none {
         core.rect_inflate(&rect_s, 2)
-        if .drop_target in v.flags do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_DROP_TARGET_COLOR)
-        if v == v.ctx.drag.source  do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_DRAG_SOURCE_COLOR)
+        if v == v.ctx.capture.source    do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_CAPTURE_SOURCE_COLOR)
+        if .drop_target in v.flags      do _debug_draw_rect(v.ctx, rect_s, 2, _DEBUG_DROP_TARGET_COLOR)
     }
 }
 

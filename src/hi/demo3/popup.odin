@@ -109,7 +109,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         // which is not critical but ugly.
 
         container := hi.add_view(popup.ui_pages, {
-            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y, .capture, .drag_pan },
+            flags   = { .page, .ratio_x, .ratio_y, .scissor, .wheel_scroll_y, .drag, .drag_pan },
             size    = 1,
             padding = 20,
         })

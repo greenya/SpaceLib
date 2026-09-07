@@ -41,6 +41,12 @@ Context_Init :: struct {
     // If not set, the value of `ref_font_height` is used for vertical and horizontal step.
     scroll_step: Vec2,
 
+    // Drag phase threshold in reference units.
+    // Dragging starts while LMB remains held after pressing a `.drag` view and displacement from the
+    // initial press reaches this distance: `abs(offset.x) + abs(offset.y)`.
+    // The default `0` starts dragging immediately on mouse press. Explicit `drag_start()` ignores it.
+    drag_threshold: f32,
+
     // Event callback
     on_event: proc (ctx: ^Context, event: Context_Event),
 
@@ -135,7 +141,7 @@ Context :: struct {
         consumed        : bool,         // Mouse interaction was consumed this frame
     },
 
-    drag: Drag_State, // Current drag operation. Valid only if `.active in drag.flags`.
+    capture: Capture_State, // Current press or drag. Valid only if `capture.phase != .none`.
 
     stats: struct {
         views_peak              : int,
@@ -224,29 +230,29 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
     hit_visible_view := _hit_test(ctx, ctx.mouse.ref_pos)
     hit_view := hit_visible_view != nil ? hit_visible_view.view : nil
 
-    _drag_cleanup_state_from_prev_frame(ctx)
+    _capture_cleanup_state_from_prev_frame(ctx)
 
     lmb_consumed: bool
     wheel_consumed: bool
 
-    if .active in ctx.drag.flags {
-        _hit_set_view(ctx, ctx.drag.source) // Keep source hit path while drag operation
-        _drag_update(ctx, hit_view)
-        _drag_step(ctx, hit_view)
-        wheel_consumed = ctx.mouse.wheel_delta != 0 && wheel(hit_view) // Allow mouse wheeling of the view we are dragging over
-        lmb_consumed = true // While drag active, lmb interaction is always consumed
+    if _capture_in_progress(ctx) {
+        _hit_set_view(ctx, ctx.capture.source) // Keep the source hit path throughout capture
+        _capture_update(ctx, hit_view)
+        _capture_step(ctx, hit_view)
+        wheel_consumed = ctx.mouse.wheel_delta != 0 && wheel(hit_view) // Wheel the view under the pointer
+        lmb_consumed = true // Capture always consumes LMB interaction
     } else {
         _hit_set_view(ctx, hit_view)
         if ctx.hit != nil {
             if ctx.mouse.lmb_pressed {
-                capture_view := _interaction_parent_by_any_flags(ctx.hit, include={ .capture }, exclude={ .disabled })
+                capture_view := _interaction_parent_by_any_flags(ctx.hit, include={ .press, .drag }, exclude={ .disabled })
                 switch {
                 case capture_view == nil: // No capture view in the hit path
                     lmb_consumed = click(ctx.hit)
                 case _click_one_before(ctx.hit, capture_view): // Child view consumed interaction via click_one()
                     lmb_consumed = true
                 case: // Interaction was not consumed before the capture boundary
-                    _drag_start(ctx, source=capture_view, hit=ctx.hit, lmb_controlled=true)
+                    _capture_start(ctx, source=capture_view, hit=ctx.hit)
                     lmb_consumed = true
                 }
             }

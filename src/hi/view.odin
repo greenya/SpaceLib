@@ -36,7 +36,7 @@ View_Init :: struct {
     // Event callback.
     //
     // - *Mouse Action* events (`.clicked`, `.wheeled`) propagate to native strata parents unless `consumed=true` is returned
-    // - `.drop_query` return value defines drop acceptance of `Context.drag.source`
+    // - `.drop_query` return value defines drop acceptance of `Context.capture.source` during dragging
     //
     // Note: Most events are emitted during `update_context()`.
     // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
@@ -103,9 +103,10 @@ Flag :: enum {
 
     disabled,   // The view is disabled. It does not receive `.clicked`, `.wheeled`, or `.drop_query`, and cannot capture the mouse. `.clicked` and `.wheeled` continue propagating to interaction parents.
     hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    capture,    // The view automatically starts an LMB-controlled drag operation when the view is pressed. Descendant `.clicked` handlers can prevent capture by consuming the event. The `.dragged` event is continuously fired while mouse is captured. The `.clicked` event is fired on mouse button release if drag ends over the source view. Only one view at any given time can capture the mouse.
-    drag_pan,   // The view automatically updates `View.scroll` while it is `Context.drag.source`. The flag does not start drag operation on its own. Combine with `.capture` for mouse-driven panning or start the drag with `drag_start()`.
-    drop_target,// The view can be a drop target of a drag operation. The nearest `.drop_target` under the drag pointer becomes `Context.drag.target` and receives `.drop_query` every update, unless `.disabled`.
+    press,      // The view holds the mouse press and emits `.clicked` on release over itself, unless dragging started. Descendant `.clicked` handlers can prevent the press by consuming the event. Combine with `.drag` for click-or-drag behavior.
+    drag,       // The view starts an LMB-controlled drag after movement reaches `Context.drag_threshold` (immediately if zero). Does not require `.press`. Without `.press`, release before dragging does nothing. Descendant `.clicked` handlers can prevent dragging by consuming the event. Once dragging starts, this interaction never emits `.clicked`.
+    drag_pan,   // The view automatically updates `View.scroll` while `dragged()` is true. Does nothing during a pending press and does not start dragging on its own. Combine with `.drag` for mouse-driven panning or use `drag_start()`.
+    drop_target,// The view can be a drop target. The nearest `.drop_target` under the drag pointer becomes `Context.capture.target` and receives `.drop_query` every update, unless `.disabled`. The source and its interaction descendants are excluded from targeting.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
     check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
     radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
@@ -163,9 +164,9 @@ Event_Type :: enum u8 {
 
     entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
     left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
-    clicked,    // Propagable *Mouse Action* event. Fired when mouse clicked the view. The event is not fired for `.disabled` views. The event is fired immediately on mouse button press for non-`.capture` views, otherwise it is fired on mouse button release over the view.
-    dragged,    // Continuously fired for `Context.drag.source` while drag operation is `.active`. A view with `.capture` flag can initiate drag operation from mouse button press.
-    drop_query, // Continuously fired for the nearest `.drop_target` under the drag pointer. Does not propagate. Return `consumed=true` to accept `Context.drag.source`.
+    clicked,    // Propagable *Mouse Action* event, skipped for `.disabled` views. Without `.press` or `.drag`, emitted on mouse down. With `.press`, emitted on release over the view only if dragging never started. A `.drag`-only source never emits a mouse-generated click. Once dragging starts, its interaction cannot emit `.clicked`, even when released over the source.
+    dragged,    // Continuously fired for `Context.capture.source` during the drag phase, including started and terminal frames (see `Context.capture.drag_flags`). Never fired during a pending press. Initiated by `.drag` after `Context.drag_threshold`, or immediately by `drag_start()`.
+    drop_query, // Continuously fired for the nearest eligible `.drop_target` during the drag phase. Never fired during a pending press. Does not propagate. Return `consumed=true` to accept `Context.capture.source`.
     wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
 
     // Behavior
@@ -646,7 +647,7 @@ wheel_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
 
     scrolled: bool
-    if v != v.ctx.drag.source do switch {
+    if !dragged(v) do switch {
     case .wheel_scroll_x in v.flags:
         scrolled = scroll_by_step(v, { v.ctx.mouse.wheel_delta, 0 })
     case .wheel_scroll_y in v.flags:
