@@ -97,9 +97,10 @@ _perf_draw :: proc (ctx: ^Context) #no_bounds_check {
     if ctx.perf.count == 0 do return
 
     graph_rect_w :: f32(_PERF_MAX_FRAMES)
+    graph_rect_extra_w_for_labels :: 40
     graph_rect_h :: 80
-    text_rect_w  :: 260
-    text_rect_h  :: 120
+    text_rect_w  :: 180
+    text_rect_h  :: 70
 
     graph_rect := Rect {
         x = 5,
@@ -123,7 +124,7 @@ _perf_draw :: proc (ctx: ^Context) #no_bounds_check {
     avg_ms /= f64(ctx.perf.count)
 
     graph_full_rect := graph_rect
-    graph_full_rect.w += 60
+    graph_full_rect.w += graph_rect_extra_w_for_labels
     _debug_draw_rect_filled(ctx, graph_full_rect, _DEBUG_BG_COLOR)
 
     for i in 0..<ctx.perf.count {
