@@ -491,37 +491,37 @@ child_next :: proc (it: ^Child_Iterator) -> (c: ^View, i: int, ok: bool) {
 
 Set_Filter :: bit_set [enum { self, children }]
 
-set_flag :: proc (v: ^View, flag: Flag, on: bool, filter: Set_Filter = { .self }) {
-    set :: proc (v: ^View, flag: Flag, on: bool) {
-        if on do v.flags += {flag}
-        else  do v.flags -= {flag}
-    }
-
-    if .self in filter {
-        set(v, flag, on)
+set_flag :: proc (v: ^View, flag: Flag, on: bool, filter := Set_Filter { .self }) -> (changed: bool) {
+    if .self in filter && (flag in v.flags) != on {
+        if on do v.flags += { flag }
+        else  do v.flags -= { flag }
+        changed = true
     }
 
     if .children in filter {
         for c := v.first_child; c != nil; c = c.next_sibling {
-            set(c, flag, on)
-            if c.first_child != nil {
-                set_flag(c, flag, on, { .children })
+            if set_flag(c, flag, on, { .self, .children }) {
+                changed = true
             }
         }
     }
+
+    return
 }
 
-set_debug :: proc (v: ^View, on: bool, filter: Set_Filter = ~{}) {
-    set_flag(v, .debug, on, filter)
-    queue_solve_context(v.ctx)
+set_debug :: proc (v: ^View, on: bool, filter := Set_Filter { .self }) {
+    if set_flag(v, .debug, on, filter) {
+        queue_solve_context(v.ctx)
+    }
 }
 
-set_disabled :: proc (v: ^View, on: bool, filter: Set_Filter = { .self }) {
-    set_flag(v, .disabled, on, filter)
-    queue_solve_context(v.ctx)
+set_disabled :: proc (v: ^View, on: bool, filter := Set_Filter { .self }) {
+    if set_flag(v, .disabled, on, filter) {
+        queue_solve_context(v.ctx)
+    }
 }
 
-set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter{}) {
+set_strata :: proc (v: ^View, strata: Strata, filter := ~Set_Filter {}) {
     if .self in filter {
         v.strata = strata
     }

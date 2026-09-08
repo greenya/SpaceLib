@@ -45,7 +45,7 @@ main_update :: proc () -> (keep_running: bool) {
 
     if k2.key_went_down(.Tab) {
         debug := .debug not_in app.ui.root.flags
-        hi.set_debug(app.ui.root, debug)
+        hi.set_debug(app.ui.root, debug, ~{})
         app.ui.root.padding = debug ? {270,0,0,0} : {}
         hi.queue_solve_context(app.ui)
     }

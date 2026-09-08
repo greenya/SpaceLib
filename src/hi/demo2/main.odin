@@ -104,7 +104,7 @@ main_update :: proc () -> (keep_running: bool) {
 
     if k2.key_went_down(.Tab) {
         debug := .debug not_in app.ui.root.flags
-        hi.set_debug(app.ui.root, debug)
+        hi.set_debug(app.ui.root, debug, ~{})
     }
 
     if k2.key_went_down(.N1) do hi.set_ref_font_height(app.ui, 16)
