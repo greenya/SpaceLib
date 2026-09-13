@@ -670,6 +670,11 @@ _hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
 }
 
 @require_results
+screen_scalar_to_ref :: proc (ctx: ^Context, screen_scalar: f32) -> f32 {
+    return screen_scalar / ctx.screen_pixel_scale
+}
+
+@require_results
 screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: Vec2) -> Vec2 {
     return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
 }
