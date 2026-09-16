@@ -26,7 +26,7 @@ main :: proc () {
     k2.init(1280, 720, "demo2", { window_mode=.Windowed_Resizable })
 
     app.ui = hi.create_context({
-        ref_font_height = 24,
+        base_font_height = 24,
         scroll_step = 60,
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(hi.scissor_enabled(scissor) ? k2.Rect(scissor) : nil)
@@ -51,7 +51,7 @@ main :: proc () {
             k2.draw_line(from, to, thick, color)
         },
         debug_draw_text = proc (text: string, pos: [2] f32, color: [4] u8) {
-            k2.draw_text(text, pos, 20, color)
+            k2.draw_text(text, pos, 12, color)
         },
     })
 
@@ -98,7 +98,7 @@ main_update :: proc () -> (keep_running: bool) {
     wheel_delta := k2.get_mouse_wheel_delta()
     mouse_input := hi.Mouse_Input {
         lmb_down = k2.mouse_button_is_held(.Left),
-        screen_pos = k2.get_mouse_position(),
+        pos_screen = k2.get_mouse_position(),
         wheel_delta = wheel_delta,
     }
 
@@ -107,16 +107,15 @@ main_update :: proc () -> (keep_running: bool) {
         hi.set_debug(app.ui.root, debug, ~{})
     }
 
-    if k2.key_went_down(.N1) do hi.set_ref_font_height(app.ui, 16)
-    if k2.key_went_down(.N2) do hi.set_ref_font_height(app.ui, 24)
-    if k2.key_went_down(.N3) do hi.set_ref_font_height(app.ui, 32)
-    if k2.key_went_down(.N4) do hi.set_ref_font_height(app.ui, 48)
-    if k2.key_went_down(.N5) do hi.set_ref_font_height(app.ui, 64)
-    if k2.key_went_down(.N6) do hi.set_ref_font_height(app.ui, 72)
+    if k2.key_went_down(.N1) do hi.set_base_font_height(app.ui, 16)
+    if k2.key_went_down(.N2) do hi.set_base_font_height(app.ui, 24)
+    if k2.key_went_down(.N3) do hi.set_base_font_height(app.ui, 32)
+    if k2.key_went_down(.N4) do hi.set_base_font_height(app.ui, 48)
+    if k2.key_went_down(.N5) do hi.set_base_font_height(app.ui, 64)
+    if k2.key_went_down(.N6) do hi.set_base_font_height(app.ui, 72)
 
-    if k2.key_went_down(.N0) do hi.set_ref_font_height(app.ui, 24)
+    if k2.key_went_down(.N0) do hi.set_base_font_height(app.ui, 24)
 
-    app.ui.ref_screen_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
     return

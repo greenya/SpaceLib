@@ -169,7 +169,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
             _tok_setup_ascent_descent(&tok, style.font_baseline_ratio)
         }
     case .br:
-        tok.size.y = style.font_scale * ctx.ref_font_height
+        tok.size.y = style.font_scale * ctx.base_font_height
         _tok_setup_ascent_descent(&tok, style.font_baseline_ratio)
     case .custom:
         if has_on_text_custom_token {
@@ -195,10 +195,10 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                     tok.flags += { .full_line }
                     tok.size = {
                         hint.scale.x, // Keep scale.x value as-is, for wrapping step
-                        hint.scale.y * style.font_scale * ctx.ref_font_height,
+                        hint.scale.y * style.font_scale * ctx.base_font_height,
                     }
                 } else {
-                    tok.size = hint.scale * style.font_scale * ctx.ref_font_height
+                    tok.size = hint.scale * style.font_scale * ctx.base_font_height
                 }
                 _tok_setup_ascent_descent(&tok, hint.baseline_ratio)
             }

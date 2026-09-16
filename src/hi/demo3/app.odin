@@ -25,7 +25,7 @@ app_init :: proc () {
     app = {}
 
     app.ui = hi.create_context({
-        ref_font_height = APP_DEFAULT_FONT_HEIGHT,
+        base_font_height = APP_DEFAULT_FONT_HEIGHT,
         scroll_step = 2 * APP_DEFAULT_FONT_HEIGHT,
 
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
@@ -127,7 +127,7 @@ app_init :: proc () {
             k2.draw_line(from, to, thick, color)
         },
         debug_draw_text = proc (text: string, pos: [2] f32, color: [4] u8) {
-            k2.draw_text(text, pos, 20, color)
+            k2.draw_text(text, pos, 12, color)
         },
     })
 

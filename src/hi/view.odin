@@ -64,7 +64,7 @@ View :: struct {
     next_sibling: ^View,
     first_child : ^View,
 
-    solved_rect                 : Rect, // Solved position and size in ref units
+    solved_rect                 : Rect, // Solved position and size in UI units
     solved_layout_child_count   : i32,  // Solved count of visible children affected by the parent layout
     solved_opacity              : f32,  // Solved combined hierarchical opacity (0 to 1)
 }
@@ -744,7 +744,7 @@ scroll_by :: proc (v: ^View, offset: Vec2) -> (scrolled: bool) {
 scroll_by_step :: proc (v: ^View, magnitude: Vec2) -> (scrolled: bool) {
     step := v.ctx.scroll_step != {}\
         ? v.ctx.scroll_step\
-        : { v.ctx.ref_font_height, v.ctx.ref_font_height }
+        : { v.ctx.base_font_height, v.ctx.base_font_height }
     return scroll_by(v, magnitude * step)
 }
 

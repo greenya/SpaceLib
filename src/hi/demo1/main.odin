@@ -27,7 +27,7 @@ main :: proc () {
 
     ctx = hi.create_context({
         ref_screen_size = { 320, 180 },
-        ref_font_height = 12,
+        base_font_height = 12,
         align_center = true,
         aspect_ratio_matching = -1,
         on_event = proc (ctx: ^hi.Context, event: hi.Context_Event) {
@@ -36,7 +36,7 @@ main :: proc () {
         on_scissor = proc (ctx: ^hi.Context, scissor: hi.Rect) {
             k2.set_scissor_rect(
                 hi.scissor_enabled(scissor)\
-                ? k2.Rect(hi.ref_rect_to_screen(ctx, scissor))\
+                ? k2.Rect(hi.ui_rect_to_screen(ctx, scissor))\
                 : nil,
             )
         },
@@ -60,12 +60,12 @@ main :: proc () {
             for tok, tok_rect in hi.visible_text_next(&it) {
                 #partial switch tok.type {
                 case .word:
-                    pos_s := hi.ref_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
+                    pos_s := hi.ui_pos_to_screen(v.ctx, {tok_rect.x,tok_rect.y})
                     font_height_screen := hi.text_style_font_height_screen(it.style)
                     k2.draw_text(tok.text, pos_s, font_height_screen, it.style.color)
                     // fmt.println("::::", tok.text)
                 case .custom:
-                    rect_s := hi.ref_rect_to_screen(v.ctx, tok_rect)
+                    rect_s := hi.ui_rect_to_screen(v.ctx, tok_rect)
                     k2.draw_rect_outline(k2.Rect(rect_s), 8, it.style.color)
                 }
             }
@@ -74,7 +74,7 @@ main :: proc () {
             k2.draw_line(from, to, thick, color)
         },
         debug_draw_text = proc (text: string, pos: [2] f32, color: [4] u8) {
-            k2.draw_text(text, pos, 20, color)
+            k2.draw_text(text, pos, 12, color)
         },
     })
 
@@ -89,7 +89,7 @@ main :: proc () {
         with_header_close_button = true,
     )
 
-    hi.set_debug(ctx.root, true)
+    hi.set_debug(ctx.root, true, ~{})
 
     hi.solve_context(ctx)
     hi.print_view_tree(ctx.root)
@@ -111,7 +111,7 @@ main_update :: proc () -> (keep_running: bool) {
     screen_size := k2.get_screen_size()
     mouse_input := hi.Mouse_Input {
         lmb_down = k2.mouse_button_is_held(.Left),
-        screen_pos = k2.get_mouse_position(),
+        pos_screen = k2.get_mouse_position(),
         wheel_delta = k2.get_mouse_wheel_delta(),
     }
 
@@ -127,7 +127,7 @@ main_draw :: proc () {
 }
 
 draw_view :: proc (v: ^hi.Visible_View) {
-    rect := k2.Rect(hi.ref_view_to_screen(v))
+    rect := k2.Rect(hi.ui_view_to_screen(v))
     alpha := u8(v.solved_opacity * 255)
     k2.draw_rect(rect, {30,80,50,alpha})
     k2.draw_rect_outline(rect, 4, {30,180,50,alpha})

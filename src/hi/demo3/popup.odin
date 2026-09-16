@@ -47,7 +47,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         size    = 1,
         strata  = .high,
         on_draw = proc (v: ^hi.Visible_View) {
-            rect := hi.ref_view_to_screen(v)
+            rect := hi.ui_view_to_screen(v)
             k2.draw_rect(k2.Rect(rect), {255,255,255,120})
         },
     })
@@ -265,7 +265,7 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
             on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
                 if event.type == .selection_changed && .selected in v.flags {
                     o := &Font_Scale_Options[v.user_idx]
-                    hi.set_ref_font_height(v.ctx, o.scale * APP_DEFAULT_FONT_HEIGHT)
+                    hi.set_base_font_height(v.ctx, o.scale * APP_DEFAULT_FONT_HEIGHT)
                 }
                 return
             },

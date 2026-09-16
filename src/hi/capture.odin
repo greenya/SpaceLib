@@ -4,8 +4,8 @@ Capture_State :: struct {
     phase               : Capture_Phase, // If `.none`, all other fields are invalid (zero)
     lmb_controlled      : bool,     // Capture ends on LMB release. Explicit `drag_start()` is not LMB-controlled.
 
-    start_ref_pos       : Vec2,     // `Context.mouse.ref_pos` when capture started; preserved when pressing becomes dragging
-    total_offset        : Vec2,     // Current `Context.mouse.ref_pos - start_ref_pos`
+    start_pos           : Vec2,     // `Context.mouse.pos` when capture started; preserved when pressing becomes dragging
+    total_offset        : Vec2,     // Current `Context.mouse.pos - start_pos`
     delta               : Vec2,     // Change in `total_offset` since the previous update
 
     source              : ^View,    // The view that owns the press or drag
@@ -60,11 +60,11 @@ _capture_in_progress :: proc (ctx: ^Context) -> bool {
 _capture_start :: proc (ctx: ^Context, source: ^View, hit: ^View, lmb_controlled := true) {
     assert(!_capture_in_progress(ctx))
 
-    source_start_pos := ctx.mouse.ref_pos - { source.solved_rect.x, source.solved_rect.y }
+    source_start_pos := ctx.mouse.pos - { source.solved_rect.x, source.solved_rect.y }
     ctx.capture = {
         phase               = .press,
         lmb_controlled      = lmb_controlled,
-        start_ref_pos       = ctx.mouse.ref_pos,
+        start_pos           = ctx.mouse.pos,
         source              = source,
         source_start_scroll = source.scroll,
         source_start_pos    = source_start_pos,
@@ -111,13 +111,13 @@ _capture_update :: proc (ctx: ^Context, hit: ^View) {
 
     // offsets
 
-    new_total_offset := ctx.mouse.ref_pos - ctx.capture.start_ref_pos
+    new_total_offset := ctx.mouse.pos - ctx.capture.start_pos
     ctx.capture.delta = new_total_offset - ctx.capture.total_offset
     ctx.capture.total_offset = new_total_offset
 
     // source view
 
-    ctx.capture.source_pos = ctx.mouse.ref_pos - { ctx.capture.source.solved_rect.x, ctx.capture.source.solved_rect.y }
+    ctx.capture.source_pos = ctx.mouse.pos - { ctx.capture.source.solved_rect.x, ctx.capture.source.solved_rect.y }
 
     if ctx.capture.phase == .drag {
         _drag_update(ctx, hit)
@@ -171,7 +171,7 @@ _drag_update :: proc (ctx: ^Context, hit: ^View) {
 
     ctx.capture.target = _interaction_parent_by_any_flags(hit, include={ .drop_target })
     if ctx.capture.target != nil {
-        ctx.capture.target_pos = ctx.mouse.ref_pos - { ctx.capture.target.solved_rect.x, ctx.capture.target.solved_rect.y }
+        ctx.capture.target_pos = ctx.mouse.pos - { ctx.capture.target.solved_rect.x, ctx.capture.target.solved_rect.y }
         if .disabled not_in ctx.capture.target.flags {
             ctx.capture.target_accepts_source = _emit(ctx.capture.target, { type=.drop_query })
         }

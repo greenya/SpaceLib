@@ -26,15 +26,15 @@ _DEBUG_STATS_COLOR          :: Color { 255, 255, 255, 255 }
 _debug_draw_stats :: proc (ctx: ^Context) {
     text := fmt.tprintf(
         "ref_screen_size: %vx%v\n" +
-        "ref_font_height: %.0f\n" +
+        "base_font_height: %.0f\n" +
+        "ui_scale: %.2f\n" +
         "\n" +
         "screen_size: %.0fx%.0f\n" +
         "screen_top_left: %.0f,%.0f\n" +
-        "screen_pixel_scale: %.2f\n" +
         "\n" +
         "time: %.3f (%ims)\n" +
-        "mouse.screen_pos: %.0f,%.0f\n" +
-        "mouse.ref_pos: %.0f,%.0f\n" +
+        "mouse.pos: %.0f,%.0f\n" +
+        "mouse.pos_screen: %.0f,%.0f\n" +
         "mouse.lmb_down: %v\n" +
         "\n" +
         "views: %i of %i\n" +
@@ -45,15 +45,15 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         "visible text tokens peak: %i",
 
         ctx.ref_screen_size.x, ctx.ref_screen_size.y,
-        ctx.ref_font_height,
+        ctx.base_font_height,
+        ctx.ui_scale,
 
         ctx.screen_size.x, ctx.screen_size.y,
         ctx.screen_top_left.x, ctx.screen_top_left.y,
-        ctx.screen_pixel_scale,
 
         ctx.time, int(ctx.dt*1000),
-        ctx.mouse.screen_pos.x, ctx.mouse.screen_pos.y,
-        ctx.mouse.ref_pos.x, ctx.mouse.ref_pos.y,
+        ctx.mouse.pos.x, ctx.mouse.pos.y,
+        ctx.mouse.pos_screen.x, ctx.mouse.pos_screen.y,
         ctx.mouse.lmb_down,
 
         core.sparse_array_len(ctx.views), core.sparse_array_cap(ctx.views),
@@ -84,7 +84,7 @@ _debug_draw_view_padding :: proc (v: ^View) {
     viewport_rect_ := viewport_rect(v)
     vlt := Vec2  { viewport_rect_.x, viewport_rect_.y }
     vbr := vlt + { viewport_rect_.w, viewport_rect_.h }
-    s := v.ctx.screen_pixel_scale
+    s := v.ctx.ui_scale
     p := v.padding
 
     for i in ([?] [3] Vec2 { // i[0]=start, i[1]=end, i[2].x=thickness, i[2].y=not used
@@ -93,8 +93,8 @@ _debug_draw_view_padding :: proc (v: ^View) {
         { {vlt.x,vlt.y-p[1]/2}, {vbr.x,vlt.y-p[1]/2}, {p[1],0} }, // top
         { {vlt.x,vbr.y+p[3]/2}, {vbr.x,vbr.y+p[3]/2}, {p[3],0} }, // bottom
     }) {
-        lt := ref_pos_to_screen(v.ctx, i[0])
-        rb := ref_pos_to_screen(v.ctx, i[1])
+        lt := ui_pos_to_screen(v.ctx, i[0])
+        rb := ui_pos_to_screen(v.ctx, i[1])
         _debug_draw_line(v.ctx, lt, rb, s*i[2].x, _DEBUG_PADDING_COLOR)
     }
 }
@@ -104,13 +104,13 @@ _debug_draw_view_scissor :: proc (v: ^View) {
 
     // ISSUE: drawing viewport_rect() of a view, not actual scissor of each child
     // (.absolute children uses parent's solved_rect for scissor)
-    vr_s := ref_rect_to_screen(v.ctx, viewport_rect(v))
+    vr_s := ui_rect_to_screen(v.ctx, viewport_rect(v))
     core.rect_inflate(&vr_s, 2)
     _debug_draw_rect(v.ctx, vr_s, 1, _DEBUG_SCISSOR_COLOR)
 }
 
 _debug_draw_view_rect :: proc (v: ^View) {
-    rect_s := ref_view_to_screen(v)
+    rect_s := ui_view_to_screen(v)
     color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
     _debug_draw_rect(v.ctx, rect_s, 1, color)
 
@@ -123,7 +123,7 @@ _debug_draw_view_rect :: proc (v: ^View) {
 
 _debug_draw_view_info :: proc (v: ^View) {
     text := fmt.tprintf("%.0fx%.0f\n%s", v.solved_rect.w, v.solved_rect.h, v.name)
-    lt_s := ref_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
+    lt_s := ui_pos_to_screen(v.ctx, { v.solved_rect.x, v.solved_rect.y })
     color := .hovered in v.flags ? _DEBUG_HOVERED_COLOR : _DEBUG_VIEW_COLOR
     _debug_draw_text(v.ctx, text, lt_s+2, color)
 }
@@ -133,12 +133,12 @@ _debug_draw_view_text :: proc (v: ^Visible_View) {
 
     it := visible_text_iterate(v, in_scissor_only=false)
     for tok, tok_rect in visible_text_next(&it) {
-        tok_rect_s := ref_rect_to_screen(v.ctx, tok_rect)
+        tok_rect_s := ui_rect_to_screen(v.ctx, tok_rect)
         _debug_draw_rect(v.ctx, tok_rect_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
 
         descent_rect := core.rect_bar_bottom(tok_rect, tok.descent)
-        baseline_start_s := ref_pos_to_screen(v.ctx, { descent_rect.x, descent_rect.y })
-        baseline_end_s := ref_pos_to_screen(v.ctx, { descent_rect.x+descent_rect.w, descent_rect.y })
+        baseline_start_s := ui_pos_to_screen(v.ctx, { descent_rect.x, descent_rect.y })
+        baseline_end_s := ui_pos_to_screen(v.ctx, { descent_rect.x+descent_rect.w, descent_rect.y })
         _debug_draw_line(v.ctx, baseline_start_s, baseline_end_s, 1, _DEBUG_TEXT_TOKEN_COLOR)
     }
 }

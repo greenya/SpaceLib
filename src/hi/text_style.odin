@@ -35,11 +35,11 @@ _text_style_init :: proc (v: ^View) -> Text_Style {
 @require_results
 text_style_font_height :: proc (style: Text_Style) -> f32 {
     assert(style.ctx != nil)
-    return style.font_scale * style.ctx.ref_font_height
+    return style.font_scale * style.ctx.base_font_height
 }
 
 @require_results
 text_style_font_height_screen :: proc (style: Text_Style) -> f32 {
     assert(style.ctx != nil)
-    return style.font_scale * style.ctx.ref_font_height * style.ctx.screen_pixel_scale
+    return style.font_scale * style.ctx.base_font_height * style.ctx.ui_scale
 }

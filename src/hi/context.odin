@@ -6,20 +6,31 @@ import "core:slice"
 import "../core"
 
 MAX_VIEWS               :: 2000
-MAX_VISIBLE_VIEWS       :: 400
+MAX_VISIBLE_VIEWS       :: 500
 MAX_VISIBLE_TEXT_TOKENS :: 2000
 
 MAX_VIEW_SOLVER_PASSES      :: 2
 MAX_SCROLL_SOLVER_PASSES    :: 4
 
 Context_Init :: struct {
-    // Reference screen size, e.g. 320x180, 1280x720
+    // Layout Mode:
+    // - **Reference Mode** if both components are positive:
+    //      * Reference screen size, e.g. `{320,180}`, `{1280,720}`
+    //      * Root size is `ref_screen_size`
+    //      * `ui_scale` is calculated automatically using `aspect_ratio_matching`, `min_ui_scale`, and `integer_scaling`
+    //      * `align_center` controls the calculated `screen_top_left`
+    // - **Screen Mode** if `{0,0}`:
+    //      * Root size is `screen_size / ui_scale`
+    //      * `ui_scale` defaults to `1.0`; use `set_ui_scale()` to change it
+    //      * `screen_top_left` is `{0,0}`; reference-mode options are ignored
     ref_screen_size: Vec2,
 
-    // Reference font height, e.g. 8, 10, 16
-    // This value is also used as a fallback for empty `scroll_step`.
-    ref_font_height: f32,
+    // Base font height in UI units, before applying `Text_Style.font_scale` and `ui_scale`.
+    // Used in both layout modes. Also used as the fallback for an unset `scroll_step`.
+    // Use `set_base_font_height()` to change it.
+    base_font_height: f32,
 
+    // [Reference Mode only]
     // Aspect ratio logic
     // - Fixed Aspect Ratio, value is `<0`
     // - Adaptive Aspect Ratio, a lerp ratio
@@ -28,20 +39,23 @@ Context_Init :: struct {
     //      - `1.0` Full height
     aspect_ratio_matching: f32,
 
-    // The lower bound for `screen_pixel_scale`
-    min_pixel_scale: f32,
+    // [Reference Mode only]
+    // The lower bound for `ui_scale`
+    min_ui_scale: f32,
 
-    // If `true`, `screen_pixel_scale` is floored
+    // [Reference Mode only]
+    // If `true`, `ui_scale` is floored
     integer_scaling: bool,
 
+    // [Reference Mode only]
     // If `true`, `screen_top_left` might not be `{0,0}`
     align_center: bool,
 
     // Scroll step used by `scroll_*_step()`, which can be used for mouse wheel scrolling.
-    // If not set, the value of `ref_font_height` is used for vertical and horizontal step.
+    // If not set, the value of `base_font_height` is used for vertical and horizontal step.
     scroll_step: Vec2,
 
-    // Drag phase threshold in reference units.
+    // Drag phase threshold in UI units.
     // Dragging starts while LMB remains held after pressing a `.drag` view and displacement from the
     // initial press reaches this distance: `abs(offset.x) + abs(offset.y)`.
     // The default `0` starts dragging immediately on mouse press. Explicit `drag_start()` ignores it.
@@ -52,8 +66,8 @@ Context_Init :: struct {
 
     // Scissor callback.
     // Scissor should be applied if `scissor_enabled(rect)`, and disabled otherwise.
-    // The value is in ref units.
-    on_scissor: proc (ctx: ^Context, rect: Rect),
+    // The rect value is in UI units.
+    on_scissor: proc (ctx: ^Context, rect_ui: Rect),
 
     // Text measure callback. Used only with `.text` views.
     // - `style` Current style
@@ -63,8 +77,8 @@ Context_Init :: struct {
     //      * `.whitespace` Spaces `" "` and tabs `"\t"`
     // - `text` Non-empty string to measure
     //
-    // Returned value is in ref units.
-    on_text_measure: proc (style: Text_Style, type: Text_Token_Type, text: string) -> (size: [2] f32),
+    // Returned value is in UI units.
+    on_text_measure: proc (style: Text_Style, type: Text_Token_Type, text: string) -> (size_ui: [2] f32),
 
     // Text style init callback. Used only with `.text` views.
     // Allows overriding default style (font, color, align, wrapping).
@@ -95,8 +109,8 @@ Context_Init :: struct {
     // Fallback for all `.text` view drawing.
     // - Use `visible_text_iterate/next()` to iterate over the tokens
     // - Use `iterator.style` for current style information, e.g. font, color, user state
-    //      * Use `text_style_font_height_screen()` for current font height in screen units
-    // - Use `ref_pos_to_screen()` for current token screen position
+    //      * Use `text_style_font_height_screen()` for current font height in Screen units
+    // - Use `ui_pos_to_screen()` for current token screen position
     //
     // Note: The call is skipped if `v.solved_text_tokens` is empty.
     on_draw_text: proc (v: ^Visible_View),
@@ -124,20 +138,24 @@ Context :: struct {
 
     solved          : bool, // If true, `update_context()` skips `solve_context()`. It is cleared automatically at some obvious moments like add/remove/re-parent views, screen-size changes etc. Call `queue_solve_context()` after direct layout-affecting mutations, e.g. changing `View.padding`.
 
+    // Screen units per UI unit, applied to UI positions and lengths.
+    // This value is set automatically in *Reference Mode* (cannot be set manually),
+    // and can be set manually in *Screen Mode* using `set_ui_scale()`.
+    ui_scale: f32,
+
     using init: Context_Init,
 
     dt: f32,
     time: f32,
 
-    screen_size         : Vec2,
-    screen_pixel_scale  : f32,
-    screen_top_left     : Vec2,
+    screen_size     : Vec2,
+    screen_top_left : Vec2,
 
     mouse: struct {
         using input     : Mouse_Input,  // The value passed to `update_context()`
-        ref_pos         : Vec2,
-        lmb_down_prev   : bool,
-        lmb_pressed     : bool,         // Left mouse button was pressed this frame
+        pos             : Vec2,         // Mouse position in UI units
+        lmb_down_prev   : bool,         // Previous frame state of LMB
+        lmb_pressed     : bool,         // LMB was pressed this frame
         consumed        : bool,         // Mouse interaction was consumed this frame
     },
 
@@ -153,7 +171,7 @@ Context :: struct {
 }
 
 Mouse_Input :: struct {
-    screen_pos  : Vec2,
+    pos_screen  : Vec2, // Mouse position in Screen units
     lmb_down    : bool,
     wheel_delta : f32,
 }
@@ -164,12 +182,14 @@ Context_Event :: struct {
 
 Context_Event_Type :: enum {
     screen_size_changed,
-    screen_pixel_scale_changed,
+    ui_scale_changed,
     solved, // The context was solved. Note: user call to `solve_context()` is silent.
 }
 
 @require_results
 create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^Context {
+    assert(init.ref_screen_size=={} || (init.ref_screen_size.x>0 && init.ref_screen_size.y>0), "`ref_screen_size` must be zero or have both components positive")
+
     ctx := new(Context, allocator)
     ctx.init = init
     ctx.next_view_sid = 1
@@ -185,6 +205,10 @@ create_context :: proc (init: Context_Init, allocator := context.allocator) -> ^
     ctx.stats.views_peak = 1
 
     if ctx.debug_draw_filter == {} do ctx.debug_draw_filter = ~{}
+
+    if ctx.ref_screen_size == {} {
+        ctx.ui_scale = 1
+    }
 
     return ctx
 }
@@ -215,7 +239,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
 
     ctx.mouse = {
         input           = mouse_input,
-        ref_pos         = screen_pos_to_ref(ctx, mouse_input.screen_pos),
+        pos             = screen_pos_to_ui(ctx, mouse_input.pos_screen),
         lmb_down_prev   = ctx.mouse.lmb_down,
         lmb_pressed     = !ctx.mouse.lmb_down && mouse_input.lmb_down,
     }
@@ -227,7 +251,7 @@ update_context :: proc (ctx: ^Context, screen_size: Vec2, mouse_input: Mouse_Inp
         }
     }
 
-    hit_visible_view := _hit_test(ctx, ctx.mouse.ref_pos)
+    hit_visible_view := _hit_test(ctx, ctx.mouse.pos)
     hit_view := hit_visible_view != nil ? hit_visible_view.view : nil
 
     _capture_cleanup_state_from_prev_frame(ctx)
@@ -312,7 +336,10 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
         return true
     }
 
-    ctx.root.solved_rect = { 0, 0, ctx.ref_screen_size.x, ctx.ref_screen_size.y }
+    ctx.root.solved_rect = is_ref_mode(ctx)\
+        ? { 0, 0, ctx.ref_screen_size.x, ctx.ref_screen_size.y }\
+        : { 0, 0, ctx.screen_size.x/ctx.ui_scale, ctx.screen_size.y/ctx.ui_scale }
+
     ctx.root.solved_opacity = ctx.root.opacity
     ctx.root.solved_layout_child_count = 0
     append(&ctx.visible_views, Visible_View { ctx.root, SCISSOR_DISABLED, nil })
@@ -416,19 +443,48 @@ draw_context :: proc (ctx: ^Context) {
     }
 }
 
-set_ref_font_height :: proc (ctx: ^Context, height: f32) {
+
+// `true` for *Reference Mode* and `false` for *Screen Mode*
+@require_results
+is_ref_mode :: proc (ctx: ^Context) -> bool {
+    return ctx.ref_screen_size != {}
+}
+
+// Sets new `ui_scale` for *Screen Mode*.
+// Emits `.ui_scale_changed` if the new scale is different.
+set_ui_scale :: proc (ctx: ^Context, ui_scale: f32) {
+    ensure(!ctx.solving)
+    ensure(!ctx.drawing)
+    ensure(!is_ref_mode(ctx), "`ui_scale` cannot be manually changed in Reference Mode")
+    ensure(ui_scale >= 0.001)
+
+    if ctx.ui_scale == ui_scale do return
+    ctx.ui_scale = ui_scale
+
+    queue_solve_context(ctx)
+
+    if ctx.on_event != nil {
+        ctx->on_event({ type=.ui_scale_changed })
+    }
+}
+
+// Sets new `base_font_height`.
+set_base_font_height :: proc (ctx: ^Context, height: f32) {
     ensure(!ctx.solving)
     ensure(!ctx.drawing)
 
-    if ctx.ref_font_height == height do return
-    ctx.ref_font_height = height
+    if ctx.base_font_height == height do return
+    ctx.base_font_height = height
 
+    _clear_text_wordy_buffers(ctx)
+    queue_solve_context(ctx)
+}
+
+_clear_text_wordy_buffers :: proc (ctx: ^Context) {
     it := core.sparse_array_iterate(&ctx.views)
     for v in core.sparse_array_next(&it) {
         if .text_wordy in v.flags do clear(_text_wordy_buffer(v))
     }
-
-    queue_solve_context(ctx)
 }
 
 _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, intext_mismatch: bool) {
@@ -579,33 +635,38 @@ _next_view_sid_adjust :: proc (ctx: ^Context, max_in_use: View_SID) {
 }
 
 _set_screen_size :: proc (ctx: ^Context, new_size: Vec2) {
-    new_scale := new_size / ctx.ref_screen_size
+    ui_scale_changed: bool
 
-    new_pixel_scale := ctx.aspect_ratio_matching < 0\
-        ? min(new_scale.x, new_scale.y)\
-        : linalg.lerp(new_scale.x, new_scale.y, ctx.aspect_ratio_matching)
+    if is_ref_mode(ctx) {
+        new_scale := new_size / ctx.ref_screen_size
+        new_ui_scale := ctx.aspect_ratio_matching < 0\
+            ? min(new_scale.x, new_scale.y)\
+            : linalg.lerp(new_scale.x, new_scale.y, ctx.aspect_ratio_matching)
 
-    if ctx.integer_scaling {
-        new_pixel_scale = math.floor(new_pixel_scale)
-    }
-
-    new_pixel_scale = max(new_pixel_scale, max(ctx.min_pixel_scale, 0.001))
-    pixel_scale_changed := new_pixel_scale != ctx.screen_pixel_scale
-
-    ctx.screen_pixel_scale = new_pixel_scale
-    ctx.screen_size = new_size
-    ctx.screen_top_left = ctx.align_center\
-        ? 0.5 * (new_size - ctx.ref_screen_size * new_pixel_scale)\
-        : {}
-
-    if ctx.on_event != nil {
-        ctx->on_event({ type=.screen_size_changed })
-        if pixel_scale_changed {
-            ctx->on_event({ type=.screen_pixel_scale_changed })
+        if ctx.integer_scaling {
+            new_ui_scale = math.floor(new_ui_scale)
         }
+
+        new_ui_scale = max(new_ui_scale, max(ctx.min_ui_scale, 0.001))
+        ui_scale_changed = new_ui_scale != ctx.ui_scale
+
+        ctx.ui_scale = new_ui_scale
+        ctx.screen_size = new_size
+        ctx.screen_top_left = ctx.align_center\
+            ? 0.5 * (new_size - ctx.ref_screen_size * new_ui_scale)\
+            : {}
+    } else {
+        ctx.screen_size = new_size
     }
 
     queue_solve_context(ctx)
+
+    if ctx.on_event != nil {
+        ctx->on_event({ type=.screen_size_changed })
+        if ui_scale_changed {
+            ctx->on_event({ type=.ui_scale_changed })
+        }
+    }
 }
 
 _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
@@ -656,58 +717,66 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
 }
 
 @require_results
-_hit_test :: proc (ctx: ^Context, ref_pos: Vec2) -> ^Visible_View {
+_hit_test :: proc (ctx: ^Context, pos_ui: Vec2) -> ^Visible_View {
     #reverse for &v in ctx.visible_views {
         if .hitless in v.flags do continue
-        in_rect := core.vec_in_rect(ref_pos, v.solved_rect)
+        in_rect := core.vec_in_rect(pos_ui, v.solved_rect)
         in_scissor := !scissor_enabled(v.solved_scissor) || (\
             scissor_has_area(v.solved_scissor) &&
-            core.vec_in_rect(ref_pos, v.solved_scissor)
+            core.vec_in_rect(pos_ui, v.solved_scissor)
         )
         if in_rect && in_scissor do return &v
     }
     return nil
 }
 
+// Converts screen scalar (e.g. line thickness, circle radius) to ui scalar
 @require_results
-screen_scalar_to_ref :: proc (ctx: ^Context, screen_scalar: f32) -> f32 {
-    return screen_scalar / ctx.screen_pixel_scale
+screen_scalar_to_ui :: proc (ctx: ^Context, scalar_screen: f32) -> f32 {
+    return scalar_screen / ctx.ui_scale
 }
 
+// Converts screen position to ui position
 @require_results
-screen_pos_to_ref :: proc (ctx: ^Context, screen_pos: Vec2) -> Vec2 {
-    return (screen_pos-ctx.screen_top_left) / ctx.screen_pixel_scale
+screen_pos_to_ui :: proc (ctx: ^Context, pos_screen: Vec2) -> Vec2 {
+    return (pos_screen - ctx.screen_top_left) / ctx.ui_scale
 }
 
+// Converts screen size to ui size
 @require_results
-screen_size_to_ref :: proc (ctx: ^Context, screen_size: Vec2) -> Vec2 {
-    return screen_size / ctx.screen_pixel_scale
+screen_size_to_ui :: proc (ctx: ^Context, size_screen: Vec2) -> Vec2 {
+    return size_screen / ctx.ui_scale
 }
 
+// Converts ui scalar (e.g. line thickness, circle radius) to screen scalar
 @require_results
-ref_scalar_to_screen :: proc (ctx: ^Context, ref_scalar: f32) -> f32 {
-    return ref_scalar * ctx.screen_pixel_scale
+ui_scalar_to_screen :: proc (ctx: ^Context, scalar_ui: f32) -> f32 {
+    return scalar_ui * ctx.ui_scale
 }
 
+// Converts ui position to screen position
 @require_results
-ref_pos_to_screen :: proc (ctx: ^Context, ref_pos: Vec2) -> Vec2 {
-    return ctx.screen_top_left + (ref_pos * ctx.screen_pixel_scale)
+ui_pos_to_screen :: proc (ctx: ^Context, pos_ui: Vec2) -> Vec2 {
+    return ctx.screen_top_left + (pos_ui * ctx.ui_scale)
 }
 
+// Converts ui size to screen size
 @require_results
-ref_size_to_screen :: proc (ctx: ^Context, ref_size: Vec2) -> Vec2 {
-    return ref_size * ctx.screen_pixel_scale
+ui_size_to_screen :: proc (ctx: ^Context, size_ui: Vec2) -> Vec2 {
+    return size_ui * ctx.ui_scale
 }
 
+// Converts ui rect to screen rect
 @require_results
-ref_rect_to_screen :: proc (ctx: ^Context, ref_rect: Rect) -> Rect {
+ui_rect_to_screen :: proc (ctx: ^Context, rect_ui: Rect) -> Rect {
     return {
-        **ref_pos_to_screen(ctx, { ref_rect.x, ref_rect.y }),
-        **ref_size_to_screen(ctx, { ref_rect.w, ref_rect.h }),
+        **ui_pos_to_screen(ctx, { rect_ui.x, rect_ui.y }),
+        **ui_size_to_screen(ctx, { rect_ui.w, rect_ui.h }),
     }
 }
 
+// Returns view's `solved_rect` as screen rect
 @require_results
-ref_view_to_screen :: proc (v: ^View) -> Rect {
-    return ref_rect_to_screen(v.ctx, v.solved_rect)
+ui_view_to_screen :: proc (v: ^View) -> Rect {
+    return ui_rect_to_screen(v.ctx, v.solved_rect)
 }

@@ -39,7 +39,7 @@ main_update :: proc () -> (keep_running: bool) {
     wheel_delta := k2.get_mouse_wheel_delta()
     mouse_input := hi.Mouse_Input {
         lmb_down = k2.mouse_button_is_held(.Left),
-        screen_pos = k2.get_mouse_position(),
+        pos_screen = k2.get_mouse_position(),
         wheel_delta = wheel_delta,
     }
 
@@ -50,7 +50,6 @@ main_update :: proc () -> (keep_running: bool) {
         hi.queue_solve_context(app.ui)
     }
 
-    app.ui.ref_screen_size = screen_size
     hi.update_context(app.ui, screen_size, mouse_input, dt)
 
     return

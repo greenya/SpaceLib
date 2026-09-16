@@ -14,7 +14,7 @@ import "../core"
 // Note: Zero `View.opacity` alone does not make the view *invisible*.
 Visible_View :: struct {
     using view          : ^View,
-    solved_scissor      : Rect,             // Scissor rect this view is clipped by in ref units. Used only if `scissor_enabled()`.
+    solved_scissor      : Rect,             // Scissor rect this view is clipped by in UI units. Used only if `scissor_enabled()`.
     solved_text_tokens  : [] Text_Token,    // Text tokens of this view. Only for `.text` views.
 }
 
