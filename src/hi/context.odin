@@ -361,9 +361,10 @@ solve_context :: proc (ctx: ^Context) -> (solved: bool) {
         scroll_solver_passed = true
         for v in ctx.visible_views {
             scroll_min_ := scroll_min(v)
+            scroll_max_ := scroll_max(v)
             new_scroll := Vec2 {
-                clamp(v.scroll.x, scroll_min_.x, 0),
-                clamp(v.scroll.y, scroll_min_.y, 0),
+                clamp(v.scroll.x, scroll_min_.x, scroll_max_.x),
+                clamp(v.scroll.y, scroll_min_.y, scroll_max_.y),
             }
             if new_scroll != v.scroll {
                 // allow mutating v.scroll only for non-final pass

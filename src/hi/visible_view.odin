@@ -20,7 +20,7 @@ Visible_View :: struct {
 
 Visible_Text_Iterator :: struct {
     using token_it  : Text_Token_Iterator,
-    content_top_left: Vec2,
+    content_origin  : Vec2,
     measurable_only : bool, // If true, skip tokens with zero size
     in_scissor_only : bool, // If true, skip tokens clipped out by `visible_view.solved_scissor` if it is used
     scissor_rect    : Rect,
@@ -38,7 +38,7 @@ visible_text_iterate :: proc (
     it = {
         token_it        = text_token_iterate(v, filter),
         measurable_only = measurable_only,
-        content_top_left= content_top_left(v),
+        content_origin  = content_origin(v),
     }
 
     if in_scissor_only && scissor_enabled(v.solved_scissor) {
@@ -55,8 +55,8 @@ visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok
         if it.measurable_only && tok_.size == {} do continue
 
         tok_rect = Rect {
-            tok_.solved_pos.x + it.content_top_left.x,
-            tok_.solved_pos.y + it.content_top_left.y,
+            tok_.solved_pos.x + it.content_origin.x,
+            tok_.solved_pos.y + it.content_origin.y,
             tok_.solved_width,
             tok_.size.y,
         }

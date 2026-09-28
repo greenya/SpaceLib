@@ -674,57 +674,68 @@ viewport_rect :: proc (v: ^View) -> Rect {
     }
 }
 
-// Total size needed to fit all layout children
+// Total rect of all layout children, including the current scroll.
+// With no eligible children, returns a zero-size rect at the padded, scrolled viewport origin.
 @require_results
-content_size :: proc (v: ^View) -> Vec2 {
-    bottom_right := content_bottom_right(v)
-    top_left := content_top_left(v)
-    return {
-        max(0, bottom_right.x - top_left.x),
-        max(0, bottom_right.y - top_left.y),
+content_rect :: proc (v: ^View) -> Rect {
+    top_left := content_origin(v)
+    bottom_right := top_left
+    found_child := false
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if .hidden in c.flags || !_is_layout_child(c) do continue
+        child_start := Vec2 { c.solved_rect.x, c.solved_rect.y }
+        child_end := child_start + Vec2 { c.solved_rect.w, c.solved_rect.h }
+        if !found_child {
+            top_left = child_start
+            bottom_right = child_end
+            found_child = true
+        } else {
+            top_left = { min(top_left.x, child_start.x), min(top_left.y, child_start.y) }
+            bottom_right = { max(bottom_right.x, child_end.x), max(bottom_right.y, child_end.y) }
+        }
     }
+    return { top_left.x, top_left.y, bottom_right.x - top_left.x, bottom_right.y - top_left.y }
 }
 
-// Padded and scrolled top-left point for layout children
+// Padded and scrolled origin for the content.
 @require_results
-content_top_left :: proc (v: ^View) -> Vec2 {
+content_origin :: proc (v: ^View) -> Vec2 {
     return {
         v.solved_rect.x + v.padding[0] + v.scroll.x,
         v.solved_rect.y + v.padding[1] + v.scroll.y,
     }
 }
 
-// Farthest bottom-right point of layout children
-@require_results
-content_bottom_right :: proc (v: ^View) -> (result: Vec2) {
-    for c := v.first_child; c != nil; c = c.next_sibling {
-        if .hidden in c.flags || !_is_layout_child(c) do continue
-        result.x = max(result.x, c.solved_rect.x + c.solved_rect.w)
-        result.y = max(result.y, c.solved_rect.y + c.solved_rect.h)
-    }
-    return
-}
-
-// Scroll minimum value.
-// Returned components are always `<=0`.
-//
-// The scrolling offset `View.scroll` moves in range `scroll_min()...{0,0}`, that is why there is
-// no "scroll_max()" as it is always zero. Content without any scroll is sitting at zero (maximum scroll).
+// Scroll minimum value. Returned components are always <= 0.
+// Scroll offsets range from scroll_min() to scroll_max(); zero preserves the original placement.
 @require_results
 scroll_min :: proc (v: ^View) -> Vec2 {
-    viewport_rect_ := viewport_rect(v)
-    content_size_ := content_size(v)
+    viewport := viewport_rect(v)
+    content := content_rect(v)
     return {
-        -max(0, content_size_.x - viewport_rect_.w),
-        -max(0, content_size_.y - viewport_rect_.h),
+        min(0, viewport.x + viewport.w - (content.x + content.w - v.scroll.x)),
+        min(0, viewport.y + viewport.h - (content.y + content.h - v.scroll.y)),
+    }
+}
+
+// Scroll maximum value. Returned components are always >= 0.
+// Positive offsets reveal content placed above or to the left of the viewport.
+@require_results
+scroll_max :: proc (v: ^View) -> Vec2 {
+    viewport := viewport_rect(v)
+    content := content_rect(v)
+    return {
+        max(0, viewport.x - (content.x - v.scroll.x)),
+        max(0, viewport.y - (content.y - v.scroll.y)),
     }
 }
 
 scroll_to :: proc (v: ^View, value: Vec2) -> (scrolled: bool) {
     scroll_min_ := scroll_min(v)
+    scroll_max_ := scroll_max(v)
     new_scroll := Vec2 {
-        clamp(value.x, scroll_min_.x, 0),
-        clamp(value.y, scroll_min_.y, 0),
+        clamp(value.x, scroll_min_.x, scroll_max_.x),
+        clamp(value.y, scroll_min_.y, scroll_max_.y),
     }
 
     if new_scroll != v.scroll {
@@ -749,7 +760,7 @@ scroll_by_step :: proc (v: ^View, magnitude: Vec2) -> (scrolled: bool) {
 }
 
 scroll_to_start :: proc (v: ^View) {
-    scroll_to(v, {})
+    scroll_to(v, scroll_max(v))
 }
 
 scroll_to_end :: proc (v: ^View) {
@@ -759,8 +770,8 @@ scroll_to_end :: proc (v: ^View) {
 scroll_layout_to_start :: proc (v: ^View) {
     switch v.layout.dir {
     case .none  : panic("The view has no layout")
-    case .row   : scroll_to(v, { 0, v.scroll.y })
-    case .column: scroll_to(v, { v.scroll.x, 0 })
+    case .row   : scroll_to(v, { scroll_max(v).x, v.scroll.y })
+    case .column: scroll_to(v, { v.scroll.x, scroll_max(v).y })
     }
 }
 
