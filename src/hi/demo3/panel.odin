@@ -108,7 +108,7 @@ _panel_read_directory :: proc (panel: ^Panel, path: string) {
 
 _panel_add_file_open_btn :: proc (panel: ^Panel, parent: ^hi.View) -> ^hi.View {
     return hi.add_view(parent, {
-        flags   = { .text, .text_fit_x },
+        flags   = { .text },
         text    = "Open",
         padding = 5,
         place   = { anchor={1,.5}, pivot={1,.5} },

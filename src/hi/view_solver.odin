@@ -24,7 +24,7 @@ _solve_view_fit_and_fixed_size :: proc (v: ^View) {
         return
     }
 
-    if .text_fit_x not_in v.flags && .intext_full not_in v.flags {
+    if !_is_text_fit_width(v) && .intext_full not_in v.flags {
         if .fit_x in v.flags {
             v.solved_rect.w = fit_size.x
         } else if v.flags & { .ratio_x, .fill_x } != {} {
@@ -79,7 +79,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
         if .hidden in c.flags do continue
 
         if _is_layout_child(c) {
-            if .text_fit_x in c.flags {
+            if _is_text_fit_width(c) {
                 non_fill_x_children_width += c.solved_rect.w
             } else if .fill_x in c.flags {
                 fill_x_child_count += 1
@@ -101,7 +101,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 non_fill_y_children_height += c.solved_rect.h
             }
         } else {
-            if .text_fit_x not_in c.flags && .intext_full not_in c.flags {
+            if !_is_text_fit_width(c) && .intext_full not_in c.flags {
                 if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
             }
             if .text not_in c.flags {
@@ -131,7 +131,7 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
 
         for c := v.first_child; c != nil; c = c.next_sibling {
             if .hidden in c.flags || !_is_layout_child(c) do continue
-            if .text_fit_x not_in c.flags {
+            if !_is_text_fit_width(c) {
                 if .fill_x in c.flags do c.solved_rect.w = fill_child_width
             }
             if .text not_in c.flags {
@@ -232,10 +232,15 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
     }
 }
 
+// Text measures its own width only when no explicit width constraint is set.
+_is_text_fit_width :: proc (v: ^View) -> bool {
+    return .text in v.flags && v.size.x == 0 && v.flags & { .ratio_x, .fit_x, .fill_x, .intext_full } == {}
+}
+
 _reset_view_parent_dependent_size_for_fit_phase :: proc (v: ^View) {
     if v.idx == 0 do return
 
-    if v.flags & { .fit_x, .text_fit_x, .intext_full } == {} && v.flags & { .ratio_x, .fill_x } != {} {
+    if !_is_text_fit_width(v) && v.flags & { .fit_x, .intext_full } == {} && v.flags & { .ratio_x, .fill_x } != {} {
         v.solved_rect.w = 0
     }
 

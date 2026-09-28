@@ -61,7 +61,7 @@ Text_Custom_Token_Hint :: struct {
 
     // Ignored if `intext_view` is set.
     // If set, `scale.x` is scaled to full line width instead of font height.
-    // This flag should not be used with `.text_fit_x`.
+    // This flag requires a text view with an explicit width constraint.
     scale_full_line: bool,
 
     // Generally value from 0 to 1 ratio inside the custom token box; but can be <0 or >1 too.
@@ -183,7 +183,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                 assert(iv.flags & { .ratio_y, .fill_y } == {}, "Text_Custom_Token_Hint.intext_view must not have .ratio_y or .fill_y flags")
                 tok.intext_view = iv
                 if .intext_full in iv.flags {
-                    assert(.text_fit_x not_in v.flags, "Text_Custom_Token_Hint.intext_view cannot be .intext_full with .text_fit_x parent")
+                    assert(!_is_text_fit_width(v.view), "Text_Custom_Token_Hint.intext_view cannot be .intext_full with an automatically sized text parent")
                     tok.flags += { .full_line }
                     tok.size = { 1, iv.solved_rect.h } // Set scale.x value for wrapping step
                 } else {

@@ -531,7 +531,7 @@ _regenerate_visible_text_tokens :: proc (ctx: ^Context) -> (extent_mismatch, int
             when PERF_ON do _perf_track_stop(ctx, .text_measure)
         }
 
-        if .text_fit_x in v.flags {
+        if _is_text_fit_width(v.view) {
             when PERF_ON do _perf_track_start(ctx, .text_wrap)
             extent, v_intext_mismatch := _text_wrap_tokens(&v, 0)
             when PERF_ON do _perf_track_stop(ctx, .text_wrap)

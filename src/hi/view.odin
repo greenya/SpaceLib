@@ -94,8 +94,7 @@ Flag :: enum {
 
     // Text
 
-    text,       // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.h` is determined by measured height of all the text (flags `.fit_y`, `.fill_y`, `.ratio_y` are ignored).
-    text_fit_x, // Text view measures `View.solved_rect.w` from the longest unwrapped text line. Overrides `.fit_x`, `.fill_x`, and `.ratio_x`; wrapping and horizontal alignment are disabled because the text defines its own width. Useful for one-line labels followed by other row-layout views. Use only with `.text`.
+    text,       // `View.text` is in Rich Text Format. The drawing procedure should use `Visible_View.solved_text_tokens` to draw the text. `View.solved_rect.w` is determined by measured with only if no width constrains are used: `size.x == 0` and no `.ratio_x`, `.fit_x`, `.fill_x`, `.intext_full` flags. `View.solved_rect.h` is determined by measured height of all the text (flags `.ratio_y`, `.fit_y`, `.fill_y` are ignored).
     text_raw,   // Text is processed exclusively in raw mode by the tokenizer. By default, raw mode is disabled until a `|raw|` tag is encountered. This flag forces the tokenizer to process `View.text` in raw mode from start to finish, ignoring any inner `|noraw|` tags. This allows displaying unformatted text contents as-is without requiring extra string manipulation. It should only be used with `.text`.
     text_wordy, // Text tokens of the view are stored in an external buffer provided by `Context.on_text_wordy()`. By default, all text tokens are stored in `Context.visible_text_tokens`, which has a contiguous but limited capacity. This flag allows a view to contain a large amount of static text, tokenized and measured tokens are cached. Use `set_text()` to set new text and invalidate all cached data. It should only be used with `.text`.
 

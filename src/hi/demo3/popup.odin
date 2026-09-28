@@ -83,7 +83,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         { "Demo\n|s=small|Formatting demo and options", &popup.ui_page_demo, { flags={ .text, .ratio_x }, size=1 } },
     }) {
         hi.add_view(popup.ui_tabs, {
-            flags   = { .text, .text_fit_x, .radio },
+            flags   = { .text, .radio },
             padding = 20,
             text    = p.title,
             user_ptr= popup,
@@ -128,7 +128,7 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
 
     footer_bar := hi.add_view(popup.ui_window, { flags={ .fill_x, .fit_y }, layout={ dir=.row, justify=.center, gap=20 } })
     hi.add_view(footer_bar, {
-        flags   = { .text, .text_fit_x },
+        flags   = { .text },
         padding = 20,
         text    = "Close",
         user_ptr= popup,
@@ -254,11 +254,11 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
         { "140%", 1.4 },
     }
 
-    hi.add_view(root, { flags={.text,.text_fit_x}, padding={20,20,20,0}, text="Font scale" })
+    hi.add_view(root, { flags={.text}, padding={20,20,20,0}, text="Font scale" })
     fs_bar := hi.add_view(root, { flags={ .fit_x, .fit_y }, layout={ dir=.row, align=.center }, padding=10 })
     for o, i in Font_Scale_Options {
         hi.add_view(fs_bar, {
-            flags   = { .text, .text_fit_x, .radio } | (o.scale == 1 ? {.selected} : {}),
+            flags   = { .text, .radio } | (o.scale == 1 ? {.selected} : {}),
             text    = o.text,
             padding = 10,
             user_idx= i,
@@ -283,11 +283,11 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
         { "50%", .5 },
     }
 
-    hi.add_view(root, { flags={.text,.text_fit_x}, padding={20,20,20,0}, text="Panel width" })
+    hi.add_view(root, { flags={.text}, padding={20,20,20,0}, text="Panel width" })
     pw_bar := hi.add_view(root, { flags={ .fit_x, .fit_y }, layout={ dir=.row, align=.center }, padding=10 })
     for o, i in Panel_Width_Options {
         hi.add_view(pw_bar, {
-            flags   = { .text, .text_fit_x, .radio } | (o.width == APP_DEFAULT_PANEL_WIDTH ? {.selected} : {}),
+            flags   = { .text, .radio } | (o.width == APP_DEFAULT_PANEL_WIDTH ? {.selected} : {}),
             text    = o.text,
             padding = 10,
             user_idx= i,
@@ -407,7 +407,7 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
         { "minus_1", "|c=#f88|-1", -1 },
     }) {
         hi.add_view(popup.ui_page_demo, {
-            flags   = { .intext, .text, .text_fit_x },
+            flags   = { .intext, .text },
             name    = b.name,
             text    = b.text,
             padding = { 5, 0, 5, 0 },
@@ -428,7 +428,7 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
     // Counter value
 
     popup.ui_page_demo_counter = hi.add_view(popup.ui_page_demo, {
-        flags   = { .intext, .text, .text_fit_x },
+        flags   = { .intext, .text },
         on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
             if event.type == .wheeled {
                 log("Demo counter label just consumed .wheeled event")

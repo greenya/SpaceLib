@@ -161,10 +161,10 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
 
     options_menu := hi.add_view(content_, { name="options_menu", flags={.fit_x,.fit_y}, place={anchor=.5}, padding=4, layout={dir=.column}, strata=.overlay, level=10, on_draw=draw_view })
     options_bar := hi.add_view(options_menu, { name="bar", flags={.fit_x,.fit_y}, layout={dir=.row,align=.center,gap=2} })
-    hi.add_view(options_bar, { text="Actions:", flags={.text,.text_fit_x} })
+    hi.add_view(options_bar, { text="Actions:", flags={.text} })
     add_icon_button(options_bar, name="button51", icon="51")
     add_icon_button(options_bar, name="button52", icon="52")
-    hi.add_view(options_bar, { text="Status: OK", flags={.text,.text_fit_x} })
+    hi.add_view(options_bar, { text="Status: OK", flags={.text} })
     hi.add_view(options_menu, { name="option1", text="Option #111|tab=65|501", flags={.fill_x,.text} })
     hi.add_view(options_menu, { name="option2", text="Option #22|tab=65|502", flags={.fill_x,.text} })
     hi.add_view(options_menu, { name="option3", text="Option #3|tab=65|503", flags={.fill_x,.text} })
