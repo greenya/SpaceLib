@@ -33,5 +33,4 @@ Time Tracker
 `-define:TIME_TRACKER=off` disables all the time tracking code into no-op.
 
 */
-
 package time_tracker

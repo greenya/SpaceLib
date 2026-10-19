@@ -12,24 +12,20 @@ Verbosity :: enum {
 }
 
 _track: mem.Tracking_Allocator
-_verbosity: Verbosity
 
-// Common usage:
-//
-//      import "spacelib:core/tracking_allocator"
-//      main :: proc () {
-//          context.allocator = tracking_allocator.init()
-//          defer {
-//              tracking_allocator.print()
-//              tracking_allocator.destroy()
-//          }
-//          ...
-//      }
+when "off" == #config(TRACKING_ALLOCATOR, "on") {
 
-init :: proc (verbosity := Verbosity.full) -> mem.Allocator {
-    _verbosity = verbosity
-    mem.tracking_allocator_init(&_track, context.allocator)
-    if _verbosity != .silent do fmt.println("[TA] Initialized")
+init    :: proc (alloc := context.allocator, silent := false) -> mem.Allocator { return alloc }
+destroy :: proc () {}
+print   :: proc (verbosity := Verbosity.full, max_rows := 10) {}
+
+} else {
+
+// - `alloc` Allocator to be tracked
+// - `silent` True to skip printing init message
+init :: proc (alloc := context.allocator, silent := false) -> mem.Allocator {
+    mem.tracking_allocator_init(&_track, backing_allocator=alloc)
+    if !silent do fmt.println("[TA] Initialized")
     return mem.tracking_allocator(&_track)
 }
 
@@ -38,24 +34,29 @@ destroy :: proc () {
     _track = {}
 }
 
-print :: proc (max_rows := 10) {
+print :: proc (verbosity := Verbosity.full, max_rows := 10) {
     has_issues :=\
         len(_track.allocation_map) > 0 ||
         len(_track.bad_free_array) > 0
 
-    if !has_issues do switch _verbosity {
-    case .full      : // nothing
-    case .minimal   : fmt.println("[TA] No issues"); return
-    case .silent    : return // silence goes here
+    if !has_issues do switch verbosity {
+    case .full:
+        /**/
+
+    case .minimal:
+        fmt.printfln("[TA] No issues (%m peak)", _track.peak_memory_allocated)
+        return
+
+    case .silent:
+        return
     }
 
-    print_stats()
-    print_not_freed_allocations(max_rows)
-    print_bad_frees(max_rows)
+    _print_stats()
+    _print_not_freed_allocations(max_rows)
+    _print_bad_frees(max_rows)
 }
 
-@private
-print_stats :: proc () {
+_print_stats :: proc () {
     tbl: table.Table
     table.init(&tbl, table_allocator=context.temp_allocator)
     table.caption(&tbl, "Tracking Allocator Stats")
@@ -71,8 +72,7 @@ print_stats :: proc () {
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
 
-@private
-print_not_freed_allocations :: proc (max_rows: int) {
+_print_not_freed_allocations :: proc (max_rows: int) {
     allocation_map_len := len(_track.allocation_map)
     if allocation_map_len == 0 do return
 
@@ -95,8 +95,7 @@ print_not_freed_allocations :: proc (max_rows: int) {
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
 
-@private
-print_bad_frees :: proc (max_rows: int) {
+_print_bad_frees :: proc (max_rows: int) {
     bad_free_array_len := len(_track.bad_free_array)
     if bad_free_array_len == 0 do return
 
@@ -118,3 +117,5 @@ print_bad_frees :: proc (max_rows: int) {
 
     table.write_plain_table(table.stdio_writer(), &tbl)
 }
+
+} // end of "else" of "when #config..."
