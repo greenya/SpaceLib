@@ -281,11 +281,8 @@ random_vec_sway :: proc (dir: Vec2, sway_side_rad: f32) -> Vec2 {
     }
 }
 
-vec_from_angle :: proc (length, angle_rad: f32) -> Vec2 {
-    return {
-        length * math.cos(angle_rad),
-        length * math.sin(angle_rad),
-    }
+vec_from_angle :: proc (angle_rad: f32, length := f32(1)) -> Vec2 {
+    return { math.cos(angle_rad), math.sin(angle_rad) } * length
 }
 
 pos_moved_towards_pos :: proc (current, target: Vec2, speed, dt: f32) -> (new: Vec2) {
@@ -308,7 +305,7 @@ pos_orbited_around_pos :: proc (current, center: Vec2, speed, dt: f32, is_clockw
     new_angle := is_clockwise\
         ?  angle + angular_vel * dt\
         : -angle + angular_vel * dt
-    return center + vec_from_angle(radius, new_angle)
+    return center + vec_from_angle(new_angle, length=radius)
 }
 
 pos_on_rotated_rect :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {

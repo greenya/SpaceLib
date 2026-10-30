@@ -124,7 +124,7 @@ app_menu_add_page_fragments :: proc (parent: ^ui.Frame) {
 app_menu_art_ring_radius :: 460
 
 app_menu_pos_on_art_ring :: proc (angle_rad: f32) -> Vec2 {
-    return core.vec_from_angle(app_menu_art_ring_radius, angle_rad)
+    return core.vec_from_angle(angle_rad, length=app_menu_art_ring_radius)
 }
 
 app_menu_add_primary_slot :: proc (parent: ^ui.Frame) -> ^ui.Frame {
