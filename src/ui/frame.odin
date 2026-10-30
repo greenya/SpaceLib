@@ -880,7 +880,7 @@ update_frame_tree :: proc (f: ^Frame) {
 
     m_pos := f.ui.mouse.pos
     hit_rect := .terse_hit_rect in f.flags && f.terse != nil ? f.terse.rect : f.rect
-    if core.vec_in_rect(m_pos, hit_rect) && core.vec_in_rect(m_pos, f.ui.scissor_rect) {
+    if core.pos_in_rect(m_pos, hit_rect) && core.pos_in_rect(m_pos, f.ui.scissor_rect) {
         append(&f.ui.mouse_frames, f)
     }
 

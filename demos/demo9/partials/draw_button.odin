@@ -51,7 +51,7 @@ draw_button_featured :: proc (f: ^ui.Frame) {
     hv_ratio := ui.hover_ratio(f, .Cubic_Out, .333, .Cubic_In, .333)
 
     if hv_ratio > 0 {
-        cr_center := core.clamp_vec_to_rect(f.ui.mouse.pos, rect)
+        cr_center := core.clamp_pos_to_rect(f.ui.mouse.pos, rect)
         cr_radius := f.rect.h * 1.777
         cr_inner_color := colors.get(.accent, alpha=hv_ratio*.3)
         draw.circle_gradient(cr_center, cr_radius, cr_inner_color, {})

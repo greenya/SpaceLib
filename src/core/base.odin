@@ -35,13 +35,13 @@ rect_bar_right              :: proc (r: Rect, thick: f32) -> Rect { return { r.x
 rect_bar_center_horizontal  :: proc (r: Rect, thick: f32) -> Rect { return { r.x, r.y+(r.h-thick)/2, r.w, thick } }
 rect_bar_center_vertical    :: proc (r: Rect, thick: f32) -> Rect { return { r.x+(r.w-thick)/2, r.y, thick, r.h } }
 
-rect_move :: proc (r: ^Rect, v: Vec2) {
-    r.x += v.x
-    r.y += v.y
+rect_move :: proc (r: ^Rect, offset: Vec2) {
+    r.x += offset.x
+    r.y += offset.y
 }
 
-rect_moved :: proc (r: Rect, v: Vec2) -> Rect {
-    return { r.x+v.x, r.y+v.y, r.w, r.h }
+rect_moved :: proc (r: Rect, offset: Vec2) -> Rect {
+    return { r.x+offset.x, r.y+offset.y, r.w, r.h }
 }
 
 rect_inflate :: proc (r: ^Rect, size: Vec2) {
@@ -106,12 +106,12 @@ rect_scaled_top_right   :: proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1
 rect_scaled_bottom_left :: proc (r: Rect, s: Vec2) -> Rect { return { r.x, r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
 rect_scaled_bottom_right:: proc (r: Rect, s: Vec2) -> Rect { return { r.x+r.w*(1-s.x), r.y+r.h*(1-s.y), r.w*s.x, r.h*s.y } }
 
-rect_from_size          :: proc (size: Vec2)          -> Rect { return { 0, 0, size.x, size.y } }
-rect_from_center        :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x/2, v.y-size.y/2, size.x, size.y } }
-rect_from_top_left      :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y, size.x, size.y } }
-rect_from_top_right     :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x, v.y, size.x, size.y } }
-rect_from_bottom_left   :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x, v.y-size.y, size.x, size.y } }
-rect_from_bottom_right  :: proc (v: Vec2, size: Vec2) -> Rect { return { v.x-size.x, v.y-size.y, size.x, size.y } }
+rect_from_size          :: proc (size: Vec2)            -> Rect { return { 0, 0, size.x, size.y } }
+rect_from_center        :: proc (pos: Vec2, size: Vec2) -> Rect { return { pos.x-size.x/2, pos.y-size.y/2, size.x, size.y } }
+rect_from_top_left      :: proc (pos: Vec2, size: Vec2) -> Rect { return { pos.x, pos.y, size.x, size.y } }
+rect_from_top_right     :: proc (pos: Vec2, size: Vec2) -> Rect { return { pos.x-size.x, pos.y, size.x, size.y } }
+rect_from_bottom_left   :: proc (pos: Vec2, size: Vec2) -> Rect { return { pos.x, pos.y-size.y, size.x, size.y } }
+rect_from_bottom_right  :: proc (pos: Vec2, size: Vec2) -> Rect { return { pos.x-size.x, pos.y-size.y, size.x, size.y } }
 
 rect_grow :: proc (r: ^Rect, o: Rect) {
     if o.x < r.x {
@@ -195,13 +195,13 @@ vec_zero_approx :: proc (a: Vec2, e: f32) -> bool {
     return abs(a.x)<e && abs(a.y)<e
 }
 
-vec_in_rect :: proc (vec: Vec2, r: Rect) -> bool {
-    return r.x <= vec.x && vec.x < r.x+r.w &&
-           r.y <= vec.y && vec.y < r.y+r.h
+pos_in_rect :: proc (pos: Vec2, r: Rect) -> bool {
+    return r.x <= pos.x && pos.x < r.x+r.w &&
+           r.y <= pos.y && pos.y < r.y+r.h
 }
 
-vec_in_arc :: proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
-    dir := vec - center
+pos_in_arc :: proc (pos: Vec2, center: Vec2, inner_radius, outer_radius, start_rad, end_rad: f32) -> bool {
+    dir := pos - center
 
     dist := math.hypot(dir.x, dir.y)
     if dist < inner_radius || dist > outer_radius {
@@ -225,7 +225,7 @@ vec_in_arc :: proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_r
     }
 }
 
-vec_in_triangle :: proc (pos: Vec2, triangle: [3] Vec2) -> bool {
+pos_in_triangle :: proc (pos: Vec2, triangle: [3] Vec2) -> bool {
     a, b, c := triangle[0], triangle[1], triangle[2]
     ab, bc, ca := b-a, c-b, a-c
     area := ab.x*(c.y-a.y) - ab.y*(c.x-a.x)
@@ -241,10 +241,10 @@ vec_in_triangle :: proc (pos: Vec2, triangle: [3] Vec2) -> bool {
            (d0<= tolerance && d1<= tolerance && d2<= tolerance)
 }
 
-clamp_vec_to_rect :: proc (vec: Vec2, r: Rect) -> Vec2 {
+clamp_pos_to_rect :: proc (pos: Vec2, r: Rect) -> Vec2 {
     return {
-        clamp(vec.x, r.x, r.x + r.w),
-        clamp(vec.y, r.y, r.y + r.h),
+        clamp(pos.x, r.x, r.x + r.w),
+        clamp(pos.y, r.y, r.y + r.h),
     }
 }
 
@@ -256,12 +256,16 @@ clamp_ratio_span :: proc (value, minimum, span: $T) -> T where intrinsics.type_i
     return clamp((value - minimum) / span, 0.0, 1.0)
 }
 
-random_vec_in_rect :: proc (rect: Rect) -> Vec2 {
-    return { rect.x + rect.w*rand.float32(), rect.y + rect.h*rand.float32() }
+random_pos_in_rect :: proc (rect: Rect) -> Vec2 {
+    return {
+        rect.x + rect.w*rand.float32(),
+        rect.y + rect.h*rand.float32(),
+    }
 }
 
-random_vec_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
-    dir := linalg.normalize0(Vec2 { rand.float32()*2 - 1, rand.float32()*2 - 1 })
+random_offset_in_ring :: proc (inner_radius, outer_radius: f32) -> Vec2 {
+    pos := Vec2 { rand.float32()*2 - 1, rand.float32()*2 - 1 }
+    dir := linalg.normalize0(pos)
     return dir * rand.float32_range(inner_radius, outer_radius)
 }
 
@@ -277,16 +281,19 @@ random_vec_sway :: proc (dir: Vec2, sway_side_rad: f32) -> Vec2 {
     }
 }
 
-vec_on_circle :: proc (radius, angle_rad: f32) -> Vec2 {
-    return { radius * math.cos(angle_rad), radius * math.sin(angle_rad) }
+vec_from_angle :: proc (length, angle_rad: f32) -> Vec2 {
+    return {
+        length * math.cos(angle_rad),
+        length * math.sin(angle_rad),
+    }
 }
 
-vec_moved_towards_vec :: proc (current, target: Vec2, speed, dt: f32) -> (new: Vec2) {
+pos_moved_towards_pos :: proc (current, target: Vec2, speed, dt: f32) -> (new: Vec2) {
     dir := linalg.normalize0(target - current)
     return current + dir * speed * dt
 }
 
-vec_moved_towards_vec_smooth :: proc (current: Vec2, target: Vec2, sharpness: f32, dt: f32) -> (new: Vec2) {
+pos_moved_towards_pos_smooth :: proc (current: Vec2, target: Vec2, sharpness: f32, dt: f32) -> (new: Vec2) {
     t := 1.0 - math.exp(-sharpness * dt)
     return current + {
         (target[0] - current[0]) * t,
@@ -294,17 +301,17 @@ vec_moved_towards_vec_smooth :: proc (current: Vec2, target: Vec2, sharpness: f3
     }
 }
 
-vec_orbited_around_vec :: proc (current, center: Vec2, speed, dt: f32, is_clockwise := true) -> (new: Vec2) {
+pos_orbited_around_pos :: proc (current, center: Vec2, speed, dt: f32, is_clockwise := true) -> (new: Vec2) {
     radius := linalg.distance(center, current)
     angle := linalg.atan2(current.y-center.y, current.x-center.x)
     angular_vel := speed / radius
     new_angle := is_clockwise\
         ?  angle + angular_vel * dt\
         : -angle + angular_vel * dt
-    return center + vec_on_circle(radius, new_angle)
+    return center + vec_from_angle(radius, new_angle)
 }
 
-vec_on_rotated_rect :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {
+pos_on_rotated_rect :: proc (rect: Rect, origin_uv: Vec2, rot_rad: f32, target_uv: Vec2) -> Vec2 {
     ox, oy := origin_uv.x, origin_uv.y
     u, v := target_uv.x, target_uv.y
 

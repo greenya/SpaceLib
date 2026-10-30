@@ -118,7 +118,7 @@ draw_animation_panel :: proc (f: ^ui.Frame) {
     for i in 0..<count {
         orbit_radius := f32(count-i)*1.456 + f32(count)/2.345
         draw.circle(
-            center  = core.vec_orbited_around_vec(center+{0,orbit_radius}, center, speed, dt),
+            center  = core.pos_orbited_around_pos(center+{0,orbit_radius}, center, speed, dt),
             radius  = f32(i/2) + 5,
             color   = core.ease_color(color_from, color_to, f32(i)/count),
         )

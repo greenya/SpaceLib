@@ -106,7 +106,7 @@ group_hit :: proc (terse: ^Terse, pos: Vec2) -> ^Group {
     assert(terse != nil)
     for &g in terse.groups {
         for r in group_rects(g, context.temp_allocator) {
-            if core.vec_in_rect(pos, r) do return &g
+            if core.pos_in_rect(pos, r) do return &g
         }
     }
     return nil

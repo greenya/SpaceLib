@@ -95,8 +95,8 @@ add_map_area :: proc () {
 
     for &d in map_page.area_land {
         d = {
-            center  = core.random_vec_in_rect({-2000,-2000,4000,4000}),
-            size    = core.random_vec_in_rect({0,0,400,400}) + 100,
+            center  = core.random_pos_in_rect({-2000,-2000,4000,4000}),
+            size    = core.random_pos_in_rect({0,0,400,400}) + 100,
         }
     }
 }
