@@ -225,6 +225,22 @@ vec_in_arc :: proc (vec: Vec2, center: Vec2, inner_radius, outer_radius, start_r
     }
 }
 
+vec_in_triangle :: proc (pos: Vec2, triangle: [3] Vec2) -> bool {
+    a, b, c := triangle[0], triangle[1], triangle[2]
+    ab, bc, ca := b-a, c-b, a-c
+    area := ab.x*(c.y-a.y) - ab.y*(c.x-a.x)
+    if area == 0 do return false
+
+    pa, pb, pc := pos-a, pos-b, pos-c
+    d0 := ab.x*pa.y - ab.y*pa.x
+    d1 := bc.x*pb.y - bc.y*pb.x
+    d2 := ca.x*pc.y - ca.y*pc.x
+
+    tolerance := abs(area) * .000001
+    return (d0>=-tolerance && d1>=-tolerance && d2>=-tolerance) ||
+           (d0<= tolerance && d1<= tolerance && d2<= tolerance)
+}
+
 clamp_vec_to_rect :: proc (vec: Vec2, r: Rect) -> Vec2 {
     return {
         clamp(vec.x, r.x, r.x + r.w),
