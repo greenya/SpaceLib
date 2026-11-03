@@ -64,9 +64,8 @@ _debug_draw_stats :: proc (ctx: ^Context) {
         ctx.stats.visible_text_tokens_peak,
     )
 
-    rect := Rect { 0, 40, 180, 240 }
+    rect := Rect { 5, 60, 240, 380 }
     _debug_draw_rect_filled(ctx, rect, _DEBUG_BG_COLOR)
-    _debug_draw_rect(ctx, rect, 1, _DEBUG_STATS_COLOR)
     _debug_draw_text(ctx, text, { rect.x, rect.y } + 4, _DEBUG_STATS_COLOR)
 }
 
