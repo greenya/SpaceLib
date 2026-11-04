@@ -11,9 +11,9 @@ log :: fmt.println
 logf :: fmt.printfln
 
 main :: proc () {
-    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    context.allocator = tracking_allocator.init()
     defer {
-        tracking_allocator.print()
+        tracking_allocator.print(verbosity=.minimal)
         tracking_allocator.destroy()
     }
 

@@ -225,6 +225,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
     line_start_i: int
     line_max_ascent: f32
     line_max_descent: f32
+    line_has_printable_content: bool
 
     ctx := v.ctx
     tokens := v.solved_text_tokens
@@ -262,8 +263,10 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
         }
 
         if tok.type == .br {
-            line_max_ascent = max(line_max_ascent, tok.ascent)
-            line_max_descent = max(line_max_descent, tok.descent)
+            if !line_has_printable_content {
+                line_max_ascent = max(line_max_ascent, tok.ascent)
+                line_max_descent = max(line_max_descent, tok.descent)
+            }
 
             extent.x = max(extent.x, _text_finalize_line(
                 tokens[line_start_i:i],
@@ -277,6 +280,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
             overflow_cursor_x = 0
             line_max_ascent = 0
             line_max_descent = 0
+            line_has_printable_content = false
             line_start_i = i + 1
             overflow_allowed = false
 
@@ -302,12 +306,14 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
             cursor_y += line_max_ascent + line_max_descent
             line_max_ascent = 0
             line_max_descent = 0
+            line_has_printable_content = false
             line_start_i = i
             overflow_allowed = false
         }
 
         line_max_ascent = max(line_max_ascent, tok.ascent)
         line_max_descent = max(line_max_descent, tok.descent)
+        line_has_printable_content ||= _tok_starts_printable_content(tok)
 
         tok.solved_pos = { cursor_x, cursor_y }
         cursor_x += tok.solved_width

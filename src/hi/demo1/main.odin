@@ -10,9 +10,9 @@ import k2 "../../../../karl2d"
 ctx: ^hi.Context
 
 main :: proc () {
-    context.allocator = tracking_allocator.init(verbosity=.minimal)
+    context.allocator = tracking_allocator.init()
     defer {
-        tracking_allocator.print()
+        tracking_allocator.print(verbosity=.minimal)
         tracking_allocator.destroy()
     }
 
