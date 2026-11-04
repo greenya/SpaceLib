@@ -9,10 +9,8 @@ View_SID :: distinct i32
 View_Init :: struct {
     flags: Flags,
 
-    using _: bit_field u16 {
-        strata  : Strata    | 4,    // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Non-native strata children are excluded from parent layout and input propagation.
-        level   : int       | 12,   // Order within `strata`, 12 bits, approximate range -2000..+2000. If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
-    },
+    strata  : Strata,   // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Non-native strata children are excluded from parent layout and input propagation.
+    level   : int,      // Order within `strata`, If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
 
     size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
     place   : Place,    // Used only if parent has no layout, or for `.absolute` and non-native `strata` children

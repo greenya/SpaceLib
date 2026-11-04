@@ -57,7 +57,7 @@ main :: proc () {
 
     defer {
         fmt.println("Token buffers")
-        for v, b in app.token_buffers {
+        for _, b in app.token_buffers {
             fmt.printfln("* len=%i, cap=%i, size=%m", len(b), cap(b), cap(b)*size_of(hi.Text_Token))
             delete(b)
         }
@@ -76,7 +76,7 @@ main :: proc () {
         on_draw = draw_container_view,
     })
 
-    for file, i in Files {
+    for file in Files {
         hi.add_view(app.container, { text=file.name, flags={.text,.fill_x}, padding={0,20,0,20}, on_draw=draw_header_view })
         hi.add_view(app.container, { text=string(file.data), flags={.text,.text_raw,.text_wordy,.fill_x} })
     }
