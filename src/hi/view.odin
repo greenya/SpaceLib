@@ -147,7 +147,8 @@ Layout_Alignment :: enum u8 {
 }
 
 Event :: struct {
-    type: Event_Type,
+    type        : Event_Type,
+    intext_query: ^Intext_Query, // Valid only for `.intext_query` event
 }
 
 Event_Type :: enum u8 {
@@ -168,8 +169,9 @@ Event_Type :: enum u8 {
 
     // Behavior
 
-    scrolled,   // `View.scroll` has changed. Note: solve-time clamping is silent.
+    scrolled,           // `View.scroll` has changed. Note: solve-time clamping is silent.
     selection_changed,  // `.selected` has changed
+    intext_query,       // Fired for the bound `.intext` view when measuring parent `.text` content. Allows overriding `baseline_ratio` initialized from `Text_Custom_Token_Hint`.
 }
 
 // Following properties are auto-set:

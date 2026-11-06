@@ -70,6 +70,10 @@ Text_Custom_Token_Hint :: struct {
     baseline_ratio: f32,
 }
 
+Intext_Query :: struct {
+    baseline_ratio: f32,
+}
+
 // Tokenizes given text.
 // Appends to the `pool` and returns slice of just appended tokens.
 _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclusive: bool) -> [] Text_Token #no_bounds_check {
@@ -181,6 +185,7 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                 assert(.intext in iv.flags, "Text_Custom_Token_Hint.intext_view must have .intext flag")
                 assert(iv.parent == v.view, "Text_Custom_Token_Hint.intext_view must be child of the .text view it is used in")
                 assert(iv.flags & { .ratio_y, .fill_y } == {}, "Text_Custom_Token_Hint.intext_view must not have .ratio_y or .fill_y flags")
+
                 tok.intext_view = iv
                 if .intext_full in iv.flags {
                     assert(!_is_text_fit_width(v.view), "Text_Custom_Token_Hint.intext_view cannot be .intext_full with an automatically sized text parent")
@@ -189,7 +194,10 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                 } else {
                     tok.size = { iv.solved_rect.w, iv.solved_rect.h }
                 }
-                _tok_setup_ascent_descent(&tok, hint.baseline_ratio)
+
+                query := Intext_Query { baseline_ratio=hint.baseline_ratio }
+                _emit(iv, { type=.intext_query, intext_query=&query })
+                _tok_setup_ascent_descent(&tok, query.baseline_ratio)
             case hint.scale != {}:
                 if hint.scale_full_line {
                     tok.flags += { .full_line }
