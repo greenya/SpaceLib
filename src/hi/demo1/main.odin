@@ -141,9 +141,8 @@ add_dialog :: proc (parent: ^hi.View, name, title, content, button1: string, but
         layout  = {dir=.column},
         place   = {anchor=.5,pivot=.5},
         on_draw = draw_view,
-        on_event= proc (v: ^hi.View, e: hi.Event) -> bool {
-            fmt.println(v.name, e)
-            return true
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            fmt.println(v.name, event)
         },
     })
 
@@ -198,9 +197,8 @@ add_icon_button :: proc (parent: ^hi.View, name, icon: string) -> ^hi.View {
 
 add_text_button :: proc (parent: ^hi.View, name, text: string) -> (root: ^hi.View) {
     root = hi.add_view(parent, { name=name, size={60,20}, on_draw=draw_view })
-    root.on_event = proc (v: ^hi.View, e: hi.Event) -> (consumed: bool) {
-        fmt.println(v.name, e)
-        return
+    root.on_event = proc (v: ^hi.View, event: hi.Event) {
+        fmt.println(v.name, event)
     }
     hi.add_view(root, { name="label", flags={.text,.fill_x}, text=text })
     return

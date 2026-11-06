@@ -619,7 +619,7 @@ _emit_visible_views_updated :: proc (ctx: ^Context) {
 
     for t in targets {
         if t.v.sid == t.sid {
-            _emit(t.v, { type=.updated })
+            _emit(t.v, Event_Updated {})
         }
     }
 }
@@ -706,12 +706,12 @@ _hit_set_view :: proc (ctx: ^Context, new_hit: ^View) {
 
     for v := old_hit; v != common_parent; v = _interaction_parent(v) {
         v.flags -= { .hovered }
-        _emit(v, { type=.left })
+        _emit(v, Event_Left {})
     }
 
     for v := new_hit; v != common_parent; v = _interaction_parent(v) {
         v.flags += { .hovered }
-        _emit(v, { type=.entered })
+        _emit(v, Event_Entered {})
     }
 
     ctx.hit = new_hit

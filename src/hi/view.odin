@@ -33,12 +33,12 @@ View_Init :: struct {
 
     // Event callback.
     //
-    // - *Mouse Action* events (`.clicked`, `.wheeled`) propagate to native strata parents unless `consumed=true` is returned
-    // - `.drop_query` return value defines drop acceptance of `Context.capture.source` during dragging
+    // - Set `Event_Clicked.consumed` or `Event_Wheeled.consumed` to stop propagation to native strata parents
+    // - Set `Event_Drop_Query.accepted` to accept `Context.capture.source` during dragging
     //
     // Note: Most events are emitted during `update_context()`.
-    // `.left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
-    on_event: proc (v: ^View, event: Event) -> (consumed: bool),
+    // `Event_Left` may also be emitted immediately by `set_parent()` when a hovered view is detached or re-parented.
+    on_event: proc (v: ^View, event: Event),
 
     // Drawing callback.
     //
@@ -74,10 +74,10 @@ Flag :: enum {
     debug,      // The view drawing will be additionally overdrawn with debug information. Only works when `Context.debug_draw_*` callbacks are set. And the `Context.debug_draw_filter` specifies what is drawn.
     hidden,     // The view and all its children are hidden. `View.solved_*` are not updated for `.hidden` views.
     hitless,    // The view cannot be the direct target of mouse hit-test, but native strata children can still make it `.hovered` and can still bubble events through it
-    updating,   // The view receives `.updated` every `update_context()` while visible
+    updating,   // The view receives `Event_Updated` every `update_context()` while visible
     scissor,    // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
     absolute,   // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
-    intext,     // The view is positioned by a custom token in the parent `.text` view and excluded from normal layout. In a stable solve, the view provides token size while the token provides view position. With `.text_wordy` parents, token size is cached: use static `.intext` sizes, or call `set_text()` on the parent after an `.intext` child size changes. This flag must not be used with `.ratio_y` or `.fill_y`.
+    intext,     // The view is positioned by a custom token in the parent `.text` view and excluded from normal layout. In a stable solve, the view provides token size while the token provides view position. The view can handle `Event_Intext_Query` to adjust alignment. With `.text_wordy` parents, token size is cached: use static `.intext` sizes, or call `set_text()` on the parent after an `.intext` child size changes. This flag must not be used with `.ratio_y` or `.fill_y`.
     intext_full,// Additionally to `.intext`, the view's solved width is set to take full text line. Text token also owns view width; view still owns height. Use only with `.intext`.
     _intext_bound, // Internal solver flag. Used for tracking `.intext` view is actually bound to a token of the parent `.text` view. If `.intext` view is not bound to a token, the view itself and its subtree gets removed from `Context.visible_views`.
 
@@ -98,19 +98,19 @@ Flag :: enum {
 
     // Behavior
 
-    disabled,   // The view is disabled. It does not receive `.clicked`, `.wheeled`, or `.drop_query`, and cannot capture the mouse. `.clicked` and `.wheeled` continue propagating to interaction parents.
-    hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `.entered` and `.left` events.
-    press,      // The view holds the mouse press and emits `.clicked` on release over itself, unless dragging started. Descendant `.clicked` handlers can prevent the press by consuming the event. Combine with `.drag` for click-or-drag behavior.
-    drag,       // The view starts an LMB-controlled drag after movement reaches `Context.drag_threshold` (immediately if zero). Does not require `.press`. Without `.press`, release before dragging does nothing. Descendant `.clicked` handlers can prevent dragging by consuming the event. Once dragging starts, this interaction never emits `.clicked`.
+    disabled,   // The view is disabled. It does not receive `Event_Clicked`, `Event_Wheeled`, or `Event_Drop_Query`, and cannot capture the mouse. `Event_Clicked` and `Event_Wheeled` continue propagating to interaction parents.
+    hovered,    // The view or any native strata children is hovered by mouse cursor. This flag is retained between `Event_Entered` and `Event_Left` events.
+    press,      // The view holds the mouse press and emits `Event_Clicked` on release over itself, unless dragging started. Descendant `Event_Clicked` handlers can prevent the press by consuming the event. Combine with `.drag` for click-or-drag behavior.
+    drag,       // The view starts an LMB-controlled drag after movement reaches `Context.drag_threshold` (immediately if zero). Does not require `.press`. Without `.press`, release before dragging does nothing. Descendant `Event_Clicked` handlers can prevent dragging by consuming the event. Once dragging starts, this interaction never emits `Event_Clicked`.
     drag_pan,   // The view automatically updates `View.scroll` while `dragged()` is true. Does nothing during a pending press and does not start dragging on its own. Combine with `.drag` for mouse-driven panning or use `drag_start()`.
-    drop_target,// The view can be a drop target. The nearest `.drop_target` under the drag pointer becomes `Context.capture.target` and receives `.drop_query` every update, unless `.disabled`. The source and its interaction descendants are excluded from targeting.
+    drop_target,// The view can be a drop target. The nearest `.drop_target` under the drag pointer becomes `Context.capture.target` and receives `Event_Drop_Query` every update, unless `.disabled`. The source and its interaction descendants are excluded from targeting.
     selected,   // The view is "selected". It is up to the `on_draw()` to respect this state. The state toggling can be automated using `.check` or `.radio` flags.
-    check,      // The view inverts `.selected` when clicked and emits `.selection_changed`. The `.clicked` event does not propagate to native strata parents.
-    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `.selection_changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `.clicked` event does not propagate to native strata parents.
+    check,      // The view inverts `.selected` when clicked and emits `Event_Selection_Changed`. The `Event_Clicked` event does not propagate to native strata parents.
+    radio,      // The view sets own `.selected` when clicked and clears it for all `.radio` siblings. The `Event_Selection_Changed` is emitted for every view which actually got updated `.selected` flag. Emit order: all de-selections -> one selection. In most cases these are two views: one de-selected and one selected. The `Event_Clicked` event does not propagate to native strata parents.
     page,       // The view hides all `.page` siblings when gets `show()`
-    wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
-    wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
-    wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `.wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
+    wheel_scroll_x, // The view scrolls itself horizontally on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `Event_Wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
+    wheel_scroll_y, // The view scrolls itself vertically on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `Event_Wheeled` is emitted. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
+    wheel_scroll_layout, // The view scrolls itself in the direction of `View.layout.dir` on mouse wheel. If scrolling changes `View.scroll`, the wheel input is considered consumed after `Event_Wheeled` is emitted. This flag works only if `View.layout.dir != .none`. Use only one `wheel_scroll_*`. Flag is ignored when a view is the active drag source.
 }
 
 Strata :: enum i8 {
@@ -146,32 +146,80 @@ Layout_Alignment :: enum u8 {
     center,
 }
 
-Event :: struct {
-    type        : Event_Type,
-    intext_query: ^Intext_Query, // Valid only for `.intext_query` event
+// View event. Value variants are notifications; pointer variants allow a response.
+// Response pointers are non-nil and valid only during the callback. Do not retain them.
+// Each emission has its own response storage, including nested emissions.
+Event :: union {
+    Event_Shown,
+    Event_Hidden,
+    Event_Updated,
+    Event_Entered,
+    Event_Left,
+    ^Event_Clicked,
+    Event_Dragged,
+    ^Event_Drop_Query,
+    ^Event_Wheeled,
+    Event_Scrolled,
+    Event_Selection_Changed,
+    ^Event_Intext_Query,
 }
 
-Event_Type :: enum u8 {
-    // Core
+// The view became shown, e.g. lost `.hidden` flag. The view may not be visible still
+// (parent is `.hidden` or clipped out by the parent scissor).
+Event_Shown :: struct {}
 
-    shown,      // The view became shown, e.g. lost `.hidden` flag. The view may not be visible still (parent is `.hidden` or clipped out by the parent scissor).
-    hidden,     // The view gained `.hidden` flag
-    updated,    // Continuously fired at the end of `update_context()`. Only for *visible* and `.updating` views.
+// The view gained `.hidden` flag
+Event_Hidden :: struct {}
 
-    // Mouse
+// Continuously fired at the end of `update_context()`. Only for *visible* and `.updating` views.
+Event_Updated :: struct {}
 
-    entered,    // *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children. Fired once for each newly-hovered view in the hit path. This event cannot be consumed.
-    left,       // *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children. Fired once for each previously-hovered view that is no longer in the current hit path. This event cannot be consumed. This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`, `remove_view()`. So if you do such action outside of `update_context()`, expect this event to fire also outside of `update_context()`.
-    clicked,    // Propagable *Mouse Action* event, skipped for `.disabled` views. Without `.press` or `.drag`, emitted on mouse down. With `.press`, emitted on release over the view only if dragging never started. A `.drag`-only source never emits a mouse-generated click. Once dragging starts, its interaction cannot emit `.clicked`, even when released over the source.
-    dragged,    // Continuously fired for `Context.capture.source` during the drag phase, including started and terminal frames (see `Context.capture.drag_flags`). Never fired during a pending press. Initiated by `.drag` after `Context.drag_threshold`, or immediately by `drag_start()`.
-    drop_query, // Continuously fired for the nearest eligible `.drop_target` during the drag phase. Never fired during a pending press. Does not propagate. Return `consumed=true` to accept `Context.capture.source`.
-    wheeled,    // Propagable *Mouse Action* event. Fired when mouse wheel is used over the view. The event is not fired for `.disabled` views.
+// *Mouse Status* event. Fired when mouse cursor enters the view or any native strata children.
+// Fired once for each newly-hovered view in the hit path.
+Event_Entered :: struct {}
 
-    // Behavior
+// *Mouse Status* event. Fired when mouse cursor leaves the view and all native strata children.
+// Fired once for each previously-hovered view that is no longer in the current hit path.
+// This event might be emitted immediately when you do view tree modification, e.g. `set_parent()`,
+// `remove_view()`. So if you do such action outside of `update_context()`, expect this event to
+// fire also outside of `update_context()`.
+Event_Left :: struct {}
 
-    scrolled,           // `View.scroll` has changed. Note: solve-time clamping is silent.
-    selection_changed,  // `.selected` has changed
-    intext_query,       // Fired for the bound `.intext` view when measuring parent `.text` content. Allows overriding `baseline_ratio` initialized from `Text_Custom_Token_Hint`.
+// Propagable *Mouse Action* event, skipped for `.disabled` views. Without `.press` or `.drag`,
+// emitted on mouse down. With `.press`, emitted on release over the view only if dragging never
+// started. A `.drag`-only source never emits a mouse-generated click. Once dragging starts,
+// its interaction cannot emit `Event_Clicked`, even when released over the source.
+Event_Clicked :: struct {
+    consumed: bool, // Set to stop propagation. Check/radio behavior also consumes the click.
+}
+
+// Continuously fired for `Context.capture.source` during the drag phase, including started and
+// terminal frames (see `Context.capture.drag_flags`). Never fired during a pending press.
+// Initiated by `.drag` after `Context.drag_threshold`, or immediately by `drag_start()`.
+Event_Dragged :: struct {}
+
+// Continuously fired for the nearest eligible `.drop_target` during the drag phase.
+// Never fired during a pending press. Does not propagate.
+Event_Drop_Query :: struct {
+    accepted: bool, // Set to accept `Context.capture.source`.
+}
+
+// Propagable *Mouse Action* event. Fired when mouse wheel is used over the view.
+// The event is not fired for `.disabled` views.
+Event_Wheeled :: struct {
+    consumed: bool, // Set to stop propagation. Automatic scrolling also consumes the wheel if it changes `View.scroll`.
+}
+
+// `View.scroll` has changed. Note: solve-time clamping is silent.
+Event_Scrolled :: struct {}
+
+// `.selected` has changed
+Event_Selection_Changed :: struct {}
+
+// Fired for the bound `.intext` view when measuring parent `.text` content.
+// Allows overriding `baseline_ratio` initialized from `Text_Custom_Token_Hint`.
+Event_Intext_Query :: struct {
+    baseline_ratio: f32, // Initialized from `Text_Custom_Token_Hint.baseline_ratio`; leave unchanged to use the hint.
 }
 
 // Following properties are auto-set:
@@ -553,14 +601,14 @@ _text_wordy_buffer :: proc (v: ^View) -> (buf: ^[dynamic] Text_Token) {
     return
 }
 
-_emit :: proc (v: ^View, e: Event) -> (consumed: bool) {
-    return v.on_event != nil ? v->on_event(e) : false
+_emit :: proc (v: ^View, e: Event) {
+    if v.on_event != nil do v->on_event(e)
 }
 
 show :: proc (v: ^View) {
     if .hidden in v.flags {
         v.flags -= { .hidden }
-        _emit(v, { type=.shown })
+        _emit(v, Event_Shown {})
         queue_solve_context(v.ctx)
     }
 
@@ -575,11 +623,11 @@ hide :: proc (v: ^View) {
     if .hidden in v.flags do return
 
     v.flags += { .hidden }
-    _emit(v, { type=.hidden })
+    _emit(v, Event_Hidden {})
     queue_solve_context(v.ctx)
 }
 
-// Fires `.clicked` event for the view as it would be clicked with a mouse.
+// Fires `Event_Clicked` event for the view as it would be clicked with a mouse.
 //
 // The event will be propagated to native strata parents until consumed.
 // If you're in a parent view and want to re-route the event to a child view
@@ -589,7 +637,7 @@ click :: proc (v: ^View) -> (consumed: bool) {
     return
 }
 
-// Fires `.clicked` event for the view as it would be clicked with a mouse.
+// Fires `Event_Clicked` event for the view as it would be clicked with a mouse.
 // No propagation.
 click_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
@@ -597,7 +645,7 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
     check_consumed: bool
     if .check in v.flags {
         v.flags ~= { .selected }
-        _emit(v, { type=.selection_changed })
+        _emit(v, Event_Selection_Changed {})
         check_consumed = true
     }
 
@@ -606,20 +654,21 @@ click_one :: proc (v: ^View) -> (consumed: bool) {
         for s := v.parent.first_child; s != nil; s = s.next_sibling {
             if s != v && .selected in s.flags {
                 s.flags -= { .selected }
-                _emit(s, { type=.selection_changed })
+                _emit(s, Event_Selection_Changed {})
             }
         }
 
         if .selected not_in v.flags {
             v.flags += { .selected }
-            _emit(v, { type=.selection_changed })
+            _emit(v, Event_Selection_Changed {})
         }
 
         radio_consumed = true
     }
 
-    clicked_consumed := _emit(v, { type=.clicked })
-    return check_consumed || radio_consumed || clicked_consumed
+    event := Event_Clicked {}
+    _emit(v, &event)
+    return check_consumed || radio_consumed || event.consumed
 }
 
 // Bubbles click_one() from `v` up to `stop_before` (which is excluded)
@@ -630,7 +679,7 @@ _click_one_before :: proc (v, stop_before: ^View) -> bool {
     return false
 }
 
-// Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
+// Fires `Event_Wheeled` event for the view as it would be scrolled with a mouse wheel.
 //
 // The event will be propagated to native strata parents until consumed.
 // If you're in a parent view and want to re-route the event to a child view
@@ -640,7 +689,7 @@ wheel :: proc (v: ^View) -> (consumed: bool) {
     return
 }
 
-// Fires `.wheeled` event for the view as it would be scrolled with a mouse wheel.
+// Fires `Event_Wheeled` event for the view as it would be scrolled with a mouse wheel.
 // No propagation.
 wheel_one :: proc (v: ^View) -> (consumed: bool) {
     if .disabled in v.flags do return false
@@ -657,8 +706,9 @@ wheel_one :: proc (v: ^View) -> (consumed: bool) {
         }
     }
 
-    wheeled_consumed := _emit(v, { type=.wheeled })
-    return scrolled || wheeled_consumed
+    event := Event_Wheeled {}
+    _emit(v, &event)
+    return scrolled || event.consumed
 }
 
 // Padded viewport rect for layout children.
@@ -740,7 +790,7 @@ scroll_to :: proc (v: ^View, value: Vec2) -> (scrolled: bool) {
     if new_scroll != v.scroll {
         v.scroll = new_scroll
         queue_solve_context(v.ctx)
-        _emit(v, { type=.scrolled })
+        _emit(v, Event_Scrolled {})
         scrolled = true
     }
 

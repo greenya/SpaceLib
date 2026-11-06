@@ -113,17 +113,17 @@ _panel_add_file_open_btn :: proc (panel: ^Panel, parent: ^hi.View) -> ^hi.View {
         padding = 5,
         place   = { anchor={1,.5}, pivot={1,.5} },
         user_ptr= panel,
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .clicked {
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            #partial switch e in event {
+            case ^hi.Event_Clicked:
                 panel := cast (^Panel) v.user_ptr
                 file_view := hi.child_by_any_flags(panel.ui_file_list, { .selected })
                 assert(file_view != nil)
                 file := &panel.files[file_view.user_idx]
                 assert(panel.on_open != nil)
                 panel->on_open(file)
-                consumed = true
+                e.consumed = true
             }
-            return
         },
         on_draw = proc (v: ^hi.Visible_View) {
             rect := k2.Rect(v.solved_rect)
@@ -144,27 +144,29 @@ _panel_add_file_view :: proc (panel: ^Panel, parent: ^hi.View, file_idx: int) {
         padding = {10,5,10,5},
         user_ptr= panel,
         user_idx= file_idx,
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .selection_changed && .selected in v.flags {
-                panel := cast (^Panel) v.user_ptr
-                hi.set_parent(panel.ui_file_open_btn, v)
-                file := &panel.files[v.user_idx]
-                strings.builder_reset(&panel.sb_file_info)
-                hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
-                    "|s=large|%s|s|\n\n"+
-                    "|c=#999|Type|c||tab=100||i=%v| %v\n"+
-                    "|c=#999|Size|c||tab=100||s=huge|%M|s|\n"+
-                    "|c=#999|Mode|c||tab=100||file_mode=%x|\n"+
-                    "|c=#999|Modified|c||tab=100|%s",
-                    file.name,
-                    file.type, file.type,
-                    file.size,
-                    transmute (u32) file.mode,
-                    _format_time(file.modification_time, fontasize=true, allocator=context.temp_allocator),
-                ))
-                _panel_update_status_bar(panel)
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            #partial switch e in event {
+            case hi.Event_Selection_Changed:
+                if .selected in v.flags {
+                    panel := cast (^Panel) v.user_ptr
+                    hi.set_parent(panel.ui_file_open_btn, v)
+                    file := &panel.files[v.user_idx]
+                    strings.builder_reset(&panel.sb_file_info)
+                    hi.set_text(panel.ui_file_info, fmt.sbprintf(&panel.sb_file_info,
+                        "|s=large|%s|s|\n\n"+
+                        "|c=#999|Type|c||tab=100||i=%v| %v\n"+
+                        "|c=#999|Size|c||tab=100||s=huge|%M|s|\n"+
+                        "|c=#999|Mode|c||tab=100||file_mode=%x|\n"+
+                        "|c=#999|Modified|c||tab=100|%s",
+                        file.name,
+                        file.type, file.type,
+                        file.size,
+                        transmute (u32) file.mode,
+                        _format_time(file.modification_time, fontasize=true, allocator=context.temp_allocator),
+                    ))
+                    _panel_update_status_bar(panel)
+                }
             }
-            return
         },
         on_draw = proc (v: ^hi.Visible_View) {
             if .selected in v.flags {

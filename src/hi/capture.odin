@@ -18,13 +18,13 @@ Capture_State :: struct {
     drag_cancel_reason  : Drag_Cancel_Reason, // Set only for a `.canceled` drag
     target              : ^View,    // Nearest eligible `.drop_target` in the hit path; nil while the pointer is over the source
     target_pos          : Vec2,     // Current mouse position relative to the top-left of `target.solved_rect`
-    target_accepts_source: bool,    // `.drop_query` result from `target`
+    target_accepts_source: bool,    // `Event_Drop_Query.accepted` value received from `target`
 }
 
 Capture_Phase :: enum u8 {
     none,
     press,  // Pending mouse press. Can click only with `.press`, or become a drag only with `.drag`.
-    drag,   // Committed drag, including its terminal frame. This interaction can no longer emit `.clicked`.
+    drag,   // Committed drag, including its terminal frame. This interaction can no longer emit `Event_Clicked`.
 }
 
 Drag_Flags :: bit_set [Drag_Flag; u8]
@@ -38,7 +38,7 @@ Drag_Flag :: enum u8 {
 Drag_Cancel_Reason :: enum u8 {
     none,
     no_target,  // Released without an eligible `.drop_target`, excluding `source`. When self targeting, `.target_self` reason is used.
-    target_self,// Released over `source` itself which is also a `.drop_target`, essentially no-op. Note: `.drag_query` is not emitted when self targeting.
+    target_self,// Released over `source` itself which is also a `.drop_target`, essentially no-op. Note: `Event_Drop_Query` is not emitted when self targeting.
     rejected,   // Released over a `.drop_target` that rejected `source`
     requested,  // Canceled programmatically with `drag_cancel()`
 }
@@ -173,7 +173,9 @@ _drag_update :: proc (ctx: ^Context, hit: ^View) {
     if ctx.capture.target != nil {
         ctx.capture.target_pos = ctx.mouse.pos - { ctx.capture.target.solved_rect.x, ctx.capture.target.solved_rect.y }
         if .disabled not_in ctx.capture.target.flags {
-            ctx.capture.target_accepts_source = _emit(ctx.capture.target, { type=.drop_query })
+            query := Event_Drop_Query {}
+            _emit(ctx.capture.target, &query)
+            ctx.capture.target_accepts_source = query.accepted
         }
     }
 }
@@ -188,7 +190,7 @@ _drag_step :: proc (ctx: ^Context, hit: ^View) {
     if ctx.capture.lmb_controlled && !ctx.mouse.lmb_down {
         _drag_stop(ctx, hit)
     } else {
-        _emit(ctx.capture.source, { type=.dragged })
+        _emit(ctx.capture.source, Event_Dragged {})
     }
 }
 
@@ -217,7 +219,7 @@ drag_drop :: proc (ctx: ^Context) {
     if ctx.capture.drag_flags & { .dropped, .canceled } != {} do return
 
     ctx.capture.drag_flags += { .dropped }
-    _emit(ctx.capture.source, { type=.dragged })
+    _emit(ctx.capture.source, Event_Dragged {})
 }
 
 drag_cancel :: proc (ctx: ^Context) {
@@ -231,5 +233,5 @@ _drag_cancel :: proc (ctx: ^Context, reason: Drag_Cancel_Reason) {
 
     ctx.capture.drag_flags += { .canceled }
     ctx.capture.drag_cancel_reason = reason
-    _emit(ctx.capture.source, { type=.dragged })
+    _emit(ctx.capture.source, Event_Dragged {})
 }

@@ -4,7 +4,7 @@
 
 - [fix] handle removing stored views (source and target), in set_parent()
 - [fix] drag_drop() and drag_cancel() are unsafe inside user callbacks; deferred/pending approach is needed
-- [fix] drag_start() is fine to call only on .clicked and .wheeled; calling it in .entered, .left, .solved will make so it operates on stale hit view; also _capture_cleanup_state_from_prev_frame() cleans ".started" state; deferred/pending approach is needed
+- [fix] drag_start() is fine to call only on `Event_Clicked` and `Event_Wheeled`; calling it in `Event_Entered`, `Event_Left`, or `Context_Event_Type.solved` will make so it operates on stale hit view; also _capture_cleanup_state_from_prev_frame() cleans ".started" state; deferred/pending approach is needed
 
 ## [todo] View: Add .modal, should block any events propagation to parent views
 
@@ -14,7 +14,7 @@ At the moment, interaction stops on strata boundaries, and new flag would allow 
 
 The idea is to simplify/automate dropdowns logic. When menu shows dropdown, the simple way is to create extra container (fullscreen later) which is invisible and will do only one thing -- catch the outside click and close the menu. The issue with such approach is that all views below will never react to mouse hover, so it will look like they cannot be clicked (which is true), so user will have to do click two times, one to cancel menu, another to click the view underneath. Not nice.
 
-With the new flag, the view should get `hide()` when clicked outside. While the menu is shown, all the events continue work for all underneath views. Only click is special, wheeling should just continue work as before and obey normal interaction path (the menu is most likely is on separate strata, so it is naturally an interaction boundary and `.wheeled` event will not propagate from the menu to underneath views.
+With the new flag, the view should get `hide()` when clicked outside. While the menu is shown, all the events continue work for all underneath views. Only click is special, wheeling should just continue work as before and obey normal interaction path (the menu is most likely is on separate strata, so it is naturally an interaction boundary and `Event_Wheeled` event will not propagate from the menu to underneath views.
 
 Observations:
 - In Google Chrome, when context menu opened, the page underneath doesn't receive any events (no wheel, no hover); clicking on active element of the page below only dismissed the context menu and enables events for the page; meaning user need to click two times if context menu open to actually click the button.

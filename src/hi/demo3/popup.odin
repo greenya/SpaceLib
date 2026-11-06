@@ -87,15 +87,15 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
             padding = 20,
             text    = p.title,
             user_ptr= popup,
-            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-                if event.type == .clicked {
+            on_event= proc (v: ^hi.View, event: hi.Event) {
+                #partial switch e in event {
+                case ^hi.Event_Clicked:
                     popup := cast (^Popup) v.user_ptr
                     idx := hi.view_index(v)
                     page := hi.child_by_index(popup.ui_pages, idx)
                     hi.show(page)
-                    consumed = true
+                    e.consumed = true
                 }
-                return
             },
             on_draw = _popup_draw_button_view,
         })
@@ -132,11 +132,12 @@ popup_create :: proc (parent: ^hi.View) -> ^Popup {
         padding = 20,
         text    = "Close",
         user_ptr= popup,
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .clicked {
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            #partial switch e in event {
+            case ^hi.Event_Clicked:
                 popup := cast (^Popup) v.user_ptr
                 popup_close(popup)
-                consumed = true
+                e.consumed = true
             }
             return
         },
@@ -180,8 +181,8 @@ popup_open :: proc (popup: ^Popup, file: ^os.File_Info) {
     _popup_setup_page_demo(popup, file)
 
     // Click 1st tab button, this essentially does the following:
-    // - each .radio button, gets .selected when .clicked, while other .radio siblings get de-.selected
-    // - button receives .clicked where we do "show(page)"
+    // - each .radio button, gets .selected on Event_Clicked, while other .radio siblings get de-.selected
+    // - button receives Event_Clicked where we do "show(page)"
     // - each page has .page, so when shown it hides all other .page siblings
     hi.click(popup.ui_tabs.first_child)
 
@@ -227,8 +228,9 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
         text    = "[ _ ] .text_raw",
         padding = 20,
         user_ptr= popup,
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .selection_changed {
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            #partial switch e in event {
+            case hi.Event_Selection_Changed:
                 popup := cast (^Popup) v.user_ptr
                 if .selected in v.flags {
                     popup.ui_page_demo.flags += { .text_raw }
@@ -238,7 +240,6 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
                     hi.set_text(v, "[ _ ] .text_raw")
                 }
             }
-            return
         },
         on_draw = _popup_draw_button_view,
     })
@@ -262,12 +263,14 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
             text    = o.text,
             padding = 10,
             user_idx= i,
-            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-                if event.type == .selection_changed && .selected in v.flags {
-                    o := &Font_Scale_Options[v.user_idx]
-                    hi.set_base_font_height(v.ctx, o.scale * APP_DEFAULT_FONT_HEIGHT)
+            on_event= proc (v: ^hi.View, event: hi.Event) {
+                #partial switch e in event {
+                case hi.Event_Selection_Changed:
+                    if .selected in v.flags {
+                        o := &Font_Scale_Options[v.user_idx]
+                        hi.set_base_font_height(v.ctx, o.scale * APP_DEFAULT_FONT_HEIGHT)
+                    }
                 }
-                return
             },
             on_draw = _popup_draw_button_view,
         })
@@ -291,12 +294,14 @@ _popup_page_demo_add_action_bar :: proc (popup: ^Popup) {
             text    = o.text,
             padding = 10,
             user_idx= i,
-            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-                if event.type == .selection_changed && .selected in v.flags {
-                    o := &Panel_Width_Options[v.user_idx]
-                    app_apply_panels_width(o.width)
+            on_event= proc (v: ^hi.View, event: hi.Event) {
+                #partial switch e in event {
+                case hi.Event_Selection_Changed:
+                    if .selected in v.flags {
+                        o := &Panel_Width_Options[v.user_idx]
+                        app_apply_panels_width(o.width)
+                    }
                 }
-                return
             },
             on_draw = _popup_draw_button_view,
         })
@@ -375,10 +380,10 @@ _popup_setup_page_demo :: proc (popup: ^Popup, file: ^os.File_Info) {
         "Resize window to see the wrapping in action. " +
         "The mouse scrolling is propagated to the parent, so whole text gets scrolled even when " +
         "mouse cursor is above the inline view. A view can manually consume the event if needed: " +
-        "the counter value does it for demo purposes, e.g. when mouse hovers the counter, |c=#ff8|.wheeled|c| " +
-        "event blocked and text scrolling doesn't happen.\n" +
+        "the counter value does it for demo purposes, e.g. when mouse hovers the counter, |c=#ff8|Event_Wheeled|c| " +
+        "blocked and text scrolling doesn't happen.\n" +
         "\n" +
-        "A file panel is another example of using |c=#ff8|.wheeled|c| for own purposes and bubbling " +
+        "A file panel is another example of using |c=#ff8|Event_Wheeled|c| for own purposes and bubbling " +
         "the event up only when it is not consumed (the file list actually wasn't able to scroll).\n" +
         "\n" +
         "|c=#888|/* This is the final line of this text. */|c|",
@@ -413,13 +418,13 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
             padding = { 5, 0, 5, 0 },
             user_ptr= popup,
             user_idx= b.step,
-            on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-                if event.type == .clicked {
+            on_event= proc (v: ^hi.View, event: hi.Event) {
+                #partial switch e in event {
+                case ^hi.Event_Clicked:
                     popup := cast (^Popup) v.user_ptr
                     _popup_page_demo_update_counter(popup, step=v.user_idx)
-                    consumed = true
+                    e.consumed = true
                 }
-                return
             },
             on_draw = _popup_draw_button_view,
         })
@@ -429,12 +434,12 @@ _popup_page_demo_add_intext_views :: proc (popup: ^Popup) {
 
     popup.ui_page_demo_counter = hi.add_view(popup.ui_page_demo, {
         flags   = { .intext, .text },
-        on_event= proc (v: ^hi.View, event: hi.Event) -> (consumed: bool) {
-            if event.type == .wheeled {
-                log("Demo counter label just consumed .wheeled event")
-                consumed = true
+        on_event= proc (v: ^hi.View, event: hi.Event) {
+            #partial switch e in event {
+            case ^hi.Event_Wheeled:
+                log("Demo counter label just consumed Event_Wheeled")
+                e.consumed = true
             }
-            return
         },
     })
 

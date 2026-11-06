@@ -65,9 +65,10 @@ main :: proc () {
     }
 
     app.ui.root.padding = 80
-    app.ui.root.on_event = proc (v: ^hi.View, e: hi.Event) -> (consumed: bool) {
-        if e.type == .wheeled do return hi.wheel_one(app.container)
-        return
+    app.ui.root.on_event = proc (v: ^hi.View, event: hi.Event) {
+        #partial switch e in event {
+        case ^hi.Event_Wheeled: e.consumed = hi.wheel_one(app.container)
+        }
     }
 
     app.container = hi.add_view(app.ui.root, {

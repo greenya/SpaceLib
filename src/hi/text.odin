@@ -70,10 +70,6 @@ Text_Custom_Token_Hint :: struct {
     baseline_ratio: f32,
 }
 
-Intext_Query :: struct {
-    baseline_ratio: f32,
-}
-
 // Tokenizes given text.
 // Appends to the `pool` and returns slice of just appended tokens.
 _text_tokenize :: proc (pool: ^[dynamic] Text_Token, text: string, is_raw_exclusive: bool) -> [] Text_Token #no_bounds_check {
@@ -195,8 +191,8 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
                     tok.size = { iv.solved_rect.w, iv.solved_rect.h }
                 }
 
-                query := Intext_Query { baseline_ratio=hint.baseline_ratio }
-                _emit(iv, { type=.intext_query, intext_query=&query })
+                query := Event_Intext_Query { baseline_ratio=hint.baseline_ratio }
+                _emit(iv, &query)
                 _tok_setup_ascent_descent(&tok, query.baseline_ratio)
             case hint.scale != {}:
                 if hint.scale_full_line {
