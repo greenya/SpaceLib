@@ -363,6 +363,24 @@ child_by_name :: proc (v: ^View, name: string) -> ^View {
     return nil
 }
 
+// Returns first child with given `user_ptr`
+@require_results
+child_by_user_ptr :: proc (v: ^View, user_ptr: rawptr) -> ^View {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.user_ptr == user_ptr do return c
+    }
+    return nil
+}
+
+// Returns first child with given `user_idx`
+@require_results
+child_by_user_idx :: proc (v: ^View, user_idx: int) -> ^View {
+    for c := v.first_child; c != nil; c = c.next_sibling {
+        if c.user_idx == user_idx do return c
+    }
+    return nil
+}
+
 // Returns first child with any flag in `flags` set
 @require_results
 child_by_any_flags :: proc (v: ^View, flags: Flags) -> ^View {
