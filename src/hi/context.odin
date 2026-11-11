@@ -749,6 +749,15 @@ screen_size_to_ui :: proc (ctx: ^Context, size_screen: Vec2) -> Vec2 {
     return size_screen / ctx.ui_scale
 }
 
+// Actual screen rect in UI units, including any space outside the root
+@require_results
+screen_rect_in_ui :: proc (ctx: ^Context) -> Rect {
+    return {
+        **screen_pos_to_ui(ctx, {}),
+        **screen_size_to_ui(ctx, ctx.screen_size),
+    }
+}
+
 // Converts ui scalar (e.g. line thickness, circle radius) to screen scalar
 @require_results
 ui_scalar_to_screen :: proc (ctx: ^Context, scalar_ui: f32) -> f32 {

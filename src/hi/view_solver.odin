@@ -101,11 +101,12 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
                 non_fill_y_children_height += c.solved_rect.h
             }
         } else {
+            rel_rect := .screen_relative in c.flags ? screen_rect_in_ui(c.ctx) : v.solved_rect
             if !_is_text_fit_width(c) && .intext_full not_in c.flags {
-                if .ratio_x in c.flags do c.solved_rect.w = c.size.x * v.solved_rect.w
+                if .ratio_x in c.flags do c.solved_rect.w = c.size.x * rel_rect.w
             }
             if .text not_in c.flags {
-                if .ratio_y in c.flags do c.solved_rect.h = c.size.y * v.solved_rect.h
+                if .ratio_y in c.flags do c.solved_rect.h = c.size.y * rel_rect.h
             }
         }
     }
@@ -196,8 +197,9 @@ _solve_children_fill_and_ratio_size :: proc (v: ^View, v_solved_scissor: Rect) {
             case .intext in c.flags:
                 // Text token owns c.solved_rect.x/y
             case:
-                // Absolute and non-native strata children skip layout cursor, padding, and scroll
-                _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, v.solved_rect)
+                // Independently placed children skip layout cursor, padding, and scroll
+                rel_rect := .screen_relative in c.flags ? screen_rect_in_ui(c.ctx) : v.solved_rect
+                _place_rect_pos(&c.solved_rect, c.place, { c.solved_rect.w, c.solved_rect.h }, rel_rect)
             }
 
             // Scissor calculation and in-scissor check
@@ -297,6 +299,7 @@ _view_layout_content_fit :: proc (v: ^View) -> (child_count: i32, fit_size: Vec2
 _is_layout_child :: proc (child: ^View) -> bool {
     assert(child.parent != nil)
     return .absolute not_in child.flags\
+        && .screen_relative not_in child.flags\
         && .intext not_in child.flags\
         && child.strata == child.parent.strata
 }

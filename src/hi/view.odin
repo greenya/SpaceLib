@@ -12,12 +12,12 @@ View_Init :: struct {
     strata  : Strata,   // Elevation layer: drawing order goes low->high, mouse hit test order goes high->low. By default, the value is set to `parent.strata`. Non-native strata children are excluded from parent layout and input propagation.
     level   : int,      // Order within `strata`, If two views has same `strata` and `level`, the view with bigger `sid` considered to be higher. By default, the value is set to `parent.level`.
 
-    size    : Vec2,     // Width and height, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` allows interpreting value as fraction of the parent
-    place   : Place,    // Used only if parent has no layout, or for `.absolute` and non-native `strata` children
+    size    : Vec2,     // Width and height in UI units, assuming "fixed value" when `.fit_*` or `.fill_*` is not used; `.ratio_*` interprets the value as a fraction of the parent, or the screen with `.screen_relative`
+    place   : Place,    // Used only if parent has no layout, or for `.absolute`, `.screen_relative` and non-native `strata` children
     opacity : f32,      // Opacity from fully transparent (`0.0`) to fully opaque (`1.0`, default value). The value affects `solved_opacity` of the view and all its children (all stratas).
     padding : Vec4,     // Padding for layout children and text content in order: 0=left, 1=top, 2=right, 3=bottom
     scroll  : Vec2,     // Offset for layout children
-    layout  : Layout,   // Layout for children. Affects non-`.absolute` native strata children only.
+    layout  : Layout,   // Layout for children. Affects native strata layout children only (excludes `.absolute`, `.screen_relative` and `.intext`).
 
     name    : string,   // Optional name
     text    : string,   // Text with rich formatting if `.text` is used
@@ -77,14 +77,15 @@ Flag :: enum {
     updating,   // The view receives `Event_Updated` every `update_context()` while visible
     scissor,    // The view clips native strata children. Layout children are clipped to `viewport_rect(parent)` and `.absolute` children are clipped to `parent.solved_rect`.
     absolute,   // Native strata layout escape: the view is positioned by `place` and skips parent layout, scroll and padding. The parent scissor is un-padded (equals to `parent.solved_rect`).
+    screen_relative, // Uses the actual screen rect in UI units for `place` and `.ratio_*` sizing. Acts like `.absolute` for layout. Clipping, strata and interaction rules are unchanged.
     intext,     // The view is positioned by a custom token in the parent `.text` view and excluded from normal layout. In a stable solve, the view provides token size while the token provides view position. The view can handle `Event_Intext_Query` to adjust alignment. With `.text_wordy` parents, token size is cached: use static `.intext` sizes, or call `set_text()` on the parent after an `.intext` child size changes. This flag must not be used with `.ratio_y` or `.fill_y`.
     intext_full,// Additionally to `.intext`, the view's solved width is set to take full text line. Text token also owns view width; view still owns height. Use only with `.intext`.
     _intext_bound, // Internal solver flag. Used for tracking `.intext` view is actually bound to a token of the parent `.text` view. If `.intext` view is not bound to a token, the view itself and its subtree gets removed from `Context.visible_views`.
 
     // Sizing
 
-    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent. `parent.padding` is included only for layout children.
-    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent. `parent.padding` is included only for layout children. This flag cannot be used with `.intext`.
+    ratio_x,    // `size.x` is a ratio (0.5 = 50%) relative to the parent, or the actual screen with `.screen_relative`. `parent.padding` is included only for layout children.
+    ratio_y,    // `size.y` is a ratio (0.5 = 50%) relative to the parent, or the actual screen with `.screen_relative`. `parent.padding` is included only for layout children. This flag cannot be used with `.intext`.
     fill_x,     // Native strata layout sizing: `solved_rect.w` takes remaining parent viewport width. In row layout, remaining width is shared evenly between layout `.fill_x` children.
     fill_y,     // Native strata layout sizing: `solved_rect.h` takes remaining parent viewport height. In column layout, remaining height is shared evenly between layout `.fill_y` children. This flag cannot be used with `.intext`.
     fit_x,      // `solved_rect.w` is set to fit visible layout children width
@@ -122,9 +123,9 @@ Strata :: enum i8 {
 }
 
 Place :: struct {
-    anchor  : Vec2, // Parent point (0 to 1)
+    anchor  : Vec2, // Parent point (0 to 1), or actual screen point with `.screen_relative`
     pivot   : Vec2, // Local point (0 to 1)
-    offset  : Vec2, // Extra offset
+    offset  : Vec2, // Extra offset (always in UI units, even with `.screen_relative`)
 }
 
 Layout :: struct {
