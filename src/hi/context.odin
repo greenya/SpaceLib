@@ -90,11 +90,12 @@ Context_Init :: struct {
     // Text custom token callback. Used only with `.text` views.
     // - The callback is called for `Text_Token_Type.custom` tokens only. See all token types
     //   of `Text_Token_Type` to know what they do and which tag names are reserved.
-    // - If `out_hint != nil`, you can change its properties. Setting `out_hint.scale` to
-    //   non-zero value makes the token occupy physical space, e.g. for `|icon=sword|` you might
-    //   want to set `out_hint.scale = 1`, which would occupy square of physical space for
-    //   inline icon. Additionally, you can change `out_hint.baseline_ratio` default value,
-    //   which is `style.font_baseline_ratio`.
+    // - If `out_hint != nil`, you can change its properties.
+    //      * `out_hint.scale` allows to make token occupy physical space, e.g. for
+    //        `|icon=sword|` you might want to set `out_hint.scale = 1`, which would occupy
+    //        square of physical space for inline icon.
+    //      * `out_hint.baseline_ratio` allows overriding default value of `style.font_baseline_ratio`.
+    //      * `out_hint.span` allows affecting the span stack.
     // - Update `style` for styling, use `style.user_*` to read/write your custom state.
     //
     // Called on every custom token in both phases: updating and drawing.

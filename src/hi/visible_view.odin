@@ -52,7 +52,7 @@ visible_text_iterate :: proc (
 @require_results
 visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok_rect: Rect, ok: bool) #no_bounds_check {
     for tok_ in text_token_next(&it.token_it) {
-        if it.measurable_only && tok_.size == {} do continue
+        if it.measurable_only && (tok_.size=={} || ._trimmed in tok_.flags) do continue
 
         tok_rect = Rect {
             tok_.solved_pos.x + it.content_origin.x,
@@ -71,6 +71,64 @@ visible_text_next :: proc (it: ^Visible_Text_Iterator) -> (tok: ^Text_Token, tok
         tok = tok_
         ok = true
         return
+    }
+    return
+}
+
+Visible_Text_Hit :: struct {
+    tok     : ^Text_Token,
+    rect    : Rect,
+    spans   : [dynamic; TEXT_SPAN_STACK_SIZE] Text_Span, // In order of encounter (from outermost to innermost)
+}
+
+// Performs hit test on the given `.text` visible view and returns token hit, including stack
+// of spans. Can hit only tokens which has physical size: words, whitespaces and custom tokens
+// with physical size. Respects scissor. All the pointers of the returned `hit` are valid until
+// the solved text is rebuilt (possibly in the same frame).
+// - `require_enabled`, if set, hit tests only if view is not `.disabled`
+// - `require_hovered`, if set, hit tests only if view is `.hovered`
+@require_results
+visible_text_hit_test :: proc (
+    v               : ^Visible_View,
+    pos             : Vec2,
+    require_enabled := true,
+    require_hovered := true,
+) -> (hit: Visible_Text_Hit, ok: bool) {
+    assert(.text in v.flags)
+
+    if require_enabled && .disabled in v.flags do return
+    if require_hovered && .hovered not_in v.flags do return
+
+    if scissor_enabled(v.solved_scissor) {
+        if !scissor_has_area(v.solved_scissor) || !core.pos_in_rect(pos, v.solved_scissor) {
+            return
+        }
+    }
+
+    it := visible_text_iterate(v, filter={ .word, .whitespace, .custom })
+    for tok, rect in visible_text_next(&it) {
+        if rect.w <= 0 || rect.h <= 0 do continue
+        if core.pos_in_rect(pos, rect) {
+            return { tok=tok, rect=rect, spans=it.spans }, true
+        }
+    }
+
+    return
+}
+
+// Returns the innermost enclosing span whose opening `token.text` matches `token_text`
+@require_results
+visible_text_hit_test_token :: proc (
+    v               : ^Visible_View,
+    pos             : Vec2,
+    token_text      : string,
+    require_enabled := true,
+    require_hovered := true,
+) -> (hit_span: Text_Span, ok: bool) {
+    if hit, hit_ok := visible_text_hit_test(v, pos, require_enabled, require_hovered); hit_ok {
+        #reverse for span in hit.spans {
+            if span.token.text == token_text do return span, true
+        }
     }
     return
 }

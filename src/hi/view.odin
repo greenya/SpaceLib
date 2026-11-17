@@ -330,6 +330,14 @@ remove_children :: proc (v: ^View) {
     }
 }
 
+// Returns reference to the element of `v.ctx.visible_views` or `nil`.
+// - Returned pointer is valid until next solve.
+@require_results
+visible_view :: proc (v: ^View) -> ^Visible_View {
+    for &vv in v.ctx.visible_views do if vv.view == v do return &vv
+    return nil
+}
+
 // Returns index of `v` in `v.parent` children.
 // - Panics if `v.parent` is not set.
 // - Panics if `v.parent` children has no `v`.

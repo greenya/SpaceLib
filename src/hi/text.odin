@@ -3,6 +3,8 @@ package hi
 import "core:strings"
 import "core:strconv"
 
+TEXT_SPAN_STACK_SIZE :: 16
+
 Text_Token :: struct {
     type        : Text_Token_Type,
     flags       : Text_Token_Flags,
@@ -45,10 +47,27 @@ Text_Token_Type :: enum u8 {
 
 Text_Token_Flags :: bit_set [Text_Token_Flag; u8]
 Text_Token_Flag :: enum {
-    full_line, // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
+    full_line,  // If set, `size.x` is a scaler for full line width; otherwise it is scaler for style font height
+
+    span_open,  // If set, this token begins new span; cannot be used with `span_close`
+    span_close, // If set, this token ends last span; cannot be used with `span_open`
+
+    _trimmed,   // Internal flag. Set for excluded leading/trailing line content; not returned by measurable-only visible iteration.
+}
+
+Text_Span :: struct {
+    id      : int,          // Non-negative span ID. The actual value is an index of the opening token, but do not use it as index. This is needed only to distinguish same token span used multiple times. Example: "|link=xxx|A B C|/link|...|link=xxx|D E F|/link|". The A, B and C will have one span ID, while D, E and F will have another span ID. They all will have token.text "link" and token.args "xxx".
+    token   : ^Text_Token,  // Token this span opened with. Pointer valid until the solved text is rebuilt (possibly in the same frame).
 }
 
 Text_Custom_Token_Hint :: struct {
+    // If set, affects the span stack:
+    // - `.open` pushes new span to stack with this token
+    // - `.close` pops the last span (regardless of token text on `.open`)
+    // - Tracks span membership without saving or restoring `Text_Style`
+    // - Unclosed spans extend to end of text
+    span: Text_Custom_Token_Hint_Span,
+
     // If set, `scale` and `scale_full_line` are ignored.
     // The view provides token size. If view is `.intext_full`, it provides only height.
     // The view must have `.intext` flag and be a child of `.text` view this token is part of.
@@ -68,6 +87,12 @@ Text_Custom_Token_Hint :: struct {
     // This value defines vertical alignment of the token in a row of tokens on the same text line.
     // This value essentially has no visible effect when the token is the only measurable token on its line, e.g. full-line tokens.
     baseline_ratio: f32,
+}
+
+Text_Custom_Token_Hint_Span :: enum {
+    none,   // Token doesn't affect span stack
+    open,   // Token opens new span
+    close,  // Token closes last opened span
 }
 
 // Tokenizes given text.
@@ -175,6 +200,13 @@ _text_measure_tokens :: proc (v: ^Visible_View) #no_bounds_check {
         if has_on_text_custom_token {
             hint := Text_Custom_Token_Hint { baseline_ratio=style.font_baseline_ratio }
             ctx.on_text_custom_token(v, &style, tok.text, tok.args, &hint)
+
+            switch hint.span {
+            case .none  : /**/
+            case .open  : tok.flags += { .span_open }
+            case .close : tok.flags += { .span_close }
+            }
+
             switch {
             case hint.intext_view != nil:
                 iv := hint.intext_view
@@ -240,6 +272,7 @@ _text_wrap_tokens :: proc (v: ^Visible_View, limit_x: f32) -> (extent: Vec2, int
     extent.x = limit_x
 
     for &tok, i in tokens {
+        tok.flags -= { ._trimmed }
         tok.solved_width = tok.size.x
         if .full_line in tok.flags do tok.solved_width *= max(limit_x, 0)
 
@@ -390,7 +423,10 @@ _text_finalize_line :: proc (
 
     if start_i > end_i {
         // the line has no printable tokens -- reset all positions
-        for &tok in line_tokens do tok.solved_pos = {}
+        for &tok in line_tokens {
+            tok.solved_pos = {}
+            tok.flags += { ._trimmed }
+        }
         return
     }
 
@@ -416,6 +452,7 @@ _text_finalize_line :: proc (
             tok.solved_pos += { shift_amount, line_max_ascent - tok.ascent }
         } else {
             tok.solved_pos = {}
+            tok.flags += { ._trimmed }
         }
     }
 
@@ -438,9 +475,12 @@ Text_Token_Iterator :: struct {
     style   : Text_Style,
     filter  : bit_set [Text_Token_Type],
     next_i  : int,
+    token_i : int,
+    spans   : [dynamic; TEXT_SPAN_STACK_SIZE] Text_Span,
 }
 
-// The `filter` affects only returned tokens; the `.custom` tokens always get processed for `Text_Token_Iterator.style` changes.
+// The `filter` affects only returned tokens; all custom tokens still update style and spans.
+// An opening token includes its new span; a closing token has already removed that span.
 @require_results
 text_token_iterate :: proc (
     v       : ^Visible_View,
@@ -452,6 +492,7 @@ text_token_iterate :: proc (
         view    = v,
         style   = _text_style_init(v),
         filter  = filter,
+        token_i = -1,
     }
 
     return
@@ -463,14 +504,28 @@ text_token_next :: proc (it: ^Text_Token_Iterator) -> (tok: ^Text_Token, ok: boo
     tokens := it.view.solved_text_tokens
     for i := it.next_i; i < len(tokens); i += 1 {
         tok = &tokens[i]
+        it.next_i = i + 1
         if tok.type == .custom && ctx.on_text_custom_token != nil {
             ctx.on_text_custom_token(it.view, &it.style, tok.text, tok.args, out_hint=nil)
         }
+        _text_span_step(&it.spans, tok, i)
         if tok.type in it.filter {
-            it.next_i = i + 1
+            it.token_i = i
             ok = true
             return
         }
     }
     return
+}
+
+@(private="file")
+_text_span_step :: proc (spans: ^[dynamic; TEXT_SPAN_STACK_SIZE] Text_Span, tok: ^Text_Token, token_idx: int) {
+    switch {
+    case .span_open in tok.flags:
+        num_appended := append(spans, Text_Span { id=token_idx, token=tok })
+        ensure(num_appended == 1, "Text span nesting overflow")
+    case .span_close in tok.flags:
+        ensure(len(spans) > 0, "Text span nesting underflow")
+        pop(spans)
+    }
 }
